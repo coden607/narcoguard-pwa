@@ -45,6 +45,10 @@ export function VitalsMonitor() {
         {overdoseCheck?.isAbnormal && (
           <div className="bg-red-500/20 border border-red-500 rounded-lg p-3 emergency-pulse">
             <p className="text-sm font-bold text-red-500">⚠️ ABNORMAL VITALS - {overdoseCheck.severity.toUpperCase()}</p>
+            <p className="text-xs text-red-400 mt-1">
+              Risk score: {overdoseCheck.riskScore}/100 • Fusion confidence: {(overdoseCheck.confidence * 100).toFixed(0)}% • Action:{" "}
+              {overdoseCheck.recommendedAction.replace(/_/g, " ")}
+            </p>
             <ul className="text-xs text-red-400 mt-1 space-y-1">
               {overdoseCheck.indicators.map((indicator, i) => (
                 <li key={i}>• {indicator}</li>
@@ -156,7 +160,7 @@ export function VitalsMonitor() {
         </div>
 
         <p className="text-xs text-muted-foreground text-center">
-          Using Kalman filtering for sensor fusion • Updated {new Date(vitals.timestamp).toLocaleTimeString()}
+          Kalman filtering + confidence-weighted fusion + trend gating • Updated {new Date(vitals.timestamp).toLocaleTimeString()}
         </p>
       </div>
     </HolographicCard>

@@ -491,6 +491,55 @@ const totalPerUnit = componentBOMTotal + assemblyLabor + qualityTesting + fdaCer
 const totalWithNaloxone = totalPerUnit + naloxoneRefill
 const fundingGoal80Units = totalWithNaloxone * 80
 
+const simulatedEnvelope = {
+  caseDiameterMm: 46,
+  caseThicknessMm: 13.8,
+  usableInternalAreaMm2: 1250,
+}
+
+const simulatedPowerProfile = {
+  standbyMw: 4.8,
+  sensorMonitoringMw: 12.4,
+  radioBurstMw: 160,
+  harvestBestCaseMw: 40.04,
+  harvestPracticalMw: 18.6,
+}
+
+const simulatedPlacement = [
+  { label: "SoC + co-processor", widthMm: 18, heightMm: 18 },
+  { label: "Display module", widthMm: 31, heightMm: 31 },
+  { label: "Battery cell", widthMm: 28, heightMm: 22 },
+  { label: "Naloxone module", widthMm: 18, heightMm: 12 },
+  { label: "Connectivity stack", widthMm: 16, heightMm: 14 },
+  { label: "Sensor ring", widthMm: 32, heightMm: 4 },
+]
+
+const simulatedFootprintMm2 = simulatedPlacement.reduce((sum, module) => sum + module.widthMm * module.heightMm, 0)
+const fitRatio = simulatedFootprintMm2 / simulatedEnvelope.usableInternalAreaMm2
+const fitScore = Math.max(0, Math.round((1 - fitRatio) * 100))
+const fitMarginMm2 = simulatedEnvelope.usableInternalAreaMm2 - simulatedFootprintMm2
+const runtimeEstimateHours = Math.round((500 * 3.7) / simulatedPowerProfile.sensorMonitoringMw)
+const powerBalanceMw = simulatedPowerProfile.harvestPracticalMw - simulatedPowerProfile.sensorMonitoringMw
+const worstCasePowerBalanceMw = simulatedPowerProfile.harvestBestCaseMw - simulatedPowerProfile.sensorMonitoringMw
+const componentCount = billOfMaterials.reduce((sum, category) => sum + category.items.length, 0)
+const simulationPanels = [
+  {
+    label: "Mechanical fit",
+    value: `${fitScore}%`,
+    detail: `${simulatedPlacement.length} major modules across ${simulatedFootprintMm2} mm²`,
+  },
+  {
+    label: "Power margin",
+    value: `${powerBalanceMw > 0 ? "+" : ""}${powerBalanceMw.toFixed(1)} mW`,
+    detail: `Practical harvest vs. continuous sensor load`,
+  },
+  {
+    label: "BOM integrity",
+    value: `${componentCount} parts`,
+    detail: `$${componentBOMTotal.toFixed(2)} component subtotal before labor`,
+  },
+]
+
 export default function NGWatchPage() {
   const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
@@ -540,7 +589,7 @@ export default function NGWatchPage() {
               Back
             </Button>
           </Link>
-          <h1 className="text-2xl md:text-3xl font-bold glow-text text-center">NarcoGuard NG BLUEPRINT</h1>
+          <h1 className="text-2xl md:text-3xl font-bold glow-text text-center">NG | NarcoGuard System Blueprint</h1>
           <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
             <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
               <DollarSign className="w-4 h-4 mr-2" />
@@ -633,6 +682,17 @@ export default function NGWatchPage() {
           </div>
         </section>
 
+        {/* Simulation / validation summary */}
+        <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {simulationPanels.map((panel) => (
+            <HolographicCard key={panel.label} className="p-5" glowIntensity="medium">
+              <p className="text-xs uppercase tracking-[0.18em] text-primary">{panel.label}</p>
+              <p className="mt-2 text-3xl font-bold font-mono">{panel.value}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{panel.detail}</p>
+            </HolographicCard>
+          ))}
+        </section>
+
         {/* Anti-Theft / Biometric Lock Callout */}
         <section className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/5">
           <div className="flex items-start gap-3">
@@ -682,9 +742,22 @@ export default function NGWatchPage() {
               <p className="text-sm text-muted-foreground text-center mb-6">Click any component to see commercially available candidate part details and supplier information</p>
 
               <div className="relative aspect-square max-w-2xl mx-auto bg-gradient-to-br from-zinc-900 to-background rounded-full neon-border overflow-hidden">
+                <div className="absolute inset-0 opacity-35">
+                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.18)_0,rgba(56,189,248,0.08)_20%,transparent_21%)]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(148,163,184,0.22)_50%,transparent_51%),linear-gradient(transparent_49%,rgba(148,163,184,0.22)_50%,transparent_51%)] bg-[length:22px_22px]" />
+                </div>
                 <div className="absolute inset-6 rounded-full border-2 border-zinc-700" />
                 <div className="absolute inset-12 rounded-full border border-zinc-800" />
                 <div className="absolute inset-[4.5rem] rounded-full border border-zinc-800/50" />
+                <div className="absolute inset-[7rem] rounded-full border border-primary/20" />
+                <div className="absolute left-1/2 top-1/2 h-[86%] w-px -translate-x-1/2 -translate-y-1/2 bg-gradient-to-b from-transparent via-primary/40 to-transparent" />
+                <div className="absolute left-1/2 top-1/2 h-px w-[86%] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+                <div className="absolute right-4 top-4 rounded-lg border border-border/60 bg-black/40 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Read order: 1 → 15
+                </div>
+                <div className="absolute left-4 bottom-4 max-w-[16rem] rounded-lg border border-border/60 bg-black/40 p-3 text-[10px] leading-relaxed text-muted-foreground">
+                  Engineering note: all dimensions shown here are concept targets. Final tooling requires tolerance stack-up, thermal soak, enclosure validation, and bench verification against real parts.
+                </div>
 
                 {watchComponents.map((comp, index) => (
                   <button
@@ -709,6 +782,7 @@ export default function NGWatchPage() {
                   <div className="text-center">
                     <p className="text-2xl font-bold glow-text">NarcoGuard NG</p>
                     <p className="text-[10px] text-muted-foreground">REV 4.2</p>
+                    <p className="text-[10px] text-primary/80 mt-2 max-w-[14rem]">Kalman-filtered vitals, confidence-weighted fusion, and persistence gating reduce noise before any emergency action.</p>
                   </div>
                 </div>
               </div>
@@ -726,7 +800,7 @@ export default function NGWatchPage() {
                 </div>
               )}
 
-              <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
                 {watchComponents.map((comp, index) => (
                   <button
                     key={comp.id}
@@ -739,6 +813,23 @@ export default function NGWatchPage() {
                     <span className="text-[11px] leading-tight">{comp.name}</span>
                   </button>
                 ))}
+              </div>
+              <div className="mt-6 grid gap-3 md:grid-cols-3">
+                <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-primary">Fit margin</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{fitMarginMm2.toLocaleString()} mm² free inside the current concept envelope.</p>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-primary">Power balance</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Practical harvest {powerBalanceMw > 0 ? "covers" : "does not cover"} continuous sensing by {Math.abs(powerBalanceMw).toFixed(1)} mW.
+                    Best case improves to {worstCasePowerBalanceMw > 0 ? "+" : ""}{worstCasePowerBalanceMw.toFixed(1)} mW.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-primary">Runtime model</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Estimated {runtimeEstimateHours} hours on the 500mAh pack before recharge under the modeled sensor load.</p>
+                </div>
               </div>
             </HolographicCard>
           </TabsContent>

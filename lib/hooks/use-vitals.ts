@@ -16,6 +16,10 @@ export interface OverdoseCheck {
   isAbnormal: boolean
   severity: "none" | "low" | "medium" | "high" | "critical"
   indicators: string[]
+  riskScore: number
+  confidence: number
+  recommendedAction: "monitor" | "increase_observation" | "prepare_response" | "activate_emergency"
+  supportingSignals: number
 }
 
 export function useVitals(pollingInterval = 2000) {
