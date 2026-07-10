@@ -1,6 +1,6 @@
 {
   "campaign": {
-    "name": "NarcoGuard NG2 Watch Funding",
+    "name": "NarcoGuard NG Watch Funding",
     "goal": 24584,
     "watches": 80,
     "costPerWatch": 307.3,
@@ -13,7 +13,7 @@
     "gofundme": "https://gofund.me/9acf270ea",
     "app": "https://narcoguard.app",
     "demo": "https://narcoguard.app",
-    "github": "https://github.com/coden809/narcoguard-pwa"
+    "github": "https://github.com/coden607/narcoguard-pwa"
   },
   "contact": {
     "email": "narcoguard607@gmail.com",
@@ -25,12 +25,12 @@
     "hashtags": {
       "primary": ["NarcoGuard", "SaveLives", "OpioidCrisis", "EndOverdose"],
       "secondary": ["Binghamton", "BroomeCounty", "HarmReduction", "OverdosePrevention", "Naloxone"],
-      "features": ["HeroNetwork", "AutoInjection", "RecoverySupport", "NG2Watch"],
+      "features": ["HeroNetwork", "AutoInjection", "RecoverySupport", "NarcoGuardNG"],
       "tiktok": ["fyp", "viral", "saveliveschallenge", "recovery", "harmreduction"],
       "youtube": ["shorts", "medtech", "smartwatch", "healthtech"]
     },
     "platforms": ["twitter", "facebook", "instagram", "linkedin", "reddit", "tiktok", "youtube"],
-    "postFrequency": "hourly",
+    "postFrequency": "daily",
     "timezone": "America/New_York"
   },
   "messaging": {
