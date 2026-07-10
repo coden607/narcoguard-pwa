@@ -492,6 +492,8 @@ const totalWithNaloxone = totalPerUnit + naloxoneRefill
 const fundingGoal80Units = totalWithNaloxone * 80
 
 export default function NG2WatchPage() {
+  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
+  const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
   const [rotation, setRotation] = useState({ x: -20, y: 30 })
   const [zoom, setZoom] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
@@ -539,7 +541,7 @@ export default function NG2WatchPage() {
             </Button>
           </Link>
           <h1 className="text-2xl md:text-3xl font-bold glow-text text-center">NG2-PRO BLUEPRINT</h1>
-          <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer">
+          <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
             <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
               <DollarSign className="w-4 h-4 mr-2" />
               Fund This
@@ -558,6 +560,75 @@ export default function NG2WatchPage() {
             </div>
             <div className="rounded-2xl overflow-hidden neon-border flex-1">
               <img src="/images/ng2-watch-hero.jpg" alt="NG2-PRO watch on wrist showing vital signs display" className="w-full h-full object-cover" />
+            </div>
+          </div>
+        </section>
+
+        {/* Investor-facing engineering summary */}
+        <section className="mb-8 grid grid-cols-1 xl:grid-cols-[1.15fr_.85fr] gap-6">
+          <HolographicCard className="p-6" glowIntensity="high">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-primary">Investor engineering view</p>
+                <h2 className="text-2xl font-bold">Numbered NG2-PRO System Diagram</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Callouts correspond to the interactive diagram and the complete supplier BOM below.
+                </p>
+              </div>
+              <span className="text-xs font-mono rounded-md border border-primary/40 px-3 py-2 whitespace-nowrap">CONCEPT REV 4.2</span>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-2">
+              {watchComponents.map((component, index) => (
+                <button
+                  key={component.id}
+                  type="button"
+                  onClick={() => setSelectedComponent(component.id)}
+                  className="flex items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 text-left hover:border-primary/60 hover:bg-primary/5 transition-colors"
+                >
+                  <span
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-black"
+                    style={{ backgroundColor: component.color }}
+                  >
+                    {index + 1}
+                  </span>
+                  <span>
+                    <span className="block text-sm font-semibold">{component.name}</span>
+                    <span className="block text-xs text-muted-foreground line-clamp-2">{component.description}</span>
+                  </span>
+                </button>
+              ))}
+            </div>
+          </HolographicCard>
+
+          <div className="space-y-6">
+            <HolographicCard className="p-6">
+              <h3 className="font-bold text-lg mb-4">Representative Candidate Parts</h3>
+              <div className="space-y-3 text-sm">
+                {[
+                  ["Compute", "Qualcomm SW5100", "Snapdragon W5+ Gen 1"],
+                  ["Health MCU", "NRF5340-QKAA-R7", "Nordic nRF5340"],
+                  ["Vitals AFE", "MAX86178", "Analog Devices / Maxim"],
+                  ["Motion", "LSM6DSO32XTR", "STMicroelectronics"],
+                  ["GNSS", "BCM47765", "Broadcom dual-band L1/L5"],
+                  ["Barometer", "BMP390", "Bosch Sensortec"],
+                ].map(([system, part, maker]) => (
+                  <div key={part} className="grid grid-cols-[.8fr_1fr] gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0">
+                    <span className="text-muted-foreground">{system}</span>
+                    <span><span className="block font-mono text-primary">{part}</span><span className="text-xs">{maker}</span></span>
+                  </div>
+                ))}
+              </div>
+            </HolographicCard>
+
+            <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+              <p className="font-semibold text-amber-300">Engineering status</p>
+              <p className="text-muted-foreground mt-1">
+                Parts, pricing, performance, medical claims, enclosure tolerances, and injection architecture are proposed design targets. Final selections require supplier confirmation, prototyping, clinical validation, regulatory review, and design-for-manufacture testing.
+              </p>
+              <a href={investorUrl} target="_blank" rel="noopener noreferrer" className="inline-flex mt-3 text-primary font-semibold hover:underline">
+                Request the investor technical package <ExternalLink className="w-4 h-4 ml-1" />
+              </a>
             </div>
           </div>
         </section>
@@ -581,13 +652,13 @@ export default function NG2WatchPage() {
               <p className="text-muted-foreground mt-1">Each NG2-PRO costs <span className="text-green-400 font-bold">${totalWithNaloxone.toFixed(2)}</span> to produce with real-world parts. Total goal: <span className="text-green-400 font-bold">${fundingGoal80Units.toFixed(2)}</span></p>
             </div>
             <div className="flex gap-3">
-              <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer">
+              <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" className="bg-green-500 hover:bg-green-600 text-black font-bold">
                   <DollarSign className="w-5 h-5 mr-2" />
                   Donate Now
                 </Button>
               </a>
-              <a href="mailto:narcoguard607@gmail.com">
+              <a href={investorUrl} target="_blank" rel="noopener noreferrer">
                 <Button size="lg" variant="outline" className="neon-border bg-transparent">
                   Partner With Us
                 </Button>
@@ -615,7 +686,7 @@ export default function NG2WatchPage() {
                 <div className="absolute inset-12 rounded-full border border-zinc-800" />
                 <div className="absolute inset-[4.5rem] rounded-full border border-zinc-800/50" />
 
-                {watchComponents.map((comp) => (
+                {watchComponents.map((comp, index) => (
                   <button
                     key={comp.id}
                     className={`absolute w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-125 ${
@@ -630,7 +701,7 @@ export default function NG2WatchPage() {
                     }}
                     onClick={() => setSelectedComponent(selectedComponent === comp.id ? null : comp.id)}
                   >
-                    <span className="text-[10px] font-bold text-white drop-shadow-lg">{comp.id.slice(0, 3).toUpperCase()}</span>
+                    <span className="text-sm font-bold text-black drop-shadow-sm">{index + 1}</span>
                   </button>
                 ))}
 
@@ -656,7 +727,7 @@ export default function NG2WatchPage() {
               )}
 
               <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                {watchComponents.map((comp) => (
+                {watchComponents.map((comp, index) => (
                   <button
                     key={comp.id}
                     className={`flex items-center gap-2 p-2 rounded text-left transition-all ${
@@ -664,7 +735,7 @@ export default function NG2WatchPage() {
                     }`}
                     onClick={() => setSelectedComponent(selectedComponent === comp.id ? null : comp.id)}
                   >
-                    <div className="w-3 h-3 rounded-full shrink-0" style={{ backgroundColor: comp.color }} />
+                    <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black" style={{ backgroundColor: comp.color }}>{index + 1}</div>
                     <span className="text-[11px] leading-tight">{comp.name}</span>
                   </button>
                 ))}
@@ -878,7 +949,7 @@ export default function NG2WatchPage() {
                     <span>80 units x ${totalWithNaloxone.toFixed(2)}</span>
                     <span className="text-2xl font-bold text-green-500">${fundingGoal80Units.toFixed(2)}</span>
                   </div>
-                  <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer" className="block mt-4">
+                  <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer" className="block mt-4">
                     <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold" size="lg">
                       <DollarSign className="w-5 h-5 mr-2" />
                       Support This Project on GoFundMe

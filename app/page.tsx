@@ -90,11 +90,11 @@ export default function DashboardPage() {
     return (
       <div className="relative">
         <OnboardingFlow onComplete={handleOnboardingComplete} />
-        <div className="fixed bottom-4 right-4 z-50">
+        <div className="fixed top-4 right-4 z-50 max-w-[calc(100vw-2rem)]">
           <Button
             onClick={() => setShowSkipWarning(true)}
             variant="outline"
-            className="glass neon-border bg-background/80 hover:bg-background"
+            className="glass neon-border bg-background/95 hover:bg-background shadow-xl"
           >
             <SkipForward className="w-4 h-4 mr-2" />
             Skip Setup (Demo Mode)
