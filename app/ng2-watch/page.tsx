@@ -367,7 +367,7 @@ const billOfMaterials = [
         quantity: 1,
         unitPrice: 15.00,
         supplier: "Nanopass Technologies / Custom",
-        partNumber: "NG2-NEEDLE-30G-4MM",
+        partNumber: "NG-NEEDLE-30G-4MM",
         datasheet: "nanopass.com",
       },
       {
@@ -376,7 +376,7 @@ const billOfMaterials = [
         quantity: 1,
         unitPrice: 8.00,
         supplier: "Gerresheimer AG / Custom",
-        partNumber: "NG2-CART-COC-04ML",
+        partNumber: "NG-CART-COC-04ML",
         datasheet: "gerresheimer.com",
       },
       {
@@ -409,7 +409,7 @@ const billOfMaterials = [
         quantity: 1,
         unitPrice: 38.00,
         supplier: "Custom CNC (Foxconn Interconnect)",
-        partNumber: "NG2-CASE-TI6AL4V-R4",
+        partNumber: "NG-CASE-TI6AL4V-R4",
         datasheet: "N/A - Custom",
       },
       {
@@ -427,7 +427,7 @@ const billOfMaterials = [
         quantity: 1,
         unitPrice: 6.00,
         supplier: "Custom (Shin-Etsu Chemical)",
-        partNumber: "NG2-STRAP-LSR-22MM",
+        partNumber: "NG-STRAP-LSR-22MM",
         datasheet: "shinetsu.com",
       },
       {
@@ -436,7 +436,7 @@ const billOfMaterials = [
         quantity: 1,
         unitPrice: 28.00,
         supplier: "JLCPCB / PCBWay",
-        partNumber: "NG2-PCBA-R4-10L",
+        partNumber: "NG-PCBA-R4-10L",
         datasheet: "N/A - Custom",
       },
       {
@@ -445,7 +445,7 @@ const billOfMaterials = [
         quantity: 1,
         unitPrice: 3.50,
         supplier: "Parker Hannifin",
-        partNumber: "NG2-GASKET-VITON-SET",
+        partNumber: "NG-GASKET-VITON-SET",
         datasheet: "parker.com",
       },
       {
@@ -463,7 +463,7 @@ const billOfMaterials = [
         quantity: 1,
         unitPrice: 12.00,
         supplier: "Custom (CoorsTek)",
-        partNumber: "NG2-BACK-ZRO2",
+        partNumber: "NG-BACK-ZRO2",
         datasheet: "coorstek.com",
       },
     ],
@@ -491,7 +491,7 @@ const totalPerUnit = componentBOMTotal + assemblyLabor + qualityTesting + fdaCer
 const totalWithNaloxone = totalPerUnit + naloxoneRefill
 const fundingGoal80Units = totalWithNaloxone * 80
 
-export default function NG2WatchPage() {
+export default function NGWatchPage() {
   const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
   const [rotation, setRotation] = useState({ x: -20, y: 30 })
@@ -540,7 +540,7 @@ export default function NG2WatchPage() {
               Back
             </Button>
           </Link>
-          <h1 className="text-2xl md:text-3xl font-bold glow-text text-center">NG2-PRO BLUEPRINT</h1>
+          <h1 className="text-2xl md:text-3xl font-bold glow-text text-center">NarcoGuard NG BLUEPRINT</h1>
           <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
             <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
               <DollarSign className="w-4 h-4 mr-2" />
@@ -552,14 +552,14 @@ export default function NG2WatchPage() {
         {/* Hero Product Showcase with New Images */}
         <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 rounded-2xl overflow-hidden neon-border">
-            <img src="/images/ng2-modular-exploded.jpg" alt="NarcoGuard NG2-PRO exploded view showing all modular components with real-world parts" className="w-full h-auto object-cover" />
+            <img src="/images/ng2-modular-exploded.jpg" alt="NarcoGuard NG exploded view showing all modular components with real-world parts" className="w-full h-auto object-cover" />
           </div>
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl overflow-hidden neon-border flex-1">
-              <img src="/images/ng2-blueprint-detailed.jpg" alt="NG2-PRO engineering blueprint with cross-section views and dimensions" className="w-full h-full object-cover" />
+              <img src="/images/ng2-blueprint-detailed.jpg" alt="NarcoGuard NG engineering blueprint with cross-section views and dimensions" className="w-full h-full object-cover" />
             </div>
             <div className="rounded-2xl overflow-hidden neon-border flex-1">
-              <img src="/images/ng2-watch-hero.jpg" alt="NG2-PRO watch on wrist showing vital signs display" className="w-full h-full object-cover" />
+              <img src="/images/ng2-watch-hero.jpg" alt="NarcoGuard NG watch on wrist showing vital signs display" className="w-full h-full object-cover" />
             </div>
           </div>
         </section>
@@ -570,9 +570,9 @@ export default function NG2WatchPage() {
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-5">
               <div>
                 <p className="text-xs uppercase tracking-[0.2em] text-primary">Investor engineering view</p>
-                <h2 className="text-2xl font-bold">Numbered NG2-PRO System Diagram</h2>
+                <h2 className="text-2xl font-bold">Numbered NarcoGuard NG System Diagram</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Callouts correspond to the interactive diagram and the complete supplier BOM below.
+                  Callouts correspond to the conceptual diagram and the candidate supplier BOM below.
                 </p>
               </div>
               <span className="text-xs font-mono rounded-md border border-primary/40 px-3 py-2 whitespace-nowrap">CONCEPT REV 4.2</span>
@@ -603,7 +603,7 @@ export default function NG2WatchPage() {
 
           <div className="space-y-6">
             <HolographicCard className="p-6">
-              <h3 className="font-bold text-lg mb-4">Representative Candidate Parts</h3>
+              <h3 className="font-bold text-lg mb-4">State-of-the-Art Candidate Parts</h3>
               <div className="space-y-3 text-sm">
                 {[
                   ["Compute", "Qualcomm SW5100", "Snapdragon W5+ Gen 1"],
@@ -624,7 +624,7 @@ export default function NG2WatchPage() {
             <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
               <p className="font-semibold text-amber-300">Engineering status</p>
               <p className="text-muted-foreground mt-1">
-                Parts, pricing, performance, medical claims, enclosure tolerances, and injection architecture are proposed design targets. Final selections require supplier confirmation, prototyping, clinical validation, regulatory review, and design-for-manufacture testing.
+                This page documents a concept design assembled from commercially available parts. Parts, pricing, performance, medical claims, enclosure tolerances, and injection architecture are proposed design targets. Final selections require supplier confirmation, prototyping, clinical validation, regulatory review, and design-for-manufacture testing before any production or medical-use claim is made.
               </p>
               <a href={investorUrl} target="_blank" rel="noopener noreferrer" className="inline-flex mt-3 text-primary font-semibold hover:underline">
                 Request the investor technical package <ExternalLink className="w-4 h-4 ml-1" />
@@ -639,7 +639,7 @@ export default function NG2WatchPage() {
             <Lock className="w-6 h-6 text-amber-400 mt-0.5 shrink-0" />
             <div>
               <h3 className="font-bold text-amber-300">Biometric-Locked to Owner - Cannot Be Resold</h3>
-              <p className="text-sm text-muted-foreground mt-1">Each NG2-PRO is permanently tied to its registered owner via the Goodix GH3220 fingerprint sensor embedded in the crown button. The device cannot be factory reset, re-paired, or used by anyone else without the enrolled fingerprint. If the watch detects tampering or removal from the registered wearer, it enters lockdown mode and sends an alert. This ensures watches distributed through our program reach and stay with the people who need them.</p>
+              <p className="text-sm text-muted-foreground mt-1">Each NarcoGuard NG is permanently tied to its registered owner via the Goodix GH3220 fingerprint sensor embedded in the crown button. The device cannot be factory reset, re-paired, or used by anyone else without the enrolled fingerprint. If the watch detects tampering or removal from the registered wearer, it enters lockdown mode and sends an alert. This ensures watches distributed through our program reach and stay with the people who need them.</p>
             </div>
           </div>
         </section>
@@ -649,7 +649,7 @@ export default function NG2WatchPage() {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-balance">80 Watches = 80 Lives Protected</h2>
-              <p className="text-muted-foreground mt-1">Each NG2-PRO costs <span className="text-green-400 font-bold">${totalWithNaloxone.toFixed(2)}</span> to produce with real-world parts. Total goal: <span className="text-green-400 font-bold">${fundingGoal80Units.toFixed(2)}</span></p>
+              <p className="text-muted-foreground mt-1">Each NarcoGuard NG costs <span className="text-green-400 font-bold">${totalWithNaloxone.toFixed(2)}</span> to produce with real-world parts. Total goal: <span className="text-green-400 font-bold">${fundingGoal80Units.toFixed(2)}</span></p>
             </div>
             <div className="flex gap-3">
               <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
@@ -678,8 +678,8 @@ export default function NG2WatchPage() {
           {/* Interactive Blueprint - DEFAULT TAB */}
           <TabsContent value="blueprint">
             <HolographicCard className="p-6" glowIntensity="medium">
-              <h2 className="text-xl font-bold mb-2 text-center">Interactive Component Map - NG2-PRO Rev 4.2</h2>
-              <p className="text-sm text-muted-foreground text-center mb-6">Click any component to see real-world part details and supplier information</p>
+              <h2 className="text-xl font-bold mb-2 text-center">Interactive Component Map - NarcoGuard NG Rev 4.2</h2>
+              <p className="text-sm text-muted-foreground text-center mb-6">Click any component to see commercially available candidate part details and supplier information</p>
 
               <div className="relative aspect-square max-w-2xl mx-auto bg-gradient-to-br from-zinc-900 to-background rounded-full neon-border overflow-hidden">
                 <div className="absolute inset-6 rounded-full border-2 border-zinc-700" />
@@ -707,7 +707,7 @@ export default function NG2WatchPage() {
 
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                   <div className="text-center">
-                    <p className="text-2xl font-bold glow-text">NG2-PRO</p>
+                    <p className="text-2xl font-bold glow-text">NarcoGuard NG</p>
                     <p className="text-[10px] text-muted-foreground">REV 4.2</p>
                   </div>
                 </div>
@@ -917,7 +917,7 @@ export default function NG2WatchPage() {
 
               {/* Grand Total */}
               <HolographicCard className="p-6 bg-gradient-to-r from-green-500/20 to-primary/20" glowIntensity="high">
-                <h3 className="text-xl font-bold mb-4">Production Cost Summary - NG2-PRO</h3>
+                <h3 className="text-xl font-bold mb-4">Prototype Cost Summary - NarcoGuard NG</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="p-4 rounded-lg bg-background/50">
                     <p className="text-xs text-muted-foreground">Components</p>

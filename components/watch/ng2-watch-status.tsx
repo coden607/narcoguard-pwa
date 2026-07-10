@@ -8,7 +8,7 @@ import { Progress } from "@/components/ui/progress"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { WatchDetails } from "./watch-details"
 
-export function NG2WatchStatus() {
+export function NGWatchStatus() {
   const [battery, setBattery] = useState(85)
   const [isConnected, setIsConnected] = useState(true)
   const [naloxoneStatus, setNaloxoneStatus] = useState<"ready" | "low" | "empty">("ready")
@@ -49,7 +49,7 @@ export function NG2WatchStatus() {
             </div>
             <div>
               <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)] flex items-center gap-2">
-                NG2 WATCH
+                NARCOGUARD NG
                 <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">AUTO-INJECT</span>
               </h3>
               {/* */}
@@ -68,7 +68,7 @@ export function NG2WatchStatus() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-2xl glass neon-border">
               <DialogHeader>
-                <DialogTitle className="font-[family-name:var(--font-orbitron)]">NG2 Watch Details</DialogTitle>
+                <DialogTitle className="font-[family-name:var(--font-orbitron)]">NarcoGuard NG Details</DialogTitle>
               </DialogHeader>
               <WatchDetails />
             </DialogContent>

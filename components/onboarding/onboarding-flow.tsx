@@ -182,12 +182,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <h1 className="text-5xl font-bold glow-text font-[family-name:var(--font-orbitron)]">WELCOME TO NARCOGUARD</h1>
         <div className="flex items-center justify-center gap-2 text-xl text-primary">
           <Syringe className="w-6 h-6" />
-          <span className="font-semibold">NG2 Auto-Injection System</span>
+          <span className="font-semibold">NarcoGuard NG Auto-Injection System</span>
         </div>
         <p className="text-xl text-secondary">A Movement to Save and Transform Lives</p>
         <p className="text-muted-foreground max-w-2xl mx-auto text-balance">
-          This isn't just an app—it's a revolution in overdose prevention powered by the NarcoGuard 2 wearable with
-          automatic naloxone injection technology. Together, we'll set up your personal Guardian AI, connect you to
+          This isn't just an app—it's a revolution in overdose prevention powered by the NarcoGuard NG wearable with
+          automatic naloxone injection technology. Together, we'll set up your personal Guardian Aingel, connect you to
           life-saving resources, and empower you to become part of a heroic community.
         </p>
       </div>
@@ -195,7 +195,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <HolographicCard className="p-6 text-center">
           <Syringe className="w-12 h-12 mx-auto mb-4 text-primary pulse-glow" />
           <h3 className="font-bold mb-2">Auto-Injection</h3>
-          <p className="text-sm text-muted-foreground">NG2 watch deploys naloxone automatically when needed</p>
+          <p className="text-sm text-muted-foreground">NarcoGuard NG deploys naloxone automatically when needed</p>
         </HolographicCard>
         <HolographicCard className="p-6 text-center">
           <Users className="w-12 h-12 mx-auto mb-4 text-secondary pulse-glow" />
@@ -210,8 +210,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       </div>
     </div>,
 
-    // Step 1: Meet Guardian AI
-    <div key="guardian-intro" className="space-y-6">
+    // Step 1: Meet Guardian Aingel
+    <div key="guardian-aingel-intro" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-24 h-24 mx-auto relative">
           <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-full pulse-glow animate-spin-slow" />
@@ -219,7 +219,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <Sparkles className="w-12 h-12 text-primary" />
           </div>
         </div>
-        <h2 className="text-3xl font-bold glow-text">Meet Your Guardian AI</h2>
+        <h2 className="text-3xl font-bold glow-text">Meet Your Guardian Aingel</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto text-balance">
           I'm your personal AI assistant, designed to protect and guide you. I'll monitor your vitals, detect
           emergencies, coordinate rescues, and provide support throughout your journey.
@@ -285,7 +285,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             className="text-lg glass neon-border"
           />
           <p className="text-sm text-muted-foreground">
-            This helps Guardian AI provide personalized care and communicate with emergency responders.
+            This helps Guardian Aingel provide personalized care and communicate with emergency responders.
           </p>
         </div>
       </HolographicCard>
@@ -373,7 +373,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="text-center space-y-4">
         <Bell className="w-16 h-16 mx-auto text-primary pulse-glow" />
         <h2 className="text-3xl font-bold glow-text">Emergency Response Preferences</h2>
-        <p className="text-muted-foreground">Customize how Guardian AI responds to emergencies</p>
+        <p className="text-muted-foreground">Customize how Guardian Aingel responds to emergencies</p>
       </div>
       <HolographicCard className="p-8 max-w-2xl mx-auto space-y-6">
         <div className="flex items-start space-x-3">
@@ -513,7 +513,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           + Add Naloxone Location
         </Button>
         <p className="text-sm text-muted-foreground text-center">
-          Guardian AI will guide responders to these locations with AR overlays
+          Guardian Aingel will guide responders to these locations with AR overlays
         </p>
       </div>
     </div>,
@@ -543,7 +543,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 Enable Never Use Alone
               </Label>
               <p className="text-sm text-muted-foreground">
-                When you use substances, Guardian AI will monitor you continuously and alert help if you don't respond
+                When you use substances, Guardian Aingel will monitor you continuously and alert help if you don't respond
                 to check-ins
               </p>
             </div>
@@ -556,7 +556,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>• Activate before using substances</li>
-              <li>• Guardian AI sends periodic check-ins</li>
+              <li>• Guardian Aingel sends periodic check-ins</li>
               <li>• If you don't respond, emergency protocol activates</li>
               <li>• Heroes and emergency contacts are notified immediately</li>
             </ul>
@@ -578,7 +578,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 Automatic Overdose Detection
               </Label>
               <p className="text-sm text-muted-foreground">
-                Guardian AI monitors your vitals 24/7 and detects overdose signs automatically
+                Guardian Aingel monitors your vitals 24/7 and detects overdose signs automatically
               </p>
             </div>
           </div>
@@ -599,7 +599,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 Voice Activation
               </Label>
               <p className="text-sm text-muted-foreground">
-                Say "Guardian, help me" to trigger emergency response hands-free
+                Say "Guardian Aingel, help me" to trigger emergency response hands-free
               </p>
             </div>
           </div>
@@ -1047,7 +1047,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>• This app does not replace professional medical care</li>
             <li>• Always call 911 in life-threatening emergencies</li>
-            <li>• Guardian AI is a tool to support, not replace, human judgment</li>
+            <li>• Guardian Aingel is a tool to support, not replace, human judgment</li>
             <li>• You can update these preferences anytime in Settings</li>
           </ul>
         </div>
@@ -1116,7 +1116,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <Shield className="w-5 h-5 text-primary" />
                 24/7 Protection Activated
               </h5>
-              <p className="text-sm text-muted-foreground">Guardian AI is now monitoring and ready to protect you</p>
+              <p className="text-sm text-muted-foreground">Guardian Aingel is now monitoring and ready to protect you</p>
             </div>
             <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/20">
               <h5 className="font-semibold mb-1 flex items-center gap-2">

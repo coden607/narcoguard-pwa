@@ -19,9 +19,9 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://narcoguard.app"),
-  title: "NarcoGuard - NG2 Auto-Injection Overdose Prevention System",
+  title: "NarcoGuard NG - Auto-Injection Overdose Prevention System",
   description:
-    "Revolutionary wearable auto-injection technology powered by AI. The NarcoGuard 2 watch automatically detects and prevents overdoses with instant naloxone deployment. Not just saving lives - transforming them. Created by Stephen Blanford.",
+    "Revolutionary wearable auto-injection concept powered by AI. The NarcoGuard NG watch is designed to detect and respond to overdose risk with instant naloxone deployment. Not just saving lives - transforming them. Created by Stephen Blanford.",
   generator: "v0.app",
   manifest: "/manifest.webmanifest",
   keywords: [
@@ -29,7 +29,7 @@ export const metadata: Metadata = {
     "overdose prevention",
     "auto-injection",
     "wearable technology",
-    "NG2",
+    "NG",
     "NarcoGuard",
     "harm reduction",
     "life-saving",
@@ -41,17 +41,17 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "NarcoGuard NG2",
+    title: "NarcoGuard NG",
   },
   openGraph: {
-    title: "NarcoGuard - NG2 Auto-Injection System",
+    title: "NarcoGuard NG - Auto-Injection System",
     description: "Revolutionary wearable auto-injection technology that saves lives. Join the movement.",
     type: "website",
     siteName: "NarcoGuard",
   },
   twitter: {
     card: "summary_large_image",
-    title: "NarcoGuard - NG2 Auto-Injection System",
+    title: "NarcoGuard NG - Auto-Injection System",
     description: "Revolutionary wearable auto-injection technology that saves lives. Join the movement.",
   },
 }

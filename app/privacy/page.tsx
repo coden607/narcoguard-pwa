@@ -50,7 +50,7 @@ export default function PrivacyPolicy() {
                 <strong>Hero Network:</strong> Connect nearby trained responders to emergencies
               </li>
               <li>
-                <strong>Guardian AI:</strong> Provide personalized recovery insights and recommendations
+                <strong>Guardian Aingel:</strong> Provide personalized recovery insights and recommendations
               </li>
             </ul>
           </section>

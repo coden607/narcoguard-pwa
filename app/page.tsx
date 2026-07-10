@@ -7,8 +7,8 @@ import { HolographicCard } from "@/components/effects/holographic-card"
 import { VitalsMonitor } from "@/components/dashboard/vitals-monitor"
 import { EmergencyButton } from "@/components/emergency/emergency-button"
 import { HeroNetworkStatus } from "@/components/hero/hero-network-status"
-import { GuardianAI } from "@/components/ai/guardian-ai"
-import { NG2WatchStatus } from "@/components/watch/ng2-watch-status"
+import { GuardianAingelAI } from "@/components/ai/guardian-ai"
+import { NGWatchStatus } from "@/components/watch/ng2-watch-status"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import {
@@ -36,7 +36,7 @@ const OnboardingFlow = dynamic(
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading Guardian AI...</p>
+          <p className="text-muted-foreground">Loading Guardian Aingel...</p>
         </div>
       </div>
     ),
@@ -118,7 +118,7 @@ export default function DashboardPage() {
             will work in <span className="text-primary font-semibold">Demo Mode</span> with limited functionality.
           </p>
           <p className="text-sm text-yellow-500 mb-6 font-semibold">
-            For full life-saving features, complete the Guardian AI setup.
+            For full life-saving features, complete the Guardian Aingel setup.
           </p>
           <div className="flex flex-col gap-3">
             <Button
@@ -209,7 +209,7 @@ export default function DashboardPage() {
               <h1 className="text-4xl font-bold glow-text font-[family-name:var(--font-orbitron)]">NARCOGUARD</h1>
               <p className="text-primary text-sm font-semibold flex items-center gap-2">
                 <Syringe className="w-4 h-4" />
-                NG2 Auto-Injection System
+                NarcoGuard NG Auto-Injection System
               </p>
             </div>
           </div>
@@ -224,7 +224,7 @@ export default function DashboardPage() {
             <Link href="/ng2-watch">
               <Button variant="outline" className="glass neon-border bg-transparent">
                 <Eye className="w-4 h-4 mr-2" />
-                View NG2 Watch
+                View NarcoGuard NG
               </Button>
             </Link>
             <div className="flex items-center gap-2 glass px-4 py-2 rounded-full neon-border">
@@ -257,11 +257,11 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="space-y-6">
             <VitalsMonitor />
-            <NG2WatchStatus />
+            <NGWatchStatus />
           </div>
 
           <div className="space-y-6">
-            <GuardianAI />
+            <GuardianAingelAI />
             <QuickActions />
           </div>
 
@@ -328,7 +328,7 @@ export default function DashboardPage() {
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold glow-text mb-2">Support the Mission</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Every donation helps us manufacture and distribute life-saving NG2 watches to those who need them most.
+              Every donation helps us manufacture and distribute life-saving NarcoGuard NG units to those who need them most.
               Together, we can end preventable overdose deaths.
             </p>
           </div>
@@ -388,7 +388,7 @@ export default function DashboardPage() {
           <p className="text-sm">
             Created by <span className="text-primary font-semibold">Stephen Blanford</span> | Broome Estates LLC
           </p>
-          <p className="text-xs mt-2">Inspired by family and friends. Saving lives, one guardian at a time.</p>
+          <p className="text-xs mt-2">Inspired by family and friends. Saving lives, one Guardian Aingel at a time.</p>
           <p className="text-xs mt-2 text-primary font-semibold">Not just saving lives - transforming them.</p>
           <div className="flex items-center justify-center gap-4 mt-4">
             <a href="mailto:narcoguard607@gmail.com" className="text-primary hover:underline text-sm">

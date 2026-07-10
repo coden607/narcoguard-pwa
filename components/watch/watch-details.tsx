@@ -26,8 +26,8 @@ export function WatchDetails() {
               <span className="text-sm font-medium">Device Info</span>
             </div>
             <div className="space-y-1 text-xs text-muted-foreground">
-              <p>Model: NG2-Pro</p>
-              <p>Serial: NG2-2024-8472</p>
+              <p>Model: NarcoGuard NG</p>
+              <p>Serial: NG-2024-8472</p>
               <p>Firmware: v2.4.1</p>
             </div>
           </div>

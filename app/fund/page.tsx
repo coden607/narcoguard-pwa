@@ -78,7 +78,7 @@ export default function FundPage() {
             </h1>
 
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-balance">
-              Help us bring life-saving NarcoGuard NG2 auto-injection watches to Broome County, NY - one of the
+              Help us bring life-saving NarcoGuard NG auto-injection watches to Broome County, NY - one of the
               hardest-hit communities in the opioid crisis.
             </p>
 
@@ -131,11 +131,11 @@ export default function FundPage() {
               <div className="rounded-xl overflow-hidden border border-primary/20">
                 <img
                   src="/images/watch-on-wrist-lifestyle.jpg"
-                  alt="NarcoGuard NG2 watch worn in everyday life - always protecting"
+                  alt="NarcoGuard NG worn in everyday life - always protecting"
                   className="w-full h-56 object-cover"
                 />
                 <div className="p-3 bg-card">
-                  <p className="text-sm text-muted-foreground">The NG2 watch - silent protection, worn every day</p>
+                  <p className="text-sm text-muted-foreground">The NarcoGuard NG - silent protection, worn every day</p>
                 </div>
               </div>
               <div className="rounded-xl overflow-hidden border border-primary/20">
@@ -237,19 +237,19 @@ export default function FundPage() {
             Revolutionary technology that saves lives automatically
           </p>
 
-          {/* NG2 Watch Showcase */}
+          {/* NG Watch Showcase */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <img
                 src="/images/ng2-watch-hero.jpg"
-                alt="NarcoGuard NG2 auto-injection smartwatch prototype"
+                alt="NarcoGuard NG auto-injection smartwatch prototype"
                 className="w-full h-64 object-cover"
               />
             </div>
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <img
                 src="/images/ng2-exploded-view.jpg"
-                alt="NG2 Watch internal engineering and components"
+                alt="NG Watch internal engineering and components"
                 className="w-full h-64 object-cover"
               />
             </div>

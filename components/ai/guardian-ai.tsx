@@ -14,13 +14,13 @@ interface Message {
   timestamp: Date
 }
 
-export function GuardianAI() {
+export function GuardianAingelAI() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 1,
       type: "ai",
-      content:
-        "Hello! I'm GuardiAIn, your personal AI assistant. I'm here to help keep you safe and guide you through any questions about overdose prevention, naloxone use, or recovery resources. How can I assist you today?",
+        content:
+        "Hello! I'm Guardian Aingel, your personal AI angel and assistant. I'm here to help keep you safe and guide you through any questions about overdose prevention, naloxone use, or recovery resources. How can I assist you today?",
       timestamp: new Date(),
     },
   ])
@@ -84,7 +84,7 @@ export function GuardianAI() {
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)]">GUARDIAIN</h3>
+            <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)]">GUARDIAN AINGEL</h3>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
               <span className="text-xs text-muted-foreground">Online & Learning</span>
@@ -143,7 +143,7 @@ export function GuardianAI() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Ask GuardiAIn anything..."
+          placeholder="Ask Guardian Aingel anything..."
           className="flex-1 glass neon-border"
         />
         <GlowButton onClick={sendMessage} size="icon">
