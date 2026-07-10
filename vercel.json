@@ -2,10 +2,19 @@
   "framework": "nextjs",
   "regions": ["iad1"],
   "buildCommand": "npm run build",
-  "env": {
-    "NEXT_PUBLIC_APP_NAME": "NarcoGuard",
-    "NEXT_PUBLIC_APP_URL": "https://narcoguard.app",
-    "NEXT_PUBLIC_GOFUNDME_URL": "https://gofund.me/9acf270ea",
-    "NEXT_PUBLIC_CONTACT_EMAIL": "narcoguard607@gmail.com"
-  }
+  "headers": [
+    {
+      "source": "/sw.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" },
+        { "key": "Service-Worker-Allowed", "value": "/" }
+      ]
+    },
+    {
+      "source": "/manifest.webmanifest",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ]
 }

@@ -19,17 +19,18 @@ test.describe("NarcoGuard Production Validation", () => {
   })
 
   test("PWA manifest is accessible", async ({ page }) => {
-    const response = await page.goto("/manifest.json")
+    const response = await page.goto("/manifest.webmanifest")
     expect(response?.status()).toBe(200)
     const manifest = await response?.json()
-    expect(manifest.name).toBe("NarcoGuard NG2")
+    expect(manifest.name).toContain("NarcoGuard")
   })
 
   test("service worker registers", async ({ page }) => {
-    const swRegistered = await page.evaluate(() => {
-      return "serviceWorker" in navigator
+    const scriptURL = await page.evaluate(async () => {
+      const registration = await navigator.serviceWorker.ready
+      return registration.active?.scriptURL
     })
-    expect(swRegistered).toBe(true)
+    expect(scriptURL).toMatch(/\/sw\.js$/)
   })
 
   test("emergency button is present", async ({ page }) => {

@@ -1,5 +1,6 @@
+import { InstallPrompt } from "@/components/pwa/install-prompt"
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Orbitron, Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
@@ -17,11 +18,12 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://narcoguard.app"),
   title: "NarcoGuard - NG2 Auto-Injection Overdose Prevention System",
   description:
     "Revolutionary wearable auto-injection technology powered by AI. The NarcoGuard 2 watch automatically detects and prevents overdoses with instant naloxone deployment. Not just saving lives - transforming them. Created by Stephen Blanford.",
   generator: "v0.app",
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   keywords: [
     "naloxone",
     "overdose prevention",
@@ -35,8 +37,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Stephen Blanford" }],
   creator: "Stephen Blanford",
-  themeColor: "#00d9ff",
-  viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+  alternates: { canonical: "/" },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
@@ -55,6 +56,13 @@ export const metadata: Metadata = {
   },
 }
 
+export const viewport: Viewport = {
+  themeColor: "#00d9ff",
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -64,27 +72,15 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <head>
         <link rel="icon" href="/images/narcoguard-icon.jpeg" />
-        <link rel="apple-touch-icon" href="/images/narcoguard-icon.jpeg" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(reg => console.log('[PWA] Service worker registered:', reg.scope))
-                    .catch(err => console.error('[PWA] Service worker registration failed:', err));
-                });
-              }
-            `,
-          }}
-        />
       </head>
       <body className={`${inter.variable} ${orbitron.variable} font-sans antialiased`}>
         {children}
         <Analytics />
+        <InstallPrompt />
       </body>
     </html>
   )

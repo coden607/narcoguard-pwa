@@ -11,7 +11,6 @@ import { GuardianAI } from "@/components/ai/guardian-ai"
 import { NG2WatchStatus } from "@/components/watch/ng2-watch-status"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
-import { InstallPrompt } from "@/components/pwa/install-prompt"
 import {
   Heart,
   Shield,
@@ -45,6 +44,8 @@ const OnboardingFlow = dynamic(
 )
 
 export default function DashboardPage() {
+  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
+  const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
   const [mounted, setMounted] = useState(false)
   const [showOnboarding, setShowOnboarding] = useState(true)
   const [skippedSetup, setSkippedSetup] = useState(false)
@@ -172,7 +173,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer">
+              <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
                 <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
                   <DollarSign className="w-4 h-4 mr-2" />
                   Donate Now
@@ -183,6 +184,12 @@ export default function DashboardPage() {
                 <Button variant="outline" className="border-green-500/50 hover:bg-green-500/20 bg-transparent">
                   <Mail className="w-4 h-4 mr-2" />
                   Contact Us
+                </Button>
+              </a>
+              <a href={investorUrl} target="_blank" rel="noopener noreferrer">
+                <Button variant="outline" className="border-primary/50 hover:bg-primary/20 bg-transparent">
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Investors
                 </Button>
               </a>
             </div>
@@ -400,7 +407,6 @@ export default function DashboardPage() {
         </footer>
       </div>
 
-      <InstallPrompt />
     </div>
   )
 }

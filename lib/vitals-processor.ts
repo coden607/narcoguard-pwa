@@ -95,7 +95,7 @@ export class VitalsProcessor {
       severity = "critical"
     } else if (this.currentVitals.respiratoryRate < 12) {
       indicators.push("Low respiratory rate")
-      severity = severity === "critical" ? "critical" : "high"
+      severity = "high"
     }
 
     // Check for low oxygen saturation

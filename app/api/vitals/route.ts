@@ -13,11 +13,11 @@ export async function GET() {
   try {
     await recordVitals({
       heartRate: vitals.heartRate,
-      spo2: vitals.spo2,
+      spo2: vitals.spO2,
       respiratoryRate: vitals.respiratoryRate,
       temperature: vitals.temperature,
-      riskLevel: overdoseCheck.riskLevel,
-      overdoseDetected: overdoseCheck.isOverdose,
+      riskLevel: overdoseCheck.severity,
+      overdoseDetected: overdoseCheck.severity === "critical",
     })
   } catch {
     // DB write is non-blocking - continue even if DB is unavailable
@@ -42,13 +42,13 @@ export async function POST(request: Request) {
       await recordVitals({
         userId,
         heartRate: vitals.heartRate,
-        spo2: vitals.spo2,
+        spo2: vitals.spO2,
         respiratoryRate: vitals.respiratoryRate,
         temperature: vitals.temperature,
-        riskLevel: overdoseCheck.riskLevel,
-        overdoseDetected: overdoseCheck.isOverdose,
+        riskLevel: overdoseCheck.severity,
+        overdoseDetected: overdoseCheck.severity === "critical",
       })
-      await logActivity({ userId, action: "vitals_recorded", details: { riskLevel: overdoseCheck.riskLevel } })
+      await logActivity({ userId, action: "vitals_recorded", details: { riskLevel: overdoseCheck.severity } })
     } catch {
       // Non-blocking
     }

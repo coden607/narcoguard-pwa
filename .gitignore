@@ -37,3 +37,12 @@ coverage/
 .nyc_output/
 playwright-report/
 test-results/
+
+# Local scratch artifact (not application source)
+/gjhv
+.env*
+.env
+.env.*
+!.env.example
+node_modules
+.next

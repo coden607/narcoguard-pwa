@@ -3,6 +3,10 @@ export const env = {
   APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || "NarcoGuard",
   APP_URL: process.env.NEXT_PUBLIC_APP_URL || "https://narcoguard.app",
   API_URL: process.env.NEXT_PUBLIC_API_URL || "/api",
+  GOFUNDME_URL: process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea",
+  INVESTOR_URL:
+    process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL ||
+    "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry",
 
   // Feature Flags
   ENABLE_LOCATION: process.env.NEXT_PUBLIC_ENABLE_LOCATION_TRACKING !== "false",
