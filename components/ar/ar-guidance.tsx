@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import type { LucideIcon } from "lucide-react"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
 import { Camera, Hand, Heart, Syringe, CheckCircle, ArrowRight } from "lucide-react"
@@ -10,16 +11,11 @@ interface ARStep {
   id: number
   title: string
   description: string
-  icon: any
+  icon: LucideIcon
   duration: number
 }
 
-export function ARGuidance() {
-  const [isActive, setIsActive] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0)
-  const [mode, setMode] = useState<"naloxone" | "cpr" | null>(null)
-
-  const naloxoneSteps: ARStep[] = [
+const naloxoneSteps: ARStep[] = [
     {
       id: 1,
       title: "Check Responsiveness",
@@ -55,9 +51,9 @@ export function ARGuidance() {
       icon: Heart,
       duration: 120,
     },
-  ]
+]
 
-  const cprSteps: ARStep[] = [
+const cprSteps: ARStep[] = [
     {
       id: 1,
       title: "Position Hands",
@@ -79,9 +75,16 @@ export function ARGuidance() {
       icon: Heart,
       duration: 120,
     },
-  ]
+]
 
-  const steps = mode === "naloxone" ? naloxoneSteps : mode === "cpr" ? cprSteps : []
+const noSteps: ARStep[] = []
+
+export function ARGuidance() {
+  const [isActive, setIsActive] = useState(false)
+  const [currentStep, setCurrentStep] = useState(0)
+  const [mode, setMode] = useState<"naloxone" | "cpr" | null>(null)
+
+  const steps = mode === "naloxone" ? naloxoneSteps : mode === "cpr" ? cprSteps : noSteps
 
   useEffect(() => {
     if (!isActive || currentStep >= steps.length) return

@@ -40,14 +40,14 @@ export default function HeroSignup() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-background px-4 py-10 sm:p-6 flex items-center justify-center">
         <HolographicCard className="p-8 max-w-2xl text-center space-y-6">
           <CheckCircle className="w-24 h-24 mx-auto text-green-500 animate-pulse" />
           <h1 className="text-4xl font-bold glow-text">Welcome to the Hero Network!</h1>
           <p className="text-lg text-muted-foreground">
             Thank you for joining our movement to save lives. Complete your training to start responding to emergencies.
           </p>
-          <div className="flex gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <GlowButton onClick={() => router.push("/ar")} variant="default">
               Start Training
             </GlowButton>
@@ -61,7 +61,7 @@ export default function HeroSignup() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="min-h-screen bg-background px-4 py-8 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-4">
           <Shield className="w-20 h-20 mx-auto text-primary pulse-glow" />

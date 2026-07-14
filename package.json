@@ -6,18 +6,21 @@
   "engines": {
     "node": ">=24 <25"
   },
-  "description": "NarcoGuard NG2 Auto-Injection Overdose Prevention System - Revolutionary wearable technology that saves lives",
+  "description": "Public PWA demo and early wearable concept for overdose-prevention research and community response",
   "license": "MIT",
   "author": "Stephen Blanford <narcoguard607@gmail.com>",
   "scripts": {
-    "build": "next build",
+    "build": "node scripts/run-next-build.js",
     "dev": "next dev",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "test:e2e": "playwright test",
-    "test:pwa": "playwright test tests/pwa.spec.ts --project=chromium",
+    "test:pwa": "node scripts/run-pwa-tests.js",
     "verify": "npm run lint && npm run typecheck && npm run build && npm run test:pwa",
+    "health": "npm run verify",
     "marketing:run": "node scripts/post-daily-campaign.js",
+    "marketing:buffer": "node scripts/push-buffer-campaign.js",
+    "marketing:videos": "bash scripts/generate-tiktok-videos.sh",
     "start": "next start"
   },
   "overrides": {

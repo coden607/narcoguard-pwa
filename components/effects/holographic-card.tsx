@@ -11,14 +11,14 @@ interface HolographicCardProps {
 
 export function HolographicCard({ children, className = "", glowIntensity = "medium" }: HolographicCardProps) {
   const glowClasses = {
-    low: "pulse-glow opacity-50",
-    medium: "pulse-glow",
-    high: "pulse-glow opacity-100",
+    low: "vibrant-card--low",
+    medium: "vibrant-card--medium",
+    high: "vibrant-card--high",
   }
 
   return (
-    <Card className={`glass neon-border relative overflow-hidden ${glowClasses[glowIntensity]} ${className}`}>
-      <div className="absolute inset-0 holographic opacity-10 pointer-events-none" />
+    <Card className={`vibrant-card relative overflow-hidden ${glowClasses[glowIntensity]} ${className}`}>
+      <div className="vibrant-card-shine pointer-events-none" aria-hidden="true" />
       <div className="relative z-10">{children}</div>
     </Card>
   )

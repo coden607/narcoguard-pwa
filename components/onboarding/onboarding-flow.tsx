@@ -1,5 +1,7 @@
 "use client"
 
+import Image from "next/image"
+
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -177,7 +179,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <div key="welcome" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-32 h-32 mx-auto float-animation">
-          <img src="/images/narcoguard-icon.jpeg" alt="Narcoguard" className="w-full h-full rounded-full pulse-glow" />
+          <Image src="/images/narcoguard-icon.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
         </div>
         <h1 className="text-5xl font-bold glow-text font-[family-name:var(--font-orbitron)]">WELCOME TO NARCOGUARD</h1>
         <div className="flex items-center justify-center gap-2 text-xl text-primary">
@@ -1058,7 +1060,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <div key="complete" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-32 h-32 mx-auto float-animation">
-          <img src="/images/narcoguard-icon.jpeg" alt="Narcoguard" className="w-full h-full rounded-full pulse-glow" />
+          <Image src="/images/narcoguard-icon.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
         </div>
         <h2 className="text-3xl font-bold glow-text">You're All Set, {name}!</h2>
         <p className="text-muted-foreground">Welcome to the movement</p>

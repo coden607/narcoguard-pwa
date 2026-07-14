@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "17 14 * * *"
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish scheduled posts through the configured relay"
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -22,7 +28,8 @@ jobs:
       - name: Generate platform-specific marketing bundle
         run: npm run marketing:run
         env:
-          MARKETING_RELAY_URL: ${{ secrets.MARKETING_RELAY_URL }}
+          MARKETING_RELAY_URL: ${{ github.event_name == 'workflow_dispatch' && secrets.MARKETING_RELAY_URL || '' }}
+          ALLOW_MARKETING_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && 'true' || 'false' }}
           FORCE_DAY: ${{ vars.MARKETING_FORCE_DAY }}
       - uses: actions/upload-artifact@v4
         with:

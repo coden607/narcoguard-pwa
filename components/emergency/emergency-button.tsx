@@ -7,7 +7,7 @@ import { useLocation } from "@/lib/hooks/use-location"
 import { useVitals } from "@/lib/hooks/use-vitals"
 
 export function EmergencyButton() {
-  const [isEmergency, setIsEmergency] = useState(false)
+  const [, setIsEmergency] = useState(false)
   const [showModal, setShowModal] = useState(false)
   const { location } = useLocation(true)
   const { vitals } = useVitals()

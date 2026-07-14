@@ -25,7 +25,7 @@
     "hashtags": {
       "primary": ["NarcoGuard", "SaveLives", "OpioidCrisis", "EndOverdose"],
       "secondary": ["Binghamton", "BroomeCounty", "HarmReduction", "OverdosePrevention", "Naloxone"],
-      "features": ["HeroNetwork", "AutoInjection", "RecoverySupport", "NarcoGuardNG"],
+      "features": ["HeroNetworkConcept", "PrototypeDevelopment", "RecoverySupport", "NarcoGuardNG"],
       "tiktok": ["fyp", "viral", "saveliveschallenge", "recovery", "harmreduction"],
       "youtube": ["shorts", "medtech", "smartwatch", "healthtech"]
     },
@@ -34,11 +34,11 @@
     "timezone": "America/New_York"
   },
   "messaging": {
-    "tagline": "80 watches = 80 lives protected 24/7",
+    "tagline": "Help fund responsible development of the NarcoGuard NG concept",
     "mission": "Fighting the opioid crisis with technology and community",
-    "callToAction": "Every donation brings life-saving technology to Broome County",
-    "urgency": "130+ Americans die EVERY DAY from opioid overdoses. Help us change that.",
-    "personal": "I'm a recovering addict who lost friends to overdose. I built NarcoGuard to save lives."
+    "callToAction": "Support transparent prototype development and community-led overdose prevention in Broome County",
+    "urgency": "Overdose remains a serious public-health crisis. Help us explore a responsible, evidence-led response.",
+    "personal": "I'm a person in recovery who has lost friends to overdose. I started NarcoGuard to explore better ways to connect people with timely help."
   },
   "videoContent": {
     "platforms": ["tiktok", "youtube_shorts", "instagram_reels"],

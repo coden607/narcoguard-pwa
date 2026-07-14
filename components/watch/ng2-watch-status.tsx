@@ -10,9 +10,9 @@ import { WatchDetails } from "./watch-details"
 
 export function NGWatchStatus() {
   const [battery, setBattery] = useState(85)
-  const [isConnected, setIsConnected] = useState(true)
-  const [naloxoneStatus, setNaloxoneStatus] = useState<"ready" | "low" | "empty">("ready")
-  const [chargingMode, setChargingMode] = useState<"solar" | "kinetic" | "wireless" | "usbc" | null>("solar")
+  const [isConnected] = useState(true)
+  const [naloxoneStatus] = useState<"ready" | "low" | "empty">("ready")
+  const [chargingMode] = useState<"solar" | "kinetic" | "wireless" | "usbc" | null>("solar")
 
   useEffect(() => {
     // Simulate battery charging

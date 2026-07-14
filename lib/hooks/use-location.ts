@@ -25,7 +25,7 @@ export function useLocation(trackContinuously = false) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(loc),
       })
-    } catch (err) {
+    } catch {
       // Silent fail for backend sync
     }
   }, [])

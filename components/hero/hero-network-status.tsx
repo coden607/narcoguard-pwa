@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
 import { Users, MapPin, Award, Clock } from "lucide-react"
@@ -8,8 +7,8 @@ import { HeroMap } from "./hero-map"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 export function HeroNetworkStatus() {
-  const [heroesOnline, setHeroesOnline] = useState(12)
-  const [nearbyHeroes, setNearbyHeroes] = useState(3)
+  const heroesOnline = 12
+  const nearbyHeroes = 3
 
   return (
     <HolographicCard className="p-6" glowIntensity="high">

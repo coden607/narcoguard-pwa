@@ -20,7 +20,7 @@ if (files.length === 0) {
 
 const latestProposal = files.sort().reverse()[0]
 const proposalPath = path.join(preparedDir, latestProposal)
-const proposalContent = fs.readFileSync(proposalPath, "utf-8")
+fs.accessSync(proposalPath, fs.constants.R_OK)
 
 console.log(`✓ Loaded proposal: ${latestProposal}`)
 console.log("")

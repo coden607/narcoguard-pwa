@@ -2,6 +2,7 @@
 
 import type React from "react"
 import { useState, useRef } from "react"
+import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { Button } from "@/components/ui/button"
@@ -15,7 +16,6 @@ import {
   Battery,
   Wifi,
   Heart,
-  Volume2,
   Cpu,
   Shield,
   Smartphone,
@@ -601,14 +601,14 @@ export default function NGWatchPage() {
         {/* Hero Product Showcase with New Images */}
         <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 rounded-2xl overflow-hidden neon-border">
-            <img src="/images/ng2-modular-exploded.jpg" alt="NarcoGuard NG exploded view showing all modular components with real-world parts" className="w-full h-auto object-cover" />
+            <Image src="/images/ng2-modular-exploded.jpg" alt="NarcoGuard NG exploded view showing all modular components with real-world parts" width={1200} height={675} className="w-full h-auto object-cover" />
           </div>
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl overflow-hidden neon-border flex-1">
-              <img src="/images/ng2-blueprint-detailed.jpg" alt="NarcoGuard NG engineering blueprint with cross-section views and dimensions" className="w-full h-full object-cover" />
+              <Image src="/images/ng2-blueprint-detailed.jpg" alt="NarcoGuard NG engineering blueprint with cross-section views and dimensions" width={600} height={338} className="w-full h-full object-cover" />
             </div>
             <div className="rounded-2xl overflow-hidden neon-border flex-1">
-              <img src="/images/ng2-watch-hero.jpg" alt="NarcoGuard NG watch on wrist showing vital signs display" className="w-full h-full object-cover" />
+              <Image src="/images/ng2-watch-hero.jpg" alt="NarcoGuard NG watch on wrist showing vital signs display" width={600} height={338} className="w-full h-full object-cover" />
             </div>
           </div>
         </section>

@@ -6,46 +6,54 @@ import { Heart, Mail, Share2, Copy, Check, Watch, Shield, Zap, Phone, MapPin, Ar
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function FundPage() {
   const [copied, setCopied] = useState(false)
 
   const GOFUNDME_URL = "https://gofund.me/9acf270ea"
-  const APP_URL = "https://narcoguard.app"
   const CONTACT_EMAIL = "narcoguard607@gmail.com"
 
   const copyLink = async () => {
-    await navigator.clipboard.writeText(GOFUNDME_URL)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    try {
+      await navigator.clipboard.writeText(GOFUNDME_URL)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      setCopied(false)
+    }
   }
 
   const shareNative = async () => {
     if (navigator.share) {
-      await navigator.share({
-        title: "NarcoGuard - Save Lives with Auto-Injection Technology",
-        text: "Help fund 80 life-saving watches for Broome County, NY. Each watch auto-injects naloxone during overdose.",
-        url: GOFUNDME_URL,
-      })
+      try {
+        await navigator.share({
+          title: "Support responsible NarcoGuard NG prototype development",
+          text: "Help fund transparent engineering and validation of the NarcoGuard NG wearable concept in Broome County, NY.",
+          url: GOFUNDME_URL,
+        })
+      } catch {
+        // A dismissed native share sheet requires no user-facing error.
+      }
     } else {
       copyLink()
     }
   }
 
   const donationTiers = [
-    { amount: 10, description: "Sensor components", impact: "Powers vital sign monitoring" },
-    { amount: 25, description: "Naloxone cartridge", impact: "The life-saving medicine itself" },
-    { amount: 50, description: "Injection system", impact: "Auto-deployment mechanism" },
-    { amount: 100, description: "Half a watch", impact: "50% of one life protected" },
-    { amount: 307, description: "ONE FULL WATCH", impact: "ONE LIFE SAVED", highlight: true },
-    { amount: 500, description: "Watch + extra cartridge", impact: "Extended protection" },
+    { amount: 10, description: "Early research", impact: "Supports documentation and component evaluation" },
+    { amount: 25, description: "Sensor evaluation", impact: "Supports benchtop testing of candidate sensors" },
+    { amount: 50, description: "Prototype materials", impact: "Contributes to non-clinical prototype fabrication" },
+    { amount: 100, description: "Engineering support", impact: "Helps fund design review and test fixtures" },
+    { amount: 307, description: "Prototype milestone", impact: "Supports one estimated hardware build allocation", highlight: true },
+    { amount: 500, description: "Validation support", impact: "Contributes to documented testing and expert review" },
   ]
 
   const stats = [
-    { value: "130+", label: "Daily US overdose deaths" },
-    { value: "80", label: "Watches we're funding" },
-    { value: "$307", label: "Cost per watch" },
-    { value: "24/7", label: "Protection provided" },
+    { value: "80", label: "Long-term prototype goal" },
+    { value: "$307", label: "Current hardware estimate" },
+    { value: "Public", label: "Development status" },
+    { value: "Concept", label: "Not a medical device" },
   ]
 
   return (
@@ -56,9 +64,12 @@ export default function FundPage() {
         <div className="relative z-10 max-w-6xl mx-auto">
           {/* Campaign Hero Image */}
           <div className="rounded-2xl overflow-hidden mb-8 border border-primary/30">
-            <img
+            <Image
               src="/images/gofundme-hero.jpg"
-              alt="NarcoGuard - Life-saving technology meets human compassion"
+              alt="NarcoGuard wearable concept and community-support campaign"
+              width={1200}
+              height={600}
+              priority
               className="w-full h-64 md:h-96 object-cover"
             />
           </div>
@@ -70,26 +81,24 @@ export default function FundPage() {
               transition={{ repeat: Number.POSITIVE_INFINITY, duration: 2 }}
             >
               <Heart className="h-4 w-4" />
-              <span className="text-sm font-medium">Every 5 minutes, someone in America dies from overdose</span>
+              <span className="text-sm font-medium">Overdose prevention deserves careful, evidence-led innovation</span>
             </motion.div>
 
             <h1 className="text-4xl md:text-6xl font-bold mb-6 text-balance">
-              <span className="text-primary">80 Watches</span> = <span className="text-green-400">80 Lives</span> Saved
+              Help Build the <span className="text-primary">NarcoGuard NG</span> Concept Responsibly
             </h1>
 
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto text-balance">
-              Help us bring life-saving NarcoGuard NG auto-injection watches to Broome County, NY - one of the
-              hardest-hit communities in the opioid crisis.
+              Support transparent prototype engineering, community review, and a credible validation path in Broome
+              County, NY.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-green-500 hover:bg-green-600 text-white text-lg px-8 py-6"
-                onClick={() => window.open(GOFUNDME_URL, "_blank")}
-              >
-                <Heart className="mr-2 h-5 w-5" />
-                Donate Now
+              <Button asChild size="lg" className="bg-green-500 hover:bg-green-600 text-white text-lg px-8 py-6">
+                <a href={GOFUNDME_URL} target="_blank" rel="noopener noreferrer">
+                  <Heart className="mr-2 h-5 w-5" />
+                  Donate Now
+                </a>
               </Button>
               <Button size="lg" variant="outline" className="text-lg px-8 py-6 bg-transparent" onClick={shareNative}>
                 <Share2 className="mr-2 h-5 w-5" />
@@ -129,19 +138,23 @@ export default function FundPage() {
             {/* Image Gallery */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div className="rounded-xl overflow-hidden border border-primary/20">
-                <img
+                <Image
                   src="/images/watch-on-wrist-lifestyle.jpg"
-                  alt="NarcoGuard NG worn in everyday life - always protecting"
+                  alt="Illustration of the proposed NarcoGuard NG wearable concept"
+                  width={800}
+                  height={448}
                   className="w-full h-56 object-cover"
                 />
                 <div className="p-3 bg-card">
-                  <p className="text-sm text-muted-foreground">The NarcoGuard NG - silent protection, worn every day</p>
+                  <p className="text-sm text-muted-foreground">A visualization of the proposed NarcoGuard NG concept</p>
                 </div>
               </div>
               <div className="rounded-xl overflow-hidden border border-primary/20">
-                <img
+                <Image
                   src="/images/broome-county-community.jpg"
                   alt="Binghamton, NY - the community NarcoGuard serves"
+                  width={800}
+                  height={448}
                   className="w-full h-56 object-cover"
                 />
                 <div className="p-3 bg-card">
@@ -163,20 +176,19 @@ export default function FundPage() {
                   </p>
 
                   <p className="mb-6">
-                    <strong>So I built NarcoGuard.</strong> A smartwatch that monitors vital signs 24/7 and
-                    automatically injects naloxone when it detects an overdose. No button to press. No one else needed.
-                    It just saves your life.
+                    <strong>So I started NarcoGuard.</strong> It is an early wearable and response-system concept that
+                    explores whether sensing, alerts, and future delivery mechanisms could help people reach timely
+                    support. Those capabilities require substantial engineering, clinical, and regulatory validation.
                   </p>
 
                   <p className="mb-6">
-                    Now I'm raising funds to build <strong>80 watches</strong> and distribute them
-                    <strong> completely FREE</strong> to at-risk individuals in Broome County - one of the hardest-hit
-                    areas in New York State.
+                    I am raising funds for responsible prototype development, documented testing, and expert and
+                    community review, with a long-term goal of evaluating up to <strong>80 prototype units</strong>.
                   </p>
 
                   <p className="text-primary font-semibold">
-                    Every dollar goes directly to watch production. I'm not taking a salary. This is about saving lives
-                    - nothing else.
+                    Contributions support the development campaign described on the linked fundraiser. NarcoGuard NG is
+                    not a validated medical device and must not be relied on for emergency detection or treatment.
                   </p>
                 </div>
               </CardContent>
@@ -189,7 +201,7 @@ export default function FundPage() {
       <section className="py-16 px-4 bg-card/30">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl font-bold mb-4 text-center">Your Impact</h2>
-          <p className="text-muted-foreground text-center mb-12">Every dollar brings us closer to saving lives</p>
+          <p className="text-muted-foreground text-center mb-12">Each contribution supports the next documented development step</p>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {donationTiers.map((tier, i) => (
@@ -208,7 +220,7 @@ export default function FundPage() {
                     <div className="font-semibold mb-2">{tier.description}</div>
                     <div className="text-sm text-muted-foreground">{tier.impact}</div>
                     {tier.highlight && (
-                      <div className="mt-4 text-green-400 font-semibold text-sm">Most Popular - Full watch funded!</div>
+                      <div className="mt-4 text-green-400 font-semibold text-sm">Featured prototype milestone</div>
                     )}
                   </CardContent>
                 </Card>
@@ -217,13 +229,11 @@ export default function FundPage() {
           </div>
 
           <div className="mt-12 text-center">
-            <Button
-              size="lg"
-              className="bg-green-500 hover:bg-green-600 text-white text-lg px-12 py-6"
-              onClick={() => window.open(GOFUNDME_URL, "_blank")}
-            >
-              <Heart className="mr-2 h-5 w-5" />
-              Donate Any Amount
+            <Button asChild size="lg" className="bg-green-500 hover:bg-green-600 text-white text-lg px-12 py-6">
+              <a href={GOFUNDME_URL} target="_blank" rel="noopener noreferrer">
+                <Heart className="mr-2 h-5 w-5" />
+                Donate Any Amount
+              </a>
             </Button>
           </div>
         </div>
@@ -232,24 +242,28 @@ export default function FundPage() {
       {/* How It Works */}
       <section className="py-16 px-4">
         <div className="max-w-6xl mx-auto">
-          <h2 className="text-3xl font-bold mb-4 text-center">How NarcoGuard Works</h2>
+          <h2 className="text-3xl font-bold mb-4 text-center">How the Concept Is Intended to Work</h2>
           <p className="text-muted-foreground text-center mb-8">
-            Revolutionary technology that saves lives automatically
+            A proposed workflow—not validated performance or medical guidance
           </p>
 
           {/* NG Watch Showcase */}
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <div className="rounded-xl overflow-hidden border border-primary/20">
-              <img
+              <Image
                 src="/images/ng2-watch-hero.jpg"
-                alt="NarcoGuard NG auto-injection smartwatch prototype"
+                alt="Rendering of the proposed NarcoGuard NG wearable"
+                width={800}
+                height={512}
                 className="w-full h-64 object-cover"
               />
             </div>
             <div className="rounded-xl overflow-hidden border border-primary/20">
-              <img
+              <Image
                 src="/images/ng2-exploded-view.jpg"
-                alt="NG Watch internal engineering and components"
+                alt="Concept rendering of candidate NG Watch components"
+                width={800}
+                height={512}
                 className="w-full h-64 object-cover"
               />
             </div>
@@ -257,10 +271,10 @@ export default function FundPage() {
 
           <div className="grid md:grid-cols-4 gap-8">
             {[
-              { icon: Watch, title: "24/7 Monitoring", desc: "Sensors track heart rate, blood oxygen, and breathing" },
-              { icon: Zap, title: "AI Detection", desc: "Algorithms identify overdose patterns in real-time" },
-              { icon: Shield, title: "Auto-Injection", desc: "4mg naloxone deploys in under 3 seconds" },
-              { icon: Phone, title: "Emergency Alert", desc: "911, family, and nearby heroes notified instantly" },
+              { icon: Watch, title: "Candidate Sensing", desc: "Research candidate signals and sensor limitations" },
+              { icon: Zap, title: "Detection Research", desc: "Evaluate whether patterns can be identified reliably" },
+              { icon: Shield, title: "Delivery Concept", desc: "Explore feasibility only after clinical and safety review" },
+              { icon: Phone, title: "Proposed Alerts", desc: "Design explicit, failure-aware emergency communication flows" },
             ].map((step, i) => (
               <motion.div
                 key={step.title}
@@ -334,7 +348,7 @@ export default function FundPage() {
                 <p className="text-muted-foreground mb-4">Share the campaign link:</p>
                 <div className="flex items-center gap-2">
                   <code className="bg-background px-4 py-2 rounded text-primary">{GOFUNDME_URL}</code>
-                  <Button variant="outline" size="icon" onClick={copyLink}>
+                  <Button variant="outline" size="icon" onClick={copyLink} aria-label={copied ? "Campaign link copied" : "Copy campaign link"}>
                     {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>
@@ -354,25 +368,23 @@ export default function FundPage() {
           >
             <h2 className="text-4xl font-bold mb-6">Together, We Can End Preventable Overdose Deaths</h2>
             <p className="text-xl text-muted-foreground mb-8">
-              80 watches. 80 lives protected. One community at a time.
+              One transparent development path, shaped with the community.
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                className="bg-green-500 hover:bg-green-600 text-white text-xl px-12 py-8"
-                onClick={() => window.open(GOFUNDME_URL, "_blank")}
-              >
-                <Heart className="mr-2 h-6 w-6" />
-                Donate Now
+              <Button asChild size="lg" className="bg-green-500 hover:bg-green-600 text-white text-xl px-12 py-8">
+                <a href={GOFUNDME_URL} target="_blank" rel="noopener noreferrer">
+                  <Heart className="mr-2 h-6 w-6" />
+                  Donate Now
+                </a>
               </Button>
               <Button size="lg" variant="outline" className="text-xl px-12 py-8 bg-transparent" onClick={shareNative}>
                 <Share2 className="mr-2 h-6 w-6" />
-                Share & Save Lives
+                Share the Project
               </Button>
             </div>
 
-            <p className="mt-8 text-muted-foreground">Can't donate? Sharing this campaign could save someone's life.</p>
+            <p className="mt-8 text-muted-foreground">Can't donate? Sharing can help us find qualified reviewers and community partners.</p>
           </motion.div>
         </div>
       </section>

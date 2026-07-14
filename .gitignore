@@ -49,3 +49,9 @@ marketing/stats/
 !.env.example
 node_modules
 .next
+.env.local
+.env.*.local
+social.env
+.oauth/
+tokens/
+*.token.json

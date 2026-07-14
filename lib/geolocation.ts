@@ -197,7 +197,7 @@ export class LocationService {
         state: data.address?.state,
         zipCode: data.address?.postcode,
       }
-    } catch (error) {
+    } catch {
       // Silently fail and return location without address
       return location
     }

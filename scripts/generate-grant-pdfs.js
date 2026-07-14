@@ -4,24 +4,6 @@ import { fileURLToPath } from "url"
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const GRANT_CONFIG = {
-  samhsa: {
-    title: "SAMHSA SOR Grant Application",
-    recipient: "New York Office of Addiction Services and Supports (OASAS)",
-    filename: "SAMHSA_OASAS_NarcoGuard_Grant_Application.pdf",
-  },
-  darpa: {
-    title: "DARPA TALON White Paper Submission",
-    recipient: "Defense Advanced Research Projects Agency",
-    filename: "DARPA_TALON_NarcoGuard_White_Paper.pdf",
-  },
-  arnold: {
-    title: "Arnold Ventures Overdose Prevention Grant",
-    recipient: "Arnold Ventures",
-    filename: "Arnold_Ventures_NarcoGuard_Grant.pdf",
-  },
-}
-
 function generateSubmissionInstructions() {
   const instructions = `
 # GRANT SUBMISSION INSTRUCTIONS
@@ -86,7 +68,6 @@ Contact stephen.r.blanford@gmail.com for assistance.
 }
 
 function copyGrantsToSubmissionFolder() {
-  const preparedDir = path.join(__dirname, "..", "grants", "prepared")
   const submissionDir = path.join(__dirname, "..", "grants", "ready-to-submit")
   const templatesDir = path.join(__dirname, "..", "grants", "templates")
 

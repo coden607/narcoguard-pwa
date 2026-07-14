@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import dynamic from "next/dynamic"
+import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { VitalsMonitor } from "@/components/dashboard/vitals-monitor"
@@ -84,7 +85,14 @@ export default function DashboardPage() {
     setShowOnboarding(true)
   }
 
-  if (!mounted) return null
+  if (!mounted) {
+    return (
+      <div className="app-loading" role="status" aria-live="polite">
+        <div className="loading-orbit"><Syringe aria-hidden="true" /></div>
+        <div><strong>Preparing your safety dashboard</strong><span>Connecting NarcoGuard services...</span></div>
+      </div>
+    )
+  }
 
   if (showOnboarding && !showSkipWarning) {
     return (
@@ -196,17 +204,19 @@ export default function DashboardPage() {
           </div>
         </HolographicCard>
 
-        <header className="flex items-center justify-between mb-8">
+        <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 mb-8 dashboard-hero">
           <div className="flex items-center gap-4">
-            <div className="relative w-16 h-16 float-animation">
-              <img
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 float-animation">
+              <Image
                 src="/images/narcoguard-icon.jpeg"
                 alt="Narcoguard"
+                width={64}
+                height={64}
                 className="w-full h-full rounded-full pulse-glow"
               />
             </div>
             <div>
-              <h1 className="text-4xl font-bold glow-text font-[family-name:var(--font-orbitron)]">NARCOGUARD</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold glow-text font-[family-name:var(--font-orbitron)]">NARCOGUARD</h1>
               <p className="text-primary text-sm font-semibold flex items-center gap-2">
                 <Syringe className="w-4 h-4" />
                 NarcoGuard NG Auto-Injection System
@@ -214,7 +224,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 w-full xl:w-auto">
             <Link href="/fund">
               <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
                 <DollarSign className="w-4 h-4 mr-2" />
