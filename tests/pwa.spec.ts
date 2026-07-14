@@ -31,8 +31,18 @@ test.describe("PWA production flow", () => {
   test("registers and activates the root service worker", async ({ page }) => {
     await page.goto("/")
     const registration = await page.evaluate(async () => {
-      const ready = await navigator.serviceWorker.ready
-      return { scope: ready.scope, scriptURL: ready.active?.scriptURL }
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Service worker registration timeout")), 10000),
+      )
+      try {
+        const ready = await Promise.race([navigator.serviceWorker.ready, timeoutPromise])
+        return { scope: ready.scope, scriptURL: ready.active?.scriptURL }
+      } catch (error) {
+        console.error("Service worker error:", error)
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        console.error("Registrations found:", registrations.length)
+        throw error
+      }
     })
 
     expect(registration.scope).toBe("http://localhost:3000/")
@@ -42,7 +52,17 @@ test.describe("PWA production flow", () => {
   test("serves the offline fallback after installation", async ({ page, context }) => {
     await page.goto("/")
     await page.evaluate(async () => {
-      await navigator.serviceWorker.ready
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("Service worker registration timeout")), 10000),
+      )
+      try {
+        await Promise.race([navigator.serviceWorker.ready, timeoutPromise])
+      } catch (error) {
+        console.error("Service worker error:", error)
+        const registrations = await navigator.serviceWorker.getRegistrations()
+        console.error("Registrations found:", registrations.length)
+        throw error
+      }
     })
     await page.reload()
 
