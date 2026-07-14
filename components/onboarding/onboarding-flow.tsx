@@ -184,25 +184,25 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <h1 className="text-5xl font-bold glow-text font-[family-name:var(--font-orbitron)]">WELCOME TO NARCOGUARD</h1>
         <div className="flex items-center justify-center gap-2 text-xl text-primary">
           <Syringe className="w-6 h-6" />
-          <span className="font-semibold">NarcoGuard NG Auto-Injection System</span>
+          <span className="font-semibold">NarcoGuard NG Development Concept</span>
         </div>
         <p className="text-xl text-secondary">A Movement to Save and Transform Lives</p>
         <p className="text-muted-foreground max-w-2xl mx-auto text-balance">
-          This isn't just an app—it's a revolution in overdose prevention powered by the NarcoGuard NG wearable with
-          automatic naloxone injection technology. Together, we'll set up your personal Guardian Aingel, connect you to
-          life-saving resources, and empower you to become part of a heroic community.
+          This public demo explores a future overdose-response wearable concept. It is not a validated medical device,
+          does not detect or treat overdose, and does not dispatch emergency help. Call 911 and administer approved
+          naloxone according to its instructions during a suspected overdose.
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
         <HolographicCard className="p-6 text-center">
           <Syringe className="w-12 h-12 mx-auto mb-4 text-primary pulse-glow" />
-          <h3 className="font-bold mb-2">Auto-Injection</h3>
-          <p className="text-sm text-muted-foreground">NarcoGuard NG deploys naloxone automatically when needed</p>
+          <h3 className="font-bold mb-2">Delivery Research</h3>
+          <p className="text-sm text-muted-foreground">Proposed naloxone delivery is a research concept, not a current capability</p>
         </HolographicCard>
         <HolographicCard className="p-6 text-center">
           <Users className="w-12 h-12 mx-auto mb-4 text-secondary pulse-glow" />
           <h3 className="font-bold mb-2">Hero Network</h3>
-          <p className="text-sm text-muted-foreground">Real people ready to help instantly</p>
+          <p className="text-sm text-muted-foreground">A simulated community-response experience for demonstration</p>
         </HolographicCard>
         <HolographicCard className="p-6 text-center">
           <Heart className="w-12 h-12 mx-auto mb-4 text-pink-500 heartbeat" />

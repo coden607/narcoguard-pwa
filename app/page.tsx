@@ -126,7 +126,7 @@ export default function DashboardPage() {
             will work in <span className="text-primary font-semibold">Demo Mode</span> with limited functionality.
           </p>
           <p className="text-sm text-yellow-500 mb-6 font-semibold">
-            For full life-saving features, complete the Guardian Aingel setup.
+            Setup only configures this concept demo; it does not enable emergency dispatch or medical-device functions.
           </p>
           <div className="flex flex-col gap-3">
             <Button
@@ -157,7 +157,7 @@ export default function DashboardPage() {
               <AlertTriangle className="w-5 h-5 text-yellow-500" />
               <div>
                 <p className="font-semibold text-yellow-500">Demo Mode Active</p>
-                <p className="text-sm text-muted-foreground">Complete setup for full emergency features</p>
+                <p className="text-sm text-muted-foreground">Complete setup to personalize the concept demo</p>
               </div>
             </div>
             <Button onClick={handleCompleteSetup} size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-black">
@@ -176,8 +176,8 @@ export default function DashboardPage() {
                 <DollarSign className="w-6 h-6 text-green-500" />
               </div>
               <div>
-                <p className="font-bold text-green-400">Help Fund 80 Life-Saving Watches for Broome County</p>
-                <p className="text-sm text-muted-foreground">Your donation directly saves lives</p>
+                <p className="font-bold text-green-400">Support NarcoGuard NG Research and Development</p>
+                <p className="text-sm text-muted-foreground">Review the fundraiser details before donating</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -219,7 +219,7 @@ export default function DashboardPage() {
               <h1 className="text-3xl sm:text-4xl font-bold glow-text font-[family-name:var(--font-orbitron)]">NARCOGUARD</h1>
               <p className="text-primary text-sm font-semibold flex items-center gap-2">
                 <Syringe className="w-4 h-4" />
-                NarcoGuard NG Auto-Injection System
+                Public overdose-response software and wearable concept
               </p>
             </div>
           </div>
@@ -239,7 +239,7 @@ export default function DashboardPage() {
             </Link>
             <div className="flex items-center gap-2 glass px-4 py-2 rounded-full neon-border">
               <div className="w-3 h-3 rounded-full bg-green-500 pulse-glow" />
-              <span className="text-sm font-medium">{skippedSetup ? "Demo Mode" : "System Active"}</span>
+              <span className="text-sm font-medium">{skippedSetup ? "Setup skipped" : "Demo ready"}</span>
             </div>
           </div>
         </header>
@@ -251,12 +251,12 @@ export default function DashboardPage() {
             </div>
             <div className="flex-1">
               <h2 className="text-2xl font-bold glow-text font-[family-name:var(--font-orbitron)]">
-                NARCOGUARD 2 AUTO-INJECTION TECHNOLOGY
+                NARCOGUARD NG DEVELOPMENT CONCEPT
               </h2>
               <p className="text-muted-foreground mt-1 text-balance">
-                Revolutionary wearable technology that automatically detects overdose signs and deploys naloxone in
-                seconds. Connected to this app for 24/7 monitoring, emergency coordination, and life-saving
-                intervention.
+                This public demo explores candidate sensing, failure-aware alerts, and future naloxone-delivery research.
+                The wearable is not a validated medical device, does not currently detect or treat overdose, and must not
+                replace 911, naloxone, or professional medical care.
               </p>
             </div>
           </div>
@@ -289,7 +289,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">98</p>
-                <p className="text-sm text-muted-foreground">BPM</p>
+                <p className="text-sm text-muted-foreground">Simulated BPM</p>
               </div>
             </div>
           </HolographicCard>
@@ -301,7 +301,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">24/7</p>
-                <p className="text-sm text-muted-foreground">Protected</p>
+                <p className="text-sm text-muted-foreground">Demo data</p>
               </div>
             </div>
           </HolographicCard>
@@ -313,7 +313,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">12</p>
-                <p className="text-sm text-muted-foreground">Heroes Nearby</p>
+                <p className="text-sm text-muted-foreground">Demo Heroes</p>
               </div>
             </div>
           </HolographicCard>
@@ -325,7 +325,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-2xl font-bold">85%</p>
-                <p className="text-sm text-muted-foreground">Watch Battery</p>
+                <p className="text-sm text-muted-foreground">Simulated Battery</p>
               </div>
             </div>
           </HolographicCard>
@@ -338,8 +338,8 @@ export default function DashboardPage() {
           <div className="text-center mb-8">
             <h2 className="text-3xl font-bold glow-text mb-2">Support the Mission</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              Every donation helps us manufacture and distribute life-saving NarcoGuard NG units to those who need them most.
-              Together, we can end preventable overdose deaths.
+              Donations support development of the NarcoGuard NG concept. The wearable is not a validated medical device,
+              and donation outcomes and future manufacturing are not guaranteed.
             </p>
           </div>
 
@@ -351,7 +351,7 @@ export default function DashboardPage() {
                 </div>
                 <div>
                   <h3 className="text-xl font-bold text-green-400">Donate via GoFundMe</h3>
-                  <p className="text-sm text-muted-foreground">100% goes to watch production</p>
+                  <p className="text-sm text-muted-foreground">See the fundraiser for current use-of-funds details</p>
                 </div>
               </div>
               <p className="text-muted-foreground mb-4">

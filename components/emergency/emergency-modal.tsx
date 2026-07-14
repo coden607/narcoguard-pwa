@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { GlowButton } from "@/components/effects/glow-button"
 import { AlertTriangle, X, Phone, Users, MapPin, Siren } from "lucide-react"
 import { ParticleField } from "@/components/effects/particle-field"
@@ -19,7 +19,7 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
   const { location, error: locationError } = useLocation(true)
 
   useEffect(() => {
-    if (countdown === null || countdown <= 0) return
+    if (!open || countdown === null || countdown <= 0) return
 
     const timer = setTimeout(() => {
       if (countdown === 1) {
@@ -30,7 +30,14 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
     }, 1000)
 
     return () => clearTimeout(timer)
-  }, [countdown, onActivate])
+  }, [countdown, onActivate, open])
+
+  useEffect(() => {
+    if (!open) {
+      setCountdown(null)
+      setIsActivated(false)
+    }
+  }, [open])
 
   const startEmergency = () => {
     setCountdown(3)
@@ -42,35 +49,42 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
     onClose()
   }
 
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) cancelEmergency()
+  }
+
   return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md glass neon-border emergency-pulse">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md glass neon-border motion-safe:emergency-pulse">
         <ParticleField count={30} color="var(--glow-emergency)" />
 
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl font-[family-name:var(--font-orbitron)]">
-            <AlertTriangle className="w-6 h-6 text-destructive animate-bounce" />
+            <AlertTriangle className="w-6 h-6 text-destructive motion-safe:animate-bounce" />
             Emergency Response
           </DialogTitle>
+          <DialogDescription>
+            Demonstration only. This flow does not contact 911 or confirm that an alert was received.
+          </DialogDescription>
         </DialogHeader>
 
         {!isActivated && countdown === null && (
           <div className="space-y-6 py-4">
-            <p className="text-center text-muted-foreground">Activating emergency mode will:</p>
+            <p className="text-center text-muted-foreground">This is a demonstration flow. It does not contact 911 or guarantee that anyone received an alert. Call 911 for an actual emergency. The demo will attempt to:</p>
 
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg glass">
                 <div className="p-2 rounded-full bg-destructive/20">
                   <Siren className="w-5 h-5 text-destructive" />
                 </div>
-                <p className="text-sm">Alert nearby Heroes</p>
+                <p className="text-sm">Simulate a nearby-Hero alert request</p>
               </div>
 
               <div className="flex items-center gap-3 p-3 rounded-lg glass">
                 <div className="p-2 rounded-full bg-destructive/20">
                   <Phone className="w-5 h-5 text-destructive" />
                 </div>
-                <p className="text-sm">Notify emergency contacts</p>
+                <p className="text-sm">Simulate emergency-contact notification</p>
               </div>
 
               <div className="flex items-center gap-3 p-3 rounded-lg glass">
@@ -78,7 +92,7 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
                   <MapPin className="w-5 h-5 text-destructive" />
                 </div>
                 <div className="text-sm flex-1">
-                  <p>Share your location</p>
+                  <p>Include location if permission is available</p>
                   {location && (
                     <p className="text-xs text-muted-foreground mt-1">
                       {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
@@ -99,9 +113,9 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
 
             <div className="flex gap-3">
               <GlowButton variant="emergency" className="flex-1" onClick={startEmergency}>
-                Activate Emergency
+                Run Emergency Demo
               </GlowButton>
-              <GlowButton variant="default" onClick={cancelEmergency}>
+              <GlowButton variant="default" onClick={cancelEmergency} aria-label="Close emergency demo">
                 <X className="w-4 h-4" />
               </GlowButton>
             </div>
@@ -109,13 +123,13 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
         )}
 
         {countdown !== null && countdown > 0 && (
-          <div className="space-y-6 py-8">
+          <div className="space-y-6 py-8" role="status" aria-live="polite">
             <div className="relative">
               <div className="text-center">
                 <div className="text-8xl font-bold text-destructive glow-text emergency-pulse font-[family-name:var(--font-orbitron)]">
                   {countdown}
                 </div>
-                <p className="text-muted-foreground mt-4">Activating emergency protocols...</p>
+                <p className="text-muted-foreground mt-4">Starting the demonstration...</p>
               </div>
 
               {/* Circular progress */}
@@ -153,7 +167,7 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
         )}
 
         {isActivated && (
-          <div className="space-y-6 py-8 text-center">
+          <div className="space-y-6 py-8 text-center" role="status" aria-live="polite">
             <div className="relative">
               <Siren className="w-24 h-24 mx-auto text-destructive emergency-pulse" />
               <div className="absolute inset-0 blur-2xl bg-destructive/50 animate-pulse" />
@@ -161,9 +175,9 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
 
             <div>
               <h3 className="text-2xl font-bold text-destructive glow-text font-[family-name:var(--font-orbitron)]">
-                EMERGENCY ACTIVATED
+                DEMO REQUEST COMPLETE
               </h3>
-              <p className="text-muted-foreground mt-2">Help is on the way</p>
+              <p className="text-muted-foreground mt-2">No emergency response is confirmed. Call 911 if help is needed.</p>
               {location && (
                 <p className="text-xs text-muted-foreground mt-2 font-mono">
                   Location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
@@ -173,21 +187,21 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
 
             <div className="space-y-2">
               <div className="flex items-center justify-between p-3 rounded-lg glass">
-                <span className="text-sm">Heroes notified</span>
-                <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
+                <span className="text-sm">Hero alert: demo only</span>
+                <div className="w-2 h-2 rounded-full bg-muted-foreground" aria-hidden="true" />
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg glass">
-                <span className="text-sm">Location shared</span>
-                <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
+                <span className="text-sm">Location: not confirmed</span>
+                <div className="w-2 h-2 rounded-full bg-muted-foreground" aria-hidden="true" />
               </div>
               <div className="flex items-center justify-between p-3 rounded-lg glass">
-                <span className="text-sm">Contacts alerted</span>
-                <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
+                <span className="text-sm">Contacts: not confirmed</span>
+                <div className="w-2 h-2 rounded-full bg-muted-foreground" aria-hidden="true" />
               </div>
             </div>
 
             <GlowButton variant="success" className="w-full" onClick={cancelEmergency}>
-              I'm Safe - Deactivate
+              Close Demo
             </GlowButton>
           </div>
         )}

@@ -31,15 +31,11 @@ export function EmergencyButton() {
         }),
       })
 
-      const result = await response.json()
-
-      // Show success feedback
-      alert(
-        `✅ Emergency activated!\n\n${result.actionsTriggered.join("\n")}\n\nEstimated response: ${result.estimatedResponseTime}`,
-      )
+      if (!response.ok) throw new Error("Demo request failed")
+      await response.json()
+      alert("Emergency demo completed. No responder, emergency service, or contact notification is confirmed. Call 911 if help is needed.")
     } catch {
-      // Fallback: Still show modal and try alternative emergency methods
-      alert("Emergency system activated with fallback mode. Calling 911...")
+      alert("The emergency demo could not complete. No help was dispatched. Call 911 if help is needed.")
     }
   }
 
@@ -88,12 +84,11 @@ export function EmergencyButton() {
         }),
       })
 
-      const result = await response.json()
-      alert(
-        `✅ Alerted ${result.nearestHeroes?.length || 0} nearby heroes!\n\nNearest hero ETA: ${result.nearestHeroes?.[0]?.eta || "calculating..."}`,
-      )
+      if (!response.ok) throw new Error("Demo request failed")
+      await response.json()
+      alert("Hero alert demo completed. No nearby responder was actually notified.")
     } catch {
-      // Hero alert failed - non-critical
+      alert("Hero alert demo could not complete. No nearby responder was notified.")
     }
   }
 
@@ -101,7 +96,7 @@ export function EmergencyButton() {
     <>
       <div className="relative">
         {/* Main Emergency Button */}
-        <button onClick={handleEmergencyPress} className="w-full relative group">
+        <button onClick={handleEmergencyPress} className="w-full relative group text-left" aria-describedby="emergency-demo-note">
           <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-orange-600 to-red-600 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 emergency-pulse" />
 
           <div className="relative bg-gradient-to-br from-red-600 to-red-800 rounded-2xl p-8 emergency-pulse transform transition-all duration-300 group-hover:scale-[1.02] group-active:scale-95">
@@ -118,9 +113,9 @@ export function EmergencyButton() {
 
               <div className="text-left">
                 <h2 className="text-4xl font-bold text-white glow-text font-[family-name:var(--font-orbitron)]">
-                  EMERGENCY SOS
+                  EMERGENCY OPTIONS
                 </h2>
-                <p className="text-white/90 text-lg mt-1">Press for immediate help</p>
+                <p className="text-white/90 text-lg mt-1">Call 911 or open the response demo</p>
               </div>
             </div>
 
@@ -133,7 +128,11 @@ export function EmergencyButton() {
           </div>
         </button>
 
-        <div className="grid grid-cols-3 gap-3 mt-4">
+        <p id="emergency-demo-note" className="mt-3 text-center text-sm text-amber-100/90">
+          The in-app response flow is a demo and does not confirm that help was dispatched.
+        </p>
+
+        <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-3 mt-4">
           <button
             onClick={call911}
             className="glass neon-border p-4 rounded-xl hover:bg-primary/10 transition-all group"
@@ -155,7 +154,7 @@ export function EmergencyButton() {
             className="glass neon-border p-4 rounded-xl hover:bg-primary/10 transition-all group"
           >
             <Users className="w-6 h-6 mx-auto mb-2 text-primary group-hover:pulse-glow" />
-            <p className="text-xs text-center">Alert Heroes</p>
+            <p className="text-xs text-center">Demo Hero Alert</p>
           </button>
         </div>
       </div>

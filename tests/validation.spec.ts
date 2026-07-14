@@ -73,6 +73,21 @@ test.describe("NarcoGuard Production Validation", () => {
     }
   })
 
+  test("emergency API is explicitly demo-only", async ({ request }) => {
+    const response = await request.post("/api/emergency", {
+      data: { location: null, vitals: null },
+    })
+    expect(response.ok()).toBeTruthy()
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      demo: true,
+      dispatched: false,
+      actionsTriggered: [],
+      estimatedResponseTime: null,
+      nearestHeroes: [],
+    })
+  })
+
   test("responsive design works", async ({ page }) => {
     // Desktop
     await page.setViewportSize({ width: 1920, height: 1080 })
