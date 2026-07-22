@@ -3,6 +3,8 @@ const { spawn, spawnSync } = require("node:child_process")
 const host = "127.0.0.1"
 const port = 3000
 const baseUrl = `http://${host}:${port}`
+const distDir = process.env.NEXT_DIST_DIR || ".next-pwa-smoke"
+process.env.NEXT_DIST_DIR = distDir
 
 function assert(condition, message) {
   if (!condition) throw new Error(message)

@@ -31,11 +31,11 @@ test.describe("PWA production flow", () => {
   test("registers and activates the root service worker", async ({ page }) => {
     await page.goto("/")
     const registration = await page.evaluate(async () => {
-      const timeoutPromise = new Promise((_, reject) =>
+      const timeoutPromise: Promise<never> = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Service worker registration timeout")), 10000),
       )
       try {
-        const ready = await Promise.race([navigator.serviceWorker.ready, timeoutPromise])
+        const ready = (await Promise.race([navigator.serviceWorker.ready, timeoutPromise])) as ServiceWorkerRegistration
         return { scope: ready.scope, scriptURL: ready.active?.scriptURL }
       } catch (error) {
         console.error("Service worker error:", error)
@@ -52,7 +52,7 @@ test.describe("PWA production flow", () => {
   test("serves the offline fallback after installation", async ({ page, context }) => {
     await page.goto("/")
     await page.evaluate(async () => {
-      const timeoutPromise = new Promise((_, reject) =>
+      const timeoutPromise: Promise<never> = new Promise((_, reject) =>
         setTimeout(() => reject(new Error("Service worker registration timeout")), 10000),
       )
       try {

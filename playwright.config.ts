@@ -35,7 +35,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run build && npm run start",
+    command: "node scripts/run-next-build.js && ./node_modules/.bin/next start",
     port: 3000,
     reuseExistingServer: !process.env.CI,
   },

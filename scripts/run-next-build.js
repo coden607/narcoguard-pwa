@@ -3,9 +3,13 @@ const { spawnSync } = require("node:child_process")
 
 const env = { ...process.env }
 
-if (process.platform === "android" && !env.NEXT_TEST_WASM_DIR) {
+const shouldUseWasmCompiler =
+  !env.NEXT_TEST_WASM_DIR &&
+  (process.platform === "android" || (process.platform === "linux" && process.arch === "arm64"))
+
+if (shouldUseWasmCompiler) {
   env.NEXT_TEST_WASM_DIR = path.dirname(require.resolve("@next/swc-wasm-nodejs/wasm.js"))
-  console.log("[build] Android detected; using the matching Next.js WASM compiler.")
+  console.log("[build] ARM64/WASM build environment detected; using the matching Next.js WASM compiler.")
 }
 
 const result = spawnSync(process.execPath, [require.resolve("next/dist/bin/next"), "build"], {

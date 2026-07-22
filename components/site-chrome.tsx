@@ -15,7 +15,7 @@ const links = [
 ]
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
+  const pathname = usePathname() ?? "/"
   const [open, setOpen] = useState(false)
 
   useEffect(() => {
@@ -31,7 +31,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("keydown", closeOnEscape)
   }, [open])
 
-  const isActive = (href: string) => href === "/" ? pathname === href : pathname.startsWith(href)
+  const isActive = (href: string) => (href === "/" ? pathname === href : pathname.startsWith(href))
 
   return <div className="site-shell">
     <a href="#main-content" className="skip-link">Skip to content</a>

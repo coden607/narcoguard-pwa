@@ -32,9 +32,9 @@ try {
 // Check 2: Essential files exist
 console.log("\n✓ Checking essential files...")
 const essentialFiles = [
-  "next.config.ts",
+  "next.config.mjs",
   "vercel.json",
-  "public/manifest.json",
+  "app/manifest.ts",
   "public/sw.js",
   ".env.local",
   "app/page.tsx",

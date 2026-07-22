@@ -5,6 +5,7 @@
 
 # next.js
 /.next/
+.next-pwa-smoke/
 /out/
 
 # production
@@ -43,6 +44,10 @@ marketing/stats/
 
 # Local scratch artifact (not application source)
 /gjhv
+/ai-vocals-studio/
+/ai-vocals-studio-airbearme/
+hj
+p.py
 .env*
 .env
 .env.*

@@ -170,11 +170,12 @@ export async function createEmergencyResponse(data: {
   heroId: number
   etaSeconds?: number
   distanceMiles?: number
+  status?: "dispatched" | "en_route" | "on_scene" | "completed" | "cancelled"
 }) {
   const sql = getSQL()
   const result = await sql`
     INSERT INTO emergency_responses (emergency_id, hero_id, status, eta_seconds, distance_miles)
-    VALUES (${data.emergencyId}, ${data.heroId}, ${"responding"}, ${data.etaSeconds || null}, ${data.distanceMiles || null})
+    VALUES (${data.emergencyId}, ${data.heroId}, ${data.status || "dispatched"}, ${data.etaSeconds || null}, ${data.distanceMiles || null})
     RETURNING *
   `
   return result[0]
