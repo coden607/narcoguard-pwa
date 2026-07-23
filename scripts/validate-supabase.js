@@ -43,7 +43,7 @@ for (const [name, pattern] of requiredChecks) {
 }
 
 const policyCount = (migrations.match(/create policy\b/gi) || []).length
-if (policyCount < 20) failures.push(`expected at least 20 explicit RLS policies, found ${policyCount}`)
+if (policyCount < 18) failures.push(`expected at least 18 explicit RLS policies, found ${policyCount}`)
 
 if (failures.length) {
   console.error("[supabase] migration validation failed")

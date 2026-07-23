@@ -21,7 +21,8 @@
     "marketing:run": "node scripts/post-daily-campaign.js",
     "marketing:buffer": "node scripts/push-buffer-campaign.js",
     "marketing:videos": "bash scripts/generate-tiktok-videos.sh",
-    "start": "next start"
+    "start": "next start",
+    "validate:supabase": "node scripts/validate-supabase.js"
   },
   "overrides": {
     "react": "18.3.1",
