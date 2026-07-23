@@ -1,0 +1,9 @@
+node_modules
+.next
+.next-pwa-smoke
+playwright-report
+test-results
+.git
+.env*
+!.env.example
+*.tsbuildinfo
