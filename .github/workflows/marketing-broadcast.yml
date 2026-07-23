@@ -31,7 +31,7 @@ jobs:
           MARKETING_RELAY_URL: ${{ github.event_name == 'workflow_dispatch' && secrets.MARKETING_RELAY_URL || '' }}
           ALLOW_MARKETING_PUBLISH: ${{ github.event_name == 'workflow_dispatch' && inputs.publish && 'true' || 'false' }}
           FORCE_DAY: ${{ vars.MARKETING_FORCE_DAY }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: marketing-bundle
           path: marketing/posts/
