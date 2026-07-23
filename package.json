@@ -22,7 +22,8 @@
     "marketing:buffer": "node scripts/push-buffer-campaign.js",
     "marketing:videos": "bash scripts/generate-tiktok-videos.sh",
     "start": "next start",
-    "validate:supabase": "node scripts/validate-supabase.js"
+    "validate:supabase": "node scripts/validate-supabase.js",
+    "validate:claims": "node scripts/validate-claims.js"
   },
   "overrides": {
     "react": "18.3.1",

@@ -141,7 +141,7 @@ Every dollar goes directly to watch production and free distribution.
 - **AR training** - CPR and naloxone certification
 
 ### Privacy & Security
-- **HIPAA compliant** - Medical data encrypted
+- **Privacy-focused demo** - Medical-data handling requires formal compliance review
 - **Incognito mode** - Anonymous responses
 - **No data selling** - Your information stays yours
 

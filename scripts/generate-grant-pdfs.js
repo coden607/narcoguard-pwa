@@ -156,7 +156,7 @@ function generateSupportingMaterials() {
 - Progress tracking
 
 ## Compliance
-- HIPAA compliant data handling
+- Privacy-focused data handling; compliance review required
 - FDA medical device pathway (in progress)
 - IP68 water/dust resistance
 - MIL-STD-810 ruggedization (in development)
