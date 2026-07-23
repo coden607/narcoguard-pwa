@@ -97,12 +97,12 @@ Broome Estates LLC proposes Narcoguard-TALON: a wearable autonomous overdose det
 
 TECHNICAL INNOVATION
 1. Edge AI Overdose Detection (Trust Layer 1)
-   - Kalman-filtered sensor fusion (PPG, SpO2, GSR, accelerometer) achieves 94% accuracy in detecting respiratory depression within 60 seconds of onset.
+   - Kalman-filtered sensor fusion (PPG, SpO2, GSR, accelerometer) has a proposed performance target that has not yet been validated in clinical data.
    - On-device TinyML model (TensorFlow Lite) processes vitals locally, eliminating cloud latency and ensuring operation in denied/austere environments (e.g., rural dead zones, disaster zones).
 
 2. Autonomous Naloxone Delivery (Trust Layer 2)
-   - Micro-pneumatic auto-injector deploys 2mg intranasal naloxone in <10 seconds upon confirmed overdose event.
-   - Multi-stage verification protocol (vitals + motion + time-series anomaly detection) prevents false positives while maintaining <15-second decision latency.
+   - The proposed delivery mechanism requires prototype, pharmacokinetic, clinical, regulatory, and human-factors validation before any deployment claim.
+   - Multi-stage verification protocol (vitals + motion + time-series anomaly detection) prevents false positives while with latency to be measured during controlled validation.
 
 3. Distributed Hero Network (Trust Layer 3)
    - Mesh-networked alert system notifies trained responders (EMS, peers, bystanders) within 500m radius via LoRa + cellular fallback.
@@ -165,7 +165,7 @@ Email: stephen.r.blanford@gmail.com
 Tax Status: For-profit LLC (will partner with 501(c)(3) fiscal sponsor if required)
 
 PROJECT SUMMARY
-Broome Estates seeks $150,000 to deploy 80 Narcoguard smartwatches in Broome County, NY—a community devastated by opioid overdoses (105 deaths in 2023, 40% above state average). Narcoguard is the first wearable device that detects overdose via AI-powered vital sign monitoring and automatically injects naloxone within 10 seconds, while alerting EMS and trained community responders (our "Hero Network"). This 12-month pilot will prevent an estimated 40+ fatal overdoses and generate rigorous outcome data to inform national policy.
+Broome Estates seeks $150,000 to deploy 80 Narcoguard smartwatches in Broome County, NY—a community devastated by opioid overdoses (105 deaths in 2023, 40% above state average). Narcoguard is the first wearable device that detects overdose via AI-powered vital sign monitoring and contains a proposed delivery concept whose safety and efficacy require validation, while alerting EMS and trained community responders (our "Hero Network"). This 12-month pilot will prevent an estimated 40+ fatal overdoses and generate rigorous outcome data to inform national policy.
 
 THE PROBLEM
 - Broome County's overdose mortality rate (34.2 per 100K) is double the national average.
@@ -175,8 +175,8 @@ THE PROBLEM
 THE SOLUTION
 Narcoguard removes the human reaction time barrier:
 1. Continuous Monitoring: PPG, SpO2, and motion sensors track vitals every 10 seconds.
-2. AI Detection: Edge-based Kalman filtering identifies respiratory depression with 94% accuracy.
-3. Auto-Injection: Micro-pneumatic system delivers 2mg intranasal naloxone in <10 sec.
+2. AI Detection: Edge-based Kalman filtering identifies respiratory depression with target sensitivity and specificity to be established through controlled validation.
+3. Delivery concept: a proposed mechanism requiring engineering and clinical validation.
 4. Network Alert: Nearby trained responders + EMS receive GPS-tagged alerts via mesh network.
 5. Recovery Support: Post-overdose, the watch delivers Rat Park-style resources (peer support, treatment intake, job placement) to address root causes.
 

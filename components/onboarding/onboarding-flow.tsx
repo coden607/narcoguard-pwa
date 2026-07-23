@@ -614,7 +614,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="text-center space-y-4">
         <Eye className="w-16 h-16 mx-auto text-primary pulse-glow" />
         <h2 className="text-3xl font-bold glow-text">Your Privacy Matters</h2>
-        <p className="text-muted-foreground">HIPAA-compliant and secure</p>
+        <p className="text-muted-foreground">Privacy-focused demo; not HIPAA-certified</p>
       </div>
       <HolographicCard className="p-8 max-w-2xl mx-auto space-y-6">
         <div className="flex items-start space-x-3">

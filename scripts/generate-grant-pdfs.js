@@ -137,8 +137,8 @@ function generateSupportingMaterials() {
 ### AI Overdose Detection
 - Edge-based TinyML model for real-time analysis
 - Kalman filtering for sensor fusion
-- 94% accuracy in overdose detection
-- <60 second detection latency
+- target performance to be established through validation
+- latency target to be measured in controlled validation
 - Multi-parameter anomaly detection
 
 ### Emergency Response
@@ -160,7 +160,7 @@ function generateSupportingMaterials() {
 - FDA medical device pathway (in progress)
 - IP68 water/dust resistance
 - MIL-STD-810 ruggedization (in development)
-- FCC/CE certification ready
+- Regulatory pathway and certification review required
 `
 
   // Budget Breakdown

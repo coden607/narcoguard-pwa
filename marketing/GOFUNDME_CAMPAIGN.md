@@ -22,7 +22,7 @@ NarcoGuard is a revolutionary smartwatch system I've spent years developing. It'
 **The NG2 Watch:**
 - Monitors vital signs 24/7 (heart rate, blood oxygen, breathing)
 - Uses AI to detect overdose within seconds
-- **AUTOMATICALLY INJECTS NALOXONE** - no human intervention needed
+- **PROPOSED DELIVERY CONCEPT** - requires engineering, clinical, regulatory, and human-factors validation
 - Alerts 911, family, and nearby trained responders
 - Works even if you're alone
 

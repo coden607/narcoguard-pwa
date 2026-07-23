@@ -1,4 +1,4 @@
-# NARCOGUARD - NG2 Auto-Injection System
+# NARCOGUARD - NG2 Research Wearable Concept
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-narcoguard.app-00d9ff?style=for-the-badge)](https://narcoguard.app)
 [![GoFundMe](https://img.shields.io/badge/Donate-GoFundMe-00b964?style=for-the-badge)](https://gofund.me/9acf270ea)
@@ -48,14 +48,14 @@
 
 ## The Solution: NarcoGuard NG2
 
-The **NarcoGuard 2 (NG2)** is a revolutionary smartwatch that **automatically detects overdoses and deploys naloxone** — no human intervention required.
+The **NarcoGuard 2 (NG2)** is a wearable research concept exploring how multi-sensor monitoring could support overdose-response research. It is not a validated medical device and does not currently detect, treat, or reverse overdose.
 
 ### How It Works
 
 1. **24/7 Monitoring** - Advanced sensors track heart rate, blood oxygen, respiratory rate, and movement
-2. **AI Detection** - Kalman filtering algorithms identify overdose patterns in real-time
-3. **Auto-Injection** - When overdose is detected, 4mg naloxone deploys automatically in under 3 seconds
-4. **Emergency Alert** - Simultaneously contacts 911, emergency contacts, and nearby trained Heroes
+2. **Research Signal Processing** - Kalman filtering and multi-sensor fusion are evaluated as prototype algorithms, not clinical detection
+3. **Future Delivery Concept** - A proposed naloxone-delivery mechanism requires engineering, clinical, regulatory, and human-factors validation before it could be considered
+4. **Response Workflow Concept** - The demo illustrates possible alert and responder workflows; it does not contact 911 or dispatch responders
 5. **AR Guidance** - If a bystander arrives, the app provides step-by-step CPR and naloxone instructions
 
 ---
@@ -110,7 +110,7 @@ Every dollar goes directly to watch production and free distribution.
 
 | Feature | Specification |
 |---------|---------------|
-| **Auto-Injection** | 4mg naloxone, < 3 second deployment |
+| **Delivery concept** | Proposed mechanism; not validated and not active |
 | **Battery Life** | 7 days typical use |
 | **Charging** | Solar + Body Heat + Wireless + USB-C |
 | **Connectivity** | LTE, Bluetooth 5.3, GPS, Wi-Fi |

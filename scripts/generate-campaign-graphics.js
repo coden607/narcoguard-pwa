@@ -33,7 +33,7 @@ async function generateGraphics() {
     },
     {
       name: "ng2-watch",
-      text: "NarcoGuard 2 Watch - Auto-Injection Technology",
+      text: "NarcoGuard 2 Watch - Proposed Delivery Concept",
       type: "product",
       timestamp: new Date().toISOString(),
     },

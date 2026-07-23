@@ -10,17 +10,17 @@ const SHOWCASE_CONTENT = `# NarcoGuard: Autonomous Overdose Prevention System
 
 ## Live Production Demo
 🌐 **https://narcoguard.app**
-🚀 **Status: Production Deployed & Operational**
+🚀 **Status: Public software demo and wearable concept**
 
 ## The Mission
 Every 11 minutes, someone dies from an opioid overdose in America. NarcoGuard exists to make that statistic obsolete.
 
 ## What Makes NarcoGuard Revolutionary
 
-### 1. Autonomous Naloxone Delivery
-- Detects overdose via AI-powered vital sign monitoring in <60 seconds
-- Auto-injects naloxone within 10 seconds of detection
-- No human intervention required - works even when user is alone
+### 1. Research Concept and Safety Workflow
+- Explores multi-sensor signal processing and responder workflows.
+- No automatic medication delivery or emergency dispatch is active.
+- Hardware, clinical, regulatory, and human-factors validation remain required.
 
 ### 2. Hero Network
 - Mesh-networked alert system notifies trained responders within 500m
@@ -39,7 +39,7 @@ Every 11 minutes, someone dies from an opioid overdose in America. NarcoGuard ex
 
 ### 5. Multi-Sensor Fusion with Kalman Filtering
 - PPG, SpO2, GSR, accelerometer data fusion
-- 94% accuracy in detecting respiratory depression
+- Performance targets are hypotheses for future validation, not measured results
 - Edge AI processing - works offline in rural dead zones
 
 ## Technical Specifications
@@ -54,7 +54,7 @@ Every 11 minutes, someone dies from an opioid overdose in America. NarcoGuard ex
 - Next.js 16 PWA with offline-first architecture
 - Real-time vitals monitoring with WebSocket sync
 - Guardian AI onboarding and support
-- HIPAA-compliant data handling
+- Privacy-focused handling; compliance requirements remain to be assessed
 
 ### Network
 - LoRa mesh networking + cellular fallback

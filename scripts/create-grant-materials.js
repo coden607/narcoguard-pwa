@@ -22,7 +22,7 @@ const techSpecs = `# NarcoGuard NG2 Technical Specifications
 - **Memory**: 512KB RAM, 2MB Flash
 - **Sensors**:
   - Photoplethysmography (PPG) - 3-wavelength
-  - Pulse oximetry (SpO2) - medical-grade accuracy ±2%
+  - Pulse oximetry (SpO2) - candidate sensor target; supplier and clinical validation required
   - Galvanic skin response (GSR)
   - 3-axis accelerometer + gyroscope
   - Temperature sensor (skin contact)
@@ -57,7 +57,7 @@ const techSpecs = `# NarcoGuard NG2 Technical Specifications
 - **Water Resistance**: IP68 (50m depth)
 - **Shock Resistance**: MIL-STD-810H
 - **Temperature Range**: -20°C to 60°C
-- **Certifications**: FDA Class II Medical Device (pending)
+- **Certifications**: Regulatory classification not established; formal review required
 
 ## Software
 
@@ -66,15 +66,15 @@ const techSpecs = `# NarcoGuard NG2 Technical Specifications
 - **Architecture**: LSTM + Kalman filtering
 - **Input Window**: 120-second rolling buffer
 - **Latency**: <60 seconds from onset
-- **Accuracy**: 94% sensitivity, 88% specificity
-- **False Positive Rate**: <2% (validated on simulated data)
+- **Accuracy**: target sensitivity and specificity to be established through controlled validation
+- **False Positive Rate**: not established; simulation and clinical validation required
 
 ### Detection Algorithm
 1. **Baseline Establishment**: 24-hour personalized profile
 2. **Multi-Sensor Fusion**: PPG + SpO2 + motion + GSR
 3. **Anomaly Detection**: Respiratory rate <8 BPM for 30+ seconds
 4. **Confirmation**: Cross-check with SpO2 <90% + loss of motion
-5. **Trigger**: Auto-inject + alert network
+5. **Trigger**: research alert state only; no medication delivery or emergency dispatch is active
 
 ### PWA Application
 - **Framework**: Next.js 16 (React 19)
@@ -98,7 +98,7 @@ const techSpecs = `# NarcoGuard NG2 Technical Specifications
 ## Clinical Validation (Planned)
 
 ### Phase 1: Benchtop Testing (Complete)
-- Sensor accuracy vs medical-grade equipment
+- Sensor accuracy vs reference equipment
 - False positive rate testing (10,000+ hours simulated data)
 - Injection system reliability (1,000+ cycles)
 

@@ -83,7 +83,7 @@ const billOfMaterials = [
   },
   {
     category: "Health & Biometric Sensors (Exceeds Apple Watch Ultra 2)",
-    description: "Medical-grade sensor array for continuous vital monitoring and overdose detection",
+    description: "Candidate sensor array for continuous vital monitoring and overdose detection",
     items: [
       {
         name: "Maxim MAX86178",
@@ -123,7 +123,7 @@ const billOfMaterials = [
       },
       {
         name: "Melexis MLX90632",
-        description: "Medical-grade infrared skin temperature sensor, +/-0.1C accuracy (same as Fitbit Sense 2)",
+        description: " candidate infrared skin temperature sensor, +/-0.1C accuracy (same as Fitbit Sense 2)",
         quantity: 1,
         unitPrice: 6.50,
         supplier: "Melexis",
@@ -350,7 +350,7 @@ const billOfMaterials = [
   },
   {
     category: "Naloxone Auto-Injection System (Patent-Pending)",
-    description: "The core life-saving mechanism - automatically deploys 0.4mg intranasal-equivalent naloxone subcutaneously when overdose is detected",
+    description: "The core life-saving mechanism - proposed delivery mechanism requiring engineering, clinical, pharmacokinetic, and regulatory validation",
     items: [
       {
         name: "Faulhaber 0206B Micro DC Motor",
@@ -363,7 +363,7 @@ const billOfMaterials = [
       },
       {
         name: "Custom Micro-Needle Cartridge Assembly",
-        description: "Medical-grade 316L stainless steel retractable 30-gauge micro-needle (0.3mm), spring-loaded with 4mm penetration depth. Needle retracts and locks after use",
+        description: " candidate 316L stainless steel retractable 30-gauge micro-needle (0.3mm), spring-loaded with 4mm penetration depth. Needle retracts and locks after use",
         quantity: 1,
         unitPrice: 15.00,
         supplier: "Nanopass Technologies / Custom",
@@ -372,7 +372,7 @@ const billOfMaterials = [
       },
       {
         name: "Naloxone Cartridge Housing (Modular)",
-        description: "USP Class VI medical-grade cyclic olefin copolymer (COC) reservoir. 0.4ml capacity, snap-fit replaceable. Sealed sterile, 24-month shelf life",
+        description: "USP Class VI  candidate cyclic olefin copolymer (COC) reservoir. 0.4ml capacity, snap-fit replaceable. Sealed sterile, 24-month shelf life",
         quantity: 1,
         unitPrice: 8.00,
         supplier: "Gerresheimer AG / Custom",
@@ -562,7 +562,7 @@ export default function NGWatchPage() {
     { id: "nordic", name: "Nordic nRF5340 Co-Processor", x: 60, y: 38, color: "#FF851B", description: "Always-on health co-processor. Runs overdose detection AI continuously while main SoC sleeps. 0.5mA standby." },
     { id: "display", name: '1.45" LTPO AMOLED', x: 50, y: 50, color: "#FFDC00", description: "BOE 466x466 round display, 2000 nits, 1-120Hz adaptive. Always-on mode shows vitals without waking main processor." },
     { id: "ppg-ecg", name: "MAX86178 PPG+ECG+BioZ", x: 50, y: 78, color: "#FF69B4", description: "Tri-mode optical/electrical heart sensor. Continuous PPG, on-demand single-lead ECG, bioimpedance for body composition." },
-    { id: "naloxone", name: "Auto-Injection Module", x: 85, y: 50, color: "#FF0000", description: "Faulhaber micro-motor + retractable 30G needle + 0.4ml naloxone cartridge. Deploys in under 3 seconds. Snap-fit replaceable." },
+    { id: "naloxone", name: "Auto-Injection Module", x: 85, y: 50, color: "#FF0000", description: "Faulhaber micro-motor + retractable 30G needle + 0.4ml naloxone cartridge. Deploys in within a future validated timing target. Snap-fit replaceable." },
     { id: "solar", name: "GaAs Solar Cell Ring", x: 50, y: 15, color: "#2ECC40", description: "Alta Devices gallium arsenide solar - 28.8% efficiency. Ring around bezel generates 15-30mW in direct sunlight." },
     { id: "kinetic", name: "Kinetic Rotor (Seiko-style)", x: 18, y: 50, color: "#B10DC9", description: "Kinetron MGS 26.4 micro-generator. Tungsten half-moon rotor converts wrist movement into 5-10mW power, like luxury automatic watches." },
     { id: "thermo", name: "Thermoelectric Generator", x: 50, y: 85, color: "#FF6600", description: "Micropelt MPG-D751 thin-film TEG. Harvests body heat from skin-to-air temperature difference. 20-40uW continuous." },
@@ -909,12 +909,12 @@ export default function NGWatchPage() {
                   </h3>
                   <div className="space-y-3">
                     {[
-                      { icon: Syringe, color: "text-red-500", title: "Auto-Injection Naloxone", desc: "No other watch can deploy life-saving medication automatically" },
+                      { icon: Syringe, color: "text-red-500", title: "Proposed Naloxone Delivery", desc: "No production watch currently offers this validated capability" },
                       { icon: Fingerprint, color: "text-amber-400", title: "Biometric Owner Lock", desc: "Fingerprint in crown - cannot be resold or stolen" },
                       { icon: Sun, color: "text-green-500", title: "Quad-Source Power", desc: "Solar + kinetic rotor + body heat + USB-C/Qi. Never dies." },
                       { icon: Radio, color: "text-cyan-400", title: "eSIM + Nano-SIM Dual", desc: "Works without phone. Two SIM options for guaranteed connectivity" },
                       { icon: Cog, color: "text-purple-400", title: "Fully Modular", desc: "Battery, cartridge, strap, glass - all snap-fit replaceable. Built for life." },
-                      { icon: Heart, color: "text-pink-500", title: "Medical-Grade Sensors", desc: "PPG + ECG + BioZ + EDA + Skin Temp - exceeds Apple Watch Ultra 2" },
+                      { icon: Heart, color: "text-pink-500", title: " candidate Sensors", desc: "PPG + ECG + BioZ + EDA + Skin Temp - exceeds Apple Watch Ultra 2" },
                       { icon: Cpu, color: "text-blue-400", title: "Dual Processor AI", desc: "Snapdragon W5+ for OS, Nordic nRF5340 for always-on overdose detection" },
                       { icon: Thermometer, color: "text-orange-400", title: "Thermoelectric Harvesting", desc: "Micropelt TEG generates power from your body heat 24/7" },
                     ].map((feature, i) => (
@@ -1069,7 +1069,7 @@ export default function NGWatchPage() {
                   ]
                 },
                 {
-                  icon: Heart, color: "text-red-500", title: "Health Sensors (Medical-Grade)",
+                  icon: Heart, color: "text-red-500", title: "Health Sensors ( candidate)",
                   specs: [
                     ["Optical PPG", "Maxim MAX86178 multi-wavelength, +/-1 BPM"],
                     ["ECG", "Single-lead electrocardiogram (on-demand)"],
