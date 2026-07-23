@@ -1,4 +1,5 @@
 import { InstallPrompt } from "@/components/pwa/install-prompt"
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register"
 import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Orbitron, Inter } from "next/font/google"
@@ -82,6 +83,7 @@ export default function RootLayout({
         <SiteChrome>{children}</SiteChrome>
         <Analytics />
         <InstallPrompt />
+        <ServiceWorkerRegister />
       </body>
     </html>
   )

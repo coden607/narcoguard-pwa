@@ -62,5 +62,7 @@ jobs:
       - run: npm run build
       - name: Start production server
         run: npm start > /tmp/narcoguard-next.log 2>&1 &
+      - name: Wait for production server
+        run: npx --yes wait-on@8.0.3 http://127.0.0.1:3000/
       - name: Run Lighthouse assertions
         run: npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.js

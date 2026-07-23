@@ -1,25 +1,20 @@
 import { NextResponse } from "next/server"
-import { updateUserLocation, logActivity } from "@/lib/db"
+import { z } from "zod"
+
+const locationSchema = z.object({ latitude: z.number().finite().min(-90).max(90), longitude: z.number().finite().min(-180).max(180), accuracy: z.number().finite().nonnegative().max(100000).optional() })
 
 export async function POST(request: Request) {
   try {
-    const { latitude, longitude, accuracy, userId } = await request.json()
-
-    // Store location in database
-    try {
-      await updateUserLocation({ userId, latitude, longitude, accuracy })
-      await logActivity({ userId, action: "location_updated", details: { latitude, longitude } })
-    } catch {
-      // Non-blocking
-    }
+    locationSchema.parse(await request.json())
 
     return NextResponse.json({
       success: true,
       message: "Location updated",
       timestamp: Date.now(),
     })
-  } catch {
-    return NextResponse.json({ error: "Failed to update location" }, { status: 500 })
+  } catch (error) {
+    const status = error instanceof z.ZodError ? 400 : 500
+    return NextResponse.json({ error: status === 400 ? "Invalid location" : "Failed to update location" }, { status })
   }
 }
 

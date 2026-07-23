@@ -1,27 +1,15 @@
 import { NextResponse } from "next/server"
 import { VitalsProcessor } from "@/lib/vitals-processor"
-import { recordVitals, logActivity } from "@/lib/db"
+import { z } from "zod"
 
 const vitalsProcessor = new VitalsProcessor()
+
+const readingsSchema = z.array(z.object({ type: z.enum(["ppg", "ecg", "accelerometer", "thermometer", "oximeter"]), value: z.number().finite(), unit: z.string().min(1).max(20), confidence: z.number().finite().min(0).max(1), timestamp: z.number().finite().default(() => Date.now()) })).min(1).max(100)
 
 export async function GET() {
   const sensorReadings = vitalsProcessor.simulateSensorData()
   const vitals = vitalsProcessor.processSensorReadings(sensorReadings)
   const overdoseCheck = vitalsProcessor.detectOverdoseIndicators()
-
-  // Persist to database
-  try {
-    await recordVitals({
-      heartRate: vitals.heartRate,
-      spo2: vitals.spO2,
-      respiratoryRate: vitals.respiratoryRate,
-      temperature: vitals.temperature,
-      riskLevel: overdoseCheck.severity,
-      overdoseDetected: overdoseCheck.severity === "critical",
-    })
-  } catch {
-    // DB write is non-blocking - continue even if DB is unavailable
-  }
 
   return NextResponse.json({
     vitals,
@@ -32,33 +20,19 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const { readings, userId } = await request.json()
+    const body = await request.json()
+    const readings = readingsSchema.parse(body?.readings)
 
     const vitals = vitalsProcessor.processSensorReadings(readings)
     const overdoseCheck = vitalsProcessor.detectOverdoseIndicators()
-
-    // Persist to database
-    try {
-      await recordVitals({
-        userId,
-        heartRate: vitals.heartRate,
-        spo2: vitals.spO2,
-        respiratoryRate: vitals.respiratoryRate,
-        temperature: vitals.temperature,
-        riskLevel: overdoseCheck.severity,
-        overdoseDetected: overdoseCheck.severity === "critical",
-      })
-      await logActivity({ userId, action: "vitals_recorded", details: { riskLevel: overdoseCheck.severity } })
-    } catch {
-      // Non-blocking
-    }
 
     return NextResponse.json({
       success: true,
       vitals,
       overdoseCheck,
     })
-  } catch {
-    return NextResponse.json({ error: "Failed to process vitals" }, { status: 500 })
+  } catch (error) {
+    const status = error instanceof z.ZodError ? 400 : 500
+    return NextResponse.json({ error: status === 400 ? "Invalid sensor readings" : "Failed to process vitals" }, { status })
   }
 }

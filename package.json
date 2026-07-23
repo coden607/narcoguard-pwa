@@ -27,7 +27,11 @@
   },
   "overrides": {
     "react": "18.3.1",
-    "react-dom": "18.3.1"
+    "react-dom": "18.3.1",
+    "next": {
+      "postcss": "8.5.10",
+      "sharp": "0.35.0"
+    }
   },
   "dependencies": {
     "@emotion/is-prop-valid": "1.4.0",
@@ -98,7 +102,7 @@
     "typescript": "^5.7.2"
   },
   "allowScripts": {
-    "sharp@0.34.5": true,
+    "sharp@0.35.0": true,
     "unrs-resolver@1.12.2": true
   }
 }
