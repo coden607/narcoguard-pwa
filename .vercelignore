@@ -7,3 +7,9 @@ test-results
 .env*
 !.env.example
 *.tsbuildinfo
+ai-vocals-studio*
+marketing/graphics
+marketing/videos
+**/output
+**/models
+**/colab
