@@ -1,10 +1,16 @@
 import { neon } from "@neondatabase/serverless"
 
 function getSQL() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is not set")
+  const connectionString =
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.SUPABASE_DB_URL
+
+  if (!connectionString) {
+    throw new Error("No server database connection string is configured")
   }
-  return neon(process.env.DATABASE_URL)
+  return neon(connectionString)
 }
 
 // ============ USERS ============

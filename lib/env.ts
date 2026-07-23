@@ -16,7 +16,13 @@ export const env = {
   ENABLE_AR: process.env.NEXT_PUBLIC_ENABLE_AR_GUIDANCE !== "false",
 
   // Mock Mode (when true, uses simulated data)
-  MOCK_MODE: !process.env.DATABASE_URL && !process.env.NG2_WATCH_API_KEY,
+  MOCK_MODE:
+    !(
+      process.env.DATABASE_URL ||
+      process.env.POSTGRES_URL ||
+      process.env.POSTGRES_PRISMA_URL ||
+      process.env.SUPABASE_DB_URL
+    ) && !process.env.NG2_WATCH_API_KEY,
 
   // External Services (with mock fallbacks) - Server-side only
   TWILIO_SID: process.env.TWILIO_ACCOUNT_SID || "",
@@ -26,7 +32,12 @@ export const env = {
   OPENAI_KEY: process.env.OPENAI_API_KEY || "",
 
   // Database
-  DATABASE_URL: process.env.DATABASE_URL || "",
+  DATABASE_URL:
+    process.env.DATABASE_URL ||
+    process.env.POSTGRES_URL ||
+    process.env.POSTGRES_PRISMA_URL ||
+    process.env.SUPABASE_DB_URL ||
+    "",
 
   // NG2 Watch Integration
   NG2_WATCH_KEY: process.env.NG2_WATCH_API_KEY || "",
