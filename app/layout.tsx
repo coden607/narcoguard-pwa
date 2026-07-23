@@ -3,6 +3,7 @@ import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register"
 import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { Orbitron, Inter } from "next/font/google"
+import Script from "next/script"
 import { Analytics } from "@vercel/analytics/next"
 import { SiteChrome } from "@/components/site-chrome"
 import "./globals.css"
@@ -73,6 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <head>
+        <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined)`}</Script>
         <link rel="icon" href="/images/narcoguard-icon.jpeg" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
