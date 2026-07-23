@@ -23,7 +23,8 @@
     "marketing:videos": "bash scripts/generate-tiktok-videos.sh",
     "start": "next start",
     "validate:supabase": "node scripts/validate-supabase.js",
-    "validate:claims": "node scripts/validate-claims.js"
+    "validate:claims": "node scripts/validate-claims.js",
+    "test:signals": "tsx scripts/test-signal-fusion.ts"
   },
   "overrides": {
     "react": "18.3.1",
@@ -99,10 +100,12 @@
     "eslint-config-next": "^15.5.21",
     "postcss": "^8.5.21",
     "tailwindcss": "^3.4.17",
+    "tsx": "4.20.3",
     "typescript": "^5.7.2"
   },
   "allowScripts": {
     "sharp@0.35.0": true,
-    "unrs-resolver@1.12.2": true
+    "unrs-resolver@1.12.2": true,
+    "esbuild@0.25.12": true
   }
 }

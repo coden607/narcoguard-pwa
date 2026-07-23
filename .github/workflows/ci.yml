@@ -26,6 +26,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run validate:supabase
       - run: npm run validate:claims
+      - run: npm run test:signals
       - name: Dependency audit
         run: npm audit --audit-level=high
       - run: npm run build
