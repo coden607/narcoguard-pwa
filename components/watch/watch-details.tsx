@@ -27,8 +27,8 @@ export function WatchDetails() {
             </div>
             <div className="space-y-1 text-xs text-muted-foreground">
               <p>Model: NarcoGuard NG</p>
-              <p>Serial: NG-2024-8472</p>
-              <p>Firmware: v2.4.1</p>
+              <p>Serial: Not assigned</p>
+              <p>Firmware: Not available</p>
             </div>
           </div>
 
@@ -38,9 +38,9 @@ export function WatchDetails() {
               <span className="text-sm font-medium">Connectivity</span>
             </div>
             <div className="space-y-1 text-xs text-muted-foreground">
-              <p>Bluetooth: Connected</p>
-              <p>eSIM: Active</p>
-              <p>Signal: Strong</p>
+              <p>Bluetooth: Not connected</p>
+              <p>eSIM: Not provisioned</p>
+              <p>Signal: Unavailable</p>
             </div>
           </div>
 
@@ -50,9 +50,9 @@ export function WatchDetails() {
               <span className="text-sm font-medium">Naloxone</span>
             </div>
             <div className="space-y-1 text-xs text-muted-foreground">
-              <p>Status: Ready</p>
-              <p>Expires: 180 days</p>
-              <p>Doses: 2mg x 2</p>
+              <p>Status: Unavailable</p>
+              <p>Expires: No cartridge installed</p>
+              <p>Doses: Unavailable</p>
             </div>
           </div>
 
@@ -62,9 +62,9 @@ export function WatchDetails() {
               <span className="text-sm font-medium">Power</span>
             </div>
             <div className="space-y-1 text-xs text-muted-foreground">
-              <p>Battery: 85%</p>
-              <p>Charging: Solar</p>
-              <p>Runtime: 48h</p>
+              <p>Battery: Unavailable</p>
+              <p>Charging: Unavailable</p>
+              <p>Runtime: Unavailable</p>
             </div>
           </div>
         </div>
@@ -87,28 +87,28 @@ export function WatchDetails() {
           <div className="glass p-4 rounded-lg neon-border">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Heart Rate</span>
-              <span className="text-2xl font-bold glow-text">72 BPM</span>
+              <span className="text-2xl font-bold glow-text">Unavailable</span>
             </div>
             <Progress value={60} className="h-2 pulse-glow" />
-            <p className="text-xs text-muted-foreground mt-2">Normal range: 60-100 BPM</p>
+            <p className="text-xs text-muted-foreground mt-2">No verified sensor data available</p>
           </div>
 
           <div className="glass p-4 rounded-lg neon-border">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Blood Oxygen (SpO2)</span>
-              <span className="text-2xl font-bold glow-text">98%</span>
+              <span className="text-2xl font-bold glow-text">Unavailable</span>
             </div>
             <Progress value={98} className="h-2 pulse-glow" />
-            <p className="text-xs text-muted-foreground mt-2">Optimal: 95-100%</p>
+            <p className="text-xs text-muted-foreground mt-2">No verified sensor data available</p>
           </div>
 
           <div className="glass p-4 rounded-lg neon-border">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-medium">Movement Activity</span>
-              <span className="text-2xl font-bold glow-text">Active</span>
+              <span className="text-2xl font-bold glow-text">Unavailable</span>
             </div>
-            <Progress value={75} className="h-2 pulse-glow" />
-            <p className="text-xs text-muted-foreground mt-2">Last movement: 2 minutes ago</p>
+            <Progress value={0} className="h-2 pulse-glow" />
+            <p className="text-xs text-muted-foreground mt-2">No verified sensor data available</p>
           </div>
 
           <div className="glass p-4 rounded-lg neon-border">
@@ -116,15 +116,7 @@ export function WatchDetails() {
               <Activity className="w-4 h-4 text-primary" />
               24-Hour Vitals Chart
             </h4>
-            <div className="h-32 flex items-end gap-1">
-              {Array.from({ length: 24 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex-1 bg-gradient-to-t from-primary to-purple-500 rounded-t pulse-glow"
-                  style={{ height: `${Math.random() * 100}%` }}
-                />
-              ))}
-            </div>
+            <p className="text-xs text-muted-foreground">No verified sensor history is available.</p>
           </div>
         </div>
       </TabsContent>
@@ -133,10 +125,10 @@ export function WatchDetails() {
         <div className="glass p-4 rounded-lg neon-border">
           <div className="flex items-center justify-between mb-4">
             <h4 className="font-medium">Battery Status</h4>
-            <span className="text-3xl font-bold glow-text">85%</span>
+            <span className="text-3xl font-bold glow-text">Unavailable</span>
           </div>
-          <Progress value={85} className="h-4 pulse-glow mb-2" />
-          <p className="text-xs text-muted-foreground">Estimated runtime: 48 hours</p>
+          <Progress value={0} className="h-4 pulse-glow mb-2" />
+          <p className="text-xs text-muted-foreground">No runtime estimate until hardware validation</p>
         </div>
 
         <div className="space-y-3">
@@ -148,7 +140,7 @@ export function WatchDetails() {
                 <Sun className="w-6 h-6 text-yellow-500 pulse-glow" />
                 <div>
                   <p className="font-medium">Solar Charging</p>
-                  <p className="text-xs text-muted-foreground">Active - 5% per hour</p>
+                  <p className="text-xs text-muted-foreground">Unavailable until hardware validation</p>
                 </div>
               </div>
               <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
@@ -204,9 +196,9 @@ export function WatchDetails() {
             <div className="flex items-center justify-between p-3 rounded-lg glass">
               <div>
                 <p className="text-sm font-medium">Naloxone Cartridge</p>
-                <p className="text-xs text-muted-foreground">Expires in 180 days</p>
+                <p className="text-xs text-muted-foreground">No cartridge installed</p>
               </div>
-              <GlowButton size="sm" variant="default">
+              <GlowButton disabled size="sm" variant="default">
                 Replace
               </GlowButton>
             </div>
@@ -214,9 +206,9 @@ export function WatchDetails() {
             <div className="flex items-center justify-between p-3 rounded-lg glass">
               <div>
                 <p className="text-sm font-medium">Battery Module</p>
-                <p className="text-xs text-muted-foreground">Health: 95%</p>
+                <p className="text-xs text-muted-foreground">Health: Unavailable</p>
               </div>
-              <GlowButton size="sm" variant="default">
+              <GlowButton disabled size="sm" variant="default">
                 Check
               </GlowButton>
             </div>
@@ -224,9 +216,9 @@ export function WatchDetails() {
             <div className="flex items-center justify-between p-3 rounded-lg glass">
               <div>
                 <p className="text-sm font-medium">Sensor Array</p>
-                <p className="text-xs text-muted-foreground">Calibrated 2 days ago</p>
+                <p className="text-xs text-muted-foreground">Calibration: Not performed</p>
               </div>
-              <GlowButton size="sm" variant="default">
+              <GlowButton disabled size="sm" variant="default">
                 Calibrate
               </GlowButton>
             </div>
@@ -237,14 +229,14 @@ export function WatchDetails() {
           <h4 className="font-medium mb-3">Firmware Updates</h4>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm">Current Version: v2.4.1</p>
-              <p className="text-xs text-muted-foreground">Latest version available</p>
+              <p className="text-sm">Current Version: Not available</p>
+              <p className="text-xs text-muted-foreground">No firmware service connected</p>
             </div>
             <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
           </div>
         </div>
 
-        <GlowButton variant="default" className="w-full">
+        <GlowButton disabled variant="default" className="w-full">
           <Settings className="w-4 h-4 mr-2" />
           Advanced Settings
         </GlowButton>
