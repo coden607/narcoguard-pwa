@@ -15,7 +15,7 @@ export const env = {
   ENABLE_HERO_NETWORK: process.env.NEXT_PUBLIC_ENABLE_HERO_NETWORK !== "false",
   ENABLE_AR: process.env.NEXT_PUBLIC_ENABLE_AR_GUIDANCE !== "false",
 
-  // Mock Mode (when true, uses simulated data)
+  // Demo mode is UI-only; production APIs return unavailable until real providers connect.
   MOCK_MODE:
     !(
       process.env.DATABASE_URL ||

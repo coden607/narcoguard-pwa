@@ -7,15 +7,7 @@ const vitalsProcessor = new VitalsProcessor()
 const readingsSchema = z.array(z.object({ type: z.enum(["ppg", "ecg", "accelerometer", "thermometer", "oximeter"]), value: z.number().finite(), unit: z.string().min(1).max(20), confidence: z.number().finite().min(0).max(1), timestamp: z.number().finite().default(() => Date.now()) })).min(1).max(100)
 
 export async function GET() {
-  const sensorReadings = vitalsProcessor.simulateSensorData()
-  const vitals = vitalsProcessor.processSensorReadings(sensorReadings)
-  const overdoseCheck = vitalsProcessor.detectOverdoseIndicators()
-
-  return NextResponse.json({
-    vitals,
-    overdoseCheck,
-    timestamp: Date.now(),
-  })
+  return NextResponse.json({ available: false, source: "unavailable", message: "No verified wearable sensor connection is configured.", timestamp: Date.now() }, { status: 503 })
 }
 
 export async function POST(request: Request) {

@@ -16,13 +16,7 @@ export function HeroMap() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const { location: userLocation } = useLocation(true)
 
-  const [heroes] = useState<Hero[]>([
-    { id: 1, name: "Hero Alpha", lat: 0.3, lng: 0.2, status: "available" },
-    { id: 2, name: "Hero Beta", lat: -0.2, lng: 0.4, status: "available" },
-    { id: 3, name: "Hero Gamma", lat: 0.5, lng: -0.3, status: "responding" },
-    { id: 4, name: "Hero Delta", lat: -0.4, lng: -0.2, status: "available" },
-    { id: 5, name: "Hero Epsilon", lat: 0.1, lng: 0.5, status: "available" },
-  ])
+  const [heroes] = useState<Hero[]>([])
 
   useEffect(() => {
     const canvas = canvasRef.current

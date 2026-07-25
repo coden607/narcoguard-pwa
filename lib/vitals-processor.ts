@@ -257,34 +257,5 @@ export class VitalsProcessor {
     return { ...this.currentVitals }
   }
 
-  // Simulate sensor data (for testing when no real sensors available)
-  simulateSensorData(): SensorReading[] {
-    const now = Date.now()
-    return [
-      {
-        type: "ppg",
-        value: this.baselineHeartRate + (Math.random() - 0.5) * 10,
-        confidence: 0.9,
-        timestamp: now,
-      },
-      {
-        type: "oximeter",
-        value: 98 + (Math.random() - 0.5) * 2,
-        confidence: 0.95,
-        timestamp: now,
-      },
-      {
-        type: "thermometer",
-        value: this.baselineTemp + (Math.random() - 0.5) * 0.5,
-        confidence: 0.98,
-        timestamp: now,
-      },
-      {
-        type: "accelerometer",
-        value: 16 + (Math.random() - 0.5) * 4,
-        confidence: 0.85,
-        timestamp: now,
-      },
-    ]
-  }
+  // Test fixtures belong in scripts/test-signal-fusion.ts; production never fabricates sensor data.
 }

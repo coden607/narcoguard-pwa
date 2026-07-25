@@ -288,8 +288,8 @@ export default function DashboardPage() {
                 <Heart className="w-6 h-6 text-primary heartbeat" />
               </div>
               <div>
-                <p className="text-2xl font-bold">98</p>
-                <p className="text-sm text-muted-foreground">Simulated BPM</p>
+                <p className="text-2xl font-bold">—</p>
+                <p className="text-sm text-muted-foreground">Sensor unavailable</p>
               </div>
             </div>
           </HolographicCard>
@@ -300,8 +300,8 @@ export default function DashboardPage() {
                 <Shield className="w-6 h-6 text-green-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold">24/7</p>
-                <p className="text-sm text-muted-foreground">Demo data</p>
+                <p className="text-2xl font-bold">—</p>
+                <p className="text-sm text-muted-foreground">Connection status</p>
               </div>
             </div>
           </HolographicCard>
@@ -312,8 +312,8 @@ export default function DashboardPage() {
                 <Users className="w-6 h-6 text-secondary" />
               </div>
               <div>
-                <p className="text-2xl font-bold">12</p>
-                <p className="text-sm text-muted-foreground">Demo Heroes</p>
+                <p className="text-2xl font-bold">—</p>
+                <p className="text-sm text-muted-foreground">Responders unavailable</p>
               </div>
             </div>
           </HolographicCard>
@@ -324,8 +324,8 @@ export default function DashboardPage() {
                 <Zap className="w-6 h-6 text-purple-500" />
               </div>
               <div>
-                <p className="text-2xl font-bold">85%</p>
-                <p className="text-sm text-muted-foreground">Simulated Battery</p>
+                <p className="text-2xl font-bold">—</p>
+                <p className="text-sm text-muted-foreground">Battery unavailable</p>
               </div>
             </div>
           </HolographicCard>

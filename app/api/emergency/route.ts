@@ -5,17 +5,7 @@ export async function POST(request: Request) {
   try {
     await request.json()
 
-    const response = {
-      success: true,
-      demo: true,
-      dispatched: false,
-      message: "Emergency response demonstration completed; no alerts were sent.",
-      actionsTriggered: [],
-      estimatedResponseTime: null,
-      nearestHeroes: [],
-    }
-
-    return NextResponse.json(response)
+    return NextResponse.json({ available: false, dispatched: false, message: "No emergency-dispatch provider is configured. Call 911 for immediate help." }, { status: 503 })
   } catch {
     return NextResponse.json({ error: "Failed to process emergency" }, { status: 500 })
   }

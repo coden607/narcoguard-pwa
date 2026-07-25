@@ -7,8 +7,8 @@ import { HeroMap } from "./hero-map"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 export function HeroNetworkStatus() {
-  const heroesOnline = 12
-  const nearbyHeroes = 3
+  const heroesOnline = 0
+  const nearbyHeroes = 0
 
   return (
     <HolographicCard className="p-6" glowIntensity="high">
@@ -42,14 +42,11 @@ export function HeroNetworkStatus() {
 
         {/* Nearby heroes list */}
         <div className="space-y-2">
-          <p className="text-sm text-muted-foreground">Closest Heroes</p>
+          <p className="text-sm text-muted-foreground">Closest verified responders</p>
+          <p className="text-xs text-amber-200">No responder network is connected.</p>
 
           <div className="space-y-2">
-            {[
-              { name: "Hero Alpha", distance: "0.3 mi", certified: true, responseTime: "2 min" },
-              { name: "Hero Beta", distance: "0.5 mi", certified: true, responseTime: "3 min" },
-              { name: "Hero Gamma", distance: "0.8 mi", certified: true, responseTime: "5 min" },
-            ].map((hero, index) => (
+            {[].map((hero, index) => (
               <div
                 key={index}
                 className="flex items-center justify-between p-3 rounded-lg glass hover:bg-primary/5 transition-all duration-300 group cursor-pointer"
