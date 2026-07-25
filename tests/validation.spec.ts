@@ -64,28 +64,18 @@ test.describe("NarcoGuard Production Validation", () => {
     await page.waitForTimeout(2000)
   })
 
-  test("all critical APIs respond", async ({ page }) => {
-    const apis = ["/api/vitals", "/api/emergency", "/api/location"]
-
-    for (const api of apis) {
-      const response = await page.goto(api, { waitUntil: "networkidle" })
-      expect([200, 405]).toContain(response?.status() || 0)
+  test("critical APIs fail closed when providers are unavailable", async ({ request }) => {
+    for (const api of ["/api/vitals", "/api/emergency", "/api/location"]) {
+      const response = await request.get(api)
+      expect(response.status()).toBe(503)
+      await expect(response.json()).resolves.toMatchObject({ available: false })
     }
   })
 
-  test("emergency API is explicitly demo-only", async ({ request }) => {
-    const response = await request.post("/api/emergency", {
-      data: { location: null, vitals: null },
-    })
-    expect(response.ok()).toBeTruthy()
-    await expect(response.json()).resolves.toMatchObject({
-      success: true,
-      demo: true,
-      dispatched: false,
-      actionsTriggered: [],
-      estimatedResponseTime: null,
-      nearestHeroes: [],
-    })
+  test("emergency dispatch never reports a fabricated success", async ({ request }) => {
+    const response = await request.post("/api/emergency", { data: { location: null, vitals: null } })
+    expect(response.status()).toBe(503)
+    await expect(response.json()).resolves.toMatchObject({ available: false, dispatched: false })
   })
 
   test("responsive design works", async ({ page }) => {

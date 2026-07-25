@@ -14,9 +14,9 @@
     "dev": "next dev",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
-    "test:e2e": "playwright test",
+    "test:e2e": "npm run build && playwright test",
     "test:pwa": "node scripts/run-pwa-tests.js",
-    "verify": "npm run lint && npm run typecheck && npm run build && npm run test:pwa",
+    "verify": "npm run lint && npm run typecheck && npm run validate:production && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm audit --audit-level=high && npm run build && npm run test:pwa",
     "health": "npm run verify",
     "marketing:run": "node scripts/post-daily-campaign.js",
     "marketing:buffer": "node scripts/push-buffer-campaign.js",
@@ -24,7 +24,8 @@
     "start": "next start",
     "validate:supabase": "node scripts/validate-supabase.js",
     "validate:claims": "node scripts/validate-claims.js",
-    "test:signals": "tsx scripts/test-signal-fusion.ts"
+    "test:signals": "tsx scripts/test-signal-fusion.ts",
+    "validate:production": "node scripts/validate-production.js"
   },
   "overrides": {
     "brace-expansion": "5.0.8",
