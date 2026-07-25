@@ -15,17 +15,11 @@ Every main-branch deployment must pass the GitHub CI workflow:
 
 The current verified Vercel project is `airbearmes-projects/narcoguard-pwa`, with `https://narcoguard.app` as its production alias.
 
-## GitHub Actions deployment credentials
+## Automatic deployment
 
-The `Vercel Production` workflow requires these GitHub Actions secrets in the repository or its `production` environment:
+The Vercel project is connected to the `coden607/narcoguard-pwa` GitHub repository. Successful pushes to `main` are deployed by Vercel's native Git integration after the project build completes. The repository does not duplicate that deployment with a token-based GitHub workflow; this avoids storing or exposing a Vercel API token in CI.
 
-| Secret | Purpose |
-| --- | --- |
-| `VERCEL_TOKEN` | Vercel API authentication token |
-| `VERCEL_ORG_ID` | Vercel team/scope identifier |
-| `VERCEL_PROJECT_ID` | Vercel project identifier |
-
-The workflow validates that all three exist before installing or deploying. Values must be added through GitHub Settings or `gh secret set`; they must never be committed, logged, or placed in `.env.example`.
+If a token-based deployment is required in a different environment, add `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` through GitHub Settings or `gh secret set`. Never commit, log, or place these values in `.env.example`.
 
 ## Vercel environment variables
 
