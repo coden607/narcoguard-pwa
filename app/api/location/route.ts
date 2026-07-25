@@ -8,10 +8,10 @@ export async function POST(request: Request) {
     locationSchema.parse(await request.json())
 
     return NextResponse.json({
-      success: true,
-      message: "Location updated",
-      timestamp: Date.now(),
-    })
+      available: false,
+      persisted: false,
+      message: "No authenticated location provider is configured; location was not stored.",
+    }, { status: 503 })
   } catch (error) {
     const status = error instanceof z.ZodError ? 400 : 500
     return NextResponse.json({ error: status === 400 ? "Invalid location" : "Failed to update location" }, { status })
