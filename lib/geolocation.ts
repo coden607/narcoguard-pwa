@@ -22,11 +22,11 @@ export class LocationService {
   private isTracking = false
   private silentMode = true // Don't spam console with errors
 
-  // Get current location with fallback to placeholder
-  async getCurrentLocation(): Promise<Location> {
+  // Get current location only from the browser geolocation provider
+  async getCurrentLocation(): Promise<Location | null> {
     return new Promise((resolve) => {
       if (!navigator.geolocation) {
-        resolve(this.getFallbackLocation())
+        resolve(null)
         return
       }
 
@@ -39,8 +39,8 @@ export class LocationService {
 
       // Set a shorter timeout to fail fast
       const timeoutId = setTimeout(() => {
-        if (!this.silentMode) console.log("[v0] Location request timed out, using fallback")
-        resolve(this.currentLocation || this.getFallbackLocation())
+        if (!this.silentMode) console.log("[v0] Location request timed out, without a provider")
+        resolve(this.currentLocation)
       }, 5000)
 
       navigator.geolocation.getCurrentPosition(
@@ -62,7 +62,7 @@ export class LocationService {
           if (!this.silentMode) console.log("[v0] Location unavailable:", error.message)
 
           // Always resolve with something - never reject
-          resolve(this.currentLocation || this.getFallbackLocation())
+          resolve(this.currentLocation)
         },
         {
           enableHighAccuracy: false,
@@ -73,21 +73,11 @@ export class LocationService {
     })
   }
 
-  // Get a reasonable fallback location (Binghamton, NY as default for NarcoGuard)
-  private getFallbackLocation(): Location {
-    return {
-      latitude: 42.0987,
-      longitude: -75.9180,
-      accuracy: 5000, // 5km accuracy to indicate it's approximate
-      timestamp: Date.now(),
-    }
-  }
 
   // Start continuous location tracking - with graceful degradation
   startTracking(callback: (location: Location) => void) {
     if (!navigator.geolocation) {
-      // Provide fallback location immediately
-      callback(this.getFallbackLocation())
+      // No browser provider means location is unavailable
       return
     }
 
@@ -97,7 +87,9 @@ export class LocationService {
     this.onLocationUpdate = callback
 
     // Try to get initial location
-    this.getCurrentLocation().then(callback)
+    this.getCurrentLocation().then((location) => {
+      if (location) callback(location)
+    })
 
     // Start watching - but silently handle failures
     this.watchId = navigator.geolocation.watchPosition(
@@ -123,15 +115,15 @@ export class LocationService {
         callback(location)
       },
       (error) => {
-        // Silently handle errors - use cached or fallback location
+        // Silently handle errors - use cached location only
         if (error.code === error.PERMISSION_DENIED) {
           if (!this.silentMode) console.log("[v0] Location permission denied")
           this.stopTracking()
-          callback(this.getFallbackLocation())
+          return
         } else {
           // For timeout or unavailable errors, use cached location
-          const locationToUse = this.currentLocation || this.getFallbackLocation()
-          callback(locationToUse)
+          const locationToUse = this.currentLocation
+          if (locationToUse) callback(locationToUse)
         }
       },
       {
@@ -151,9 +143,9 @@ export class LocationService {
     this.isTracking = false
   }
 
-  // Get last known location or fallback
-  getLastLocation(): Location {
-    return this.currentLocation || this.getFallbackLocation()
+  // Get last known location, if available
+  getLastLocation(): Location | null {
+    return this.currentLocation
   }
 
   // Calculate distance between two points (Haversine formula)

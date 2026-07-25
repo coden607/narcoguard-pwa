@@ -13,7 +13,7 @@ export function useLocation(trackContinuously = false) {
   const [permissionState, setPermissionState] = useState<"granted" | "denied" | "prompt">("prompt")
 
   const updateLocation = useCallback(async (loc: Location) => {
-    // Accept any location, including fallback
+    // Only accept a verified browser-provided location
     setLocation(loc)
     setError(null)
     setIsLoading(false)
@@ -34,6 +34,12 @@ export function useLocation(trackContinuously = false) {
     try {
       setIsLoading(true)
       const loc = await locationService.getCurrentLocation()
+      if (!loc) {
+        setLocation(null)
+        setError("Location unavailable")
+        return
+      }
+
       await updateLocation(loc)
 
       // Only set permission granted if we got real coordinates
@@ -43,16 +49,16 @@ export function useLocation(trackContinuously = false) {
 
       setError(null)
     } catch (err) {
-      // This should rarely happen now since getCurrentLocation resolves with fallback
+      // The provider can be unavailable or permission may be denied
       const errorMessage = err instanceof Error ? err.message : "Location unavailable"
 
       if (errorMessage.includes("denied") || errorMessage.includes("permission")) {
         setPermissionState("denied")
       }
 
-      // Use fallback location on any error
-      const fallbackLoc = locationService.getLastLocation()
-      setLocation(fallbackLoc)
+      // Preserve only a previously verified location
+      setError(errorMessage)
+      setLocation(locationService.getLastLocation())
     } finally {
       setIsLoading(false)
     }
