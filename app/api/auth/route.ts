@@ -10,8 +10,12 @@ const schema = z.object({
 })
 
 export async function GET() {
-  const user = await getSession()
-  return NextResponse.json({ authenticated: Boolean(user), user: user ? { id: user.id, email: user.email } : null })
+  try {
+    const user = await getSession()
+    return NextResponse.json({ authenticated: Boolean(user), user: user ? { id: user.id, email: user.email } : null })
+  } catch {
+    return NextResponse.json({ error: "Authentication service is unavailable" }, { status: 503 })
+  }
 }
 
 export async function POST(request: Request) {

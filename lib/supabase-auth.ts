@@ -37,12 +37,28 @@ export async function signUp(email: string, password: string, displayName: strin
   return (await response.json()) as SupabaseSession
 }
 
-export async function getSession() {
-  const accessToken = (await cookies()).get(ACCESS_COOKIE)?.value
-  if (!accessToken) return null
-  const response = await supabaseRequest("/auth/v1/user", { headers: { Authorization: `Bearer ${accessToken}` } })
+export async function refreshSession(refreshToken: string) {
+  const response = await supabaseRequest("/auth/v1/token?grant_type=refresh_token", { method: "POST", body: JSON.stringify({ refresh_token: refreshToken }) })
   if (!response.ok) return null
-  return (await response.json()) as { id: string; email?: string }
+  return (await response.json()) as SupabaseSession
+}
+
+export async function getSession() {
+  const store = await cookies()
+  const accessToken = store.get(ACCESS_COOKIE)?.value
+  const refreshToken = store.get(REFRESH_COOKIE)?.value
+  if (accessToken) {
+    const response = await supabaseRequest("/auth/v1/user", { headers: { Authorization: `Bearer ${accessToken}` } })
+    if (response.ok) return (await response.json()) as { id: string; email?: string }
+  }
+  if (!refreshToken) return null
+  const session = await refreshSession(refreshToken)
+  if (!session?.access_token || !session.refresh_token) {
+    await clearSession()
+    return null
+  }
+  await storeSession(session)
+  return session.user ? { id: session.user.id, email: session.user.email } : null
 }
 
 export async function storeSession(session: SupabaseSession) {
