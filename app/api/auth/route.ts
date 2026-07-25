@@ -9,6 +9,16 @@ const schema = z.object({
   displayName: z.string().trim().min(1).max(80).optional(),
 })
 
+function isSameOrigin(request: Request) {
+  const origin = request.headers.get("origin")
+  if (!origin) return true
+  try {
+    return new URL(origin).origin === new URL(request.url).origin
+  } catch {
+    return false
+  }
+}
+
 export async function GET() {
   try {
     const user = await getSession()
@@ -19,6 +29,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!isSameOrigin(request)) return NextResponse.json({ error: "Cross-origin request rejected" }, { status: 403 })
   try {
     const input = schema.parse(await request.json())
     if (input.action === "logout") {

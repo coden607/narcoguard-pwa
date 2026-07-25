@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server"
-import { getActiveEmergencies } from "@/lib/db"
 
 export async function POST(request: Request) {
   try {
@@ -12,10 +11,8 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  try {
-    const emergencies = await getActiveEmergencies()
-    return NextResponse.json({ emergencies })
-  } catch {
-    return NextResponse.json({ emergencies: [] })
-  }
+  return NextResponse.json(
+    { available: false, emergencies: [], message: "Emergency status is unavailable until an authenticated provider is configured." },
+    { status: 503 },
+  )
 }
