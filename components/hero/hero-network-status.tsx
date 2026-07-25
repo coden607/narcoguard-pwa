@@ -2,7 +2,7 @@
 
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
-import { Users, MapPin, Award, Clock } from "lucide-react"
+import { Users, MapPin } from "lucide-react"
 import { HeroMap } from "./hero-map"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
