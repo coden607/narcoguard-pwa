@@ -20,22 +20,13 @@ export function GuardianAingelAI() {
       id: 1,
       type: "ai",
         content:
-        "Hello! I'm Guardian Aingel, your personal AI angel and assistant. I'm here to help keep you safe and guide you through any questions about overdose prevention, naloxone use, or recovery resources. How can I assist you today?",
+        "Guardian Aingel is unavailable until a verified AI provider is configured. This interface does not provide medical or emergency guidance.",
       timestamp: new Date(),
     },
   ])
   const [input, setInput] = useState("")
-  const [isTyping, setIsTyping] = useState(false)
-  const [isSpeaking, setIsSpeaking] = useState(false)
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const aiResponses = [
-    "Remember to check your naloxone expiration date regularly. Would you like me to set a reminder?",
-    "Your vitals look good today! Keep up the great work staying healthy.",
-    "I noticed you haven't checked in today. How are you feeling?",
-    "There's a recovery support meeting near you tomorrow at 6 PM. Would you like directions?",
-    "Great job maintaining your 30-day streak! That's a significant milestone.",
-  ]
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -55,19 +46,17 @@ export function GuardianAingelAI() {
 
     setMessages([...messages, userMessage])
     setInput("")
-    setIsTyping(true)
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: messages.length + 2,
+    setMessages((prev) => [
+      ...prev,
+      {
+        ...userMessage,
+        id: prev.length + 1,
         type: "ai",
-        content: aiResponses[Math.floor(Math.random() * aiResponses.length)],
+        content: "No verified AI provider is configured. This assistant cannot provide live guidance. For an emergency, call 911.",
         timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, aiMessage])
-      setIsTyping(false)
-    }, 1500)
+      },
+    ])
   }
 
   return (
@@ -86,18 +75,15 @@ export function GuardianAingelAI() {
           <div>
             <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)]">GUARDIAN AINGEL</h3>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
-              <span className="text-xs text-muted-foreground">Online & Learning</span>
+              <div className="w-2 h-2 rounded-full bg-muted-foreground" />
+              <span className="text-xs text-muted-foreground">AI provider unavailable</span>
             </div>
           </div>
         </div>
 
         <div className="flex gap-2">
-          <button
-            onClick={() => setIsSpeaking(!isSpeaking)}
-            className={`p-2 rounded-full glass hover:bg-primary/10 transition-all ${isSpeaking ? "pulse-glow" : ""}`}
-          >
-            <Volume2 className={`w-4 h-4 ${isSpeaking ? "text-primary" : "text-muted-foreground"}`} />
+          <button disabled className="p-2 rounded-full glass opacity-50">
+            <Volume2 className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
       </div>
@@ -120,33 +106,22 @@ export function GuardianAingelAI() {
             </div>
           ))}
 
-          {isTyping && (
-            <div className="flex justify-start">
-              <div className="glass neon-border p-3 rounded-lg">
-                <div className="flex gap-1">
-                  <div className="w-2 h-2 rounded-full bg-primary pulse-glow" style={{ animationDelay: "0s" }} />
-                  <div className="w-2 h-2 rounded-full bg-primary pulse-glow" style={{ animationDelay: "0.2s" }} />
-                  <div className="w-2 h-2 rounded-full bg-primary pulse-glow" style={{ animationDelay: "0.4s" }} />
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </ScrollArea>
 
       {/* Input */}
       <div className="mt-4 flex gap-2">
-        <button className="p-3 rounded-full glass hover:bg-primary/10 transition-all group">
+        <button disabled className="p-3 rounded-full glass opacity-50 group">
           <Mic className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:pulse-glow" />
         </button>
-        <Input
+        <Input disabled
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-          placeholder="Ask Guardian Aingel anything..."
+          placeholder="AI provider unavailable"
           className="flex-1 glass neon-border"
         />
-        <GlowButton onClick={sendMessage} size="icon">
+        <GlowButton disabled onClick={sendMessage} size="icon">
           <Send className="w-4 h-4" />
         </GlowButton>
       </div>
@@ -154,7 +129,7 @@ export function GuardianAingelAI() {
       {/* Quick suggestions */}
       <div className="mt-3 flex flex-wrap gap-2">
         {["Check vitals", "Find resources", "Naloxone info"].map((suggestion) => (
-          <button
+          <button disabled
             key={suggestion}
             onClick={() => setInput(suggestion)}
             className="text-xs px-3 py-1 rounded-full glass hover:bg-primary/10 transition-all hover:pulse-glow"

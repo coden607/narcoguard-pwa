@@ -1,41 +1,16 @@
 "use client"
 
 import { HolographicCard } from "@/components/effects/holographic-card"
-import { Brain, TrendingUp, AlertCircle, CheckCircle, Lightbulb } from "lucide-react"
+import { Brain } from "lucide-react"
 
 export function AIInsights() {
   const insights = [
     {
-      type: "positive",
-      icon: CheckCircle,
-      title: "Healthy Pattern Detected",
-      description: "Your vitals have been stable for 7 consecutive days",
-      color: "text-green-500",
-      bgColor: "bg-green-500/20",
-    },
-    {
-      type: "tip",
-      icon: Lightbulb,
-      title: "Daily Tip",
-      description: "Consider adding a trusted friend to your emergency contacts",
-      color: "text-secondary",
-      bgColor: "bg-secondary/20",
-    },
-    {
-      type: "warning",
-      icon: AlertCircle,
-      title: "Reminder",
-      description: "Your naloxone kit expires in 45 days",
-      color: "text-yellow-500",
-      bgColor: "bg-yellow-500/20",
-    },
-    {
-      type: "trend",
-      icon: TrendingUp,
-      title: "Progress Update",
-      description: "You've maintained a 30-day check-in streak",
-      color: "text-purple-500",
-      bgColor: "bg-purple-500/20",
+      icon: Brain,
+      title: "Insights unavailable",
+      description: "No verified vitals or AI provider is connected, so no personalized claim is shown.",
+      color: "text-muted-foreground",
+      bgColor: "bg-muted",
     },
   ]
 
@@ -48,7 +23,7 @@ export function AIInsights() {
           </div>
           <div>
             <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)]">AI INSIGHTS</h3>
-            <p className="text-xs text-muted-foreground">Personalized recommendations</p>
+            <p className="text-xs text-muted-foreground">Provider status</p>
           </div>
         </div>
 
@@ -78,10 +53,10 @@ export function AIInsights() {
         <div className="mt-4 p-3 rounded-lg glass text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Brain className="w-4 h-4 text-primary pulse-glow" />
-            <span className="text-sm font-medium">AI Learning Active</span>
+            <span className="text-sm font-medium">AI provider unavailable</span>
           </div>
           <p className="text-xs text-muted-foreground">
-            GuardiAIn is continuously learning your patterns to provide better support
+            No AI service is connected. This panel does not make medical or recovery claims.
           </p>
         </div>
       </div>
