@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { HeartPulse, Home, Menu, ShieldCheck, Sparkles, Watch, X } from "lucide-react"
+import { HeartPulse, Home, LogIn, Menu, ShieldCheck, Sparkles, Watch, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
@@ -12,6 +12,7 @@ const links = [
   { href: "/ar", label: "Training", icon: Sparkles },
   { href: "/hero-signup", label: "Hero Network", icon: ShieldCheck },
   { href: "/fund", label: "Support", icon: HeartPulse },
+  { href: "/auth", label: "Account", icon: LogIn },
 ]
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
