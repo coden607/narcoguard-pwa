@@ -29,6 +29,10 @@ const requiredChecks = [
   ["users RLS", /alter table public\.users enable row level security/i],
   ["vitals RLS", /alter table public\.vitals_readings enable row level security/i],
   ["emergency RLS", /alter table public\.emergencies enable row level security/i],
+  ["response emergency index", /create index if not exists emergency_responses_emergency_idx/i],
+  ["response hero index", /create index if not exists emergency_responses_hero_idx/i],
+  ["contact ownership index", /create index if not exists emergency_contacts_user_idx/i],
+  ["agreement ownership index", /create index if not exists legal_agreements_user_idx/i],
   ["service-only donations", /Donations and activity logs contain administrative/i],
 ]
 
