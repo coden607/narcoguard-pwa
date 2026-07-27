@@ -121,7 +121,7 @@ const billOfMaterials = [
       },
       {
         name: "Melexis MLX90632",
-        description: "candidate non-contact infrared skin-temperature sensor; medical-grade accuracy is specified by the selected variant and requires validation",
+        description: "candidate non-contact infrared skin-temperature sensor; accuracy depends on the selected variant and requires validation",
         quantity: 1,
         unitPrice: 6.50,
         supplier: "Melexis",
