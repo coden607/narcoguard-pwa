@@ -20,15 +20,9 @@ export async function GET() {
       costPerWatch: 700,
     })
   } catch {
-    return NextResponse.json({
-      totalUsers: 0,
-      activeHeroes: 0,
-      totalEmergencies: 0,
-      totalDonations: 0,
-      donations: { total: 0, count: 0, average: 0 },
-      goal: 56000,
-      watchesTarget: 80,
-      costPerWatch: 700,
-    })
+    return NextResponse.json(
+      { available: false, message: "Dashboard statistics are unavailable until a verified database provider is configured." },
+      { status: 503 },
+    )
   }
 }

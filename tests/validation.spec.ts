@@ -65,7 +65,7 @@ test.describe("NarcoGuard Production Validation", () => {
   })
 
   test("critical APIs fail closed when providers are unavailable", async ({ request }) => {
-    for (const api of ["/api/vitals", "/api/emergency", "/api/location"]) {
+    for (const api of ["/api/vitals", "/api/emergency", "/api/location", "/api/stats"]) {
       const response = await request.get(api)
       expect(response.status()).toBe(503)
       await expect(response.json()).resolves.toMatchObject({ available: false })
