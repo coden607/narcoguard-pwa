@@ -25,6 +25,18 @@ This document describes the current engineering concept. It is not a manufacturi
 - The cartridge/actuator bay is mechanically isolated from the sensing board and must have a physical service lockout.
 - Every module needs a keyed connector, strain relief, polarity protection and a documented replacement procedure.
 
+## Revised physical architecture
+
+The original all-in-one planar sum is not a valid manufacturable layout: it totals 2,469 mm² against a 1,250 mm² single-plane allowance. The revised concept separates the sealed watch core from the medication pod:
+
+- Display/optical plane: 1,089 mm² modeled footprint, 2 mm maximum target height.
+- Compute/connectivity plane: 548 mm² modeled footprint, 2 mm maximum target height.
+- Battery plane: 616 mm² modeled footprint, 5 mm maximum target height.
+- Inter-layer clearance assumption: 0.6 mm; modeled core stack: 10.2 mm inside the 13.8 mm case target, leaving 3.6 mm before real gasket, flex, fastener, and tolerance data.
+- Medication pod: 216 mm² modeled footprint, up to 10 mm target height, mechanically separate with its own pressure boundary. It is not part of the sealed watch-core stack and is not permitted to deploy underwater.
+
+These are feasibility calculations, not CAD evidence. The core remains conditional until a tolerance-aware 3D CAD assembly demonstrates clearances, heat paths, flex routing, antenna keep-outs, seal compression, and service access.
+
 ## Water-resistance requirement
 
 Water resistance is a required design constraint, not a current product claim. The target is an IP68 enclosure qualification under [IEC 60529](https://webstore.iec.ch/en/publication/2453) together with water-resistant-watch qualification under [ISO 22810:2010](https://www.iso.org/standard/45334.html). The applicable standards define the test methods and marking requirements; a rendered blueprint or gasket specification cannot substitute for those tests.

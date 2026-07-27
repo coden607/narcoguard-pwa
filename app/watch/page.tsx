@@ -471,16 +471,15 @@ const totalPerUnit = componentBOMTotal + assemblyLabor + qualityTesting + fdaCer
 const totalWithNaloxone = totalPerUnit + naloxoneRefill
 const fundingGoal80Units = totalWithNaloxone * 80
 
-const conceptPlacement = watchDesignModel.placement
-const conceptFootprintMm2 = watchDesignCalculations.planarFootprintMm2
-const fitMarginMm2 = watchDesignCalculations.planarFitMarginMm2
+const coreLayerMarginsMm2 = watchDesignCalculations.coreLayerMarginsMm2
+const coreMinimumLayerMarginMm2 = Math.min(...coreLayerMarginsMm2)
 const idealizedRuntimeHours = watchDesignCalculations.idealizedRuntimeHours
 const componentCount = billOfMaterials.reduce((sum, category) => sum + category.items.length, 0)
 const simulationPanels = [
   {
-    label: "Mechanical fit",
-    value: "Unverified",
-    detail: `${conceptPlacement.length} modules total ${conceptFootprintMm2} mm² vs ${watchDesignModel.usableInternalPlanarAreaMm2} mm² planar allowance`,
+    label: "Sealed core fit",
+    value: "Conditional",
+    detail: `${watchDesignModel.coreLayers.length} layered planes; minimum ${coreMinimumLayerMarginMm2} mm² planar margin and ${watchDesignCalculations.coreThicknessMarginMm} mm modeled stack margin. Medication pod is separate.`,
   },
   {
     label: "Power margin",
@@ -769,18 +768,16 @@ export default function NGWatchPage() {
               </div>
               <div className="mt-6 grid gap-3 md:grid-cols-3">
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
-                  <p className="text-xs uppercase tracking-[0.16em] text-primary">Fit margin</p>
-                  <p className="mt-1 text-sm text-muted-foreground">{fitMarginMm2.toLocaleString()} mm² free inside the current concept envelope.</p>
+                  <p className="text-xs uppercase tracking-[0.16em] text-primary">Core fit margin</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Layered core minimum: {coreMinimumLayerMarginMm2} mm² planar margin; modeled stack margin: {watchDesignCalculations.coreThicknessMarginMm} mm. CAD interference and tolerances remain required.</p>
                 </div>
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-xs uppercase tracking-[0.16em] text-primary">Power balance</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Harvesting and load balance are unverified until measured on a populated prototype.
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-border/60 bg-background/40 p-3">
-                    <p className="text-xs uppercase tracking-[0.16em] text-primary">Runtime model</p>
-                    <p className="mt-1 text-sm text-muted-foreground">Idealized energy-only estimate: ${idealizedRuntimeHours} hours; radio bursts, conversion losses, temperature, battery aging, and safety reserve are not modeled.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Harvesting and load balance are unverified until measured on a populated prototype.</p>
+                </div>
+                <div className="rounded-lg border border-border/60 bg-background/40 p-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-primary">Runtime model</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Idealized energy-only estimate: {idealizedRuntimeHours} hours; radio bursts, conversion losses, temperature, battery aging, and safety reserve are not modeled.</p>
                 </div>
               </div>
             </HolographicCard>
