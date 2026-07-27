@@ -31,6 +31,7 @@ export function HeroMap() {
 
     // Animation loop
     let frame = 0
+    let animationId = 0
     const animate = () => {
       frame++
 
@@ -61,26 +62,23 @@ export function HeroMap() {
         ctx.lineWidth = 2
         ctx.stroke()
       }
-
-      // Draw user location (center)
-      const userPulse = Math.sin(frame * 0.1) * 0.3 + 0.7
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, 15 * userPulse, 0, Math.PI * 2)
-      ctx.fillStyle = "rgba(0, 217, 255, 0.3)"
-      ctx.fill()
-
-      ctx.beginPath()
-      ctx.arc(centerX, centerY, 8, 0, Math.PI * 2)
-      ctx.fillStyle = "#00d9ff"
-      ctx.fill()
-
       if (userLocation) {
+        const userPulse = Math.sin(frame * 0.1) * 0.3 + 0.7
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, 15 * userPulse, 0, Math.PI * 2)
+        ctx.fillStyle = "rgba(0, 217, 255, 0.3)"
+        ctx.fill()
+
+        ctx.beginPath()
+        ctx.arc(centerX, centerY, 8, 0, Math.PI * 2)
+        ctx.fillStyle = "#00d9ff"
+        ctx.fill()
+
         ctx.fillStyle = "#ffffff"
         ctx.font = "10px monospace"
         const locationText = `${userLocation.latitude.toFixed(4)}, ${userLocation.longitude.toFixed(4)}`
         ctx.fillText(locationText, centerX - 50, centerY - 25)
       }
-
       // Draw heroes
       heroes.forEach((hero, index) => {
         const x = centerX + hero.lng * scale
@@ -115,10 +113,11 @@ export function HeroMap() {
         ctx.fillText(`${distance} mi`, x + 15, y - 10)
       })
 
-      requestAnimationFrame(animate)
+      animationId = requestAnimationFrame(animate)
     }
 
     animate()
+    return () => cancelAnimationFrame(animationId)
   }, [heroes, userLocation])
 
   return (
@@ -130,7 +129,7 @@ export function HeroMap() {
         <div className="absolute top-4 right-4 glass p-4 rounded-lg space-y-2">
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-primary pulse-glow" />
-            <span className="text-xs">You</span>
+            <span className="text-xs">{userLocation ? "You" : "Location unavailable"}</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-green-500 pulse-glow" />
@@ -161,17 +160,17 @@ export function HeroMap() {
       <div className="grid grid-cols-3 gap-3">
         <div className="glass p-3 rounded-lg text-center">
           <Users className="w-5 h-5 mx-auto mb-1 text-primary" />
-          <p className="text-lg font-bold">{heroes.filter((h) => h.status === "available").length}</p>
+          <p className="text-lg font-bold">{heroes.length ? heroes.filter((h) => h.status === "available").length : "Unavailable"}</p>
           <p className="text-xs text-muted-foreground">Available</p>
         </div>
         <div className="glass p-3 rounded-lg text-center">
           <MapPin className="w-5 h-5 mx-auto mb-1 text-red-500" />
-          <p className="text-lg font-bold">{heroes.filter((h) => h.status === "responding").length}</p>
+          <p className="text-lg font-bold">{heroes.length ? heroes.filter((h) => h.status === "responding").length : "Unavailable"}</p>
           <p className="text-xs text-muted-foreground">Responding</p>
         </div>
         <div className="glass p-3 rounded-lg text-center">
           <Navigation className="w-5 h-5 mx-auto mb-1 text-secondary" />
-          <p className="text-lg font-bold">0.3 mi</p>
+          <p className="text-lg font-bold">Unavailable</p>
           <p className="text-xs text-muted-foreground">Nearest</p>
         </div>
       </div>
