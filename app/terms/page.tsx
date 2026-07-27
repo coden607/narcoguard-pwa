@@ -28,7 +28,7 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-3">3. NG2 Watch Auto-Injection System</h2>
+            <h2 className="text-2xl font-semibold mb-3">3. NG Watch Auto-Injection System</h2>
             <p className="text-muted-foreground mb-3">The NarcoGuard 2 Watch with auto-injection technology:</p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
               <li>Is designed to administer naloxone automatically when an overdose is detected</li>

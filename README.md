@@ -1,4 +1,4 @@
-# NARCOGUARD - NG2 Research Wearable Concept
+# NARCOGUARD - NG Research Wearable Concept
 
 [![Live Demo](https://img.shields.io/badge/Live%20Demo-narcoguard.app-00d9ff?style=for-the-badge)](https://narcoguard.app)
 [![GoFundMe](https://img.shields.io/badge/Donate-GoFundMe-00b964?style=for-the-badge)](https://gofund.me/9acf270ea)
@@ -46,9 +46,9 @@
 - Naloxone isn't available when needed
 - Emergency services arrive too late
 
-## The Solution: NarcoGuard NG2
+## The Solution: NarcoGuard NG
 
-The **NarcoGuard 2 (NG2)** is a wearable research concept exploring how multi-sensor monitoring could support overdose-response research. It is not a validated medical device and does not currently detect, treat, or reverse overdose.
+The **NarcoGuard 2 (NG)** is a wearable research concept exploring how multi-sensor monitoring could support overdose-response research. It is not a validated medical device and does not currently detect, treat, or reverse overdose.
 
 ### How It Works
 
@@ -73,7 +73,7 @@ Features you can try:
 - Vitals monitoring dashboard
 - Hero Network map
 - Guardian AI assistant
-- NG2 Watch blueprint and specifications
+- NG Watch blueprint and specifications
 - Recovery resources
 
 ---
@@ -106,7 +106,7 @@ Every dollar goes directly to watch production and free distribution.
 
 ---
 
-## NG2 Watch Specifications
+## NG Watch Specifications
 
 | Feature | Specification |
 |---------|---------------|

@@ -59,13 +59,13 @@ render_story public/images/watch-on-wrist-lifestyle.jpg ng-concept-explained-v2.
   "THE CONCEPT" "SENSE. CONFIRM.\nALERT. RESPOND." "Candidate sensors look for\nmultiple concerning signals.\nA failure-aware flow seeks help\nand keeps the user informed." "Detection and delivery remain proposed.\nFalse alarms and missed events matter." \
   "THE MISSION" "BUILD EVIDENCE,\nNOT HYPE" "Prototype engineering.\nClinical and human-factors review.\nCommunity input. Regulatory planning.\nTransparent test results." "Help fund responsible development.\nNARCOGUARD.APP"
 
-render_story public/images/ng2-exploded-view.jpg ng-feature-tour-v2.mp4 0xa7f3d0 \
+render_story public/images/ng-exploded-view.jpg ng-feature-tour-v2.mp4 0xa7f3d0 \
   "PROPOSED FEATURE 01" "MULTI-SIGNAL\nSENSING" "Candidate inputs include heart rate,\nmovement, oxygen trends and context.\nNo single wrist signal can safely\nprove an overdose on its own." "Research question: can sensor fusion\nprovide useful, timely confidence?" \
   "PROPOSED FEATURE 02" "ESCALATION\nWITH GUARDRAILS" "User prompts and cancellation.\nEmergency-contact alerts.\nLocation sharing with consent.\nClear connection and failure states." "The system must never imply that\nan alert or responder is guaranteed." \
   "PROPOSED FEATURE 03" "NALOXONE\nDELIVERY RESEARCH" "A future delivery mechanism would\nrequire dose, skin-contact, sterility,\nmisfire, lockout and removal testing\nplus clinical and regulatory review." "This capability does not exist yet.\nThe current watch is a concept." \
   "PROPOSED FEATURE 04" "A CONNECTED\nRESPONSE SYSTEM" "Wearable concept + mobile PWA.\nEmergency contacts + responders.\nRecovery resources + follow-up.\nPrivacy-conscious data handling." "The goal is timely connection to help,\nnot replacement of 911 or medical care."
 
-render_story public/images/ng2-blueprint-detailed.jpg ng-watch-comparison-v2.mp4 0xfde68a \
+render_story public/images/ng-blueprint-detailed.jpg ng-watch-comparison-v2.mp4 0xfde68a \
   "ESTABLISHED PRODUCTS" "APPLE WATCH" "Strong general-purpose platform:\nheart rate, ECG, fall detection,\nsleep and model/region-dependent\nblood-oxygen and safety features." "Commercial product with mature ecosystem.\nNot an opioid-overdose treatment device." \
   "ESTABLISHED PRODUCTS" "GALAXY WATCH" "Strong Android-focused platform:\nheart rhythm tools, sleep features,\nfall detection and model/region-dependent\noxygen and blood-pressure features." "Commercial product with broad wellness tools.\nNot a naloxone-delivery device." \
   "ESTABLISHED PRODUCTS" "FITBIT" "Fitness and wellness focus:\nactivity, sleep, heart-rate trends,\nmodel-dependent ECG and overnight SpO2.\nSome features are wellness-only." "Accessible health insights.\nNot validated for overdose response." \

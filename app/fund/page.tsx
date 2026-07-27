@@ -251,7 +251,7 @@ export default function FundPage() {
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng2-watch-hero.jpg"
+                src="/images/ng-watch-hero.jpg"
                 alt="Rendering of the proposed NarcoGuard NG wearable"
                 width={800}
                 height={512}
@@ -260,7 +260,7 @@ export default function FundPage() {
             </div>
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng2-exploded-view.jpg"
+                src="/images/ng-exploded-view.jpg"
                 alt="Concept rendering of candidate NG Watch components"
                 width={800}
                 height={512}

@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils"
 
 const links = [
   { href: "/", label: "Dashboard", icon: Home },
-  { href: "/ng2-watch", label: "NG Watch", icon: Watch },
+  { href: "/ng-watch", label: "NG Watch", icon: Watch },
   { href: "/ar", label: "Training", icon: Sparkles },
   { href: "/hero-signup", label: "Hero Network", icon: ShieldCheck },
   { href: "/fund", label: "Support", icon: HeartPulse },

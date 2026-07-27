@@ -61,7 +61,7 @@ NarcoGuard is now a fully functional Progressive Web App (PWA) with one-click in
 
 NarcoGuard is designed as a **network-connected PWA** rather than a portable PWA because:
 
-1. **Real-time Vitals** - Requires connection to NG2 watch for sensor data
+1. **Real-time Vitals** - Requires connection to NG watch for sensor data
 2. **Emergency Services** - Must connect to emergency responders and 911
 3. **Hero Network** - Real-time location sharing for nearby heroes
 4. **Guardian AI** - Cloud-based AI processing for insights

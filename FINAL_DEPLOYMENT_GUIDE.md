@@ -26,7 +26,7 @@ This is the complete, step-by-step guide to deploy NarcoGuard to production at n
 
 git init
 git add .
-git commit -m "feat: initial NarcoGuard NG2 deployment"
+git commit -m "feat: initial NarcoGuard NG deployment"
 git branch -M main
 git remote add origin https://github.com/YOUR_USERNAME/narcoguard-pwa.git
 git push -u origin main
@@ -386,7 +386,7 @@ navigator.serviceWorker.getRegistrations().then(console.log)
 ### Phase 2: Real Integrations (Week 2-3)
 - Connect real database (Supabase/Neon)
 - Add SMS notifications (Twilio)
-- Integrate NG2 Watch API
+- Integrate NG Watch API
 - Add AI assistant (OpenAI)
 
 ### Phase 3: Hero Network (Week 4+)

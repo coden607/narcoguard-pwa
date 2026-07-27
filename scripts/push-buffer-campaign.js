@@ -17,7 +17,7 @@ const postsDir = path.join(__dirname, "../marketing/posts", dateStamp)
 const publishingApproved = process.env.ALLOW_MARKETING_PUBLISH === "true"
 const publishNow = publishingApproved && process.env.MARKETING_PUBLISH_NOW === "true"
 const mode = !publishingApproved ? "draft" : publishNow ? "shareNow" : "addToQueue"
-const imageUrl = process.env.MARKETING_IMAGE_URL || "https://narcoguard-pwa-iota.vercel.app/images/ng2-watch-hero.jpg"
+const imageUrl = process.env.MARKETING_IMAGE_URL || "https://narcoguard-pwa-iota.vercel.app/images/ng-watch-hero.jpg"
 const headers = { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" }
 
 async function graphql(query) {

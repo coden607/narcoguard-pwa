@@ -11,7 +11,7 @@ if (!fs.existsSync(materialsDir)) {
 }
 
 // Technical Specifications
-const techSpecs = `# NarcoGuard NG2 Technical Specifications
+const techSpecs = `# NarcoGuard NG Technical Specifications
 
 ## Hardware
 
@@ -153,7 +153,7 @@ const budget = `# NarcoGuard Pilot Budget Breakdown
 ## Equipment & Hardware (40%)
 | Item | Quantity | Unit Cost | Total |
 |------|----------|-----------|-------|
-| NG2 Smartwatch (production) | 100 | $800 | $80,000 |
+| NG Smartwatch (production) | 100 | $800 | $80,000 |
 | Naloxone cartridges (6 months supply) | 600 | $15 | $9,000 |
 | Replacement parts & repairs (15%) | - | - | $13,350 |
 | Testing equipment | 1 lot | $10,000 | $10,000 |

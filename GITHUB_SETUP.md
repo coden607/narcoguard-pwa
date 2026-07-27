@@ -24,7 +24,7 @@ git init
 git add .
 
 # Commit
-git commit -m "Initial commit - NarcoGuard PWA with NG2 Auto-Injection"
+git commit -m "Initial commit - NarcoGuard PWA with NG Auto-Injection"
 
 # Add remote (replace with your repo URL)
 git remote add origin https://github.com/YOUR_USERNAME/narcoguard-pwa.git
@@ -229,7 +229,7 @@ vercel logs [deployment-url]
 1. **Add Real Integrations** (when ready):
    - Connect database (Supabase/Neon)
    - Add SMS service (Twilio)
-   - Integrate NG2 Watch API
+   - Integrate NG Watch API
    - Add AI services (OpenAI)
 
 2. **Monitor Performance**:

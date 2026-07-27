@@ -9,7 +9,7 @@ import { VitalsMonitor } from "@/components/dashboard/vitals-monitor"
 import { EmergencyButton } from "@/components/emergency/emergency-button"
 import { HeroNetworkStatus } from "@/components/hero/hero-network-status"
 import { GuardianAingelAI } from "@/components/ai/guardian-ai"
-import { NGWatchStatus } from "@/components/watch/ng2-watch-status"
+import { NGWatchStatus } from "@/components/watch/ng-watch-status"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
 import {
@@ -231,7 +231,7 @@ export default function DashboardPage() {
                 Fund Us
               </Button>
             </Link>
-            <Link href="/ng2-watch">
+            <Link href="/ng-watch">
               <Button variant="outline" className="glass neon-border bg-transparent">
                 <Eye className="w-4 h-4 mr-2" />
                 View NarcoGuard NG

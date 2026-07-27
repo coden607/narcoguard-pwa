@@ -101,7 +101,7 @@ function generateSupportingMaterials() {
 
   // Technical Specifications
   const techSpecs = `
-# NarcoGuard NG2 Technical Specifications
+# NarcoGuard NG Technical Specifications
 
 ## Hardware Components
 

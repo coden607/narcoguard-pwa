@@ -22,7 +22,7 @@ export const env = {
       process.env.POSTGRES_URL ||
       process.env.POSTGRES_PRISMA_URL ||
       process.env.SUPABASE_DB_URL
-    ) && !process.env.NG2_WATCH_API_KEY,
+    ) && !process.env.NG_WATCH_API_KEY,
 
   // External Services (with mock fallbacks) - Server-side only
   TWILIO_SID: process.env.TWILIO_ACCOUNT_SID || "",
@@ -39,9 +39,9 @@ export const env = {
     process.env.SUPABASE_DB_URL ||
     "",
 
-  // NG2 Watch Integration
-  NG2_WATCH_KEY: process.env.NG2_WATCH_API_KEY || "",
-  NG2_WATCH_ENDPOINT: process.env.NG2_WATCH_ENDPOINT || "",
+  // NG Watch Integration
+  NG_WATCH_KEY: process.env.NG_WATCH_API_KEY || "",
+  NG_WATCH_ENDPOINT: process.env.NG_WATCH_ENDPOINT || "",
 
   // Hero Network
   HERO_NETWORK_KEY: process.env.HERO_NETWORK_API_KEY || "",

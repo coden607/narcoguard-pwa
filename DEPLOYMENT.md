@@ -133,7 +133,7 @@ NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
 SUPABASE_SERVICE_ROLE_KEY=your_service_key
 
-# Stripe (for NG2 watch purchases)
+# Stripe (for NG watch purchases)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_xxx
 STRIPE_SECRET_KEY=sk_live_xxx
 
@@ -181,7 +181,7 @@ Already implemented:
 - Next.js framework updates
 - Security patches
 - New features based on user feedback
-- NG2 watch firmware compatibility
+- NG watch firmware compatibility
 
 ### User Support:
 - Guardian AI provides in-app support
@@ -196,7 +196,7 @@ Already implemented:
 Consider creating these redirects:
 
 - `narcoguard.app` → Main app
-- `ng2.watch` → Product landing page
+- `ng.watch` → Product landing page
 - `joinnarcoguard.org` → Hero recruitment
 - `narcoguardny.org` → NY-specific advocacy
 
@@ -233,7 +233,7 @@ As your user base grows:
 1. **Phase 1** (0-1K users): Vercel free tier sufficient
 2. **Phase 2** (1K-10K users): Upgrade Vercel Pro ($20/mo)
 3. **Phase 3** (10K+ users): Consider dedicated database
-4. **Phase 4**: NG2 watch production and distribution
+4. **Phase 4**: NG watch production and distribution
 
 ---
 

@@ -16,7 +16,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test:e2e": "npm run build && playwright test",
     "test:pwa": "node scripts/run-pwa-tests.js",
-    "verify": "npm run lint && npm run typecheck && npm run validate:production && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm audit --audit-level=high && npm run build && npm run test:pwa",
+    "verify": "npm run lint && npm run typecheck && npm run validate:production && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm run validate:watch-design && npm audit --audit-level=high && npm run build && npm run test:pwa",
     "health": "npm run verify",
     "marketing:run": "node scripts/post-daily-campaign.js",
     "marketing:buffer": "node scripts/push-buffer-campaign.js",
@@ -25,6 +25,7 @@
     "validate:supabase": "node scripts/validate-supabase.js",
     "validate:claims": "node scripts/validate-claims.js",
     "test:signals": "tsx scripts/test-signal-fusion.ts",
+    "validate:watch-design": "tsx scripts/validate-watch-design.ts",
     "validate:production": "node scripts/validate-production.js"
   },
   "overrides": {

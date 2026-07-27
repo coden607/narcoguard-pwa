@@ -1,7 +1,7 @@
 # NarcoGuard GoFundMe Campaign - Complete Setup Guide
 
 ## Campaign Title
-**80 Life-Saving Watches for Broome County - NarcoGuard NG2**
+**80 Life-Saving Watches for Broome County - NarcoGuard NG**
 
 ---
 
@@ -19,7 +19,7 @@ Every 5 minutes, someone in America dies from an opioid overdose. In my hometown
 
 NarcoGuard is a revolutionary smartwatch system I've spent years developing. It's not just another app - it's a complete life-saving system:
 
-**The NG2 Watch:**
+**The NG Watch:**
 - Monitors vital signs 24/7 (heart rate, blood oxygen, breathing)
 - Uses AI to detect overdose within seconds
 - **PROPOSED DELIVERY CONCEPT** - requires engineering, clinical, regulatory, and human-factors validation
@@ -41,7 +41,7 @@ Broome County has one of the highest overdose rates in New York State. In recent
 
 ### The Goal: 80 Watches = 80 Lives Protected
 
-I'm raising $24,584 to build and distribute **80 NarcoGuard NG2 watches completely FREE** to at-risk individuals in Broome County.
+I'm raising $24,584 to build and distribute **80 NarcoGuard NG watches completely FREE** to at-risk individuals in Broome County.
 
 **Cost Breakdown:**
 - $262.30 - Watch hardware and sensors
@@ -61,7 +61,7 @@ I'm raising $24,584 to build and distribute **80 NarcoGuard NG2 watches complete
 
 I've been clean for years, but I remember the fear. Using alone, knowing that one bad batch could be my last. Wishing someone was there to save me if something went wrong.
 
-**The NG2 watch IS that someone.**
+**The NG watch IS that someone.**
 
 It doesn't judge. It doesn't sleep. It doesn't give up on you. It just saves your life.
 

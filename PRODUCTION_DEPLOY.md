@@ -121,7 +121,7 @@ Every push to `main` branch will automatically:
 Once deployed, NarcoGuard will be accessible at **narcoguard.app** and ready to save lives.
 
 **Share the movement:**
-- Tweet: "Just launched NarcoGuard - the life-saving PWA with NG2 auto-injection tech! 🚀 #NarcoGuard #SaveLives"
+- Tweet: "Just launched NarcoGuard - the life-saving PWA with NG auto-injection tech! 🚀 #NarcoGuard #SaveLives"
 - Update app stores (when native apps are ready)
 - Share with recovery organizations
 - Promote Good Samaritan laws in your state

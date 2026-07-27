@@ -52,12 +52,12 @@ Your life-saving app is now LIVE and ready to save lives.
 \`\`\`
 🚀 NarcoGuard is LIVE at https://narcoguard.app
 
-The revolutionary PWA with NG2 Auto-Injection technology
+The revolutionary PWA with NG Auto-Injection technology
 to prevent overdose deaths and save lives.
 
 This isn't just an app - it's a MOVEMENT.
 
-#NarcoGuard #SaveLives #NG2Watch #OpioidCrisis
+#NarcoGuard #SaveLives #NGWatch #OpioidCrisis
 \`\`\`
 
 ---

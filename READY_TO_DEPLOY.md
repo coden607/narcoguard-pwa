@@ -12,7 +12,7 @@ All systems are configured and ready for deployment to narcoguard.app
 - Emergency SOS system with location tracking
 - Hero Network with map visualization
 - Guardian AI onboarding system
-- NG2 Watch integration interface
+- NG Watch integration interface
 - AR guidance for naloxone administration
 - Recovery resources and support
 

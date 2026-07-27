@@ -32,7 +32,7 @@ async function generateGraphics() {
       timestamp: new Date().toISOString(),
     },
     {
-      name: "ng2-watch",
+      name: "ng-watch",
       text: "NarcoGuard 2 Watch - Proposed Delivery Concept",
       type: "product",
       timestamp: new Date().toISOString(),

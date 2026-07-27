@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "NarcoGuard - NG2 Overdose Prevention System",
+    name: "NarcoGuard - NG Overdose Prevention System",
     short_name: "NarcoGuard",
     description: "Wearable overdose prevention, emergency coordination, and naloxone response support.",
     id: "/",

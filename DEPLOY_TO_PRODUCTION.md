@@ -156,7 +156,7 @@ Once deployed, these run automatically:
 \`\`\`
 🚀 NarcoGuard is LIVE at narcoguard.app!
 
-The NG2 Auto-Injection system is revolutionizing overdose prevention.
+The NG Auto-Injection system is revolutionizing overdose prevention.
 
 ✅ Automatic naloxone deployment
 ✅ 24/7 vitals monitoring

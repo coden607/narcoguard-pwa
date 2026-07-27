@@ -2,7 +2,7 @@
 
 ## Project
 
-NarcoGuard is a production-oriented Next.js PWA for the NG2 overdose-prevention wearable. Treat reliability, accessibility, privacy, and emergency-flow correctness as safety-critical.
+NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention wearable. Treat reliability, accessibility, privacy, and emergency-flow correctness as safety-critical.
 
 ## Stack
 

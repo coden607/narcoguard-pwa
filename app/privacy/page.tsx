@@ -18,7 +18,7 @@ export default function PrivacyPolicy() {
 
             <h3 className="text-xl font-semibold mt-4 mb-2">Health Data (HIPAA-Protected)</h3>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>Heart rate, respiratory rate, SpO2 levels from NG2 Watch</li>
+              <li>Heart rate, respiratory rate, SpO2 levels from NG Watch</li>
               <li>Overdose detection alerts and timestamps</li>
               <li>Naloxone administration records</li>
               <li>Recovery milestones and wellness tracking</li>

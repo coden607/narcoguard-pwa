@@ -45,7 +45,7 @@ Every 11 minutes, someone dies from an opioid overdose in America. NarcoGuard ex
 ## Technical Specifications
 
 ### Hardware
-- NG2 Smartwatch with auto-injection system
+- NG Smartwatch with auto-injection system
 - 4 charging methods: Solar, Kinetic, Wireless, USB-C
 - IP68 waterproof, MIL-STD-810 ruggedized
 - 72-hour battery life, 30-day standby

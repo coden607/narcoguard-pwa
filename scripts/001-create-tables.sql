@@ -42,7 +42,7 @@ CREATE TABLE IF NOT EXISTS heroes (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Vitals readings from the NG2 watch
+-- Vitals readings from the NG watch
 CREATE TABLE IF NOT EXISTS vitals_readings (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
@@ -101,7 +101,7 @@ CREATE TABLE IF NOT EXISTS locations (
   recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- NG2 Watch devices
+-- NG Watch devices
 CREATE TABLE IF NOT EXISTS watches (
   id SERIAL PRIMARY KEY,
   user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
