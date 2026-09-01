@@ -2,23 +2,10 @@ import { InstallPrompt } from "@/components/pwa/install-prompt"
 import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register"
 import type React from "react"
 import type { Metadata, Viewport } from "next"
-import { Orbitron, Inter } from "next/font/google"
 import Script from "next/script"
 import { Analytics } from "@vercel/analytics/next"
 import { SiteChrome } from "@/components/site-chrome"
 import "./globals.css"
-
-const orbitron = Orbitron({
-  subsets: ["latin"],
-  variable: "--font-orbitron",
-  display: "swap",
-})
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-})
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://narcoguard.app"),
@@ -81,7 +68,7 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${inter.variable} ${orbitron.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <SiteChrome>{children}</SiteChrome>
         <Analytics />
         <InstallPrompt />

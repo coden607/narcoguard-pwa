@@ -24,6 +24,7 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run validate:production
+      - run: npm run validate:env
       - run: npm run typecheck
       - run: npm run validate:supabase
       - run: npm run validate:claims

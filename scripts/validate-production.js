@@ -6,6 +6,8 @@ const requiredFiles = [
   "package.json", "package-lock.json", "next.config.mjs", "vercel.json",
   "app/manifest.ts", "public/sw.js", "app/page.tsx", "app/layout.tsx",
   ".github/workflows/ci.yml",
+  ".env.development.example", ".env.preview.example", ".env.production.example",
+  "docs/ENVIRONMENTS.md",
 ]
 
 const failures = []
