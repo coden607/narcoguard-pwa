@@ -18,6 +18,7 @@
     "test:pwa": "node scripts/run-pwa-tests.js",
     "verify": "npm run lint && npm run typecheck && npm run validate:production && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm run validate:watch-design && npm audit --audit-level=high && npm run build && npm run test:pwa",
     "health": "npm run verify",
+    "setup:project-ops": "node scripts/setup-project-ops.mjs",
     "marketing:run": "node scripts/post-daily-campaign.js",
     "marketing:buffer": "node scripts/push-buffer-campaign.js",
     "marketing:videos": "bash scripts/generate-tiktok-videos.sh",
@@ -29,7 +30,7 @@
     "validate:production": "node scripts/validate-production.js"
   },
   "overrides": {
-    "brace-expansion": "5.0.8",
+    "brace-expansion": "5.0.9",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "next": {
