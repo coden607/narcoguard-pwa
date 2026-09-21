@@ -159,7 +159,7 @@ export function EmergencyButton() {
         </div>
       </div>
 
-      <EmergencyModal open={showModal} onClose={() => setShowModal(false)} onActivate={activateEmergency} />
+      <EmergencyModal key={showModal ? "open" : "closed"} open={showModal} onClose={() => setShowModal(false)} onActivate={activateEmergency} />
     </>
   )
 }

@@ -20,6 +20,7 @@
 | **Donate** | [https://gofund.me/9acf270ea](https://gofund.me/9acf270ea) |
 | **Email** | [narcoguard607@gmail.com](mailto:narcoguard607@gmail.com) |
 | **GitHub** | [github.com/Coden809/narcoguard-pwa](https://github.com/Coden809/narcoguard-pwa) |
+| **Codex on iPhone/iPad** | [Interactive iSH setup](docs/CODEX_ON_ISH.md) |
 
 ---
 

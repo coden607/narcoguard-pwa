@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { HeartPulse, Home, LogIn, Menu, ShieldCheck, Sparkles, Watch, X } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
 const links = [
@@ -17,11 +17,12 @@ const links = [
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/"
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    setOpen(false)
-  }, [pathname])
+  const [openPath, setOpenPath] = useState<string | null>(null)
+  const open = openPath === pathname
+  const setOpen = useCallback(
+    (nextOpen: boolean) => setOpenPath(nextOpen ? pathname : null),
+    [pathname],
+  )
 
   useEffect(() => {
     if (!open) return
@@ -30,7 +31,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     }
     window.addEventListener("keydown", closeOnEscape)
     return () => window.removeEventListener("keydown", closeOnEscape)
-  }, [open])
+  }, [open, setOpen])
 
   const isActive = (href: string) => (href === "/" ? pathname === href : pathname.startsWith(href))
 

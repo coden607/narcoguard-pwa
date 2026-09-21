@@ -1165,7 +1165,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   })
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden" data-testid="onboarding">
       <ParticleField count={50} />
 
       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />

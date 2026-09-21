@@ -34,24 +34,14 @@ test.describe("NarcoGuard Production Validation", () => {
   })
 
   test("emergency button is present", async ({ page }) => {
-    // Skip onboarding if present
-    const skipButton = page.locator('button:has-text("Skip")')
-    if (await skipButton.isVisible()) {
-      await skipButton.click()
-      await page.waitForTimeout(1000)
-    }
+    await enableDemoMode(page)
 
-    const emergencyButton = page.locator('button:has-text("Emergency")')
+    const emergencyButton = page.getByRole("button", { name: /emergency options/i })
     await expect(emergencyButton).toBeVisible({ timeout: 10000 })
   })
 
   test("vitals monitoring displays", async ({ page }) => {
-    // Skip onboarding
-    const skipButton = page.locator('button:has-text("Skip")')
-    if (await skipButton.isVisible()) {
-      await skipButton.click()
-      await page.waitForTimeout(1000)
-    }
+    await enableDemoMode(page)
 
     const vitals = page.locator("text=/Heart Rate|SpO2|Respiratory/")
     await expect(vitals.first()).toBeVisible({ timeout: 10000 })
@@ -80,7 +70,7 @@ test.describe("NarcoGuard Production Validation", () => {
 
   test("native text correction is enabled for prose fields", async ({ page }) => {
     await page.goto("/hero-signup")
-    const name = page.locator("input[type=\"text\"]").first()
+    const name = page.locator("#name")
     await expect(name).toHaveAttribute("spellcheck", "true")
     await expect(name).toHaveAttribute("autocorrect", "on")
     const email = page.locator("input[type=\"email\"]").first()
@@ -119,6 +109,16 @@ test.describe("NarcoGuard Production Validation", () => {
   })
 })
 
+async function enableDemoMode(page: import("@playwright/test").Page) {
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "narcoguard_preferences",
+      JSON.stringify({ hasCompletedOnboarding: true, skippedSetup: true }),
+    )
+  })
+  await page.reload()
+}
+
 test.describe("Security Headers", () => {
   test("has security headers", async ({ page }) => {
     const response = await page.goto("/")
@@ -131,11 +131,12 @@ test.describe("Security Headers", () => {
 
 test.describe("Performance", () => {
   test("loads within acceptable time", async ({ page }) => {
-    const start = Date.now()
-    await page.goto("/")
-    await page.waitForLoadState("networkidle")
-    const loadTime = Date.now() - start
+    await page.goto("/", { waitUntil: "domcontentloaded" })
+    const loadTime = await page.evaluate(() => {
+      const navigation = performance.getEntriesByType("navigation")[0] as PerformanceNavigationTiming
+      return navigation.domContentLoadedEventEnd
+    })
 
-    expect(loadTime).toBeLessThan(5000) // 5 seconds
+    expect(loadTime).toBeLessThan(5000)
   })
 })

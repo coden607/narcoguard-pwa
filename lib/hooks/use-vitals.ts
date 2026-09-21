@@ -51,9 +51,14 @@ export function useVitals(pollingInterval = 2000) {
   }, [])
 
   useEffect(() => {
-    fetchVitals()
+    const initialFetch = setTimeout(() => {
+      void fetchVitals()
+    }, 0)
     const interval = setInterval(fetchVitals, pollingInterval)
-    return () => clearInterval(interval)
+    return () => {
+      clearTimeout(initialFetch)
+      clearInterval(interval)
+    }
   }, [fetchVitals, pollingInterval])
 
   return { vitals, overdoseCheck, isLoading, error, refetch: fetchVitals }

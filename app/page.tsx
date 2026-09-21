@@ -53,10 +53,12 @@ export default function DashboardPage() {
   const [showSkipWarning, setShowSkipWarning] = useState(false)
 
   useEffect(() => {
-    setMounted(true)
-    const preferences = getUserPreferences()
-    setShowOnboarding(!preferences.hasCompletedOnboarding)
-    setSkippedSetup(preferences.skippedSetup || false)
+    queueMicrotask(() => {
+      setMounted(true)
+      const preferences = getUserPreferences()
+      setShowOnboarding(!preferences.hasCompletedOnboarding)
+      setSkippedSetup(preferences.skippedSetup || false)
+    })
   }, [])
 
   const handleOnboardingComplete = () => {
@@ -98,7 +100,7 @@ export default function DashboardPage() {
     return (
       <div className="relative">
         <OnboardingFlow onComplete={handleOnboardingComplete} />
-        <div className="fixed top-4 right-4 z-50 max-w-[calc(100vw-2rem)]">
+        <div className="fixed top-24 right-4 z-[70] max-w-[calc(100vw-2rem)]">
           <Button
             onClick={() => setShowSkipWarning(true)}
             variant="outline"

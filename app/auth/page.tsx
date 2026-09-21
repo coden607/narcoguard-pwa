@@ -2,8 +2,10 @@
 
 import { FormEvent, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 
 export default function AuthPage() {
+  const router = useRouter()
   const [mode, setMode] = useState<"login" | "signup">("login")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -19,7 +21,8 @@ export default function AuthPage() {
       const response = await fetch("/api/auth", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: mode, email, password, displayName: mode === "signup" ? displayName : undefined }) })
       const result = await response.json()
       if (!response.ok) throw new Error(result.error ?? "Unable to authenticate")
-      window.location.assign("/")
+      router.push("/")
+      router.refresh()
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Unable to authenticate")
     } finally {

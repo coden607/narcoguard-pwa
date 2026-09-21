@@ -1,10 +1,10 @@
-import { FlatCompat } from "@eslint/eslintrc"
+import { defineConfig, globalIgnores } from "eslint/config"
+import nextCoreWebVitals from "eslint-config-next/core-web-vitals"
+import nextTypeScript from "eslint-config-next/typescript"
 
-const compat = new FlatCompat({ baseDirectory: import.meta.dirname })
-
-const config = [
-  { ignores: [".next/**", ".next-pwa-smoke/**", "next-env.d.ts", "node_modules/**", "playwright-report/**", "test-results/**"] },
-  ...compat.extends("next/core-web-vitals", "next/typescript"),
+export default defineConfig([
+  ...nextCoreWebVitals,
+  ...nextTypeScript,
   {
     rules: {
       "react/no-unescaped-entities": "off",
@@ -12,6 +12,12 @@ const config = [
       "@typescript-eslint/no-require-imports": "off",
     },
   },
-]
-
-export default config
+  globalIgnores([
+    ".next/**",
+    ".next-pwa-smoke/**",
+    "next-env.d.ts",
+    "node_modules/**",
+    "playwright-report/**",
+    "test-results/**",
+  ]),
+])

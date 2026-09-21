@@ -82,7 +82,9 @@ export function useLocation(trackContinuously = false) {
     }
 
     // Get initial location
-    getCurrentLocation()
+    const initialLocationRequest = setTimeout(() => {
+      void getCurrentLocation()
+    }, 0)
 
     if (trackContinuously) {
       const startDelay = setTimeout(() => {
@@ -90,10 +92,12 @@ export function useLocation(trackContinuously = false) {
       }, 3000) // Give time for initial location request
 
       return () => {
+        clearTimeout(initialLocationRequest)
         clearTimeout(startDelay)
         locationService.stopTracking()
       }
     }
+    return () => clearTimeout(initialLocationRequest)
   }, [trackContinuously, getCurrentLocation, updateLocation])
 
   return {

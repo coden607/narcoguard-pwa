@@ -1,5 +1,10 @@
 import { defineConfig, devices } from "@playwright/test"
 
+const chromiumExecutablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH
+const chromiumLaunchOptions = chromiumExecutablePath
+  ? { executablePath: chromiumExecutablePath }
+  : {}
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: true,
@@ -13,10 +18,10 @@ export default defineConfig({
     screenshot: "only-on-failure",
   },
   projects: [
-    { name: "chromium", use: { ...devices["Desktop Chrome"] } },
+    { name: "chromium", use: { ...devices["Desktop Chrome"], launchOptions: chromiumLaunchOptions } },
     { name: "firefox", use: { ...devices["Desktop Firefox"] } },
     { name: "webkit", use: { ...devices["Desktop Safari"] } },
-    { name: "Mobile Chrome", use: { ...devices["Pixel 5"] } },
+    { name: "Mobile Chrome", use: { ...devices["Pixel 5"], launchOptions: chromiumLaunchOptions } },
     { name: "Mobile Safari", use: { ...devices["iPhone 12"] } },
   ],
   webServer: {

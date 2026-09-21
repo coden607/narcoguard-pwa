@@ -35,11 +35,14 @@ test.describe("Emergency Features", () => {
     await page.goto("/")
     // Complete onboarding first
     await page.evaluate(() => {
-      localStorage.setItem("narcoguard_onboarding_complete", "true")
+      localStorage.setItem(
+        "narcoguard_preferences",
+        JSON.stringify({ hasCompletedOnboarding: true, skippedSetup: true }),
+      )
     })
     await page.reload()
 
-    const emergencyButton = page.locator("text=/Emergency/i").first()
+    const emergencyButton = page.getByRole("button", { name: /emergency/i })
     await expect(emergencyButton).toBeVisible()
   })
 })

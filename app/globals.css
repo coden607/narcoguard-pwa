@@ -1,9 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@config "../tailwind.config.js";
+@import "tailwindcss";
 
-/* NarcoGuard dark theme with HSL colors for Tailwind v3 compatibility */
+/* NarcoGuard dark theme tokens */
 :root {
+  --font-inter: "Inter Variable";
+  --font-orbitron: "Orbitron Variable";
   --background: 230 48% 5%;
   --foreground: 180 10% 98%;
   --card: 226 42% 9%;
