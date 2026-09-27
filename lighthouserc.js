@@ -1,7 +1,7 @@
 module.exports = {
   ci: {
     collect: {
-      url: ["http://localhost:3000/", "http://localhost:3000/ar"],
+      url: ["http://localhost:3000/", "http://localhost:3000/ar", "http://localhost:3000/stability"],
       numberOfRuns: 3,
     },
     assert: {
