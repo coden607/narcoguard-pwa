@@ -65,6 +65,9 @@ test.describe("PWA production flow", () => {
       }
     })
     await page.reload()
+    // A ready registration can exist before this page is controlled by it.
+    await page.waitForFunction(() => navigator.serviceWorker.controller?.scriptURL.endsWith("/sw.js"))
+    expect(await page.evaluate(async () => Boolean(await caches.match("/offline.html")))).toBe(true)
 
     await context.setOffline(true)
     await page.goto("/offline-check")
