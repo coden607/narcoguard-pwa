@@ -16,7 +16,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test:e2e": "npm run build && playwright test",
     "test:pwa": "node scripts/run-pwa-tests.js",
-    "verify": "npm run lint && npm run typecheck && npm run validate:production && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm run validate:watch-design && npm audit --audit-level=high && npm run build && npm run test:pwa",
+    "verify": "npm run lint && npm run typecheck && npm run validate:production && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm run test:guardian && npm run test:constitution && npm run validate:watch-design && npm audit --audit-level=high && npm run build && npm run test:pwa",
     "health": "npm run verify",
     "setup:project-ops": "node scripts/setup-project-ops.mjs",
     "marketing:run": "node scripts/post-daily-campaign.js",
@@ -25,8 +25,10 @@
     "start": "next start",
     "validate:supabase": "node scripts/validate-supabase.js",
     "validate:claims": "node scripts/validate-claims.js",
-    "test:signals": "tsx scripts/test-signal-fusion.ts",
-    "validate:watch-design": "tsx scripts/validate-watch-design.ts",
+    "test:signals": "node --import tsx scripts/test-signal-fusion.ts",
+    "test:guardian": "node --import tsx --test tests/guardian-*.test.ts",
+    "test:constitution": "node --import tsx --test tests/constitution-page.test.tsx",
+    "validate:watch-design": "node --import tsx scripts/validate-watch-design.ts",
     "validate:production": "node scripts/validate-production.js"
   },
   "overrides": {
@@ -35,7 +37,7 @@
     "react-dom": "18.3.1",
     "next": {
       "postcss": "8.5.23",
-      "sharp": "0.35.0"
+      "sharp": "0.35.5"
     }
   },
   "dependencies": {
@@ -76,7 +78,7 @@
     "framer-motion": "^12.42.2",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.454.0",
-    "next": "^15.5.21",
+    "next": "15.5.26",
     "next-themes": "0.4.6",
     "postgres": "^3.4.9",
     "react": "18.3.1",
@@ -85,7 +87,7 @@
     "react-hook-form": "^7.81.0",
     "react-resizable-panels": "^4.12.1",
     "recharts": "^2.15.0",
-    "sharp": "^0.35.0",
+    "sharp": "0.35.5",
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.5.5",
     "tailwindcss-animate": "^1.0.7",
@@ -94,21 +96,21 @@
     "zod": "^3.24.0"
   },
   "devDependencies": {
-    "@next/swc-wasm-nodejs": "^15.5.21",
+    "@next/swc-wasm-nodejs": "15.5.26",
     "@playwright/test": "^1.57.0",
     "@types/node": "^22.10.6",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
     "autoprefixer": "^10.4.20",
     "eslint": "^9.18.0",
-    "eslint-config-next": "^15.5.21",
+    "eslint-config-next": "15.5.26",
     "postcss": "^8.5.21",
     "tailwindcss": "^3.4.17",
     "tsx": "4.20.3",
     "typescript": "^5.7.2"
   },
   "allowScripts": {
-    "sharp@0.35.0": true,
+    "sharp@0.35.5": true,
     "unrs-resolver@1.12.2": true,
     "esbuild@0.25.12": true
   }

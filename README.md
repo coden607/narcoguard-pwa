@@ -1,185 +1,42 @@
-# NARCOGUARD - NG Research Wearable Concept
+# NarcoGuard — public PWA and wearable research concept
 
-[![Live Demo](https://img.shields.io/badge/Live%20Demo-narcoguard.app-00d9ff?style=for-the-badge)](https://narcoguard.app)
-[![GoFundMe](https://img.shields.io/badge/Donate-GoFundMe-00b964?style=for-the-badge)](https://gofund.me/9acf270ea)
-[![Built with Next.js](https://img.shields.io/badge/Built%20with-Next.js%2016-black?style=for-the-badge)](https://nextjs.org)
+NarcoGuard explores overdose prevention and person-led recovery support. The public web app is a **demo and research concept**. It is not a validated medical device, emergency dispatch service, treatment program, or proof that an experimental wearable can detect or reverse an overdose. In an immediate emergency, call 911.
 
----
+## Visit and contribute
 
-## **Not just saving lives — transforming them.**
+- [Public PWA](https://narcoguard-pwa.vercel.app)
+- [Guardian Stability planner](https://narcoguard-pwa.vercel.app/stability)
+- [Founding Constitution](https://narcoguard-pwa.vercel.app/constitution) — **founding draft, not yet ratified**
+- [Repository](https://github.com/coden607/narcoguard-pwa)
+- Contact: [narcoguard607@gmail.com](mailto:narcoguard607@gmail.com)
 
-> *"Every 5 minutes, someone dies from an opioid overdose in America. NarcoGuard is here to change that."*
+## What this release does
 
----
+The PWA demonstrates emergency guidance, wearable and community response concepts. A screen or prototype algorithm does not establish clinical reliability. The public demo does not automatically contact 911, dispatch responders, deliver naloxone, or alert loved ones.
 
-## Quick Links
+The optional Guardian Stability page lets a person record daily needs, estimated sleep, personal goals, a task for tomorrow, and a support phone number. It suggests relevant public service directories such as 211 when a need is marked. Records stay in the browser's local storage; there is no account sync. A person can pause recording or erase planner data from that browser. A link to call a support person opens the phone dialer only when tapped. The page shows a descriptive count from answered entries after enough data is available, not a relapse prediction. Resources may be unavailable or have changed; verify with each provider.
 
-| Resource | Link |
-|----------|------|
-| **Live App** | [https://narcoguard.app](https://narcoguard.app) |
-| **Donate** | [https://gofund.me/9acf270ea](https://gofund.me/9acf270ea) |
-| **Email** | [narcoguard607@gmail.com](mailto:narcoguard607@gmail.com) |
-| **GitHub** | [github.com/Coden809/narcoguard-pwa](https://github.com/Coden809/narcoguard-pwa) |
-| **Project Operations** | [Mission Control workflow](docs/PROJECT_OPERATING_SYSTEM.md) |
+Site traffic is measured with Vercel Analytics. Guardian check-in answers, sleep, goals, ZIP code and contact number are not sent as custom analytics events. See the [privacy page](https://narcoguard-pwa.vercel.app/privacy) for browser-sharing and third-party-link details.
 
----
+## Planned Guardian work
 
-## Contact & Support
+The long-term direction is a person-led planner for food, water, rest, hygiene, laundry, safety, connection, treatment, and meaningful goals. The next resource phase needs verified local service hours, eligibility, accessibility, freshness, and an honest unknown or unavailable state. Only after separate evaluation could the product offer opt-in proactive guidance based on personal patterns. It must never invent a percentage chance of relapse or treat a correlation as a clinical prediction. Any outbound alert to a loved one requires separate, specific, revocable permission, delivery handling, and review. These capabilities are **not live**. Engineering rules are in [AGENTS.md](AGENTS.md).
 
-**Email:** narcoguard607@gmail.com
+## Founding Constitution
 
-**GoFundMe:** [https://gofund.me/9acf270ea](https://gofund.me/9acf270ea)
+The [canonical draft](docs/governance/CONSTITUTION.md) is published at `/constitution`. Visitors can submit public support, objections, proposed changes, evidence, harms, or constitutional challenges through the [structured issue form](https://github.com/coden607/narcoguard-pwa/issues/new?template=constitution.yml). A public GitHub issue number identifies the submission; discussion, decisions, and linked PRs provide a review record. Do not place private health, contact, or location information in a public issue. Email is available for feedback that should not be public. Submissions are advisory: they neither edit the document automatically nor control emergency functions. Binding elections, ratification, and institution-level authority require future reviews and are not implemented here.
 
-**Organization:** Broome Estates LLC
+## Run locally
 
-**Founder:** Stephen Blanford
+Use Node 24 and npm. Copy `.env.example` to `.env.local` only if you need the optional integrations; never commit secret values.
 
-**Location:** Binghamton, NY (Broome County)
+```bash
+npm ci
+npm run dev
+```
 
----
-
-## The Problem
-
-**130+ Americans die every day** from opioid overdoses. Many of these deaths are preventable if naloxone is administered within minutes. But:
-
-- Victims often use alone
-- Bystanders don't know how to help
-- Naloxone isn't available when needed
-- Emergency services arrive too late
-
-## The Solution: NarcoGuard NG
-
-The **NarcoGuard 2 (NG)** is a wearable research concept exploring how multi-sensor monitoring could support overdose-response research. It is not a validated medical device and does not currently detect, treat, or reverse overdose.
-
-### How It Works
-
-1. **24/7 Monitoring** - Advanced sensors track heart rate, blood oxygen, respiratory rate, and movement
-2. **Research Signal Processing** - Kalman filtering and multi-sensor fusion are evaluated as prototype algorithms, not clinical detection
-3. **Future Delivery Concept** - A proposed naloxone-delivery mechanism requires engineering, clinical, regulatory, and human-factors validation before it could be considered
-4. **Response Workflow Concept** - The demo illustrates possible alert and responder workflows; it does not contact 911 or dispatch responders
-5. **AR Guidance** - If a bystander arrives, the app provides step-by-step CPR and naloxone instructions
-
----
-
-## Live Demo - NO ACCOUNT NEEDED
-
-**Try the app now:** [https://narcoguard.app](https://narcoguard.app)
-
-1. Visit the link above
-2. Click "Skip Setup (Demo Mode)"
-3. Explore all features instantly
-
-Features you can try:
-- Emergency SOS button
-- Vitals monitoring dashboard
-- Hero Network map
-- Guardian AI assistant
-- NG Watch blueprint and specifications
-- Recovery resources
-
----
-
-## Funding Goal
-
-### **80 Watches for Broome County, NY**
-
-**Total Needed: $24,584**
-
-| Item | Cost |
-|------|------|
-| Hardware per watch | $262.30 |
-| Naloxone cartridge | $45.00 |
-| **Total per watch** | **$307.30** |
-| **80 watches** | **$24,584** |
-
-### Why Broome County?
-
-- One of the highest overdose rates in New York State
-- 150+ overdose deaths in recent years
-- Our home community
-- Model program to scale nationwide
-
-### Donate Now
-
-**GoFundMe:** [https://gofund.me/9acf270ea](https://gofund.me/9acf270ea)
-
-Every dollar goes directly to watch production and free distribution.
-
----
-
-## NG Watch Specifications
-
-| Feature | Specification |
-|---------|---------------|
-| **Delivery concept** | Proposed mechanism; not validated and not active |
-| **Battery Life** | 7 days typical use |
-| **Charging** | Solar + Body Heat + Wireless + USB-C |
-| **Connectivity** | LTE, Bluetooth 5.3, GPS, Wi-Fi |
-| **Sensors** | Heart rate, SpO2, temperature, accelerometer, gyroscope |
-| **Display** | 1.4" AMOLED, 454x454 resolution |
-| **Water Resistance** | IP68 (5ATM) |
-| **Case** | Grade 5 Titanium |
-| **Weight** | 68g with cartridge |
-
----
-
-## App Features
-
-### Emergency Response
-- **One-tap SOS** - Activates in 3 seconds
-- **Automatic location sharing** - GPS coordinates sent to all contacts
-- **911 auto-dial** - Medical info pre-loaded
-- **95dB alarm** - Alerts nearby responders
-
-### Guardian AI
-- **Personalized monitoring** - Learns your patterns
-- **Voice-activated** - Hands-free emergency activation
-- **Recovery resources** - 24/7 hotlines and treatment finder
-
-### Hero Network
-- **Trained responders** - Community members with naloxone
-- **Real-time alerts** - Notified when nearby emergencies occur
-- **AR training** - CPR and naloxone certification
-
-### Privacy & Security
-- **Privacy-focused demo** - Medical-data handling requires formal compliance review
-- **Incognito mode** - Anonymous responses
-- **No data selling** - Your information stays yours
-
----
-
-## About the Creator
-
-**Stephen Blanford** - Founder of Broome Estates LLC
-
-> *"I've lost too many friends and family to overdoses. As a recovering addict myself, I know the struggle. NarcoGuard isn't just technology — it's a second chance at life."*
-
-**Contact:** [narcoguard607@gmail.com](mailto:narcoguard607@gmail.com)
-
----
-
-## Support the Mission
-
-| Method | Link |
-|--------|------|
-| **GoFundMe** | [https://gofund.me/9acf270ea](https://gofund.me/9acf270ea) |
-| **Email** | [narcoguard607@gmail.com](mailto:narcoguard607@gmail.com) |
-| **Try the App** | [https://narcoguard.app](https://narcoguard.app) |
-
----
+Run `npm run verify` before a release. This checks lint, types, production and claim validation, signal/Guardian/Constitution tests, dependency audit, build, and PWA browser smoke. Browser tests require Playwright Chromium; CI runs them when a local browser is unavailable. See [deployment guidance](docs/DEPLOYMENT.md) and [project operations](docs/PROJECT_OPERATING_SYSTEM.md).
 
 ## License
 
-MIT License - This project is dedicated to saving lives.
-
-**Medical Disclaimer:** This app supports emergency response but is not a replacement for professional medical care. Always call 911 in life-threatening emergencies.
-
----
-
-**Together, we can end preventable overdose deaths.**
-
-*Built with love by Stephen Blanford*
-
-**Broome Estates LLC | Binghamton, NY**
-
-**Email:** narcoguard607@gmail.com | **Donate:** [https://gofund.me/9acf270ea](https://gofund.me/9acf270ea)
+MIT. Contributions do not confer ownership, employment, payment, or governance authority.
