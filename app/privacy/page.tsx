@@ -1,122 +1,60 @@
 export default function PrivacyPolicy() {
   return (
-    <div className="min-h-screen bg-background p-6">
+    <main className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
-        <h1 className="text-4xl font-bold text-center">NarcoGuard Privacy Policy</h1>
-        <p className="text-sm text-muted-foreground text-center">Last Updated: January 6, 2026</p>
+        <h1 className="text-4xl font-bold text-center">NarcoGuard Privacy</h1>
+        <p className="text-sm text-muted-foreground text-center">Updated September 27, 2026</p>
 
-        <div className="space-y-6 text-sm">
-          <section>
-            <h2 className="text-2xl font-semibold mb-3">1. Information We Collect</h2>
-            <h3 className="text-xl font-semibold mt-4 mb-2">Personal Information</h3>
-            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>Name and emergency contact information</li>
-              <li>Phone numbers for SMS alerts</li>
-              <li>Location data (GPS coordinates and address)</li>
-              <li>Naloxone storage locations you specify</li>
-            </ul>
-
-            <h3 className="text-xl font-semibold mt-4 mb-2">Health Data (HIPAA-Protected)</h3>
-            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>Heart rate, respiratory rate, SpO2 levels from NG Watch</li>
-              <li>Overdose detection alerts and timestamps</li>
-              <li>Naloxone administration records</li>
-              <li>Recovery milestones and wellness tracking</li>
-            </ul>
-
-            <h3 className="text-xl font-semibold mt-4 mb-2">Usage Data</h3>
-            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>App interactions and feature usage</li>
-              <li>Training module completion</li>
-              <li>Hero Network participation</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-3">2. How We Use Your Information</h2>
-            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>
-                <strong>Emergency Response:</strong> Share location and vitals with 911, emergency contacts, and nearby
-                Heroes during overdose alerts
-              </li>
-              <li>
-                <strong>Vitals Monitoring:</strong> Process sensor data through Kalman filtering to detect overdose
-                events
-              </li>
-              <li>
-                <strong>Never Use Alone:</strong> Trigger automatic check-ins and emergency protocols
-              </li>
-              <li>
-                <strong>Hero Network:</strong> Connect nearby trained responders to emergencies
-              </li>
-              <li>
-                <strong>Guardian Aingel:</strong> Provide personalized recovery insights and recommendations
-              </li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-3">3. Data Sharing</h2>
-            <p className="text-muted-foreground mb-3">We share your data ONLY in the following circumstances:</p>
-            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>
-                <strong>Emergency Situations:</strong> With 911 dispatchers, paramedics, and your emergency contacts
-              </li>
-              <li>
-                <strong>Hero Network:</strong> Location and basic emergency info with nearby trained Heroes
-              </li>
-              <li>
-                <strong>Legal Requirements:</strong> When required by law or to prevent imminent harm
-              </li>
-            </ul>
-            <p className="text-muted-foreground mt-3">
-              We DO NOT sell your data to third parties or share it for marketing purposes.
+        <div className="space-y-6 text-sm text-muted-foreground">
+          <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Guardian Stability planner</h2>
+            <p>
+              The optional planner can store your needs check-ins, estimated sleep hours, goals, plans, ZIP code,
+              and a support phone number in this browser. It is off until you enable it. Your entries are not
+              uploaded to a NarcoGuard account or synced between devices by this planner.
+            </p>
+            <p>
+              Anyone who can use this browser may be able to read your entries. They are not encrypted by the
+              planner. Clearing your browser data can erase them. You can pause new entries or erase the planner
+              data from its page; erasing the planner does not erase data held by external sites you visit.
             </p>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-3">4. HIPAA Compliance</h2>
-            <p className="text-muted-foreground">
-              NarcoGuard handles Protected Health Information (PHI) in compliance with HIPAA regulations. Your health
-              data is encrypted in transit and at rest. By using the App, you authorize us to share your PHI with
-              emergency responders when necessary to save your life.
+          <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Website analytics and outside services</h2>
+            <p>
+              This website includes Vercel Analytics for site-usage measurements. The planner does not send your
+              check-in answers, goals, sleep entries, support phone number, or ZIP code as custom analytics events.
+              Visiting the planner page may still count as a website page visit. Do not enter personal information
+              into a shared browser if that would put you at risk.
+            </p>
+            <p>
+              Resource links can open third-party websites or phone services. Those services have their own privacy
+              practices. Check a service&apos;s details and availability before relying on it.
             </p>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-3">5. Data Retention</h2>
-            <p className="text-muted-foreground">
-              We retain your data for as long as you use the App. You can request data deletion at any time by
-              contacting support@narcoguard.app.
+          <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Emergency and health limitations</h2>
+            <p>
+              The public app is a software and wearable research concept, not an emergency dispatch service or a
+              validated medical device. The Guardian planner does not monitor your location or vitals, calculate
+              relapse odds, contact loved ones, summon responders, or contact 911 for you. Its support-person link
+              only opens your phone dialer when you choose to tap it. Call 911 yourself for an immediate emergency.
+            </p>
+            <p>
+              No formal HIPAA compliance claim is made for the current planner, and its browser-local entries are
+              not encrypted at rest by the planner. Any future health-data service or contact alerts would need separate consent,
+              security, and legal review before launch.
             </p>
           </section>
 
-          <section>
-            <h2 className="text-2xl font-semibold mb-3">6. Your Privacy Rights</h2>
-            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>Access your data at any time through the App</li>
-              <li>Request data correction or deletion</li>
-              <li>Opt out of non-emergency data collection</li>
-              <li>Use incognito mode to limit data sharing with Hero Network</li>
-            </ul>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-3">7. Security</h2>
-            <p className="text-muted-foreground">
-              We use industry-standard encryption and security measures to protect your data. However, no system is 100%
-              secure. You use the App at your own risk.
-            </p>
-          </section>
-
-          <section>
-            <h2 className="text-2xl font-semibold mb-3">8. Contact Us</h2>
-            <p className="text-muted-foreground">
-              For privacy questions or to exercise your rights, contact: privacy@narcoguard.app
-            </p>
+          <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Questions</h2>
+            <p>For privacy questions, contact <a className="underline" href="mailto:narcoguard607@gmail.com">narcoguard607@gmail.com</a>.</p>
           </section>
         </div>
       </div>
-    </div>
+    </main>
   )
 }

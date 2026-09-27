@@ -16,7 +16,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test:e2e": "npm run build && playwright test",
     "test:pwa": "node scripts/run-pwa-tests.js",
-    "verify": "npm run lint && npm run typecheck && npm run validate:production && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm run test:guardian && npm run validate:watch-design && npm audit --audit-level=high && npm run build && npm run test:pwa",
+    "verify": "npm run lint && npm run typecheck && npm run validate:production && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm run test:guardian && npm run test:constitution && npm run validate:watch-design && npm audit --audit-level=high && npm run build && npm run test:pwa",
     "health": "npm run verify",
     "setup:project-ops": "node scripts/setup-project-ops.mjs",
     "marketing:run": "node scripts/post-daily-campaign.js",
@@ -27,6 +27,7 @@
     "validate:claims": "node scripts/validate-claims.js",
     "test:signals": "node --import tsx scripts/test-signal-fusion.ts",
     "test:guardian": "node --import tsx --test tests/guardian-*.test.ts",
+    "test:constitution": "node --import tsx --test tests/constitution-page.test.tsx",
     "validate:watch-design": "node --import tsx scripts/validate-watch-design.ts",
     "validate:production": "node scripts/validate-production.js"
   },
