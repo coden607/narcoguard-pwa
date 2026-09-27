@@ -71,4 +71,29 @@ test.describe("PWA production flow", () => {
     await expect(page.getByRole("heading", { name: "You're Offline" })).toBeVisible()
     await context.setOffline(false)
   })
+
+  test("Guardian needs planner requires consent and can be paused and erased", async ({ page }) => {
+    await page.goto("/stability")
+    await expect(page.getByRole("heading", { name: "Guardian Stability" })).toBeVisible()
+    await expect(page.getByLabel("Food status")).toHaveCount(0)
+
+    await page.getByRole("button", { name: "Enable my private planner" }).click()
+    await page.getByLabel("Food status").selectOption("needs-help")
+    await page.getByLabel("Hours slept last night").fill("7")
+    await expect(page.getByRole("link", { name: /Find local help through 211/ })).toBeVisible()
+    await page.getByLabel("Tomorrow's task").fill("Visit pantry")
+    await page.getByRole("button", { name: "Plan it" }).click()
+    await expect(page.getByText(/Visit pantry/)).toBeVisible()
+
+    await page.getByRole("button", { name: "Pause" }).click()
+    await expect(page.getByLabel("Food status")).toBeDisabled()
+    await page.reload()
+    await expect(page.getByLabel("Food status")).toBeDisabled()
+    await page.getByRole("button", { name: "Resume" }).click()
+    await expect(page.getByLabel("Food status")).toHaveValue("needs-help")
+
+    page.once("dialog", (dialog) => dialog.accept())
+    await page.getByRole("button", { name: "Erase all Guardian data" }).click()
+    await expect(page.getByRole("button", { name: "Enable my private planner" })).toBeVisible()
+  })
 })
