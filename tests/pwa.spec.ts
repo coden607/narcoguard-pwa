@@ -90,7 +90,7 @@ test.describe("PWA production flow", () => {
     await page.getByLabel("Plan need").selectOption("food")
     await page.getByRole("button", { name: "Add to plan" }).click()
     await expect(page.getByText(/Visit pantry/)).toBeVisible()
-    await expect(page.getByText(/appointment/)).toBeVisible()
+    await expect(page.getByText(/appointment at/)).toBeVisible()
 
     await page.getByRole("button", { name: "Pause" }).click()
     await expect(page.getByLabel("Food status")).toBeDisabled()
