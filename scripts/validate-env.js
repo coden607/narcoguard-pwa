@@ -8,6 +8,7 @@ const ignoredRuntimeVariables = new Set([
   "CI", "FORCE_DAY", "GRANT_TYPE", "NEXT_DIST_DIR", "NODE_ENV", "PWA_BROWSER",
   "APPLICANT_NAME", "APPLICANT_EMAIL", "COMPANY_NAME", "DOS_ID", "SAMHSA_EMAIL",
   "OASAS_EMAIL", "STAP_EMAIL", "GOFUNDME_URL",
+  "GITHUB_EVENT_PATH", "GITHUB_EVENT_NAME", "GITHUB_REPOSITORY", "GITHUB_ACTOR",
 ])
 
 const variableNames = (contents) => new Set(
