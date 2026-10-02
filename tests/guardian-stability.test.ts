@@ -31,3 +31,13 @@ test("early warning is transparent, configurable, and not a relapse probability"
   assert.equal(earlyWarning({date:"2026-10-01",needs:{}},3).level,"steady")
   assert.equal(earlyWarning(entry,6).level,"check-in")
 })
+
+
+test("appointment planning data is retained only within the safe local schema", () => {
+  const store = storage()
+  const enabled = { ...defaultGuardianState(), enabled: true, plan: [
+    { id: "appointment-1", date: "2026-10-03", title: "Clinic visit", done: false, kind: "appointment" as const, time: "14:30", location: "Community clinic", need: "treatment" as const },
+  ] }
+  saveGuardianState(store, enabled)
+  assert.deepEqual(readGuardianState(store).plan[0], enabled.plan[0])
+})
