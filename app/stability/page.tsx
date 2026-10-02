@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
-  clearGuardianState, defaultGuardianState, NEEDS, readGuardianState, saveGuardianState, summarizePattern,
+  clearGuardianState, defaultGuardianState, earlyWarning, NEEDS, patternInsights, readGuardianState, saveGuardianState,
   type GuardianState, type Need, type NeedStatus,
 } from "@/lib/guardian-stability"
 import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
@@ -33,7 +33,7 @@ export default function StabilityPage() {
   if (!state || !now) return <main className="p-6" role="status">Loading your planner…</main>
 
   const today = state.entries.find((item) => item.date === now) ?? { date: now, needs: {} }
-  const pattern = summarizePattern(state.entries)
+  const patterns = patternInsights(state.entries).slice(0, 5)\n  const warning = earlyWarning(today, state.escalationThreshold)
   const needsHelp = NEEDS.filter((need) => today.needs[need] === "needs-help")
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
 
