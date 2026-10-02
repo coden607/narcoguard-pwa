@@ -6,6 +6,9 @@ export interface CheckIn {
   date: string
   needs: Partial<Record<Need, NeedStatus>>
   sleepHours?: number
+  mood?: "low" | "okay" | "good"
+  craving?: "none" | "some" | "strong"
+  isolated?: boolean
 }
 export interface PlanItem { id: string; date: string; title: string; done: boolean }
 export interface GuardianState {
@@ -40,7 +43,14 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
       for (const need of NEEDS) {
         if (entry.needs?.[need] === "met" || entry.needs?.[need] === "needs-help") needs[need] = entry.needs[need]
       }
-      return { date: entry.date, needs, ...(typeof entry.sleepHours === "number" && entry.sleepHours >= 0 && entry.sleepHours <= 24 ? { sleepHours: entry.sleepHours } : {}) }
+      return {
+        date: entry.date,
+        needs,
+        ...(typeof entry.sleepHours === "number" && entry.sleepHours >= 0 && entry.sleepHours <= 24 ? { sleepHours: entry.sleepHours } : {}),
+        ...(entry.mood === "low" || entry.mood === "okay" || entry.mood === "good" ? { mood: entry.mood } : {}),
+        ...(entry.craving === "none" || entry.craving === "some" || entry.craving === "strong" ? { craving: entry.craving } : {}),
+        ...(typeof entry.isolated === "boolean" ? { isolated: entry.isolated } : {}),
+      }
     })
     return {
       enabled: true,
