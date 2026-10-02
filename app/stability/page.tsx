@@ -94,6 +94,12 @@ export default function StabilityPage() {
       </section>
       <section className="border rounded-xl p-5 space-y-4">
         <h2 className="text-xl font-semibold">Your goals and tomorrow’s plan</h2>
+        <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); if (goal.trim()) { update({ ...state, goals: [...state.goals, goal.trim().slice(0, 160)] }); setGoal("") } }}>
+          <input aria-label="New goal" disabled={state.paused} maxLength={160} className="bg-background border rounded p-2 flex-1 min-w-0" placeholder="A goal you choose" value={goal} onChange={(event) => setGoal(event.target.value)} />
+          <Button disabled={state.paused} type="submit">Add goal</Button>
+        </form>
+
+        <ul className="space-y-2">{state.goals.map((item, index) => <li key={`${index}-${item}`} className="flex justify-between gap-2">{item}<button disabled={state.paused} className="underline" onClick={() => update({ ...state, goals: state.goals.filter((_, i) => i !== index) })}>Remove</button></li>)}</ul>
         <p className="text-sm text-muted-foreground">Plan a task or an appointment. NarcoGuard does not book, confirm, or change appointments; verify details with the provider.</p>
         <form className="grid gap-2 sm:grid-cols-2" onSubmit={(event) => { event.preventDefault(); if (planTitle.trim()) { update({ ...state, plan: [...state.plan, { id: crypto.randomUUID(), date: planDate || localDate(1), title: planTitle.trim().slice(0, 160), done: false, kind: planTime ? "appointment" : "task", ...(planTime ? { time: planTime } : {}), ...(planLocation.trim() ? { location: planLocation.trim().slice(0, 160) } : {}), ...(planNeed ? { need: planNeed } : {}) }] }); setPlanTitle(""); setPlanDate(""); setPlanTime(""); setPlanLocation(""); setPlanNeed("") } }}>
           <input aria-label="Task or appointment" disabled={state.paused} maxLength={160} className="bg-background border rounded p-2 sm:col-span-2" placeholder="Task or appointment name" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} />
@@ -102,11 +108,6 @@ export default function StabilityPage() {
           <label className="text-sm">Location or call details (optional)<input aria-label="Plan location" disabled={state.paused} maxLength={160} className="block bg-background border rounded p-2 w-full" value={planLocation} onChange={(event) => setPlanLocation(event.target.value)} /></label>
           <label className="text-sm">Need this supports (optional)<select aria-label="Plan need" disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={planNeed} onChange={(event) => setPlanNeed(event.target.value as Need | "")}><option value="">Choose a need</option>{NEEDS.map((need) => <option key={need} value={need}>{names[need]}</option>)}</select></label>
           <Button disabled={state.paused} type="submit" className="sm:col-span-2">Add to plan</Button>
-        </form>
-        <ul className="space-y-2">{state.goals.map((item, index) => <li key={`${index}-${item}`} className="flex justify-between gap-2">{item}<button disabled={state.paused} className="underline" onClick={() => update({ ...state, goals: state.goals.filter((_, i) => i !== index) })}>Remove</button></li>)}</ul>
-        <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); if (planTitle.trim()) { update({ ...state, plan: [...state.plan, { id: crypto.randomUUID(), date: localDate(1), title: planTitle.trim().slice(0, 160), done: false }] }); setPlanTitle("") } }}>
-          <input aria-label="Tomorrow's task" disabled={state.paused} maxLength={160} className="bg-background border rounded p-2 flex-1 min-w-0" placeholder="One step for tomorrow" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} />
-          <Button disabled={state.paused} type="submit">Plan it</Button>
         </form>
         {today.needs.food === "needs-help" && <p className="text-sm">Planning ahead could help: consider finding a pantry or meal for tomorrow. Check availability before you go.</p>}
         <ul className="space-y-2">{state.plan.filter((item) => item.date >= now).map((item) => <li key={item.id} className="flex flex-wrap items-center gap-3">
