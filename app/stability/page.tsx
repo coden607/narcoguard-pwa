@@ -33,7 +33,8 @@ export default function StabilityPage() {
   if (!state || !now) return <main className="p-6" role="status">Loading your planner…</main>
 
   const today = state.entries.find((item) => item.date === now) ?? { date: now, needs: {} }
-  const patterns = patternInsights(state.entries).slice(0, 5)\n  const warning = earlyWarning(today, state.escalationThreshold)
+  const patterns = patternInsights(state.entries).slice(0, 5)
+  const warning = earlyWarning(today, state.escalationThreshold)
   const needsHelp = NEEDS.filter((need) => today.needs[need] === "needs-help")
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
 
