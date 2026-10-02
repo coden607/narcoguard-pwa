@@ -2,8 +2,8 @@ export const GUARDIAN_STORAGE_KEY = "narcoguard_guardian_stability_v2"
 export const NEEDS = ["food", "water", "sleep", "hygiene", "laundry", "safePlace", "connection", "treatment"] as const
 export type Need = typeof NEEDS[number]
 export type NeedStatus = "met" | "needs-help"
-export interface CheckIn { date: string; needs: Partial<Record<Need, NeedStatus>>; sleepHours?: number }
-export interface PlanItem { id: string; date: string; title: string; done: boolean }
+export interface CheckIn { date: string; needs: Partial<Record<Need, NeedStatus>>; sleepHours?: number; mood?: "low" | "okay" | "good"; craving?: "none" | "some" | "strong"; isolated?: boolean }
+export interface PlanItem { id: string; date: string; title: string; done: boolean; kind?: "task" | "appointment"; time?: string; location?: string; need?: Need }
 export interface GuardianState {
   enabled: boolean; paused: boolean; postalCode: string; supportPhone: string; goals: string[]; entries: CheckIn[]; plan: PlanItem[]
   escalationEnabled: boolean; escalationThreshold: number
@@ -27,7 +27,14 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
     const entries: CheckIn[] = value.entries.slice(-365).filter((entry: unknown) => entry && typeof entry === "object" && isDate((entry as CheckIn).date)).map((entry: CheckIn) => {
       const needs: CheckIn["needs"] = {}
       for (const need of NEEDS) if (entry.needs?.[need] === "met" || entry.needs?.[need] === "needs-help") needs[need] = entry.needs[need]
-      return { date: entry.date, needs, ...(typeof entry.sleepHours === "number" && entry.sleepHours >= 0 && entry.sleepHours <= 24 ? { sleepHours: entry.sleepHours } : {}) }
+      return {
+        date: entry.date,
+        needs,
+        ...(typeof entry.sleepHours === "number" && entry.sleepHours >= 0 && entry.sleepHours <= 24 ? { sleepHours: entry.sleepHours } : {}),
+        ...(entry.mood === "low" || entry.mood === "okay" || entry.mood === "good" ? { mood: entry.mood } : {}),
+        ...(entry.craving === "none" || entry.craving === "some" || entry.craving === "strong" ? { craving: entry.craving } : {}),
+        ...(typeof entry.isolated === "boolean" ? { isolated: entry.isolated } : {}),
+      }
     })
     return {
       enabled: true, paused: value.paused === true,
@@ -35,7 +42,7 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
       supportPhone: typeof value.supportPhone === "string" ? value.supportPhone.slice(0, 30) : "",
       goals: value.goals.filter((g: unknown) => typeof g === "string").slice(0, 20).map((g: string) => g.slice(0, 160)),
       entries,
-      plan: value.plan.filter((i: unknown) => i && typeof i === "object" && isDate((i as PlanItem).date) && typeof (i as PlanItem).title === "string" && typeof (i as PlanItem).id === "string").slice(-100).map((i: PlanItem) => ({ id: i.id.slice(0,80), date:i.date, title:i.title.slice(0,160), done:i.done===true })),
+      plan: value.plan.filter((i: unknown) => i && typeof i === "object" && isDate((i as PlanItem).date) && typeof (i as PlanItem).title === "string" && typeof (i as PlanItem).id === "string").slice(-100).map((i: PlanItem) => ({ id: i.id.slice(0,80), date:i.date, title:i.title.slice(0,160), done:i.done===true, ...(i.kind === "appointment" || i.kind === "task" ? { kind: i.kind } : {}), ...(typeof i.time === "string" && /^\d{2}:\d{2}$/.test(i.time) ? { time: i.time } : {}), ...(typeof i.location === "string" ? { location: i.location.slice(0,160) } : {}), ...(NEEDS.includes(i.need as Need) ? { need: i.need as Need } : {}) })),
       escalationEnabled: value.escalationEnabled === true,
       escalationThreshold: typeof value.escalationThreshold === "number" && value.escalationThreshold >= 2 && value.escalationThreshold <= 6 ? Math.round(value.escalationThreshold) : 3,
     }
