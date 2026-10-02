@@ -8,6 +8,8 @@ import {
   type GuardianState, type Need, type NeedStatus,
 } from "@/lib/guardian-stability"
 import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
+import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
+import { CalmingAudio } from "@/components/calming-audio"
 
 const names: Record<Need, string> = {
   food: "Food", water: "Water", sleep: "Sleep", hygiene: "Shower / hygiene",
@@ -23,6 +25,10 @@ export default function StabilityPage() {
   const [state, setState] = useState<GuardianState | null>(null)
   const [goal, setGoal] = useState("")
   const [planTitle, setPlanTitle] = useState("")
+  const [planDate, setPlanDate] = useState("")
+  const [planTime, setPlanTime] = useState("")
+  const [planLocation, setPlanLocation] = useState("")
+  const [planNeed, setPlanNeed] = useState<Need | "">("")
   const [now, setNow] = useState("")
   useEffect(() => { setState(readGuardianState(window.localStorage)); setNow(localDate()) }, [])
 
@@ -35,6 +41,8 @@ export default function StabilityPage() {
   const today = state.entries.find((item) => item.date === now) ?? { date: now, needs: {} }
   const patterns = patternInsights(state.entries).slice(0, 5)
   const warning = earlyWarning(today, state.escalationThreshold)
+  const prevention = analyzePreventionPatterns(state.entries, today)
+  const suggested = suggestedNeeds(prevention)
   const needsHelp = NEEDS.filter((need) => today.needs[need] === "needs-help")
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
 
@@ -72,6 +80,11 @@ export default function StabilityPage() {
             <option value="">Unknown</option><option value="met">Met</option><option value="needs-help">Need help</option>
           </select>
         </label>)}</div>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <label className="space-y-1">Mood (optional)<select disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={today.mood ?? ""} onChange={(event) => update({ ...state, entries: [...state.entries.filter((item) => item.date !== now), { ...today, mood: (event.target.value || undefined) as typeof today.mood }] })}><option value="">Unknown</option><option value="good">Good</option><option value="okay">Okay</option><option value="low">Low</option></select></label>
+          <label className="space-y-1">Craving (optional)<select disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={today.craving ?? ""} onChange={(event) => update({ ...state, entries: [...state.entries.filter((item) => item.date !== now), { ...today, craving: (event.target.value || undefined) as typeof today.craving }] })}><option value="">Unknown</option><option value="none">None</option><option value="some">Some</option><option value="strong">Strong</option></select></label>
+          <label className="space-y-1">Connection (optional)<select disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={today.isolated === undefined ? "" : today.isolated ? "isolated" : "connected"} onChange={(event) => update({ ...state, entries: [...state.entries.filter((item) => item.date !== now), { ...today, isolated: event.target.value === "" ? undefined : event.target.value === "isolated" }] })}><option value="">Unknown</option><option value="connected">Feeling connected</option><option value="isolated">Feeling isolated</option></select></label>
+        </div>
         <label className="block space-y-1">Hours slept last night (optional, your estimate)
           <input disabled={state.paused} type="number" min="0" max="24" step="0.5" className="block bg-background border rounded p-2 w-28" value={today.sleepHours ?? ""} onChange={(event) => {
             const value = event.target.value
@@ -81,9 +94,14 @@ export default function StabilityPage() {
       </section>
       <section className="border rounded-xl p-5 space-y-4">
         <h2 className="text-xl font-semibold">Your goals and tomorrow’s plan</h2>
-        <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); if (goal.trim()) { update({ ...state, goals: [...state.goals, goal.trim().slice(0, 160)] }); setGoal("") } }}>
-          <input aria-label="New goal" disabled={state.paused} maxLength={160} className="bg-background border rounded p-2 flex-1 min-w-0" placeholder="A goal you choose" value={goal} onChange={(event) => setGoal(event.target.value)} />
-          <Button disabled={state.paused} type="submit">Add goal</Button>
+        <p className="text-sm text-muted-foreground">Plan a task or an appointment. NarcoGuard does not book, confirm, or change appointments; verify details with the provider.</p>
+        <form className="grid gap-2 sm:grid-cols-2" onSubmit={(event) => { event.preventDefault(); if (planTitle.trim()) { update({ ...state, plan: [...state.plan, { id: crypto.randomUUID(), date: planDate || localDate(1), title: planTitle.trim().slice(0, 160), done: false, kind: planTime ? "appointment" : "task", ...(planTime ? { time: planTime } : {}), ...(planLocation.trim() ? { location: planLocation.trim().slice(0, 160) } : {}), ...(planNeed ? { need: planNeed } : {}) }] }); setPlanTitle(""); setPlanDate(""); setPlanTime(""); setPlanLocation(""); setPlanNeed("") } }}>
+          <input aria-label="Task or appointment" disabled={state.paused} maxLength={160} className="bg-background border rounded p-2 sm:col-span-2" placeholder="Task or appointment name" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} />
+          <label className="text-sm">Date<input aria-label="Plan date" disabled={state.paused} type="date" min={now} className="block bg-background border rounded p-2 w-full" value={planDate || localDate(1)} onChange={(event) => setPlanDate(event.target.value)} /></label>
+          <label className="text-sm">Time (optional; adding one makes it an appointment)<input aria-label="Plan time" disabled={state.paused} type="time" className="block bg-background border rounded p-2 w-full" value={planTime} onChange={(event) => setPlanTime(event.target.value)} /></label>
+          <label className="text-sm">Location or call details (optional)<input aria-label="Plan location" disabled={state.paused} maxLength={160} className="block bg-background border rounded p-2 w-full" value={planLocation} onChange={(event) => setPlanLocation(event.target.value)} /></label>
+          <label className="text-sm">Need this supports (optional)<select aria-label="Plan need" disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={planNeed} onChange={(event) => setPlanNeed(event.target.value as Need | "")}><option value="">Choose a need</option>{NEEDS.map((need) => <option key={need} value={need}>{names[need]}</option>)}</select></label>
+          <Button disabled={state.paused} type="submit" className="sm:col-span-2">Add to plan</Button>
         </form>
         <ul className="space-y-2">{state.goals.map((item, index) => <li key={`${index}-${item}`} className="flex justify-between gap-2">{item}<button disabled={state.paused} className="underline" onClick={() => update({ ...state, goals: state.goals.filter((_, i) => i !== index) })}>Remove</button></li>)}</ul>
         <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); if (planTitle.trim()) { update({ ...state, plan: [...state.plan, { id: crypto.randomUUID(), date: localDate(1), title: planTitle.trim().slice(0, 160), done: false }] }); setPlanTitle("") } }}>
@@ -93,9 +111,19 @@ export default function StabilityPage() {
         {today.needs.food === "needs-help" && <p className="text-sm">Planning ahead could help: consider finding a pantry or meal for tomorrow. Check availability before you go.</p>}
         <ul className="space-y-2">{state.plan.filter((item) => item.date >= now).map((item) => <li key={item.id} className="flex flex-wrap items-center gap-3">
           <input aria-label={`Mark ${item.title} complete`} disabled={state.paused} type="checkbox" checked={item.done} onChange={() => update({ ...state, plan: state.plan.map((candidate) => candidate.id === item.id ? { ...candidate, done: !candidate.done } : candidate) })} />
-          <span className={item.done ? "line-through" : ""}>{item.date}: {item.title}</span>
+          <span className={item.done ? "line-through" : ""}>{item.date}{item.kind === "appointment" ? ` · appointment${item.time ? ` at ${item.time}` : ""}` : ""}: {item.title}{item.location ? ` · ${item.location}` : ""}{item.need ? ` · support: ${names[item.need]}` : ""}</span>
           <button disabled={state.paused} className="underline ml-auto" onClick={() => update({ ...state, plan: state.plan.filter((candidate) => candidate.id !== item.id) })}>Remove</button>
         </li>)}</ul>
+      </section>
+      <section className="border rounded-xl p-5 space-y-4" aria-live="polite">
+        <h2 className="text-xl font-semibold">Pre-warning & next action</h2>
+        {prevention.level === "steady" ? <p>No change that needs attention is visible in the information you chose to record today. Unknown answers stay unknown.</p> : <>
+          <p className="font-medium">{prevention.level === "support" ? "Several things you recorded today may deserve support." : "One or more things you recorded today may deserve attention."}</p>
+          <ul className="list-disc pl-5 space-y-2">{prevention.signals.map((signal) => <li key={signal.id}><strong>{signal.label}.</strong> {signal.detail}</li>)}</ul>
+          <p className="text-sm text-muted-foreground">This compares your voluntary entries with your own recent records. It is not a relapse probability, diagnosis, or proof that one event causes another.</p>
+          {suggested.length > 0 && <p>Choose a small next step below for {suggested.map((need) => names[need]).join(", ")}. You remain in control of what happens next.</p>}
+        </>}
+        <CalmingAudio />
       </section>
       <section className="border rounded-xl p-5 space-y-4">
         <h2 className="text-xl font-semibold">Find a next step</h2>
@@ -123,8 +151,8 @@ export default function StabilityPage() {
         <label className="block">Someone you choose to call (optional)
           <input disabled={state.paused} type="tel" maxLength={30} className="block bg-background border rounded p-2" value={state.supportPhone} onChange={(event) => update({ ...state, supportPhone: event.target.value })} placeholder="Phone number" />
         </label>
-        {telephone.length >= 7 && <a href={`tel:${telephone}`} className="underline text-primary">Call my support person</a>}
-        <p className="text-sm text-muted-foreground">NarcoGuard does not call or message anyone for you. No relapse risk score or emergency detection is provided here.</p>
+        {telephone.length >= 7 && <div className="flex flex-wrap gap-4"><a href={`tel:${telephone}`} className="underline text-primary">Call my support person</a><a href={`sms:${telephone}?body=${encodeURIComponent("Could you check in with me when you can? I would like some support.")}`} className="underline text-primary">Draft a check-in text</a></div>}
+        <p className="text-sm text-muted-foreground">NarcoGuard never sends this message automatically. The text link only opens your phone's composer so you can review and choose whether to send it. No relapse risk score or emergency detection is provided here.</p>
       </section>
     </>}
   </main>
