@@ -125,8 +125,8 @@ export default function StabilityPage() {
         <label className="block">Someone you choose to call (optional)
           <input disabled={state.paused} type="tel" maxLength={30} className="block bg-background border rounded p-2" value={state.supportPhone} onChange={(event) => update({ ...state, supportPhone: event.target.value })} placeholder="Phone number" />
         </label>
-        {telephone.length >= 7 && <a href={`tel:${telephone}`} className="underline text-primary">Call my support person</a>}
-        <p className="text-sm text-muted-foreground">NarcoGuard does not call or message anyone for you. No relapse risk score or emergency detection is provided here.</p>
+        {telephone.length >= 7 && <div className="flex flex-wrap gap-4"><a href={`tel:${telephone}`} className="underline text-primary">Call my support person</a><a href={`sms:${telephone}?body=${encodeURIComponent("Could you check in with me when you can? I would like some support.")}`} className="underline text-primary">Draft a check-in text</a></div>}
+        <p className="text-sm text-muted-foreground">NarcoGuard never sends this message automatically. The text link only opens your phone's composer so you can review and choose whether to send it. No relapse risk score or emergency detection is provided here.</p>
       </section>
     </>}
   </main>
