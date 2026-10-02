@@ -8,6 +8,8 @@ import {
   type GuardianState, type Need, type NeedStatus,
 } from "@/lib/guardian-stability"
 import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
+import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
+import { CalmingAudio } from "@/components/calming-audio"
 
 const names: Record<Need, string> = {
   food: "Food", water: "Water", sleep: "Sleep", hygiene: "Shower / hygiene",
@@ -34,6 +36,8 @@ export default function StabilityPage() {
 
   const today = state.entries.find((item) => item.date === now) ?? { date: now, needs: {} }
   const pattern = summarizePattern(state.entries)
+  const prevention = analyzePreventionPatterns(state.entries, today)
+  const suggested = suggestedNeeds(prevention)
   const needsHelp = NEEDS.filter((need) => today.needs[need] === "needs-help")
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
 
@@ -95,6 +99,16 @@ export default function StabilityPage() {
           <span className={item.done ? "line-through" : ""}>{item.date}: {item.title}</span>
           <button disabled={state.paused} className="underline ml-auto" onClick={() => update({ ...state, plan: state.plan.filter((candidate) => candidate.id !== item.id) })}>Remove</button>
         </li>)}</ul>
+      </section>
+      <section className="border rounded-xl p-5 space-y-4" aria-live="polite">
+        <h2 className="text-xl font-semibold">Pre-warning & next action</h2>
+        {prevention.level === "steady" ? <p>No change that needs attention is visible in the information you chose to record today. Unknown answers stay unknown.</p> : <>
+          <p className="font-medium">{prevention.level === "support" ? "Several things you recorded today may deserve support." : "One or more things you recorded today may deserve attention."}</p>
+          <ul className="list-disc pl-5 space-y-2">{prevention.signals.map((signal) => <li key={signal.id}><strong>{signal.label}.</strong> {signal.detail}</li>)}</ul>
+          <p className="text-sm text-muted-foreground">This compares your voluntary entries with your own recent records. It is not a relapse probability, diagnosis, or proof that one event causes another.</p>
+          {suggested.length > 0 && <p>Choose a small next step below for {suggested.map((need) => names[need]).join(", ")}. You remain in control of what happens next.</p>}
+        </>}
+        <CalmingAudio />
       </section>
       <section className="border rounded-xl p-5 space-y-4">
         <h2 className="text-xl font-semibold">Find a next step</h2>
