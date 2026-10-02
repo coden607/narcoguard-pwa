@@ -108,7 +108,8 @@ export default function StabilityPage() {
       </section>
       <section className="border rounded-xl p-5 space-y-3">
         <h2 className="text-xl font-semibold">Your patterns and support</h2>
-        <p>{pattern ? `Of ${pattern.answered} days when you marked food as needing help and answered the connection question, you also marked connection as needing help ${pattern.observed} times (${pattern.percent}%). This describes your entries; it is not a prediction or proof of cause.` : "Not enough answered check-ins for a personal pattern yet. Five days with both food and connection answered are needed."}</p>
+        <p>Current pre-warning: {warning.level}. Based only on the signals you chose to enter today ({warning.score}); this is non-diagnostic and not a probability.</p>
+        {patterns.length > 0 ? <ul>{patterns.map((item) => <li key={`${item.trigger}-${item.companion}`}>{names[item.trigger]} + {names[item.companion]}: {item.observed}/{item.answered} answered check-ins ({item.percent}%). This describes your entries; it does not prove cause.</li>)}</ul> : <p>Not enough answered check-ins for a personal pattern yet.</p>}
         <label className="block">Someone you choose to call (optional)
           <input disabled={state.paused} type="tel" maxLength={30} className="block bg-background border rounded p-2" value={state.supportPhone} onChange={(event) => update({ ...state, supportPhone: event.target.value })} placeholder="Phone number" />
         </label>
