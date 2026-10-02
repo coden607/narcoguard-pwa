@@ -29,7 +29,8 @@
     "test:guardian": "node --import tsx --test tests/guardian-*.test.ts tests/prevention-engine.test.ts",
     "test:constitution": "node --import tsx --test tests/constitution-page.test.tsx",
     "validate:watch-design": "node --import tsx scripts/validate-watch-design.ts",
-    "validate:production": "node scripts/validate-production.js"
+    "validate:production": "node scripts/validate-production.js",
+    "validate:env": "node scripts/validate-env.js"
   },
   "overrides": {
     "brace-expansion": "5.0.12",
