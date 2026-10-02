@@ -75,6 +75,11 @@ export default function StabilityPage() {
             <option value="">Unknown</option><option value="met">Met</option><option value="needs-help">Need help</option>
           </select>
         </label>)}</div>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <label className="space-y-1">Mood (optional)<select disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={today.mood ?? ""} onChange={(event) => update({ ...state, entries: [...state.entries.filter((item) => item.date !== now), { ...today, mood: (event.target.value || undefined) as typeof today.mood }] })}><option value="">Unknown</option><option value="good">Good</option><option value="okay">Okay</option><option value="low">Low</option></select></label>
+          <label className="space-y-1">Craving (optional)<select disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={today.craving ?? ""} onChange={(event) => update({ ...state, entries: [...state.entries.filter((item) => item.date !== now), { ...today, craving: (event.target.value || undefined) as typeof today.craving }] })}><option value="">Unknown</option><option value="none">None</option><option value="some">Some</option><option value="strong">Strong</option></select></label>
+          <label className="space-y-1">Connection (optional)<select disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={today.isolated === undefined ? "" : today.isolated ? "isolated" : "connected"} onChange={(event) => update({ ...state, entries: [...state.entries.filter((item) => item.date !== now), { ...today, isolated: event.target.value === "" ? undefined : event.target.value === "isolated" }] })}><option value="">Unknown</option><option value="connected">Feeling connected</option><option value="isolated">Feeling isolated</option></select></label>
+        </div>
         <label className="block space-y-1">Hours slept last night (optional, your estimate)
           <input disabled={state.paused} type="number" min="0" max="24" step="0.5" className="block bg-background border rounded p-2 w-28" value={today.sleepHours ?? ""} onChange={(event) => {
             const value = event.target.value
