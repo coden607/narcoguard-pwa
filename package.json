@@ -26,7 +26,7 @@
     "validate:supabase": "node scripts/validate-supabase.js",
     "validate:claims": "node scripts/validate-claims.js",
     "test:signals": "node --import tsx scripts/test-signal-fusion.ts",
-    "test:guardian": "node --import tsx --test tests/guardian-*.test.ts",
+    "test:guardian": "node --import tsx --test tests/guardian-*.test.ts tests/prevention-engine.test.ts",
     "test:constitution": "node --import tsx --test tests/constitution-page.test.tsx",
     "validate:watch-design": "node --import tsx scripts/validate-watch-design.ts",
     "validate:production": "node scripts/validate-production.js"
