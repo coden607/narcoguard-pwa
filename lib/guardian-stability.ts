@@ -27,7 +27,14 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
     const entries: CheckIn[] = value.entries.slice(-365).filter((entry: unknown) => entry && typeof entry === "object" && isDate((entry as CheckIn).date)).map((entry: CheckIn) => {
       const needs: CheckIn["needs"] = {}
       for (const need of NEEDS) if (entry.needs?.[need] === "met" || entry.needs?.[need] === "needs-help") needs[need] = entry.needs[need]
-      return {\n        date: entry.date,\n        needs,\n        ...(typeof entry.sleepHours === "number" && entry.sleepHours >= 0 && entry.sleepHours <= 24 ? { sleepHours: entry.sleepHours } : {}),\n        ...(entry.mood === "low" || entry.mood === "okay" || entry.mood === "good" ? { mood: entry.mood } : {}),\n        ...(entry.craving === "none" || entry.craving === "some" || entry.craving === "strong" ? { craving: entry.craving } : {}),\n        ...(typeof entry.isolated === "boolean" ? { isolated: entry.isolated } : {}),\n      }
+      return {
+        date: entry.date,
+        needs,
+        ...(typeof entry.sleepHours === "number" && entry.sleepHours >= 0 && entry.sleepHours <= 24 ? { sleepHours: entry.sleepHours } : {}),
+        ...(entry.mood === "low" || entry.mood === "okay" || entry.mood === "good" ? { mood: entry.mood } : {}),
+        ...(entry.craving === "none" || entry.craving === "some" || entry.craving === "strong" ? { craving: entry.craving } : {}),
+        ...(typeof entry.isolated === "boolean" ? { isolated: entry.isolated } : {}),
+      }
     })
     return {
       enabled: true, paused: value.paused === true,
