@@ -21,3 +21,13 @@ test("unknown answers do not become negative signals", () => {
   const today: CheckIn = { date: "2026-09-30", needs: {} }
   assert.deepEqual(analyzePreventionPatterns([], today), { level: "steady", signals: [], baselineSleep: undefined })
 })
+
+
+test("voluntary precursor signals are explainable and user-entered", () => {
+  const today: CheckIn = { date: "2026-10-01", needs: {}, mood: "low", craving: "strong", isolated: true }
+  const summary = analyzePreventionPatterns([], today)
+  assert.equal(summary.level, "support")
+  assert.ok(summary.signals.some((signal) => signal.id === "mood-low"))
+  assert.ok(summary.signals.some((signal) => signal.id === "craving-strong"))
+  assert.ok(summary.signals.some((signal) => signal.id === "isolation"))
+})
