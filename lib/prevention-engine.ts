@@ -50,7 +50,11 @@ export function analyzePreventionPatterns(entries: CheckIn[], today: CheckIn): P
     })
   }
 
-  const level = signals.length >= 3 ? "support" : signals.length > 0 ? "check-in" : "steady"
+  if (today.mood === "low") signals.push({ id: "mood-low", label: "Mood check-in", detail: "You marked your mood as low today. Consider a support person, a chosen goal, or another small stabilizing step." })
+  if (today.craving === "strong") signals.push({ id: "craving-strong", label: "Strong craving", detail: "You marked a strong craving today. Consider using a support or treatment resource you trust." })
+  if (today.isolated === true) signals.push({ id: "isolation", need: "connection", label: "Feeling isolated", detail: "You chose to record feeling isolated today. A connection step may be useful if you want one." })
+
+    const level = signals.length >= 3 ? "support" : signals.length > 0 ? "check-in" : "steady"
   return { level, signals, baselineSleep }
 }
 
