@@ -110,6 +110,16 @@ export default function StabilityPage() {
         <h2 className="text-xl font-semibold">Your patterns and support</h2>
         <p>Current pre-warning: {warning.level}. Based only on the signals you chose to enter today ({warning.score}); this is non-diagnostic and not a probability.</p>
         {patterns.length > 0 ? <ul>{patterns.map((item) => <li key={`${item.trigger}-${item.companion}`}>{names[item.trigger]} + {names[item.companion]}: {item.observed}/{item.answered} answered check-ins ({item.percent}%). This describes your entries; it does not prove cause.</li>)}</ul> : <p>Not enough answered check-ins for a personal pattern yet.</p>}
+        <label className="flex items-center gap-2">
+          <input disabled={state.paused} type="checkbox" checked={state.escalationEnabled} onChange={(event) => update({ ...state, escalationEnabled: event.target.checked })} />
+          Offer my chosen support option when my threshold is reached
+        </label>
+        <label className="block text-sm">Support threshold
+          <select disabled={state.paused || !state.escalationEnabled} className="ml-2 bg-background border rounded p-1" value={state.escalationThreshold} onChange={(event) => update({ ...state, escalationThreshold: Number(event.target.value) })}>
+            {[2, 3, 4, 5, 6].map((value) => <option key={value} value={value}>{value} signals</option>)}
+          </select>
+        </label>
+        {state.escalationEnabled && warning.level === "support" && <p className="text-sm">Your chosen threshold is reached. You decide whether to use the support option below; NarcoGuard does not contact anyone automatically.</p>}
         <label className="block">Someone you choose to call (optional)
           <input disabled={state.paused} type="tel" maxLength={30} className="block bg-background border rounded p-2" value={state.supportPhone} onChange={(event) => update({ ...state, supportPhone: event.target.value })} placeholder="Phone number" />
         </label>
