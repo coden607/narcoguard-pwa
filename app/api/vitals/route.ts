@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 
-const readingsSchema = z.array(z.object({ type: z.enum(["ppg", "ecg", "accelerometer", "thermometer", "oximeter"]), value: z.number().finite(), unit: z.string().min(1).max(20), confidence: z.number().finite().min(0).max(1), timestamp: z.number().finite().default(() => Date.now()) })).min(1).max(100)
+const readingsSchema = z.array(z.object({ type: z.enum(["ppg", "ecg", "accelerometer", "thermometer", "oximeter"]), value: z.number(), unit: z.string().min(1).max(20), confidence: z.number().min(0).max(1), timestamp: z.number().default(() => Date.now()) })).min(1).max(100)
 
 export async function GET() {
   return NextResponse.json({ available: false, source: "unavailable", message: "No verified wearable sensor connection is configured.", timestamp: Date.now() }, { status: 503 })

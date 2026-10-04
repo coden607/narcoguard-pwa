@@ -4,7 +4,7 @@ import { clearSession, ensureProfile, getSession, signIn, signUp, storeSession }
 
 const schema = z.object({
   action: z.enum(["login", "signup", "logout"]),
-  email: z.string().trim().email().max(254).optional(),
+  email: z.string().trim().pipe(z.email().max(254)).optional(),
   password: z.string().min(8).max(128).optional(),
   displayName: z.string().trim().min(1).max(80).optional(),
 })
