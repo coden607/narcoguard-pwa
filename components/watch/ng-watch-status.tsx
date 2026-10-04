@@ -50,8 +50,8 @@ export function NGWatchStatus() {
 
           <Dialog>
             <DialogTrigger asChild>
-              <button className="p-2 rounded-full glass hover:bg-primary/10 transition-all">
-                <Settings className="w-5 h-5 text-muted-foreground hover:text-primary" />
+              <button type="button" aria-label="Show NarcoGuard NG details" className="p-2 rounded-full glass hover:bg-primary/10 transition-all">
+                <Settings aria-hidden="true" className="w-5 h-5 text-muted-foreground hover:text-primary" />
               </button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-2xl glass neon-border">
@@ -72,7 +72,7 @@ export function NGWatchStatus() {
             </div>
             <span className={`text-2xl font-bold glow-text ${getBatteryColor()}`}>{battery === null ? "Unavailable" : Math.round(battery) + "%"}</span>
           </div>
-          <Progress value={battery ?? 0} className="h-3 pulse-glow" />
+          <Progress value={battery} aria-label="Watch battery level" className="h-3 pulse-glow" />
 
         </div>
 

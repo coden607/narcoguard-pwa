@@ -78,9 +78,9 @@ export function MealLogSection({ today, entries, paused, postalCode, onChange }:
       )}
       <div className="space-y-1">
         <p className="text-sm font-medium">Need food? These are free starting points; confirm hours with the provider.</p>
-        <ul className="list-disc pl-5 text-sm">
+        <ul className="list-disc pl-5 text-sm space-y-1">
           {foodHelp.map((resource) => (
-            <li key={resource.url}><a className="underline text-primary" href={resource.url} target="_blank" rel="noopener noreferrer">{resource.title}</a></li>
+            <li key={resource.url}><a className="inline-flex min-h-6 items-center underline text-primary" href={resource.url} target="_blank" rel="noopener noreferrer">{resource.title}</a></li>
           ))}
         </ul>
       </div>
