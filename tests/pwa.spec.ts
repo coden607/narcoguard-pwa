@@ -51,6 +51,20 @@ test.describe("PWA production flow", () => {
     expect(vitalsRequests).toBe(1)
   })
 
+  test("decorative motion stops when the person asks for reduced motion", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.goto("/fund")
+    const pulse = page.getByText("Overdose prevention deserves careful, evidence-led innovation").locator("..")
+    await expect(pulse).toBeVisible()
+
+    const samples: string[] = []
+    for (let i = 0; i < 4; i++) {
+      samples.push(await pulse.evaluate((element) => getComputedStyle(element).transform))
+      await page.waitForTimeout(300)
+    }
+    expect(new Set(samples).size, `transform changed over time: ${samples.join(" | ")}`).toBe(1)
+  })
+
   test("serves a valid install manifest and icons", async ({ page, request }) => {
     await page.goto("/")
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { motion } from "framer-motion"
+import { MotionConfig, motion } from "framer-motion"
 import { Heart, Mail, Share2, Copy, Check, Watch, Shield, Zap, Phone, MapPin, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -57,6 +57,8 @@ export default function FundPage() {
   ]
 
   return (
+    // Honour the OS "reduce motion" setting for every animation on this page.
+    <MotionConfig reducedMotion="user">
     <div className="min-h-screen bg-background">
       {/* Hero Section with Generated Images */}
       <section className="relative py-12 px-4 overflow-hidden">
@@ -411,5 +413,6 @@ export default function FundPage() {
         </div>
       </footer>
     </div>
+    </MotionConfig>
   )
 }
