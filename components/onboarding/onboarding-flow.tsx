@@ -92,7 +92,8 @@ const US_STATES = [
 ]
 
 interface OnboardingFlowProps {
-  onComplete: () => void
+  /** Called after preferences are saved; pages that read the preferences store update on their own. */
+  onComplete?: () => void
 }
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
@@ -129,9 +130,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       legal: preferences.legal,
     }
     saveUserPreferences(finalPreferences)
-    setTimeout(() => {
-      onComplete()
-    }, 100)
+    onComplete?.()
   }
 
   const addEmergencyContact = () => {

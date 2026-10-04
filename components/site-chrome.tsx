@@ -17,16 +17,15 @@ const links = [
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? "/"
-  const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    setOpen(false)
-  }, [pathname])
+  // The menu belongs to the page it was opened on, so navigating closes it without an effect.
+  const [openPath, setOpenPath] = useState<string | null>(null)
+  const open = openPath === pathname
+  const setOpen = (nextOpen: boolean) => setOpenPath(nextOpen ? pathname : null)
 
   useEffect(() => {
     if (!open) return
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpen(false)
+      if (event.key === "Escape") setOpenPath(null)
     }
     window.addEventListener("keydown", closeOnEscape)
     return () => window.removeEventListener("keydown", closeOnEscape)

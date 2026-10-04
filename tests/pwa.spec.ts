@@ -65,6 +65,49 @@ test.describe("PWA production flow", () => {
     expect(new Set(samples).size, `transform changed over time: ${samples.join(" | ")}`).toBe(1)
   })
 
+  test("skipping and resuming setup follows saved preferences across reloads", async ({ page }) => {
+    await page.goto("/")
+    await page.getByRole("button", { name: "Skip Setup (Demo Mode)" }).click()
+    await page.getByRole("button", { name: "Continue to Demo Mode" }).click()
+    await expect(page.getByText("Demo Mode Active")).toBeVisible()
+
+    await page.reload()
+    await expect(page.getByText("Demo Mode Active")).toBeVisible()
+
+    await page.getByRole("button", { name: "Complete Setup" }).click()
+    await expect(page.getByRole("button", { name: "Skip Setup (Demo Mode)" })).toBeVisible()
+  })
+
+  test("each opening of the emergency demo starts fresh", async ({ page }) => {
+    // This checks state, not animation: reduced motion makes the dialog close immediately.
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.addInitScript(() => localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true })))
+    await page.goto("/")
+    const trigger = page.getByRole("button", { name: /emergency options/i })
+
+    await trigger.click()
+    await page.getByRole("button", { name: "Run Emergency Demo" }).click()
+    await expect(page.getByText("Starting the demonstration...")).toBeVisible()
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+
+    await trigger.click()
+    await expect(page.getByRole("button", { name: "Run Emergency Demo" })).toBeVisible()
+    await expect(page.getByText("Starting the demonstration...")).toHaveCount(0)
+  })
+
+  test("mobile navigation closes after navigating", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await page.goto("/privacy")
+    const toggle = page.getByRole("button", { name: "Toggle navigation" })
+    await toggle.click()
+    await expect(toggle).toHaveAttribute("aria-expanded", "true")
+
+    await page.getByRole("navigation", { name: "Mobile navigation" }).getByRole("link", { name: "Training" }).click()
+    await expect(page).toHaveURL(/\/ar$/)
+    await expect(toggle).toHaveAttribute("aria-expanded", "false")
+  })
+
   test("serves a valid install manifest and icons", async ({ page, request }) => {
     await page.goto("/")
 

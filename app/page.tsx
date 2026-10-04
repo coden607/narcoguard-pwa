@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
@@ -25,7 +25,8 @@ import {
   DollarSign,
   ExternalLink,
 } from "lucide-react"
-import { getUserPreferences, saveUserPreferences } from "@/lib/user-preferences"
+import { saveUserPreferences } from "@/lib/user-preferences"
+import { useUserPreferences } from "@/lib/hooks/use-user-preferences"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
@@ -47,45 +48,21 @@ const OnboardingFlow = dynamic(
 export default function DashboardPage() {
   const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
-  const [mounted, setMounted] = useState(false)
-  const [showOnboarding, setShowOnboarding] = useState(true)
-  const [skippedSetup, setSkippedSetup] = useState(false)
+  const preferences = useUserPreferences()
+  const showOnboarding = preferences !== null && !preferences.hasCompletedOnboarding
+  const skippedSetup = preferences?.skippedSetup ?? false
   const [showSkipWarning, setShowSkipWarning] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-    const preferences = getUserPreferences()
-    setShowOnboarding(!preferences.hasCompletedOnboarding)
-    setSkippedSetup(preferences.skippedSetup || false)
-  }, [])
-
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false)
-  }
-
   const handleSkipSetup = () => {
-    const preferences = getUserPreferences()
-    saveUserPreferences({
-      ...preferences,
-      skippedSetup: true,
-      hasCompletedOnboarding: true,
-    })
-    setSkippedSetup(true)
-    setShowOnboarding(false)
+    saveUserPreferences({ skippedSetup: true, hasCompletedOnboarding: true })
+    setShowSkipWarning(false)
   }
 
   const handleCompleteSetup = () => {
-    const preferences = getUserPreferences()
-    saveUserPreferences({
-      ...preferences,
-      skippedSetup: false,
-      hasCompletedOnboarding: false,
-    })
-    setSkippedSetup(false)
-    setShowOnboarding(true)
+    saveUserPreferences({ skippedSetup: false, hasCompletedOnboarding: false })
   }
 
-  if (!mounted) {
+  if (preferences === null) {
     return (
       <div className="app-loading" role="status" aria-live="polite">
         <div className="loading-orbit"><Syringe aria-hidden="true" /></div>
@@ -97,8 +74,8 @@ export default function DashboardPage() {
   if (showOnboarding && !showSkipWarning) {
     return (
       <div className="relative">
-        <OnboardingFlow onComplete={handleOnboardingComplete} />
-        <div className="fixed top-4 right-4 z-50 max-w-[calc(100vw-2rem)]">
+        {/* In normal flow (not a fixed overlay) so the sticky site header can never cover it. */}
+        <div className="flex justify-end px-4 pt-4">
           <Button
             onClick={() => setShowSkipWarning(true)}
             variant="outline"
@@ -108,6 +85,7 @@ export default function DashboardPage() {
             Skip Setup (Demo Mode)
           </Button>
         </div>
+        <OnboardingFlow />
       </div>
     )
   }

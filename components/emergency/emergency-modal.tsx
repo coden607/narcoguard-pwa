@@ -32,13 +32,6 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
     return () => clearTimeout(timer)
   }, [countdown, onActivate, open])
 
-  useEffect(() => {
-    if (!open) {
-      setCountdown(null)
-      setIsActivated(false)
-    }
-  }, [open])
-
   const startEmergency = () => {
     setCountdown(3)
   }

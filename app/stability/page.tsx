@@ -1,15 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
-  clearGuardianState, defaultGuardianState, earlyWarning, NEEDS, patternInsights, readGuardianState, saveGuardianState,
+  clearGuardianState, defaultGuardianState, earlyWarning, NEEDS, patternInsights, saveGuardianState,
   type GuardianState, type Need, type NeedStatus,
 } from "@/lib/guardian-stability"
 import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
 import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
 import { CalmingAudio } from "@/components/calming-audio"
+import { notifyGuardianChange, useGuardianState, useLocalDate } from "@/lib/hooks/use-guardian-state"
 
 const names: Record<Need, string> = {
   food: "Food", water: "Water", sleep: "Sleep", hygiene: "Shower / hygiene",
@@ -22,19 +23,18 @@ const localDate = (dayOffset = 0) => {
 }
 
 export default function StabilityPage() {
-  const [state, setState] = useState<GuardianState | null>(null)
+  const state = useGuardianState()
   const [goal, setGoal] = useState("")
   const [planTitle, setPlanTitle] = useState("")
   const [planDate, setPlanDate] = useState("")
   const [planTime, setPlanTime] = useState("")
   const [planLocation, setPlanLocation] = useState("")
   const [planNeed, setPlanNeed] = useState<Need | "">("")
-  const [now, setNow] = useState("")
-  useEffect(() => { setState(readGuardianState(window.localStorage)); setNow(localDate()) }, [])
+  const now = useLocalDate()
 
   const update = (next: GuardianState) => {
     saveGuardianState(window.localStorage, next)
-    setState(readGuardianState(window.localStorage))
+    notifyGuardianChange()
   }
   if (!state || !now) return <main className="p-6" role="status">Loading your planner…</main>
 
@@ -68,7 +68,7 @@ export default function StabilityPage() {
         <p className="font-medium">{state.paused ? "Tracking paused. Your existing entries remain here." : "Tracking on. Entries are saved only when you choose to record them."}</p>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={() => update({ ...state, paused: !state.paused })}>{state.paused ? "Resume" : "Pause"}</Button>
-          <Button variant="destructive" onClick={() => { if (window.confirm("Erase all Guardian check-ins, goals, plans and support contact from this browser?")) { clearGuardianState(window.localStorage); setState(defaultGuardianState()) } }}>Erase all Guardian data</Button>
+          <Button variant="destructive" onClick={() => { if (window.confirm("Erase all Guardian check-ins, goals, plans and support contact from this browser?")) { clearGuardianState(window.localStorage); notifyGuardianChange() } }}>Erase all Guardian data</Button>
         </div>
       </section>
       <section className="border rounded-xl p-5 space-y-4">

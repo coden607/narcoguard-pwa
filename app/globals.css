@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 
-@plugin 'tailwindcss-animate';
+@import 'tw-animate-css';
 
 @source '../*.{js,ts,jsx,tsx,mdx}';
 
@@ -179,15 +179,14 @@
   }
 }
 
+/* Glow only: emergency controls must stay still so they are easy to hit. */
 @keyframes emergency-pulse {
   0%,
   100% {
     box-shadow: 0 0 30px var(--glow-emergency), 0 0 60px var(--glow-emergency), 0 0 90px var(--glow-emergency);
-    transform: scale(1);
   }
   50% {
     box-shadow: 0 0 50px var(--glow-emergency), 0 0 100px var(--glow-emergency), 0 0 150px var(--glow-emergency);
-    transform: scale(1.05);
   }
 }
 

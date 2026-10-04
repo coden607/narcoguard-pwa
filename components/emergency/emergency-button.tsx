@@ -9,10 +9,13 @@ import { useVitals } from "@/lib/hooks/use-vitals"
 export function EmergencyButton() {
   const [, setIsEmergency] = useState(false)
   const [showModal, setShowModal] = useState(false)
+  // Each opening gets a fresh modal (countdown and activation state start over).
+  const [modalSession, setModalSession] = useState(0)
   const { location } = useLocation(true)
   const { vitals } = useVitals()
 
   const handleEmergencyPress = () => {
+    setModalSession((session) => session + 1)
     setShowModal(true)
   }
 
@@ -159,7 +162,7 @@ export function EmergencyButton() {
         </div>
       </div>
 
-      <EmergencyModal open={showModal} onClose={() => setShowModal(false)} onActivate={activateEmergency} />
+      <EmergencyModal key={modalSession} open={showModal} onClose={() => setShowModal(false)} onActivate={activateEmergency} />
     </>
   )
 }

@@ -12,7 +12,10 @@ if (shouldUseWasmCompiler) {
   console.log("[build] ARM64/WASM build environment detected; using the matching Next.js WASM compiler.")
 }
 
-const result = spawnSync(process.execPath, [require.resolve("next/dist/bin/next"), "build"], {
+// Turbopack (the default builder) needs native SWC bindings; the WASM compiler only works with webpack.
+const buildArgs = shouldUseWasmCompiler ? ["build", "--webpack"] : ["build"]
+
+const result = spawnSync(process.execPath, [require.resolve("next/dist/bin/next"), ...buildArgs], {
   env,
   stdio: "inherit",
 })

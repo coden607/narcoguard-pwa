@@ -29,39 +29,50 @@ export function useLocation(trackContinuously = false) {
     }
   }, [])
 
-  const getCurrentLocation = useCallback(async () => {
-    try {
-      setIsLoading(true)
-      const loc = await locationService.getCurrentLocation()
-      if (!loc) {
-        setLocation(null)
-        setError("Location unavailable")
-        return
-      }
+  // Requests a location. Every state update happens in a promise callback, never synchronously
+  // in the caller; isLoading starts true, so the initial request needs no state change first.
+  const requestLocation = useCallback(
+    () =>
+      locationService
+        .getCurrentLocation()
+        .then(async (loc) => {
+          if (!loc) {
+            setLocation(null)
+            setError("Location unavailable")
+            return
+          }
 
-      await updateLocation(loc)
+          await updateLocation(loc)
 
-      // Only set permission granted if we got real coordinates
-      if (loc.accuracy < 1000) {
-        setPermissionState("granted")
-      }
+          // Only set permission granted if we got real coordinates
+          if (loc.accuracy < 1000) {
+            setPermissionState("granted")
+          }
 
-      setError(null)
-    } catch (err) {
-      // The provider can be unavailable or permission may be denied
-      const errorMessage = err instanceof Error ? err.message : "Location unavailable"
+          setError(null)
+        })
+        .catch((err: unknown) => {
+          // The provider can be unavailable or permission may be denied
+          const errorMessage = err instanceof Error ? err.message : "Location unavailable"
 
-      if (errorMessage.includes("denied") || errorMessage.includes("permission")) {
-        setPermissionState("denied")
-      }
+          if (errorMessage.includes("denied") || errorMessage.includes("permission")) {
+            setPermissionState("denied")
+          }
 
-      // Preserve only a previously verified location
-      setError(errorMessage)
-      setLocation(locationService.getLastLocation())
-    } finally {
-      setIsLoading(false)
-    }
-  }, [updateLocation])
+          // Preserve only a previously verified location
+          setError(errorMessage)
+          setLocation(locationService.getLastLocation())
+        })
+        .finally(() => {
+          setIsLoading(false)
+        }),
+    [updateLocation],
+  )
+
+  const refresh = useCallback(() => {
+    setIsLoading(true)
+    return requestLocation()
+  }, [requestLocation])
 
   useEffect(() => {
     if (navigator.permissions) {
@@ -81,7 +92,7 @@ export function useLocation(trackContinuously = false) {
     }
 
     // Get initial location
-    getCurrentLocation()
+    void requestLocation()
 
     if (trackContinuously) {
       const startDelay = setTimeout(() => {
@@ -93,14 +104,14 @@ export function useLocation(trackContinuously = false) {
         locationService.stopTracking()
       }
     }
-  }, [trackContinuously, getCurrentLocation, updateLocation])
+  }, [trackContinuously, requestLocation, updateLocation])
 
   return {
     location,
     isLoading,
     error,
     permissionState,
-    refresh: getCurrentLocation,
+    refresh,
     locationService,
   }
 }
