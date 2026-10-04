@@ -6,8 +6,8 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 
 ## Stack
 
-- Next.js 15 App Router, React 18, and TypeScript
-- Tailwind CSS and Radix UI components
+- Next.js 16 App Router (Turbopack builds), React 19, and TypeScript 6
+- Tailwind CSS 4 (CSS-first config in `app/globals.css`) and Radix UI components
 - Supabase/Postgres backend and Vercel hosting
 - npm with Node 24 (see `.nvmrc`, `engines`, and `packageManager`)
 - Playwright for browser and PWA tests
@@ -33,7 +33,7 @@ npm run build
 npm run test:pwa
 ```
 
-Use `npm run verify` for the complete gate. Report any check that could not run and why.
+Use `npm run verify` for the complete gate; it runs the same checks as CI, including `npm run validate:env` and `npm run audit:deps` (see `scripts/audit-gate.js` for the only allowed, self-expiring audit exception). Report any check that could not run and why.
 
 ## Dependencies
 
@@ -41,6 +41,7 @@ Use `npm run verify` for the complete gate. Report any check that could not run 
 - Inspect release notes and migration guides before major upgrades.
 - Prefer incremental upgrades with verification between framework/runtime majors.
 - Do not weaken lint, type checking, tests, or security settings to make an upgrade pass.
+- Known compatibility caps: eslint stays on 9 until eslint-plugin-react, eslint-plugin-import and eslint-plugin-jsx-a11y support 10; TypeScript stays below 6.1 for typescript-eslint; `@types/node` tracks the Node 24 runtime.
 
 ## Environment and Integrations
 
@@ -70,7 +71,7 @@ Use `npm run verify` for the complete gate. Report any check that could not run 
 ## Guardian Stability planner
 
 - Follow `docs/governance/CONSTITUTION.md`: assistance remains available if a person declines tracking, pauses, or erases their planner. The person sets goals and chooses each action; never gate food, shelter, hygiene, or emergency guidance on check-ins.
-- Current `/stability` is an opt-in browser-local prototype: needs, estimated sleep, goals, tomorrow's tasks, broad resource-directory links, and descriptive personal counts. It has no background location tracking, verified service availability, predictive relapse probability, or automated outreach. Do not label a proposed feature as live.
+- Current `/stability` is an opt-in browser-local prototype: needs, estimated sleep, an optional calorie-free meal log, goals, tomorrow's tasks, broad resource-directory links, and descriptive personal counts. It has no background location tracking, verified service availability, predictive relapse probability, or automated outreach. Do not label a proposed feature as live.
 - Build future help in stages: (1) consent and data controls; (2) a maintained resource catalog with service type, eligibility, location, hours, accessibility, contact, provenance, last verification date, and an explicit stale/unknown state; (3) voluntary planning reminders; (4) evaluated personal pattern summaries; (5) separately reviewed, explicitly opted-in alerts. Provide a human-accessible 211 or local directory fallback when fresh resource data is unavailable. Never promise a bed, meal, appointment, or benefit without confirming with the provider.
 - Prefer practical next steps based on the person's stated needs and goals. Maslow's hierarchy is a planning aid, not a ranking of people or a reason to deny care. Preserve unknown answers; do not infer that silence means a missed meal, hygiene, or relapse.
 - Show descriptive counts with denominators and time windows. Do not turn small or biased samples into a percentage chance of relapse, imply causality, or use population statistics to diagnose an individual. Require clinical, statistical, fairness, and safety review, independent validation, calibration, uncertainty bounds, abstention rules, and prospective monitoring before any prediction or danger alert can ship.

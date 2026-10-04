@@ -518,7 +518,7 @@ export default function NGWatchPage() {
     { id: "naloxone", name: "Auto-Injection Module", x: 85, y: 50, color: "#FF0000", description: "Faulhaber micro-motor + retractable 30G needle + 0.4ml naloxone cartridge. Deploys in within a future validated timing target. Snap-fit replaceable." },
     { id: "solar", name: "GaAs Solar Cell Ring", x: 50, y: 15, color: "#2ECC40", description: "Candidate solar concept; measured output and thermal integration are unverified." },
     { id: "kinetic", name: "Kinetic Rotor (Seiko-style)", x: 18, y: 50, color: "#B10DC9", description: "Candidate kinetic concept; measured output and mechanical integration are unverified." },
-    { id: "thermo", name: "Thermoelectric Generator", x: 50, y: 85, color: "#FF6600", description: "Candidate thermoelectric concept; measured output and thermal path are unverified." },
+    { id: "thermo", name: "Thermoelectric Generator", x: 35, y: 86, color: "#FF6600", description: "Candidate thermoelectric concept; measured output and thermal path are unverified." },
     { id: "battery", name: "500mAh LiPo + Qi Charging", x: 15, y: 35, color: "#7FDBFF", description: "Candidate battery and single-input charger; source arbitration and safety design are not implemented." },
     { id: "cellular", name: "4G LTE + eSIM concept", x: 82, y: 28, color: "#39CCCC", description: "Candidate cellular architecture; carrier certification, antenna performance, eSIM provisioning, and standalone behavior are unverified." },
     { id: "gps", name: "Multi-constellation GNSS concept", x: 22, y: 22, color: "#01FF70", description: "Candidate GNSS path; accuracy and RF integration are unverified." },
@@ -680,7 +680,7 @@ export default function NGWatchPage() {
         </section>
 
         <Tabs defaultValue="blueprint" className="gap-8">
-          <TabsList className="grid grid-cols-4 glass neon-border">
+          <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4 glass neon-border">
             <TabsTrigger value="blueprint">Blueprint</TabsTrigger>
             <TabsTrigger value="3d-view">3D View</TabsTrigger>
             <TabsTrigger value="bom">Bill of Materials</TabsTrigger>
@@ -704,16 +704,19 @@ export default function NGWatchPage() {
                 <div className="absolute inset-28 rounded-full border border-primary/20" />
                 <div className="absolute left-1/2 top-1/2 h-[86%] w-px -translate-x-1/2 -translate-y-1/2 bg-linear-to-b from-transparent via-primary/40 to-transparent" />
                 <div className="absolute left-1/2 top-1/2 h-px w-[86%] -translate-x-1/2 -translate-y-1/2 bg-linear-to-r from-transparent via-primary/40 to-transparent" />
-                <div className="absolute right-4 top-4 rounded-lg border border-border/60 bg-black/40 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Read order: 1 → 15
+                <div className="absolute right-4 top-4 hidden md:block rounded-lg border border-border/60 bg-black/40 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+                  Read order: 1 → {watchComponents.length}
                 </div>
-                <div className="absolute left-4 bottom-4 max-w-[16rem] rounded-lg border border-border/60 bg-black/40 p-3 text-[10px] leading-relaxed text-muted-foreground">
+                <div className="absolute left-4 bottom-4 hidden md:block max-w-[16rem] rounded-lg border border-border/60 bg-black/40 p-3 text-[10px] leading-relaxed text-muted-foreground">
                   Engineering note: all dimensions shown here are concept targets. Final tooling requires tolerance stack-up, thermal soak, enclosure validation, and bench verification against real parts.
                 </div>
 
                 {watchComponents.map((comp, index) => (
                   <button
                     key={comp.id}
+                    type="button"
+                    aria-label={`${index + 1}. ${comp.name}`}
+                    aria-pressed={selectedComponent === comp.id}
                     className={`absolute w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-125 ${
                       selectedComponent === comp.id ? "ring-4 ring-white scale-125 z-20" : "z-10"
                     }`}
@@ -738,6 +741,10 @@ export default function NGWatchPage() {
                   </div>
                 </div>
               </div>
+
+              <p className="md:hidden mt-4 text-xs leading-relaxed text-muted-foreground">
+                Read order: 1 → {watchComponents.length}. Engineering note: all dimensions shown here are concept targets. Final tooling requires tolerance stack-up, thermal soak, enclosure validation, and bench verification against real parts.
+              </p>
 
               {selectedComponent && (
                 <div className="mt-6 p-4 rounded-lg bg-background/50 neon-border max-w-lg mx-auto">

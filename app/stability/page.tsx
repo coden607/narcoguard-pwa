@@ -10,6 +10,7 @@ import {
 import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
 import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
 import { CalmingAudio } from "@/components/calming-audio"
+import { MealLogSection } from "@/components/guardian/meal-log-section"
 import { notifyGuardianChange, useGuardianState, useLocalDate } from "@/lib/hooks/use-guardian-state"
 
 const names: Record<Need, string> = {
@@ -92,6 +93,13 @@ export default function StabilityPage() {
           }} />
         </label>
       </section>
+      <MealLogSection
+        today={today}
+        entries={state.entries}
+        paused={state.paused}
+        postalCode={state.postalCode}
+        onChange={(entry) => update({ ...state, entries: [...state.entries.filter((item) => item.date !== now), entry] })}
+      />
       <section className="border rounded-xl p-5 space-y-4">
         <h2 className="text-xl font-semibold">Your goals and tomorrow’s plan</h2>
         <form className="flex gap-2" onSubmit={(event) => { event.preventDefault(); if (goal.trim()) { update({ ...state, goals: [...state.goals, goal.trim().slice(0, 160)] }); setGoal("") } }}>

@@ -1,8 +1,10 @@
+import { normalizeMeals, type Meal } from "@/lib/meal-log"
+
 export const GUARDIAN_STORAGE_KEY = "narcoguard_guardian_stability_v2"
 export const NEEDS = ["food", "water", "sleep", "hygiene", "laundry", "safePlace", "connection", "treatment"] as const
 export type Need = typeof NEEDS[number]
 export type NeedStatus = "met" | "needs-help"
-export interface CheckIn { date: string; needs: Partial<Record<Need, NeedStatus>>; sleepHours?: number; mood?: "low" | "okay" | "good"; craving?: "none" | "some" | "strong"; isolated?: boolean }
+export interface CheckIn { date: string; needs: Partial<Record<Need, NeedStatus>>; sleepHours?: number; mood?: "low" | "okay" | "good"; craving?: "none" | "some" | "strong"; isolated?: boolean; meals?: Meal[] }
 export interface PlanItem { id: string; date: string; title: string; done: boolean; kind?: "task" | "appointment"; time?: string; location?: string; need?: Need }
 export interface GuardianState {
   enabled: boolean; paused: boolean; postalCode: string; supportPhone: string; goals: string[]; entries: CheckIn[]; plan: PlanItem[]
@@ -27,6 +29,7 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
     const entries: CheckIn[] = value.entries.slice(-365).filter((entry: unknown) => entry && typeof entry === "object" && isDate((entry as CheckIn).date)).map((entry: CheckIn) => {
       const needs: CheckIn["needs"] = {}
       for (const need of NEEDS) if (entry.needs?.[need] === "met" || entry.needs?.[need] === "needs-help") needs[need] = entry.needs[need]
+      const meals = normalizeMeals(entry.meals)
       return {
         date: entry.date,
         needs,
@@ -34,6 +37,7 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
         ...(entry.mood === "low" || entry.mood === "okay" || entry.mood === "good" ? { mood: entry.mood } : {}),
         ...(entry.craving === "none" || entry.craving === "some" || entry.craving === "strong" ? { craving: entry.craving } : {}),
         ...(typeof entry.isolated === "boolean" ? { isolated: entry.isolated } : {}),
+        ...(meals.length ? { meals } : {}),
       }
     })
     return {

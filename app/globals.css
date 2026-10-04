@@ -449,7 +449,6 @@ input:focus,textarea:focus,select:focus { border-color: rgba(103,232,249,.7) !im
   .vibrant-card.p-8,.vibrant-card.p-6 { padding: 1.15rem; }
   .site-main [class*="text-4xl"] { font-size: 2rem; line-height: 1.15; }
   .site-main [class*="text-3xl"] { font-size: 1.65rem; line-height: 1.2; }
-  .site-main [class*="grid-cols-4"] { overflow-x: auto; grid-template-columns: repeat(4,minmax(7rem,1fr)); }
   .site-main table { min-width: 34rem; }
 }
 @media (prefers-reduced-motion: reduce) {

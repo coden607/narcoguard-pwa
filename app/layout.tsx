@@ -6,6 +6,7 @@ import { Orbitron, Inter } from "next/font/google"
 import Script from "next/script"
 import { Analytics } from "@vercel/analytics/next"
 import { SiteChrome } from "@/components/site-chrome"
+import { SITE_URL } from "@/lib/site-url"
 import "./globals.css"
 
 const orbitron = Orbitron({
@@ -21,7 +22,7 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://narcoguard.app"),
+  metadataBase: new URL(SITE_URL),
   title: "NarcoGuard NG - Overdose-Prevention Wearable Concept",
   description:
     "Explore the NarcoGuard NG public software demo and early overdose-prevention wearable concept. Hardware and medical capabilities require engineering, clinical, and regulatory validation.",
@@ -40,7 +41,6 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Stephen Blanford" }],
   creator: "Stephen Blanford",
-  alternates: { canonical: "/" },
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",

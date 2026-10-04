@@ -1,7 +1,9 @@
+import { SITE_URL } from "@/lib/site-url"
+
 export const env = {
   // App Configuration
   APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || "NarcoGuard",
-  APP_URL: process.env.NEXT_PUBLIC_APP_URL || "https://narcoguard.app",
+  APP_URL: SITE_URL,
   API_URL: process.env.NEXT_PUBLIC_API_URL || "/api",
   GOFUNDME_URL: process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea",
   INVESTOR_URL:

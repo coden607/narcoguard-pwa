@@ -82,8 +82,8 @@ export function GuardianAingelAI() {
         </div>
 
         <div className="flex gap-2">
-          <button disabled className="p-2 rounded-full glass opacity-50">
-            <Volume2 className="w-4 h-4 text-muted-foreground" />
+          <button type="button" disabled aria-label="Read replies aloud (unavailable)" className="p-2 rounded-full glass opacity-50">
+            <Volume2 aria-hidden="true" className="w-4 h-4 text-muted-foreground" />
           </button>
         </div>
       </div>
@@ -111,18 +111,19 @@ export function GuardianAingelAI() {
 
       {/* Input */}
       <div className="mt-4 flex gap-2">
-        <button disabled className="p-3 rounded-full glass opacity-50 group">
-          <Mic className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:pulse-glow" />
+        <button type="button" disabled aria-label="Voice input (unavailable)" className="p-3 rounded-full glass opacity-50 group">
+          <Mic aria-hidden="true" className="w-5 h-5 text-muted-foreground group-hover:text-primary group-hover:pulse-glow" />
         </button>
         <Input disabled
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+          aria-label="Message Guardian AI (unavailable)"
           placeholder="AI provider unavailable"
           className="flex-1 glass neon-border"
         />
-        <GlowButton disabled onClick={sendMessage} size="icon">
-          <Send className="w-4 h-4" />
+        <GlowButton disabled onClick={sendMessage} size="icon" aria-label="Send message (unavailable)">
+          <Send aria-hidden="true" className="w-4 h-4" />
         </GlowButton>
       </div>
 

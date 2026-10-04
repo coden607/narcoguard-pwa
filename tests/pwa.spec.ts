@@ -108,6 +108,28 @@ test.describe("PWA production flow", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "false")
   })
 
+  test("robots and sitemap list only real public pages on the canonical host", async ({ page, request }) => {
+    const robots = await request.get("/robots.txt")
+    expect(robots.ok()).toBeTruthy()
+    const robotsText = await robots.text()
+    expect(robotsText).toContain("Disallow: /api/")
+    expect(robotsText).toContain("Sitemap: https://www.narcoguard.app/sitemap.xml")
+
+    const sitemap = await request.get("/sitemap.xml")
+    expect(sitemap.ok()).toBeTruthy()
+    const urls = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
+    expect(urls.length).toBeGreaterThan(5)
+    for (const url of urls) {
+      expect(url.startsWith("https://www.narcoguard.app")).toBeTruthy()
+      const path = new URL(url).pathname
+      expect((await request.get(path)).status(), `${path} should load`).toBe(200)
+    }
+
+    // A site-wide canonical of "/" would mark every page as a duplicate of the homepage.
+    await page.goto("/watch")
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0)
+  })
+
   test("serves a valid install manifest and icons", async ({ page, request }) => {
     await page.goto("/")
 
@@ -190,7 +212,8 @@ test.describe("PWA production flow", () => {
     await page.getByRole("button", { name: "Enable my private planner" }).click()
     await page.getByLabel("Food status").selectOption("needs-help")
     await page.getByLabel("Hours slept last night").fill("7")
-    await expect(page.getByRole("link", { name: /Find local help through 211/ })).toBeVisible()
+    const nextStep = page.locator("section", { has: page.getByRole("heading", { name: "Find a next step" }) })
+    await expect(nextStep.getByRole("link", { name: /Find local help through 211/ })).toBeVisible()
     await page.getByLabel("Task or appointment").fill("Visit pantry")
     await page.getByLabel("Plan time").fill("09:00")
     await page.getByLabel("Plan location").fill("Community pantry")
@@ -209,5 +232,39 @@ test.describe("PWA production flow", () => {
     page.once("dialog", (dialog) => dialog.accept())
     await page.getByRole("button", { name: "Erase all Guardian data" }).click()
     await expect(page.getByRole("button", { name: "Enable my private planner" })).toBeVisible()
+  })
+
+  test("meal log is optional, calorie-free, survives reload, pauses and erases with the planner", async ({ page }) => {
+    await page.goto("/stability")
+    await page.getByRole("button", { name: "Enable my private planner" }).click()
+    const meals = page.getByRole("list", { name: "Meals logged today" })
+
+    await expect(page.getByRole("heading", { name: "Meals today (optional)" })).toBeVisible()
+    await expect(page.getByText(/calorie/i)).toContainText("no calories")
+    // Food help is shown without logging anything first.
+    const mealSection = page.getByRole("region", { name: "Meals today (optional)" })
+    await expect(mealSection.getByRole("link", { name: /Find local help through 211/ })).toBeVisible()
+
+    await page.getByLabel("Meal type").selectOption("lunch")
+    await page.getByLabel("What you had (optional)").fill("Soup at the center")
+    await page.getByRole("button", { name: "Add meal" }).click()
+    await expect(meals).toContainText("Lunch: Soup at the center")
+    await expect(page.getByTestId("meal-summary")).toContainText("checked in on 1 day and logged a meal on 1 of them")
+    await expect(page.getByLabel("Food status")).toHaveValue("")
+
+    await page.reload()
+    await expect(meals).toContainText("Lunch: Soup at the center")
+
+    await page.getByRole("button", { name: "Pause" }).click()
+    await expect(page.getByRole("button", { name: "Add meal" })).toBeDisabled()
+    await page.getByRole("button", { name: "Resume" }).click()
+
+    await page.getByRole("button", { name: "Remove Lunch: Soup at the center" }).click()
+    await expect(meals).toHaveCount(0)
+    await page.getByRole("button", { name: "Add meal" }).click()
+    page.once("dialog", (dialog) => dialog.accept())
+    await page.getByRole("button", { name: "Erase all Guardian data" }).click()
+    await page.getByRole("button", { name: "Enable my private planner" }).click()
+    await expect(meals).toHaveCount(0)
   })
 })
