@@ -32,13 +32,6 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
     return () => clearTimeout(timer)
   }, [countdown, onActivate, open])
 
-  useEffect(() => {
-    if (!open) {
-      setCountdown(null)
-      setIsActivated(false)
-    }
-  }, [open])
-
   const startEmergency = () => {
     setCountdown(3)
   }
@@ -59,7 +52,7 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
         <ParticleField count={30} color="var(--glow-emergency)" />
 
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl font-[family-name:var(--font-orbitron)]">
+          <DialogTitle className="flex items-center gap-2 text-2xl font-orbitron">
             <AlertTriangle className="w-6 h-6 text-destructive motion-safe:animate-bounce" />
             Emergency Response
           </DialogTitle>
@@ -126,7 +119,7 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
           <div className="space-y-6 py-8" role="status" aria-live="polite">
             <div className="relative">
               <div className="text-center">
-                <div className="text-8xl font-bold text-destructive glow-text emergency-pulse font-[family-name:var(--font-orbitron)]">
+                <div className="text-8xl font-bold text-destructive glow-text emergency-pulse font-orbitron">
                   {countdown}
                 </div>
                 <p className="text-muted-foreground mt-4">Starting the demonstration...</p>
@@ -174,7 +167,7 @@ export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProp
             </div>
 
             <div>
-              <h3 className="text-2xl font-bold text-destructive glow-text font-[family-name:var(--font-orbitron)]">
+              <h3 className="text-2xl font-bold text-destructive glow-text font-orbitron">
                 DEMO REQUEST COMPLETE
               </h3>
               <p className="text-muted-foreground mt-2">No emergency response is confirmed. Call 911 if help is needed.</p>

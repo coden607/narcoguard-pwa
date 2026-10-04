@@ -29,7 +29,7 @@ export function SOSOverlay({ active, naloxoneLocation = "Front pocket", vitals }
   if (!active) return null
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-xs">
       <ParticleField count={100} color="var(--glow-emergency)" />
 
       {/* Pulsing border */}
@@ -44,7 +44,7 @@ export function SOSOverlay({ active, naloxoneLocation = "Front pocket", vitals }
           </div>
 
           <div>
-            <h1 className="text-6xl font-bold text-destructive glow-text mb-4 font-[family-name:var(--font-orbitron)]">
+            <h1 className="text-6xl font-bold text-destructive glow-text mb-4 font-orbitron">
               EMERGENCY
             </h1>
             <p className="text-3xl text-white">Medical Assistance Needed</p>

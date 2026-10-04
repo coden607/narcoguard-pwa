@@ -14,7 +14,7 @@ export function HeroNetworkStatus() {
     <HolographicCard className="p-6" glowIntensity="high">
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)]">HERO NETWORK</h3>
+          <h3 className="text-lg font-semibold font-orbitron">HERO NETWORK</h3>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
             <span className="text-xs text-muted-foreground">Active</span>
@@ -60,7 +60,7 @@ export function HeroNetworkStatus() {
           </DialogTrigger>
           <DialogContent className="sm:max-w-4xl glass neon-border">
             <DialogHeader>
-              <DialogTitle className="font-[family-name:var(--font-orbitron)]">Hero Network Map</DialogTitle>
+              <DialogTitle className="font-orbitron">Hero Network Map</DialogTitle>
             </DialogHeader>
             <HeroMap />
           </DialogContent>

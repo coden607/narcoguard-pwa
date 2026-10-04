@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
@@ -25,7 +25,8 @@ import {
   DollarSign,
   ExternalLink,
 } from "lucide-react"
-import { getUserPreferences, saveUserPreferences } from "@/lib/user-preferences"
+import { saveUserPreferences } from "@/lib/user-preferences"
+import { useUserPreferences } from "@/lib/hooks/use-user-preferences"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
 
@@ -47,45 +48,21 @@ const OnboardingFlow = dynamic(
 export default function DashboardPage() {
   const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
-  const [mounted, setMounted] = useState(false)
-  const [showOnboarding, setShowOnboarding] = useState(true)
-  const [skippedSetup, setSkippedSetup] = useState(false)
+  const preferences = useUserPreferences()
+  const showOnboarding = preferences !== null && !preferences.hasCompletedOnboarding
+  const skippedSetup = preferences?.skippedSetup ?? false
   const [showSkipWarning, setShowSkipWarning] = useState(false)
 
-  useEffect(() => {
-    setMounted(true)
-    const preferences = getUserPreferences()
-    setShowOnboarding(!preferences.hasCompletedOnboarding)
-    setSkippedSetup(preferences.skippedSetup || false)
-  }, [])
-
-  const handleOnboardingComplete = () => {
-    setShowOnboarding(false)
-  }
-
   const handleSkipSetup = () => {
-    const preferences = getUserPreferences()
-    saveUserPreferences({
-      ...preferences,
-      skippedSetup: true,
-      hasCompletedOnboarding: true,
-    })
-    setSkippedSetup(true)
-    setShowOnboarding(false)
+    saveUserPreferences({ skippedSetup: true, hasCompletedOnboarding: true })
+    setShowSkipWarning(false)
   }
 
   const handleCompleteSetup = () => {
-    const preferences = getUserPreferences()
-    saveUserPreferences({
-      ...preferences,
-      skippedSetup: false,
-      hasCompletedOnboarding: false,
-    })
-    setSkippedSetup(false)
-    setShowOnboarding(true)
+    saveUserPreferences({ skippedSetup: false, hasCompletedOnboarding: false })
   }
 
-  if (!mounted) {
+  if (preferences === null) {
     return (
       <div className="app-loading" role="status" aria-live="polite">
         <div className="loading-orbit"><Syringe aria-hidden="true" /></div>
@@ -97,8 +74,8 @@ export default function DashboardPage() {
   if (showOnboarding && !showSkipWarning) {
     return (
       <div className="relative">
-        <OnboardingFlow onComplete={handleOnboardingComplete} />
-        <div className="fixed top-4 right-4 z-50 max-w-[calc(100vw-2rem)]">
+        {/* In normal flow (not a fixed overlay) so the sticky site header can never cover it. */}
+        <div className="flex justify-end px-4 pt-4">
           <Button
             onClick={() => setShowSkipWarning(true)}
             variant="outline"
@@ -108,6 +85,7 @@ export default function DashboardPage() {
             Skip Setup (Demo Mode)
           </Button>
         </div>
+        <OnboardingFlow />
       </div>
     )
   }
@@ -148,7 +126,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <ParticleField count={100} />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
 
       <div className="relative z-10 container mx-auto px-4 py-6 space-y-6">
         {skippedSetup && (
@@ -167,7 +145,7 @@ export default function DashboardPage() {
         )}
 
         <HolographicCard
-          className="p-4 bg-gradient-to-r from-green-500/20 to-primary/20 border-green-500/50"
+          className="p-4 bg-linear-to-r from-green-500/20 to-primary/20 border-green-500/50"
           glowIntensity="medium"
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -204,11 +182,11 @@ export default function DashboardPage() {
           </div>
         </HolographicCard>
 
-        <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 mb-8 dashboard-hero">
+        <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 dashboard-hero">
           <div className="flex items-center gap-4">
             <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 float-animation">
               <Image
-                src="/images/narcoguard-icon.jpeg"
+                src="/images/narcoguard-icon-256.jpeg"
                 alt="Narcoguard"
                 width={64}
                 height={64}
@@ -216,7 +194,7 @@ export default function DashboardPage() {
               />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold glow-text font-[family-name:var(--font-orbitron)]">NARCOGUARD</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold glow-text font-orbitron">NARCOGUARD</h1>
               <p className="text-primary text-sm font-semibold flex items-center gap-2">
                 <Syringe className="w-4 h-4" />
                 Public overdose-response software and wearable concept
@@ -231,7 +209,7 @@ export default function DashboardPage() {
                 Fund Us
               </Button>
             </Link>
-            <Link href="/ng-watch">
+            <Link href="/watch">
               <Button variant="outline" className="glass neon-border bg-transparent">
                 <Eye className="w-4 h-4 mr-2" />
                 View NarcoGuard NG
@@ -244,13 +222,13 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <HolographicCard className="p-6 mb-6 bg-gradient-to-r from-primary/10 to-secondary/10" glowIntensity="high">
+        <HolographicCard className="p-6 bg-linear-to-r from-primary/10 to-secondary/10" glowIntensity="high">
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-full bg-primary/20 pulse-glow">
               <Syringe className="w-8 h-8 text-primary" />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold glow-text font-[family-name:var(--font-orbitron)]">
+              <h2 className="text-2xl font-bold glow-text font-orbitron">
                 NARCOGUARD NG DEVELOPMENT CONCEPT
               </h2>
               <p className="text-muted-foreground mt-1 text-balance">
@@ -264,7 +242,7 @@ export default function DashboardPage() {
 
         <EmergencyButton />
 
-        <div className="mb-6 rounded-xl border border-primary/30 p-5">
+        <div className="rounded-xl border border-primary/30 p-5">
           <h2 className="text-xl font-semibold">Guardian Stability</h2>
           <p className="text-sm text-muted-foreground mb-3">Opt-in check-ins for food, sleep and everyday needs, with a next-day plan and resource starting points.</p>
           <Link href="/stability"><Button variant="outline">Open my needs planner</Button></Link>
@@ -339,7 +317,7 @@ export default function DashboardPage() {
         </div>
 
         <HolographicCard
-          className="p-8 bg-gradient-to-br from-green-500/10 via-primary/10 to-secondary/10"
+          className="p-8 bg-linear-to-br from-green-500/10 via-primary/10 to-secondary/10"
           glowIntensity="high"
         >
           <div className="text-center mb-8">

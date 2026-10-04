@@ -1,33 +1,37 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useSyncExternalStore } from "react"
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
+const STANDALONE_QUERY = "(display-mode: standalone)"
+
+function subscribeToDisplayMode(onChange: () => void) {
+  const query = window.matchMedia(STANDALONE_QUERY)
+  query.addEventListener("change", onChange)
+  return () => query.removeEventListener("change", onChange)
+}
+
+const isStandalone = () => window.matchMedia(STANDALONE_QUERY).matches
+
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [isInstallable, setIsInstallable] = useState(false)
-  const [isInstalled, setIsInstalled] = useState(false)
+  const [installedThisSession, setInstalledThisSession] = useState(false)
+  const runningStandalone = useSyncExternalStore(subscribeToDisplayMode, isStandalone, () => false)
+  const isInstalled = runningStandalone || installedThisSession
+  const isInstallable = deferredPrompt !== null && !isInstalled
 
   useEffect(() => {
-    // Check if already installed
-    if (window.matchMedia("(display-mode: standalone)").matches) {
-      setIsInstalled(true)
-      return
-    }
-
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault()
       setDeferredPrompt(e as BeforeInstallPromptEvent)
-      setIsInstallable(true)
     }
 
     const handleAppInstalled = () => {
-      setIsInstalled(true)
-      setIsInstallable(false)
+      setInstalledThisSession(true)
       setDeferredPrompt(null)
     }
 
@@ -48,13 +52,9 @@ export function usePWAInstall() {
     await deferredPrompt.prompt()
     const { outcome } = await deferredPrompt.userChoice
 
-    if (outcome === "accepted") {
-      setDeferredPrompt(null)
-      setIsInstallable(false)
-      return true
-    }
-
-    return false
+    // A prompt can only be used once, whatever the person chose.
+    setDeferredPrompt(null)
+    return outcome === "accepted"
   }
 
   return { isInstallable, isInstalled, installPWA }

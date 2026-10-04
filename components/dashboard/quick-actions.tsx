@@ -41,7 +41,7 @@ export function QuickActions() {
 
   return (
     <HolographicCard className="p-6">
-      <h3 className="text-lg font-semibold mb-4 font-[family-name:var(--font-orbitron)]">QUICK ACTIONS</h3>
+      <h3 className="text-lg font-semibold mb-4 font-orbitron">QUICK ACTIONS</h3>
 
       <div className="grid grid-cols-2 gap-3">
         <GlowButton variant="default" className="flex flex-col items-center gap-2 h-auto py-4" onClick={callSupport}>

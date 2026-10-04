@@ -10,13 +10,13 @@ import "./globals.css"
 
 const orbitron = Orbitron({
   subsets: ["latin"],
-  variable: "--font-orbitron",
+  variable: "--font-orbitron-face",
   display: "swap",
 })
 
 const inter = Inter({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-inter-face",
   display: "swap",
 })
 
@@ -72,18 +72,18 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`dark ${inter.variable} ${orbitron.variable}`}>
       <head>
         <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined)`}</Script>
-        <link rel="icon" href="/images/narcoguard-icon.jpeg" />
+        <link rel="icon" href="/images/narcoguard-icon-256.jpeg" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
-      <body className={`${inter.variable} ${orbitron.variable} font-sans antialiased`}>
+      <body className="font-sans antialiased">
         <SiteChrome>{children}</SiteChrome>
-        <Analytics />
+        {process.env.VERCEL ? <Analytics /> : null}
         <InstallPrompt />
         <ServiceWorkerRegister />
       </body>

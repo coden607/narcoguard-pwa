@@ -79,12 +79,11 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   },
 }
 
-export function getUserPreferences(): UserPreferences {
-  if (typeof window === "undefined") return DEFAULT_PREFERENCES
+const STORAGE_KEY = "narcoguard_preferences"
+const CHANGE_EVENT = "narcoguard:preferences-change"
 
-  const stored = localStorage.getItem("narcoguard_preferences")
+export function parseUserPreferences(stored: string | null): UserPreferences {
   if (!stored) return DEFAULT_PREFERENCES
-
   try {
     return { ...DEFAULT_PREFERENCES, ...JSON.parse(stored) }
   } catch {
@@ -92,15 +91,45 @@ export function getUserPreferences(): UserPreferences {
   }
 }
 
+/** Raw stored value; a string is a stable snapshot for useSyncExternalStore. */
+export function readStoredPreferences(): string {
+  try {
+    return localStorage.getItem(STORAGE_KEY) ?? ""
+  } catch {
+    // Storage can be unavailable (private mode, blocked site data); treat as no saved preferences.
+    return ""
+  }
+}
+
+/** Notifies on changes from this tab (save/reset) and other tabs (storage event). */
+export function subscribeToPreferences(onChange: () => void) {
+  const onStorage = (event: StorageEvent) => {
+    if (event.key === null || event.key === STORAGE_KEY) onChange()
+  }
+  window.addEventListener("storage", onStorage)
+  window.addEventListener(CHANGE_EVENT, onChange)
+  return () => {
+    window.removeEventListener("storage", onStorage)
+    window.removeEventListener(CHANGE_EVENT, onChange)
+  }
+}
+
+export function getUserPreferences(): UserPreferences {
+  if (typeof window === "undefined") return DEFAULT_PREFERENCES
+  return parseUserPreferences(readStoredPreferences())
+}
+
 export function saveUserPreferences(preferences: Partial<UserPreferences>) {
   if (typeof window === "undefined") return
 
   const current = getUserPreferences()
   const updated = { ...current, ...preferences }
-  localStorage.setItem("narcoguard_preferences", JSON.stringify(updated))
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
+  window.dispatchEvent(new Event(CHANGE_EVENT))
 }
 
 export function resetUserPreferences() {
   if (typeof window === "undefined") return
-  localStorage.removeItem("narcoguard_preferences")
+  localStorage.removeItem(STORAGE_KEY)
+  window.dispatchEvent(new Event(CHANGE_EVENT))
 }

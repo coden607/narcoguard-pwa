@@ -14,6 +14,17 @@ const forbidden = [
   /automatically injects naloxone/i,
   /No human intervention required/i,
   /certification ready/i,
+  // Capabilities that do not exist today (monitoring, detection, automatic alerts) must not be described as live.
+  /monitor you continuously/i,
+  /monitors your vitals 24\/7/i,
+  /detects? overdose signs automatically/i,
+  /Call 911 Automatically/i,
+  /Automatically call emergency services/i,
+  /emergency protocol activates/i,
+  /notified immediately/i,
+  /always watching over you/i,
+  /We comply with HIPAA/i,
+  /emergency coordination/i,
 ]
 
 function filesIn(target) {

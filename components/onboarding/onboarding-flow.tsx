@@ -92,7 +92,8 @@ const US_STATES = [
 ]
 
 interface OnboardingFlowProps {
-  onComplete: () => void
+  /** Called after preferences are saved; pages that read the preferences store update on their own. */
+  onComplete?: () => void
 }
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
@@ -106,13 +107,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const totalSteps = 12
 
   const nextStep = () => {
-    console.log("[v0] Current step:", step, "Total steps:", totalSteps)
-    console.log("[v0] Legal preferences:", preferences.legal)
     if (step < totalSteps - 1) {
       setStep(step + 1)
-      console.log("[v0] Moving to step:", step + 1)
-    } else {
-      console.log("[v0] Already at last step")
     }
   }
 
@@ -123,7 +119,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   }
 
   const completeOnboarding = () => {
-    console.log("[v0] Completing onboarding...")
     const finalPreferences = {
       name,
       hasCompletedOnboarding: true,
@@ -134,12 +129,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       features: preferences.features,
       legal: preferences.legal,
     }
-    console.log("[v0] Saving final preferences:", finalPreferences)
     saveUserPreferences(finalPreferences)
-    console.log("[v0] Preferences saved, calling onComplete")
-    setTimeout(() => {
-      onComplete()
-    }, 100)
+    onComplete?.()
   }
 
   const addEmergencyContact = () => {
@@ -179,9 +170,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <div key="welcome" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-32 h-32 mx-auto float-animation">
-          <Image src="/images/narcoguard-icon.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
+          <Image src="/images/narcoguard-icon-256.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
         </div>
-        <h1 className="text-5xl font-bold glow-text font-[family-name:var(--font-orbitron)]">WELCOME TO NARCOGUARD</h1>
+        <h1 className="text-5xl font-bold glow-text font-orbitron">WELCOME TO NARCOGUARD</h1>
         <div className="flex items-center justify-center gap-2 text-xl text-primary">
           <Syringe className="w-6 h-6" />
           <span className="font-semibold">NarcoGuard NG Development Concept</span>
@@ -193,20 +184,20 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           naloxone according to its instructions during a suspected overdose.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <HolographicCard className="p-6 text-center">
           <Syringe className="w-12 h-12 mx-auto mb-4 text-primary pulse-glow" />
-          <h3 className="font-bold mb-2">Delivery Research</h3>
+          <h2 className="font-bold mb-2">Delivery Research</h2>
           <p className="text-sm text-muted-foreground">Proposed naloxone delivery is a research concept, not a current capability</p>
         </HolographicCard>
         <HolographicCard className="p-6 text-center">
           <Users className="w-12 h-12 mx-auto mb-4 text-secondary pulse-glow" />
-          <h3 className="font-bold mb-2">Hero Network</h3>
+          <h2 className="font-bold mb-2">Hero Network</h2>
           <p className="text-sm text-muted-foreground">A simulated community-response experience for demonstration</p>
         </HolographicCard>
         <HolographicCard className="p-6 text-center">
           <Heart className="w-12 h-12 mx-auto mb-4 text-pink-500 heartbeat" />
-          <h3 className="font-bold mb-2">Transform Lives</h3>
+          <h2 className="font-bold mb-2">Transform Lives</h2>
           <p className="text-sm text-muted-foreground">Recovery resources and support</p>
         </HolographicCard>
       </div>
@@ -216,15 +207,16 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <div key="guardian-aingel-intro" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-24 h-24 mx-auto relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-full pulse-glow animate-spin-slow" />
+          <div className="absolute inset-0 bg-linear-to-br from-primary to-secondary rounded-full pulse-glow animate-spin-slow" />
           <div className="absolute inset-2 bg-background rounded-full flex items-center justify-center">
             <Sparkles className="w-12 h-12 text-primary" />
           </div>
         </div>
         <h2 className="text-3xl font-bold glow-text">Meet Your Guardian Aingel</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto text-balance">
-          I'm your personal AI assistant, designed to protect and guide you. I'll monitor your vitals, detect
-          emergencies, coordinate rescues, and provide support throughout your journey.
+          I'm the Guardian Aingel demo. Today I can walk you through the NarcoGuard concept, help you plan for everyday
+          needs, and point you to real resources. I can't monitor you, detect an overdose, or call anyone. If someone may
+          be overdosing, call 911 and give naloxone.
         </p>
       </div>
 
@@ -235,30 +227,30 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         </h3>
         <ul className="space-y-3">
           <li className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <div>
-              <p className="font-semibold">Emergency Detection</p>
-              <p className="text-sm text-muted-foreground">Monitor vitals and detect overdose signs automatically</p>
+              <p className="font-semibold">Overdose Detection (research)</p>
+              <p className="text-sm text-muted-foreground">A goal for the future wearable. Nothing monitors you or detects overdoses today.</p>
             </div>
           </li>
           <li className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-secondary mt-0.5 flex-shrink-0" />
+            <MapPin className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
             <div>
-              <p className="font-semibold">Rescue Coordination</p>
+              <p className="font-semibold">Rescue Coordination (demo)</p>
               <p className="text-sm text-muted-foreground">
-                Share your location and guide heroes to you with naloxone directions
+                Shows how trained volunteers might be guided to you. In this demo, no one is alerted.
               </p>
             </div>
           </li>
           <li className="flex items-start gap-3">
-            <Phone className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+            <Phone className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
             <div>
               <p className="font-semibold">Emergency Response</p>
-              <p className="text-sm text-muted-foreground">Call 911, alert contacts, and provide CPR/Narcan guidance</p>
+              <p className="text-sm text-muted-foreground">Tap-to-call 911 and CPR/naloxone guidance. NarcoGuard does not call 911 or alert contacts for you.</p>
             </div>
           </li>
           <li className="flex items-start gap-3">
-            <Heart className="w-5 h-5 text-pink-500 mt-0.5 flex-shrink-0" />
+            <Heart className="w-5 h-5 text-pink-500 mt-0.5 shrink-0" />
             <div>
               <p className="font-semibold">Recovery Support</p>
               <p className="text-sm text-muted-foreground">Connect you to resources and track your wellness journey</p>
@@ -375,7 +367,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="text-center space-y-4">
         <Bell className="w-16 h-16 mx-auto text-primary pulse-glow" />
         <h2 className="text-3xl font-bold glow-text">Emergency Response Preferences</h2>
-        <p className="text-muted-foreground">Customize how Guardian Aingel responds to emergencies</p>
+        <p className="text-muted-foreground">
+          Save how you would want the future device to respond. These settings are not active: NarcoGuard does not sound
+          alarms, call 911, notify contacts, or share your location today.
+        </p>
       </div>
       <HolographicCard className="p-8 max-w-2xl mx-auto space-y-6">
         <div className="flex items-start space-x-3">
@@ -391,10 +386,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="soundAlarm" className="text-base font-semibold cursor-pointer">
-              Sound Loud Alarm
+              Sound a Loud Alarm (planned)
             </Label>
             <p className="text-sm text-muted-foreground">
-              Play a loud alarm to alert people nearby and wake you if you're unconscious
+              Future device: an alarm to alert people nearby. Not active today.
             </p>
           </div>
         </div>
@@ -412,10 +407,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="call911" className="text-base font-semibold cursor-pointer">
-              Call 911 Automatically
+              Call 911 for Me (planned)
             </Label>
             <p className="text-sm text-muted-foreground">
-              Automatically call emergency services and share your location
+              A future goal that needs approval and testing. Not active: call 911 yourself.
             </p>
           </div>
         </div>
@@ -433,9 +428,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="notifyContacts" className="text-base font-semibold cursor-pointer">
-              Notify Emergency Contacts
+              Notify My Emergency Contacts (planned)
             </Label>
-            <p className="text-sm text-muted-foreground">Alert your trusted contacts via call or text</p>
+            <p className="text-sm text-muted-foreground">Not active: NarcoGuard never contacts anyone for you today.</p>
           </div>
         </div>
 
@@ -452,10 +447,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="shareLocation" className="text-base font-semibold cursor-pointer">
-              Share Location with Heroes
+              Share My Location with Trained Volunteers (planned)
             </Label>
             <p className="text-sm text-muted-foreground">
-              Allow nearby trained heroes to see your location and respond immediately
+              Not active: your location is not shared with anyone.
             </p>
           </div>
         </div>
@@ -525,7 +520,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="text-center space-y-4">
         <Users className="w-16 h-16 mx-auto text-primary pulse-glow" />
         <h2 className="text-3xl font-bold glow-text">Never Use Alone</h2>
-        <p className="text-muted-foreground">Someone is always watching over you</p>
+        <p className="text-muted-foreground">
+          NarcoGuard cannot watch over you. Using with someone else present, with naloxone on hand, can save your life.
+        </p>
       </div>
       <HolographicCard className="p-8 max-w-2xl mx-auto space-y-6">
         <div className="space-y-4">
@@ -542,10 +539,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             />
             <div className="space-y-1">
               <Label htmlFor="neverUseAlone" className="text-base font-semibold cursor-pointer">
-                Enable Never Use Alone
+                Never Use Alone Monitoring (planned)
               </Label>
               <p className="text-sm text-muted-foreground">
-                When you use substances, Guardian Aingel will monitor you continuously and alert help if you don't respond
+                Not active: NarcoGuard cannot monitor you or send help if you stop responding. Don't use alone; have
+                someone with you who has naloxone, and call 911 if someone may be overdosing.
                 to check-ins
               </p>
             </div>
@@ -554,13 +552,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
             <h4 className="font-semibold mb-2 flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary" />
-              How It Works
+              How It Could Work (planned, not active)
             </h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• Activate before using substances</li>
-              <li>• Guardian Aingel sends periodic check-ins</li>
-              <li>• If you don't respond, emergency protocol activates</li>
-              <li>• Heroes and emergency contacts are notified immediately</li>
+              <li>• A future version could send periodic check-ins</li>
+              <li>• A missed check-in could ask chosen people to check on you</li>
+              <li>• This needs testing, approval and your explicit consent first</li>
+              <li>• Today nothing is sent and no one is notified</li>
             </ul>
           </div>
 
@@ -577,10 +575,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             />
             <div className="space-y-1">
               <Label htmlFor="autoDetection" className="text-base font-semibold cursor-pointer">
-                Automatic Overdose Detection
+                Automatic Overdose Detection (research)
               </Label>
               <p className="text-sm text-muted-foreground">
-                Guardian Aingel monitors your vitals 24/7 and detects overdose signs automatically
+                Not active: no device or app monitors your vitals today.
               </p>
             </div>
           </div>
@@ -598,10 +596,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             />
             <div className="space-y-1">
               <Label htmlFor="voiceActivation" className="text-base font-semibold cursor-pointer">
-                Voice Activation
+                Voice Activation (planned)
               </Label>
               <p className="text-sm text-muted-foreground">
-                Say "Guardian Aingel, help me" to trigger emergency response hands-free
+                Not active: voice commands do not trigger any response.
               </p>
             </div>
           </div>
@@ -632,7 +630,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <Label htmlFor="incognitoMode" className="text-base font-semibold cursor-pointer">
               Incognito Mode
             </Label>
-            <p className="text-sm text-muted-foreground">Your identity remains anonymous to heroes and responders</p>
+            <p className="text-sm text-muted-foreground">For the planned volunteer network. Nothing about you is shared today.</p>
           </div>
         </div>
 
@@ -649,10 +647,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="shareWithHeroes" className="text-base font-semibold cursor-pointer">
-              Share Location with Hero Network
+              Share Location with Volunteers in Emergencies (planned)
             </Label>
             <p className="text-sm text-muted-foreground">
-              Allow nearby trained heroes to see your location during emergencies only
+              Not active: your location is not shared.
             </p>
           </div>
         </div>
@@ -660,11 +658,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
           <h4 className="font-semibold mb-2 flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
-            HIPAA Compliance
+            Where your answers are stored
           </h4>
           <p className="text-sm text-muted-foreground">
-            All your health data is encrypted and stored securely. We comply with HIPAA regulations and never sell your
-            data. Medical information is only shared with emergency responders when your life is at risk.
+            Your answers are saved only in this browser on this device. They are not encrypted, are not sent to
+            NarcoGuard, and are not shared with anyone. NarcoGuard is not HIPAA-certified. Clearing this site's browser
+            data deletes them.
           </p>
         </div>
       </HolographicCard>
@@ -681,8 +680,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="space-y-4">
           <h3 className="text-xl font-bold">What is a Hero?</h3>
           <p className="text-muted-foreground">
-            Heroes are trained community members who carry naloxone and respond to nearby overdose emergencies. When
-            someone needs help, you'll receive an alert with their location and can choose to respond.
+            Heroes would be trained community members who carry naloxone and choose to respond to nearby overdoses. The
+            network is planned, not live: no alerts are sent today.
           </p>
         </div>
 
@@ -690,23 +689,23 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <h4 className="font-semibold">Roles & Responsibilities:</h4>
           <ul className="space-y-3 text-sm">
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Respond to emergency alerts in your area</span>
             </li>
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Administer naloxone following AR-guided instructions</span>
             </li>
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Perform CPR if trained and necessary</span>
             </li>
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Stay with the person until EMS arrives</span>
             </li>
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Protected by Good Samaritan laws</span>
             </li>
           </ul>
@@ -879,7 +878,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               id="acknowledgedGoodSamaritan"
               checked={preferences.legal.acknowledgedGoodSamaritan}
               onCheckedChange={(checked) => {
-                console.log("[v0] Good Samaritan acknowledged:", checked)
                 setPreferences({
                   ...preferences,
                   legal: { ...preferences.legal, acknowledgedGoodSamaritan: checked as boolean },
@@ -916,7 +914,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           className="p-6 bg-blue-500/30 rounded-lg border-4 border-blue-500 cursor-pointer hover:bg-blue-500/40 transition-colors"
           onClick={() => {
             const newValue = !preferences.legal.acceptedTerms
-            console.log("[v0] Terms checked:", newValue)
             setPreferences({
               ...preferences,
               legal: { ...preferences.legal, acceptedTerms: newValue },
@@ -928,7 +925,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               id="acceptedTerms"
               checked={preferences.legal.acceptedTerms}
               onCheckedChange={(checked) => {
-                console.log("[v0] Terms checked:", checked)
                 setPreferences({
                   ...preferences,
                   legal: { ...preferences.legal, acceptedTerms: checked as boolean },
@@ -954,7 +950,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </p>
             </div>
             {preferences.legal.acceptedTerms && (
-              <Check className="w-10 h-10 text-green-500 flex-shrink-0 animate-pulse" />
+              <Check className="w-10 h-10 text-green-500 shrink-0 animate-pulse" />
             )}
           </div>
         </div>
@@ -963,7 +959,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           className="p-6 bg-purple-500/30 rounded-lg border-4 border-purple-500 cursor-pointer hover:bg-purple-500/40 transition-colors"
           onClick={() => {
             const newValue = !preferences.legal.acceptedPrivacy
-            console.log("[v0] Privacy checked:", newValue)
             setPreferences({
               ...preferences,
               legal: { ...preferences.legal, acceptedPrivacy: newValue },
@@ -975,7 +970,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               id="acceptedPrivacy"
               checked={preferences.legal.acceptedPrivacy}
               onCheckedChange={(checked) => {
-                console.log("[v0] Privacy checked:", checked)
                 setPreferences({
                   ...preferences,
                   legal: { ...preferences.legal, acceptedPrivacy: checked as boolean },
@@ -1001,7 +995,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </p>
             </div>
             {preferences.legal.acceptedPrivacy && (
-              <Check className="w-10 h-10 text-green-500 flex-shrink-0 animate-pulse" />
+              <Check className="w-10 h-10 text-green-500 shrink-0 animate-pulse" />
             )}
           </div>
         </div>
@@ -1010,7 +1004,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           className="p-6 bg-cyan-500/30 rounded-lg border-4 border-cyan-500 cursor-pointer hover:bg-cyan-500/40 transition-colors"
           onClick={() => {
             const newValue = !preferences.legal.acceptedHIPAA
-            console.log("[v0] HIPAA checked:", newValue)
             setPreferences({
               ...preferences,
               legal: { ...preferences.legal, acceptedHIPAA: newValue },
@@ -1022,7 +1015,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               id="acceptedHIPAA"
               checked={preferences.legal.acceptedHIPAA}
               onCheckedChange={(checked) => {
-                console.log("[v0] HIPAA checked:", checked)
                 setPreferences({
                   ...preferences,
                   legal: { ...preferences.legal, acceptedHIPAA: checked as boolean },
@@ -1039,7 +1031,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </p>
             </div>
             {preferences.legal.acceptedHIPAA && (
-              <Check className="w-10 h-10 text-green-500 flex-shrink-0 animate-pulse" />
+              <Check className="w-10 h-10 text-green-500 shrink-0 animate-pulse" />
             )}
           </div>
         </div>
@@ -1060,7 +1052,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <div key="complete" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-32 h-32 mx-auto float-animation">
-          <Image src="/images/narcoguard-icon.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
+          <Image src="/images/narcoguard-icon-256.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
         </div>
         <h2 className="text-3xl font-bold glow-text">You're All Set, {name}!</h2>
         <p className="text-muted-foreground">Welcome to the movement</p>
@@ -1076,10 +1068,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           {isInstallable ? (
             <GlowButton
               onClick={async () => {
-                console.log("[v0] Install button clicked")
                 const success = await installPWA()
                 if (success) {
-                  console.log("[v0] PWA installed successfully")
                   setTimeout(completeOnboarding, 1000)
                 }
               }}
@@ -1099,7 +1089,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
           <GlowButton
             onClick={() => {
-              console.log("[v0] Launch Dashboard clicked")
               completeOnboarding()
             }}
             className="w-full bg-green-500 hover:bg-green-600"
@@ -1157,18 +1146,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   const isContinueDisabled = isStep2Invalid || isStep10Invalid || isStep11Invalid
 
-  console.log("[v0] Step:", step, "Continue disabled:", isContinueDisabled, "Reasons:", {
-    isStep2Invalid,
-    isStep10Invalid,
-    isStep11Invalid,
-    legal: preferences.legal,
-  })
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <ParticleField count={50} />
 
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Progress Bar */}
@@ -1181,7 +1164,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </div>
           <div className="h-2 bg-background/50 rounded-full overflow-hidden neon-border">
             <div
-              className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 pulse-glow"
+              className="h-full bg-linear-to-r from-primary to-secondary transition-all duration-500 pulse-glow"
               style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
             />
           </div>
@@ -1211,10 +1194,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               {isInstallable && (
                 <GlowButton
                   onClick={async () => {
-                    console.log("[v0] Install button clicked")
                     const success = await installPWA()
                     if (success) {
-                      console.log("[v0] PWA installed successfully")
                       setTimeout(completeOnboarding, 500)
                     }
                   }}
@@ -1227,7 +1208,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
               <GlowButton
                 onClick={() => {
-                  console.log("[v0] Launch Dashboard button clicked")
                   completeOnboarding()
                 }}
                 className="w-full bg-green-500 hover:bg-green-600"

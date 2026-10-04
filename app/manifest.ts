@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "NarcoGuard - NG Overdose Prevention System",
     short_name: "NarcoGuard",
-    description: "Wearable overdose prevention, emergency coordination, and naloxone response support.",
+    description: "Overdose-response wearable concept demo with naloxone guidance and everyday needs planning. Not a medical device.",
     id: "/",
     start_url: "/",
     scope: "/",

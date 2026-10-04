@@ -120,7 +120,7 @@ export function ARGuidance() {
               <div className="absolute inset-0 blur-2xl bg-primary/50 animate-pulse" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold glow-text font-[family-name:var(--font-orbitron)]">AR GUIDANCE</h2>
+              <h2 className="text-2xl font-bold glow-text font-orbitron">AR GUIDANCE</h2>
               <p className="text-muted-foreground mt-2">
                 Step-by-step augmented reality instructions for emergency response
               </p>
@@ -135,7 +135,7 @@ export function ARGuidance() {
                 <div className="p-3 rounded-full bg-primary/20 pulse-glow">
                   <Syringe className="w-8 h-8 text-primary" />
                 </div>
-                <h3 className="text-xl font-bold font-[family-name:var(--font-orbitron)]">NALOXONE</h3>
+                <h3 className="text-xl font-bold font-orbitron">NALOXONE</h3>
               </div>
               <p className="text-sm text-muted-foreground">
                 Learn proper naloxone administration with AR overlay guidance
@@ -152,7 +152,7 @@ export function ARGuidance() {
                 <div className="p-3 rounded-full bg-red-500/20 pulse-glow">
                   <Heart className="w-8 h-8 text-red-500 heartbeat" />
                 </div>
-                <h3 className="text-xl font-bold font-[family-name:var(--font-orbitron)]">CPR</h3>
+                <h3 className="text-xl font-bold font-orbitron">CPR</h3>
               </div>
               <p className="text-sm text-muted-foreground">Follow AR-guided CPR instructions with real-time feedback</p>
               <GlowButton onClick={() => startGuidance("cpr")} className="w-full" variant="emergency">
@@ -170,7 +170,7 @@ export function ARGuidance() {
   const progress = ((currentStep + 1) / steps.length) * 100
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xs">
       <ParticleField count={50} color="var(--glow-primary)" />
 
       <div className="relative h-full flex flex-col p-6">
@@ -179,7 +179,7 @@ export function ARGuidance() {
           <div className="flex items-center gap-3">
             <Camera className="w-8 h-8 text-primary pulse-glow" />
             <div>
-              <h2 className="text-2xl font-bold glow-text font-[family-name:var(--font-orbitron)]">
+              <h2 className="text-2xl font-bold glow-text font-orbitron">
                 AR GUIDANCE ACTIVE
               </h2>
               <p className="text-sm text-muted-foreground">
@@ -202,7 +202,7 @@ export function ARGuidance() {
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-primary to-secondary pulse-glow transition-all duration-500"
+              className="h-full bg-linear-to-r from-primary to-secondary pulse-glow transition-all duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -211,7 +211,7 @@ export function ARGuidance() {
         {/* AR Camera View Simulation */}
         <div className="flex-1 relative rounded-2xl overflow-hidden glass neon-border mb-6">
           {/* Simulated camera feed */}
-          <div className="absolute inset-0 bg-gradient-to-br from-muted/20 to-background/40">
+          <div className="absolute inset-0 bg-linear-to-br from-muted/20 to-background/40">
             {/* Scan lines effect */}
             <div className="absolute inset-0 opacity-20">
               {Array.from({ length: 20 }).map((_, i) => (
@@ -243,7 +243,7 @@ export function ARGuidance() {
 
                 {/* Step info */}
                 <div className="glass neon-border p-8 rounded-2xl">
-                  <h3 className="text-4xl font-bold glow-text mb-4 font-[family-name:var(--font-orbitron)]">
+                  <h3 className="text-4xl font-bold glow-text mb-4 font-orbitron">
                     {currentStepData.title}
                   </h3>
                   <p className="text-xl text-foreground leading-relaxed">{currentStepData.description}</p>

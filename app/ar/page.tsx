@@ -11,7 +11,7 @@ export default function ARPage() {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <ParticleField count={100} />
 
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
 
       <div className="relative z-10 container mx-auto px-4 py-6">
         <Link

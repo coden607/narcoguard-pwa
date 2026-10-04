@@ -29,11 +29,12 @@ jobs:
       - run: npm run validate:supabase
       - run: npm run validate:claims
       - run: npm run test:signals
+      - run: npm run test:vitals
       - run: npm run test:guardian
       - run: npm run test:constitution
       - run: npm run validate:watch-design
       - name: Dependency audit
-        run: npm audit --audit-level=high
+        run: npm run audit:deps
       - run: npm run build
 
   pwa-browser-smoke:

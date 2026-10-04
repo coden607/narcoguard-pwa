@@ -60,3 +60,6 @@ social.env
 .oauth/
 tokens/
 *.token.json
+
+# Lighthouse CI local output
+.lighthouseci/
