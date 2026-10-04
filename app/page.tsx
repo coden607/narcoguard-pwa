@@ -208,7 +208,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-4">
             <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 float-animation">
               <Image
-                src="/images/narcoguard-icon.jpeg"
+                src="/images/narcoguard-icon-256.jpeg"
                 alt="Narcoguard"
                 width={64}
                 height={64}

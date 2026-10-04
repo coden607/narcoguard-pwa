@@ -171,7 +171,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <div key="welcome" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-32 h-32 mx-auto float-animation">
-          <Image src="/images/narcoguard-icon.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
+          <Image src="/images/narcoguard-icon-256.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
         </div>
         <h1 className="text-5xl font-bold glow-text font-orbitron">WELCOME TO NARCOGUARD</h1>
         <div className="flex items-center justify-center gap-2 text-xl text-primary">
@@ -188,17 +188,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <HolographicCard className="p-6 text-center">
           <Syringe className="w-12 h-12 mx-auto mb-4 text-primary pulse-glow" />
-          <h3 className="font-bold mb-2">Delivery Research</h3>
+          <h2 className="font-bold mb-2">Delivery Research</h2>
           <p className="text-sm text-muted-foreground">Proposed naloxone delivery is a research concept, not a current capability</p>
         </HolographicCard>
         <HolographicCard className="p-6 text-center">
           <Users className="w-12 h-12 mx-auto mb-4 text-secondary pulse-glow" />
-          <h3 className="font-bold mb-2">Hero Network</h3>
+          <h2 className="font-bold mb-2">Hero Network</h2>
           <p className="text-sm text-muted-foreground">A simulated community-response experience for demonstration</p>
         </HolographicCard>
         <HolographicCard className="p-6 text-center">
           <Heart className="w-12 h-12 mx-auto mb-4 text-pink-500 heartbeat" />
-          <h3 className="font-bold mb-2">Transform Lives</h3>
+          <h2 className="font-bold mb-2">Transform Lives</h2>
           <p className="text-sm text-muted-foreground">Recovery resources and support</p>
         </HolographicCard>
       </div>
@@ -1045,7 +1045,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <div key="complete" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-32 h-32 mx-auto float-animation">
-          <Image src="/images/narcoguard-icon.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
+          <Image src="/images/narcoguard-icon-256.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
         </div>
         <h2 className="text-3xl font-bold glow-text">You're All Set, {name}!</h2>
         <p className="text-muted-foreground">Welcome to the movement</p>

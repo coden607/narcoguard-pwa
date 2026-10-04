@@ -24,7 +24,7 @@ export function GlowButton({
   const variantClasses = {
     default: "pulse-glow bg-primary hover:bg-primary/90 text-primary-foreground",
     outline: "border border-primary/60 bg-transparent text-primary hover:bg-primary/10",
-    emergency: "emergency-pulse bg-destructive hover:bg-destructive/90 text-destructive-foreground",
+    emergency: "emergency-pulse bg-destructive-solid hover:bg-destructive-solid/90 text-destructive-foreground",
     success: "pulse-glow bg-green-600 hover:bg-green-700 text-white",
   }
 
