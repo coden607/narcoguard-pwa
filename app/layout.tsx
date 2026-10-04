@@ -75,7 +75,8 @@ export default function RootLayout({
     <html lang="en" className={`dark ${inter.variable} ${orbitron.variable}`}>
       <head>
         <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined)`}</Script>
-        <link rel="icon" href="/images/narcoguard-icon-256.jpeg" />
+        <link rel="icon" href="/icon-dark-32x32.png" sizes="32x32" type="image/png" />
+        <link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-capable" content="yes" />

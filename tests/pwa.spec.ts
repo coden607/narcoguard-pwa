@@ -147,6 +147,7 @@ test.describe("PWA production flow", () => {
       expect.arrayContaining([
         expect.objectContaining({ src: "/icon-192.png", sizes: "192x192" }),
         expect.objectContaining({ src: "/icon-512.png", sizes: "512x512" }),
+        expect.objectContaining({ src: "/icon-maskable-512.png", sizes: "512x512", purpose: "maskable" }),
       ]),
     )
 
@@ -343,5 +344,14 @@ test.describe("PWA production flow", () => {
     await expect(law).toContainText("Tex. Health & Safety Code § 481.115(g)")
     await expect(law).toContainText("defense in court, not immunity")
     await expect(page.getByText("not legal advice", { exact: false })).toBeVisible()
+  })
+
+  test("the NarcoGuard logo appears in the header of every public page", async ({ page }) => {
+    for (const path of ["/", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/privacy", "/terms"]) {
+      await page.goto(path)
+      const logo = page.locator(".site-header .brand-mark img")
+      await expect(logo, path).toBeVisible()
+      expect(await logo.evaluate((img) => (img as HTMLImageElement).naturalWidth), path).toBeGreaterThan(0)
+    }
   })
 })

@@ -14,7 +14,7 @@ export interface ResourceLookup {
 
 async function fetchJson(url: string, init?: RequestInit): Promise<unknown> {
   const response = await fetch(url, { ...init, headers: { "User-Agent": USER_AGENT, Accept: "application/json", ...init?.headers }, signal: AbortSignal.timeout(12_000), cache: "no-store" })
-  if (!response.ok) throw new Error(`upstream ${response.status}`)
+  if (!response.ok) throw new Error(`${new URL(url).hostname} responded ${response.status}`)
   return response.json()
 }
 
@@ -44,8 +44,10 @@ export async function lookupResources(kind: ResourceKind, origin: ResourceOrigin
       results = parseOverpass(kind, body, point)
     }
     return { status: "ok", fetchedAt: new Date().toISOString(), results, fallback }
-  } catch {
-    console.warn(`[resources] ${kind} lookup unavailable`)
+  } catch (error) {
+    // Only the upstream host and status are logged, never the location or query.
+    const reason = error instanceof Error && /responded \d+$/.test(error.message) ? error.message : error instanceof Error ? error.name : "unknown"
+    console.warn(`[resources] ${kind} lookup unavailable: ${reason}`)
     return { status: "unavailable", message: "The live directory did not respond. Use the links below.", results: [], fallback }
   }
 }
