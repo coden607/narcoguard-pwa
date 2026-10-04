@@ -16,7 +16,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test:e2e": "npm run build && playwright test",
     "test:pwa": "node scripts/run-pwa-tests.js",
-    "verify": "npm run lint && npm run validate:production && npm run validate:env && npm run typecheck && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm run test:vitals && npm run test:guardian && npm run test:constitution && npm run validate:watch-design && npm audit --audit-level=high && npm run build && npm run test:pwa",
+    "verify": "npm run lint && npm run validate:production && npm run validate:env && npm run typecheck && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm run test:vitals && npm run test:guardian && npm run test:constitution && npm run validate:watch-design && npm run audit:deps && npm run build && npm run test:pwa",
     "health": "npm run verify",
     "setup:project-ops": "node scripts/setup-project-ops.mjs",
     "marketing:run": "node scripts/post-daily-campaign.js",
@@ -31,7 +31,8 @@
     "validate:watch-design": "node --import tsx scripts/validate-watch-design.ts",
     "validate:production": "node scripts/validate-production.js",
     "validate:env": "node scripts/validate-env.js",
-    "test:vitals": "node --import tsx --test tests/vitals-response.test.ts"
+    "test:vitals": "node --import tsx --test tests/vitals-response.test.ts",
+    "audit:deps": "node scripts/audit-gate.js"
   },
   "overrides": {
     "next": {

@@ -214,8 +214,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         </div>
         <h2 className="text-3xl font-bold glow-text">Meet Your Guardian Aingel</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto text-balance">
-          I'm your personal AI assistant, designed to protect and guide you. I'll monitor your vitals, detect
-          emergencies, coordinate rescues, and provide support throughout your journey.
+          I'm the Guardian Aingel demo. Today I can walk you through the NarcoGuard concept, help you plan for everyday
+          needs, and point you to real resources. I can't monitor you, detect an overdose, or call anyone. If someone may
+          be overdosing, call 911 and give naloxone.
         </p>
       </div>
 
@@ -228,16 +229,16 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <li className="flex items-start gap-3">
             <AlertTriangle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <div>
-              <p className="font-semibold">Emergency Detection</p>
-              <p className="text-sm text-muted-foreground">Monitor vitals and detect overdose signs automatically</p>
+              <p className="font-semibold">Overdose Detection (research)</p>
+              <p className="text-sm text-muted-foreground">A goal for the future wearable. Nothing monitors you or detects overdoses today.</p>
             </div>
           </li>
           <li className="flex items-start gap-3">
             <MapPin className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
             <div>
-              <p className="font-semibold">Rescue Coordination</p>
+              <p className="font-semibold">Rescue Coordination (demo)</p>
               <p className="text-sm text-muted-foreground">
-                Share your location and guide heroes to you with naloxone directions
+                Shows how trained volunteers might be guided to you. In this demo, no one is alerted.
               </p>
             </div>
           </li>
@@ -245,7 +246,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <Phone className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
             <div>
               <p className="font-semibold">Emergency Response</p>
-              <p className="text-sm text-muted-foreground">Call 911, alert contacts, and provide CPR/Narcan guidance</p>
+              <p className="text-sm text-muted-foreground">Tap-to-call 911 and CPR/naloxone guidance. NarcoGuard does not call 911 or alert contacts for you.</p>
             </div>
           </li>
           <li className="flex items-start gap-3">
@@ -366,7 +367,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="text-center space-y-4">
         <Bell className="w-16 h-16 mx-auto text-primary pulse-glow" />
         <h2 className="text-3xl font-bold glow-text">Emergency Response Preferences</h2>
-        <p className="text-muted-foreground">Customize how Guardian Aingel responds to emergencies</p>
+        <p className="text-muted-foreground">
+          Save how you would want the future device to respond. These settings are not active: NarcoGuard does not sound
+          alarms, call 911, notify contacts, or share your location today.
+        </p>
       </div>
       <HolographicCard className="p-8 max-w-2xl mx-auto space-y-6">
         <div className="flex items-start space-x-3">
@@ -382,10 +386,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="soundAlarm" className="text-base font-semibold cursor-pointer">
-              Sound Loud Alarm
+              Sound a Loud Alarm (planned)
             </Label>
             <p className="text-sm text-muted-foreground">
-              Play a loud alarm to alert people nearby and wake you if you're unconscious
+              Future device: an alarm to alert people nearby. Not active today.
             </p>
           </div>
         </div>
@@ -403,10 +407,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="call911" className="text-base font-semibold cursor-pointer">
-              Call 911 Automatically
+              Call 911 for Me (planned)
             </Label>
             <p className="text-sm text-muted-foreground">
-              Automatically call emergency services and share your location
+              A future goal that needs approval and testing. Not active: call 911 yourself.
             </p>
           </div>
         </div>
@@ -424,9 +428,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="notifyContacts" className="text-base font-semibold cursor-pointer">
-              Notify Emergency Contacts
+              Notify My Emergency Contacts (planned)
             </Label>
-            <p className="text-sm text-muted-foreground">Alert your trusted contacts via call or text</p>
+            <p className="text-sm text-muted-foreground">Not active: NarcoGuard never contacts anyone for you today.</p>
           </div>
         </div>
 
@@ -443,10 +447,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="shareLocation" className="text-base font-semibold cursor-pointer">
-              Share Location with Heroes
+              Share My Location with Trained Volunteers (planned)
             </Label>
             <p className="text-sm text-muted-foreground">
-              Allow nearby trained heroes to see your location and respond immediately
+              Not active: your location is not shared with anyone.
             </p>
           </div>
         </div>
@@ -516,7 +520,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="text-center space-y-4">
         <Users className="w-16 h-16 mx-auto text-primary pulse-glow" />
         <h2 className="text-3xl font-bold glow-text">Never Use Alone</h2>
-        <p className="text-muted-foreground">Someone is always watching over you</p>
+        <p className="text-muted-foreground">
+          NarcoGuard cannot watch over you. Using with someone else present, with naloxone on hand, can save your life.
+        </p>
       </div>
       <HolographicCard className="p-8 max-w-2xl mx-auto space-y-6">
         <div className="space-y-4">
@@ -533,10 +539,11 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             />
             <div className="space-y-1">
               <Label htmlFor="neverUseAlone" className="text-base font-semibold cursor-pointer">
-                Enable Never Use Alone
+                Never Use Alone Monitoring (planned)
               </Label>
               <p className="text-sm text-muted-foreground">
-                When you use substances, Guardian Aingel will monitor you continuously and alert help if you don't respond
+                Not active: NarcoGuard cannot monitor you or send help if you stop responding. Don't use alone; have
+                someone with you who has naloxone, and call 911 if someone may be overdosing.
                 to check-ins
               </p>
             </div>
@@ -545,13 +552,13 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
             <h4 className="font-semibold mb-2 flex items-center gap-2">
               <Shield className="w-5 h-5 text-primary" />
-              How It Works
+              How It Could Work (planned, not active)
             </h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li>• Activate before using substances</li>
-              <li>• Guardian Aingel sends periodic check-ins</li>
-              <li>• If you don't respond, emergency protocol activates</li>
-              <li>• Heroes and emergency contacts are notified immediately</li>
+              <li>• A future version could send periodic check-ins</li>
+              <li>• A missed check-in could ask chosen people to check on you</li>
+              <li>• This needs testing, approval and your explicit consent first</li>
+              <li>• Today nothing is sent and no one is notified</li>
             </ul>
           </div>
 
@@ -568,10 +575,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             />
             <div className="space-y-1">
               <Label htmlFor="autoDetection" className="text-base font-semibold cursor-pointer">
-                Automatic Overdose Detection
+                Automatic Overdose Detection (research)
               </Label>
               <p className="text-sm text-muted-foreground">
-                Guardian Aingel monitors your vitals 24/7 and detects overdose signs automatically
+                Not active: no device or app monitors your vitals today.
               </p>
             </div>
           </div>
@@ -589,10 +596,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             />
             <div className="space-y-1">
               <Label htmlFor="voiceActivation" className="text-base font-semibold cursor-pointer">
-                Voice Activation
+                Voice Activation (planned)
               </Label>
               <p className="text-sm text-muted-foreground">
-                Say "Guardian Aingel, help me" to trigger emergency response hands-free
+                Not active: voice commands do not trigger any response.
               </p>
             </div>
           </div>
@@ -623,7 +630,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <Label htmlFor="incognitoMode" className="text-base font-semibold cursor-pointer">
               Incognito Mode
             </Label>
-            <p className="text-sm text-muted-foreground">Your identity remains anonymous to heroes and responders</p>
+            <p className="text-sm text-muted-foreground">For the planned volunteer network. Nothing about you is shared today.</p>
           </div>
         </div>
 
@@ -640,10 +647,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           />
           <div className="space-y-1">
             <Label htmlFor="shareWithHeroes" className="text-base font-semibold cursor-pointer">
-              Share Location with Hero Network
+              Share Location with Volunteers in Emergencies (planned)
             </Label>
             <p className="text-sm text-muted-foreground">
-              Allow nearby trained heroes to see your location during emergencies only
+              Not active: your location is not shared.
             </p>
           </div>
         </div>
@@ -651,11 +658,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
           <h4 className="font-semibold mb-2 flex items-center gap-2">
             <Shield className="w-5 h-5 text-primary" />
-            HIPAA Compliance
+            Where your answers are stored
           </h4>
           <p className="text-sm text-muted-foreground">
-            All your health data is encrypted and stored securely. We comply with HIPAA regulations and never sell your
-            data. Medical information is only shared with emergency responders when your life is at risk.
+            Your answers are saved only in this browser on this device. They are not encrypted, are not sent to
+            NarcoGuard, and are not shared with anyone. NarcoGuard is not HIPAA-certified. Clearing this site's browser
+            data deletes them.
           </p>
         </div>
       </HolographicCard>
@@ -672,8 +680,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="space-y-4">
           <h3 className="text-xl font-bold">What is a Hero?</h3>
           <p className="text-muted-foreground">
-            Heroes are trained community members who carry naloxone and respond to nearby overdose emergencies. When
-            someone needs help, you'll receive an alert with their location and can choose to respond.
+            Heroes would be trained community members who carry naloxone and choose to respond to nearby overdoses. The
+            network is planned, not live: no alerts are sent today.
           </p>
         </div>
 
