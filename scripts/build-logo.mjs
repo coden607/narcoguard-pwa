@@ -29,6 +29,8 @@ const square = (size) => sharp(logo).resize(size, size)
 const outputs = [
   ["public/images/narcoguard-logo.png", square(1024).png()],
   ["public/images/narcoguard-icon-256.jpeg", square(256).jpeg({ quality: 88, mozjpeg: true })],
+  // Header mark: shown at 44 CSS px, so 96 px covers 2x screens without oversized bytes.
+  ["public/images/narcoguard-logo-96.webp", square(96).webp({ quality: 82 })],
   ["public/icon-192.png", square(192).png()],
   ["public/icon-512.png", square(512).png()],
   ["public/apple-touch-icon.png", square(180).png()],
