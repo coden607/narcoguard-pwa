@@ -108,6 +108,28 @@ test.describe("PWA production flow", () => {
     await expect(toggle).toHaveAttribute("aria-expanded", "false")
   })
 
+  test("robots and sitemap list only real public pages on the canonical host", async ({ page, request }) => {
+    const robots = await request.get("/robots.txt")
+    expect(robots.ok()).toBeTruthy()
+    const robotsText = await robots.text()
+    expect(robotsText).toContain("Disallow: /api/")
+    expect(robotsText).toContain("Sitemap: https://www.narcoguard.app/sitemap.xml")
+
+    const sitemap = await request.get("/sitemap.xml")
+    expect(sitemap.ok()).toBeTruthy()
+    const urls = [...(await sitemap.text()).matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1])
+    expect(urls.length).toBeGreaterThan(5)
+    for (const url of urls) {
+      expect(url.startsWith("https://www.narcoguard.app")).toBeTruthy()
+      const path = new URL(url).pathname
+      expect((await request.get(path)).status(), `${path} should load`).toBe(200)
+    }
+
+    // A site-wide canonical of "/" would mark every page as a duplicate of the homepage.
+    await page.goto("/watch")
+    await expect(page.locator('link[rel="canonical"]')).toHaveCount(0)
+  })
+
   test("serves a valid install manifest and icons", async ({ page, request }) => {
     await page.goto("/")
 
