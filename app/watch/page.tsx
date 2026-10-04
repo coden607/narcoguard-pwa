@@ -553,7 +553,7 @@ export default function NGWatchPage() {
         {/* Hero Product Showcase with New Images */}
         <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
           <div className="lg:col-span-2 rounded-2xl overflow-hidden neon-border">
-            <Image src="/images/ng-modular-exploded.jpg" alt="NarcoGuard NG concept exploded view showing candidate modular components" width={1200} height={675} className="w-full h-auto object-cover" />
+            <Image src="/images/ng-modular-exploded.jpg" alt="NarcoGuard NG concept exploded view showing candidate modular components" width={1200} height={675} priority className="w-full h-auto object-cover" />
           </div>
           <div className="flex flex-col gap-4">
             <div className="rounded-2xl overflow-hidden neon-border flex-1">
