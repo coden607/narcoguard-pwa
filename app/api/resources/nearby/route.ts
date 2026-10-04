@@ -3,6 +3,9 @@ import { z } from "zod"
 import { RESOURCE_KINDS } from "@/lib/resource-finder"
 import { lookupResources } from "@/lib/resource-lookup"
 
+// Upstream directories and the AI provider can be slow; allow time for one fallback attempt.
+export const maxDuration = 60
+
 const querySchema = z.union([
   z.object({ kind: z.enum(RESOURCE_KINDS), lat: z.coerce.number().min(-90).max(90), lon: z.coerce.number().min(-180).max(180) }),
   z.object({ kind: z.enum(RESOURCE_KINDS), zip: z.string().regex(/^\d{5}$/) }),

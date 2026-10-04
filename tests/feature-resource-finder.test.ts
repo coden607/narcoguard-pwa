@@ -45,7 +45,9 @@ test("FindTreatment rows map to treatment resources and malformed bodies yield n
   assert.equal(results.length, 1)
   assert.deepEqual(results[0], { name: "Recovery Center – Outpatient", kind: "treatment", address: "2 Elm St, Albany, NY, 12207", phone: "518-555-0100", website: "https://rc.example/", lat: 42.65, lon: -73.75, distanceMiles: 1.2, source: "SAMHSA FindTreatment.gov" })
   assert.deepEqual(parseFindTreatment({ error: "x" }), [])
-  assert.match(findTreatmentUrl("12207"), /sAddr=12207&limitType=2&limitValue=16000/)
+  assert.match(findTreatmentUrl(42.65, -73.75), /sAddr=42.65%2C-73.75&limitType=2&limitValue=16000/)
+  const dupes = parseFindTreatment({ rows: [{ name1: "A", street1: "1 St" }, { name1: "A", street1: "1 St" }, { name1: "A", street1: "2 St" }] })
+  assert.equal(dupes.length, 2)
 })
 
 test("fallback directories are always available, with 211 last", () => {
@@ -53,5 +55,6 @@ test("fallback directories are always available, with 211 last", () => {
     const links = fallbackLinks(kind)
     assert.equal(links.at(-1)?.url, "https://www.211.org/get-help")
   }
-  assert.match(fallbackLinks("treatment", "12207")[0].url, /sAddr=12207/)
+  // The ZIP is never put into third-party URLs.
+  assert.equal(fallbackLinks("treatment")[0].url, "https://findtreatment.gov/")
 })

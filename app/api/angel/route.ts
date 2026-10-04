@@ -10,6 +10,9 @@ import {
 import { lookupResources, type ResourceLookup } from "@/lib/resource-lookup"
 
 // Conversations are relayed to Groq to generate a reply and are not stored or logged by NarcoGuard.
+// Upstream directories and the AI provider can be slow; allow time for one fallback attempt.
+export const maxDuration = 60
+
 const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 const noStore = { "Cache-Control": "private, no-store" }
 

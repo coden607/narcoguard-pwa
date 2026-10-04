@@ -12,8 +12,11 @@ export interface ResourceLookup {
   fallback: { title: string; url: string }[]
 }
 
-async function fetchJson(url: string, init?: RequestInit): Promise<unknown> {
-  const response = await fetch(url, { ...init, headers: { "User-Agent": USER_AGENT, Accept: "application/json", ...init?.headers }, signal: AbortSignal.timeout(12_000), cache: "no-store" })
+// Public Overpass instances; the second is tried when the first times out or is rate-limited.
+const OVERPASS_ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
+
+async function fetchJson(url: string, init?: RequestInit, timeoutMs = 12_000): Promise<unknown> {
+  const response = await fetch(url, { ...init, headers: { "User-Agent": USER_AGENT, Accept: "application/json", ...init?.headers }, signal: AbortSignal.timeout(timeoutMs), cache: "no-store" })
   if (!response.ok) throw new Error(`${new URL(url).hostname} responded ${response.status}`)
   return response.json()
 }
@@ -27,21 +30,25 @@ async function geocodeZip(zip: string): Promise<{ lat: number; lon: number } | u
 
 /** Looks up live listings. Never logs the location; failures are reported by kind only. */
 export async function lookupResources(kind: ResourceKind, origin: ResourceOrigin): Promise<ResourceLookup> {
-  const fallback = fallbackLinks(kind, "zip" in origin ? origin.zip : undefined)
+  const fallback = fallbackLinks(kind)
   try {
+    const point = "zip" in origin ? await geocodeZip(origin.zip) : { lat: coarsen(origin.lat), lon: coarsen(origin.lon) }
+    if (!point) return { status: "unavailable", message: "That ZIP code could not be located.", results: [], fallback }
     let results: NearbyResource[]
     if (kind === "treatment") {
-      const sAddr = "zip" in origin ? origin.zip : `${coarsen(origin.lat)},${coarsen(origin.lon)}`
-      results = parseFindTreatment(await fetchJson(findTreatmentUrl(sAddr)))
+      results = parseFindTreatment(await fetchJson(findTreatmentUrl(point.lat, point.lon)))
     } else {
-      const point = "zip" in origin ? await geocodeZip(origin.zip) : { lat: coarsen(origin.lat), lon: coarsen(origin.lon) }
-      if (!point) return { status: "unavailable", message: "That ZIP code could not be located.", results: [], fallback }
-      const body = await fetchJson("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ data: overpassQuery(kind, point.lat, point.lon) }).toString(),
-      })
-      results = parseOverpass(kind, body, point)
+      const body = new URLSearchParams({ data: overpassQuery(kind, point.lat, point.lon) }).toString()
+      let data: unknown
+      for (const [index, endpoint] of OVERPASS_ENDPOINTS.entries()) {
+        try {
+          data = await fetchJson(endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body }, 22_000)
+          break
+        } catch (error) {
+          if (index === OVERPASS_ENDPOINTS.length - 1) throw error
+        }
+      }
+      results = parseOverpass(kind, data, point)
     }
     return { status: "ok", fetchedAt: new Date().toISOString(), results, fallback }
   } catch (error) {

@@ -42,14 +42,14 @@ export function haversineMiles(aLat: number, aLon: number, bLat: number, bLon: n
 }
 
 const OSM_FILTERS: Record<Exclude<ResourceKind, "treatment">, string[]> = {
-  food: ['nwr["social_facility"~"^(food_bank|soup_kitchen)$"]', 'nwr["amenity"="food_bank"]'],
+  food: ['nwr["social_facility"="food_bank"]', 'nwr["social_facility"="soup_kitchen"]', 'nwr["amenity"="food_bank"]'],
   shelter: ['nwr["social_facility"="shelter"]'],
   pharmacy: ['nwr["amenity"="pharmacy"]', 'nwr["healthcare"="pharmacy"]'],
 }
 
 export function overpassQuery(kind: Exclude<ResourceKind, "treatment">, lat: number, lon: number, radius = SEARCH_RADIUS_METERS): string {
   const around = `(around:${radius},${lat},${lon})`
-  return `[out:json][timeout:15];(${OSM_FILTERS[kind].map((filter) => `${filter}${around};`).join("")});out center tags 60;`
+  return `[out:json][timeout:20];(${OSM_FILTERS[kind].map((filter) => `${filter}${around};`).join("")});out center tags 60;`
 }
 
 const str = (value: unknown, max = 160) => (typeof value === "string" && value.trim() ? value.trim().slice(0, max) : undefined)
@@ -102,14 +102,16 @@ export function parseOverpass(kind: Exclude<ResourceKind, "treatment">, body: un
   return results.sort((a, b) => (a.distanceMiles ?? 0) - (b.distanceMiles ?? 0)).slice(0, MAX_RESULTS)
 }
 
-export function findTreatmentUrl(sAddr: string, radius = SEARCH_RADIUS_METERS): string {
-  const params = new URLSearchParams({ sAddr, limitType: "2", limitValue: String(radius), pageSize: String(MAX_RESULTS), page: "1", sort: "0" })
+/** FindTreatment needs "lat,lon" in sAddr; a bare ZIP is ignored and silently falls back to a default location. */
+export function findTreatmentUrl(lat: number, lon: number, radius = SEARCH_RADIUS_METERS): string {
+  const params = new URLSearchParams({ sAddr: `${lat},${lon}`, limitType: "2", limitValue: String(radius), pageSize: String(MAX_RESULTS), page: "1", sort: "0" })
   return `https://findtreatment.gov/locator/exportsAsJson/v2?${params}`
 }
 
 export function parseFindTreatment(body: unknown): NearbyResource[] {
   const rows = (body as { rows?: Record<string, unknown>[] } | null)?.rows
   if (!Array.isArray(rows)) return []
+  const seen = new Set<string>()
   return rows.flatMap((row) => {
     const name = [str(row.name1), str(row.name2)].filter(Boolean).join(" – ")
     if (!name) return []
@@ -126,14 +128,17 @@ export function parseFindTreatment(body: unknown): NearbyResource[] {
       distanceMiles: num(row.miles) !== undefined ? Math.round((num(row.miles) as number) * 10) / 10 : undefined,
       source: "SAMHSA FindTreatment.gov",
     }
+    const key = `${name}|${address ?? ""}`.toLowerCase()
+    if (seen.has(key)) return []
+    seen.add(key)
     return [resource]
   }).slice(0, MAX_RESULTS)
 }
 
 /** Directory pages a person can always use when live results are empty or unavailable. */
-export function fallbackLinks(kind: ResourceKind, zip?: string) {
+export function fallbackLinks(kind: ResourceKind) {
   const links = [{ title: "Find local help through 211", url: "https://www.211.org/get-help" }]
-  if (kind === "treatment") links.unshift({ title: "Search FindTreatment.gov", url: `https://findtreatment.gov/locator${zip ? `?sAddr=${encodeURIComponent(zip)}` : ""}` })
+  if (kind === "treatment") links.unshift({ title: "Search FindTreatment.gov", url: "https://findtreatment.gov/" })
   if (kind === "food") links.unshift({ title: "Feeding America food bank locator", url: "https://www.feedingamerica.org/find-your-local-foodbank" })
   if (kind === "shelter") links.unshift({ title: "HUD Find Shelter", url: "https://www.hud.gov/FindShelter" })
   return links
