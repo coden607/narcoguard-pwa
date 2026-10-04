@@ -190,7 +190,8 @@ test.describe("PWA production flow", () => {
     await page.getByRole("button", { name: "Enable my private planner" }).click()
     await page.getByLabel("Food status").selectOption("needs-help")
     await page.getByLabel("Hours slept last night").fill("7")
-    await expect(page.getByRole("link", { name: /Find local help through 211/ })).toBeVisible()
+    const nextStep = page.locator("section", { has: page.getByRole("heading", { name: "Find a next step" }) })
+    await expect(nextStep.getByRole("link", { name: /Find local help through 211/ })).toBeVisible()
     await page.getByLabel("Task or appointment").fill("Visit pantry")
     await page.getByLabel("Plan time").fill("09:00")
     await page.getByLabel("Plan location").fill("Community pantry")
@@ -209,5 +210,39 @@ test.describe("PWA production flow", () => {
     page.once("dialog", (dialog) => dialog.accept())
     await page.getByRole("button", { name: "Erase all Guardian data" }).click()
     await expect(page.getByRole("button", { name: "Enable my private planner" })).toBeVisible()
+  })
+
+  test("meal log is optional, calorie-free, survives reload, pauses and erases with the planner", async ({ page }) => {
+    await page.goto("/stability")
+    await page.getByRole("button", { name: "Enable my private planner" }).click()
+    const meals = page.getByRole("list", { name: "Meals logged today" })
+
+    await expect(page.getByRole("heading", { name: "Meals today (optional)" })).toBeVisible()
+    await expect(page.getByText(/calorie/i)).toContainText("no calories")
+    // Food help is shown without logging anything first.
+    const mealSection = page.getByRole("region", { name: "Meals today (optional)" })
+    await expect(mealSection.getByRole("link", { name: /Find local help through 211/ })).toBeVisible()
+
+    await page.getByLabel("Meal type").selectOption("lunch")
+    await page.getByLabel("What you had (optional)").fill("Soup at the center")
+    await page.getByRole("button", { name: "Add meal" }).click()
+    await expect(meals).toContainText("Lunch: Soup at the center")
+    await expect(page.getByTestId("meal-summary")).toContainText("checked in on 1 day and logged a meal on 1 of them")
+    await expect(page.getByLabel("Food status")).toHaveValue("")
+
+    await page.reload()
+    await expect(meals).toContainText("Lunch: Soup at the center")
+
+    await page.getByRole("button", { name: "Pause" }).click()
+    await expect(page.getByRole("button", { name: "Add meal" })).toBeDisabled()
+    await page.getByRole("button", { name: "Resume" }).click()
+
+    await page.getByRole("button", { name: "Remove Lunch: Soup at the center" }).click()
+    await expect(meals).toHaveCount(0)
+    await page.getByRole("button", { name: "Add meal" }).click()
+    page.once("dialog", (dialog) => dialog.accept())
+    await page.getByRole("button", { name: "Erase all Guardian data" }).click()
+    await page.getByRole("button", { name: "Enable my private planner" }).click()
+    await expect(meals).toHaveCount(0)
   })
 })
