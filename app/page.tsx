@@ -8,7 +8,7 @@ import { HolographicCard } from "@/components/effects/holographic-card"
 import { VitalsMonitor } from "@/components/dashboard/vitals-monitor"
 import { EmergencyButton } from "@/components/emergency/emergency-button"
 import { HeroNetworkStatus } from "@/components/hero/hero-network-status"
-import { GuardianAingelAI } from "@/components/ai/guardian-ai"
+import { AngelAI } from "@/components/ai/angel-ai"
 import { NGWatchStatus } from "@/components/watch/ng-watch-status"
 import { QuickActions } from "@/components/dashboard/quick-actions"
 import { ActivityFeed } from "@/components/dashboard/activity-feed"
@@ -38,7 +38,7 @@ const OnboardingFlow = dynamic(
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-muted-foreground">Loading Guardian Aingel...</p>
+          <p className="text-muted-foreground">Loading NarcoGuard…</p>
         </div>
       </div>
     ),
@@ -256,7 +256,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="space-y-6">
-            <GuardianAingelAI />
+            <AngelAI compact />
             <QuickActions />
           </div>
 
@@ -383,7 +383,7 @@ export default function DashboardPage() {
           <p className="text-sm">
             Created by <span className="text-primary font-semibold">Stephen Blanford</span> | Broome Estates LLC
           </p>
-          <p className="text-xs mt-2">Inspired by family and friends. Saving lives, one Guardian Aingel at a time.</p>
+          <p className="text-xs mt-2">Inspired by family and friends. Saving lives, one person at a time.</p>
           <p className="text-xs mt-2 text-primary font-semibold">Not just saving lives - transforming them.</p>
           <div className="flex items-center justify-center gap-4 mt-4">
             <a href="mailto:narcoguard607@gmail.com" className="text-primary hover:underline text-sm">

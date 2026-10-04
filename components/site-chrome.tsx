@@ -2,12 +2,13 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { HeartPulse, Home, LogIn, Menu, ShieldCheck, Sparkles, Watch, X } from "lucide-react"
+import { HandHeart, HeartPulse, Home, LogIn, Menu, ShieldCheck, Sparkles, Watch, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
 const links = [
   { href: "/", label: "Dashboard", icon: Home },
+  { href: "/angel", label: "Angel AI", icon: HandHeart },
   { href: "/watch", label: "NG Watch", icon: Watch },
   { href: "/ar", label: "Training", icon: Sparkles },
   { href: "/hero-signup", label: "Hero Network", icon: ShieldCheck },

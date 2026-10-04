@@ -79,6 +79,13 @@ Use `npm run verify` for the complete gate; it runs the same checks as CI, inclu
 - Keep sensitive entries out of analytics, server logs, URL parameters, issue reports, and error traces. Assess device sharing, retention, deletion, consent withdrawal, access controls, encryption, and service-provider agreements before server persistence. Measure aggregate opt-in feature use separately from personal outcomes.
 - Test missing/uncertain data, stale resource listings, denied permissions, paused/deleted state, accessibility, offline behavior, and emergency-path isolation. Report benchmark methodology and actual measured results, never fabricated effectiveness or accuracy claims.
 
+## Angel AI, nearby search and Bluetooth readings
+
+- Angel AI (`/angel`, `app/api/angel`) relays chats to Groq using the server-only `GROQ_API_KEY` (optional `GROQ_MODEL`). It requires in-page consent, keeps conversations in memory only, never logs content, and adds deterministic 911/988 notices (`lib/angel-ai.ts`) independent of the model. It is not an emergency service and must not claim to monitor, detect or contact anyone.
+- Nearby search (`app/api/resources/nearby`, `lib/resource-lookup.ts`) uses SAMHSA FindTreatment.gov and OpenStreetMap (Overpass/Nominatim). Coordinates are rounded to about 1 km server-side and never stored or logged; every listing shows its source and "call first", with 211 and directory fallbacks.
+- Bluetooth readings (`lib/ble-vitals.ts`) come from standard heart-rate and pulse-oximeter GATT services, stay on screen only, and are never fed into overdose detection or alerts.
+- Overdose Good Samaritan summaries (`lib/good-samaritan-laws.ts`) are general information with citations and a review date; re-verify against the statute and update the date when changing any entry.
+
 ## Founding Constitution
 
 - `docs/governance/CONSTITUTION.md` is the canonical public **founding draft, not yet ratified**. `/constitution` displays it. Its protections and offices are proposals, not currently enforceable. Do not describe a draft, GitHub issue, donation, or majority as binding governance authority.

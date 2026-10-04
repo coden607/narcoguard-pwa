@@ -32,6 +32,7 @@ jobs:
       - run: npm run test:vitals
       - run: npm run test:guardian
       - run: npm run test:constitution
+      - run: npm run test:features
       - run: npm run validate:watch-design
       - name: Dependency audit
         run: npm run audit:deps

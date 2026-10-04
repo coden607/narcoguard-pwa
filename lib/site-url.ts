@@ -3,4 +3,4 @@
 export const SITE_URL = (process.env.NEXT_PUBLIC_APP_URL || "https://www.narcoguard.app").replace(/\/+$/, "")
 
 /** Public pages worth indexing. Account and API routes are intentionally excluded. */
-export const PUBLIC_ROUTES = ["/", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/privacy", "/terms"] as const
+export const PUBLIC_ROUTES = ["/", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/privacy", "/terms"] as const
