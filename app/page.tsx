@@ -231,7 +231,7 @@ export default function DashboardPage() {
                 Fund Us
               </Button>
             </Link>
-            <Link href="/ng-watch">
+            <Link href="/watch">
               <Button variant="outline" className="glass neon-border bg-transparent">
                 <Eye className="w-4 h-4 mr-2" />
                 View NarcoGuard NG

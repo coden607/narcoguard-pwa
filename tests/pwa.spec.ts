@@ -1,6 +1,20 @@
 import { expect, test } from "@playwright/test"
 
 test.describe("PWA production flow", () => {
+  test("primary navigation links resolve to existing pages", async ({ page, request }) => {
+    await page.goto("/privacy")
+
+    const hrefs = await page.locator('nav[aria-label="Primary navigation"] a').evaluateAll((links) =>
+      links.map((link) => link.getAttribute("href")),
+    )
+    expect(hrefs.length).toBeGreaterThan(0)
+
+    for (const href of hrefs) {
+      const response = await request.get(href!)
+      expect(response.status(), `${href} should not 404`).toBe(200)
+    }
+  })
+
   test("serves a valid install manifest and icons", async ({ page, request }) => {
     await page.goto("/")
 
