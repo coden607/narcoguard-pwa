@@ -1,26 +1,31 @@
 "use client"
 
-import { useEffect } from "react"
 import { HolographicCard } from "@/components/effects/holographic-card"
-import { Heart, Activity, Droplet, Wind } from "lucide-react"
+import { Heart, Activity, Droplet, Wind, Unplug } from "lucide-react"
 import { useVitals } from "@/lib/hooks/use-vitals"
 
 export function VitalsMonitor() {
-  const { vitals, overdoseCheck, isLoading } = useVitals(2000)
+  const { vitals, overdoseCheck, status, message } = useVitals(2000)
 
-  useEffect(() => {
-    if (overdoseCheck?.severity === "critical") {
-      console.log("[v0] CRITICAL OVERDOSE INDICATORS DETECTED")
-      // Trigger visual and audio alerts
-    }
-  }, [overdoseCheck])
-
-  if (isLoading || !vitals) {
+  if (status === "loading") {
     return (
-      <HolographicCard className="p-6" glowIntensity="high">
-        <div className="text-center py-8">
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-sm text-muted-foreground mt-4">Initializing sensors...</p>
+      <HolographicCard className="p-6" glowIntensity="medium">
+        <div className="text-center py-8" role="status" aria-live="polite">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin motion-reduce:animate-none mx-auto" aria-hidden="true" />
+          <p className="text-sm text-muted-foreground mt-4">Checking for a verified sensor connection…</p>
+        </div>
+      </HolographicCard>
+    )
+  }
+
+  if (!vitals) {
+    return (
+      <HolographicCard className="p-6" glowIntensity="low">
+        <div className="text-center py-8 space-y-2" role="status" aria-live="polite" data-testid="vitals-unavailable">
+          <Unplug className="w-8 h-8 mx-auto text-muted-foreground" aria-hidden="true" />
+          <p className="font-semibold">{status === "unavailable" ? "No live vitals" : "Vitals unavailable"}</p>
+          <p className="text-sm text-muted-foreground text-balance">{message}</p>
+          <p className="text-sm text-muted-foreground text-balance">NarcoGuard is not monitoring you. If someone may be overdosing, call 911 and give naloxone if available.</p>
         </div>
       </HolographicCard>
     )
@@ -35,7 +40,7 @@ export function VitalsMonitor() {
     <HolographicCard className="p-6" glowIntensity={overdoseCheck?.severity === "critical" ? "high" : "medium"}>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)]">VITAL SIGNS</h3>
+          <h3 className="text-lg font-semibold font-orbitron">VITAL SIGNS</h3>
           <div
             className={`w-2 h-2 rounded-full pulse-glow ${overdoseCheck?.isAbnormal ? "bg-red-500" : "bg-green-500"}`}
           />
@@ -70,7 +75,7 @@ export function VitalsMonitor() {
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-red-500 to-pink-500 pulse-glow transition-all duration-500"
+              className="h-full bg-linear-to-r from-red-500 to-pink-500 pulse-glow transition-all duration-500"
               style={{ width: `${Math.min(100, (vitals.heartRate / 120) * 100)}%` }}
             />
           </div>
@@ -92,7 +97,7 @@ export function VitalsMonitor() {
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 pulse-glow transition-all duration-500"
+              className="h-full bg-linear-to-r from-blue-500 to-cyan-500 pulse-glow transition-all duration-500"
               style={{ width: `${vitals.spO2}%` }}
             />
           </div>
@@ -112,7 +117,7 @@ export function VitalsMonitor() {
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-teal-500 pulse-glow transition-all duration-500"
+              className="h-full bg-linear-to-r from-cyan-500 to-teal-500 pulse-glow transition-all duration-500"
               style={{ width: `${(vitals.respiratoryRate / 30) * 100}%` }}
             />
           </div>
@@ -134,7 +139,7 @@ export function VitalsMonitor() {
           </div>
           <div className="h-2 bg-muted rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-orange-500 to-yellow-500 pulse-glow transition-all duration-500"
+              className="h-full bg-linear-to-r from-orange-500 to-yellow-500 pulse-glow transition-all duration-500"
               style={{ width: `${((vitals.temperature - 96) / 6) * 100}%` }}
             />
           </div>
@@ -156,7 +161,7 @@ export function VitalsMonitor() {
               />
             </svg>
           </div>
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent animate-pulse" />
+          <div className="absolute inset-0 bg-linear-to-r from-transparent via-primary/20 to-transparent animate-pulse" />
         </div>
 
         <p className="text-xs text-muted-foreground text-center">

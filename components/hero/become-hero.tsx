@@ -32,7 +32,7 @@ export function BecomeHero() {
             <Shield className="w-16 h-16 text-primary pulse-glow float-animation" />
             <div className="absolute inset-0 blur-xl bg-primary/50 animate-pulse" />
           </div>
-          <h2 className="text-2xl font-bold glow-text font-[family-name:var(--font-orbitron)]">BECOME A HERO</h2>
+          <h2 className="text-2xl font-bold glow-text font-orbitron">BECOME A HERO</h2>
           <p className="text-muted-foreground mt-2">Join the network of trained responders saving lives</p>
         </div>
 

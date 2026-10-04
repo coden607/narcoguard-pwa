@@ -33,7 +33,7 @@ const activities = [
 export function ActivityFeed() {
   return (
     <HolographicCard className="p-6">
-      <h3 className="text-lg font-semibold mb-4 font-[family-name:var(--font-orbitron)]">ACTIVITY FEED</h3>
+      <h3 className="text-lg font-semibold mb-4 font-orbitron">ACTIVITY FEED</h3>
 
       <div className="space-y-4">
         {activities.map((activity, index) => (

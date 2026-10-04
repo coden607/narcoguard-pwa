@@ -15,6 +15,42 @@ test.describe("PWA production flow", () => {
     }
   })
 
+  test("emergency and outline buttons keep their own readable backgrounds", async ({ page }) => {
+    await page.goto("/ar")
+
+    const cpr = page.getByRole("button", { name: "Start CPR Guide" })
+    await expect(cpr).toBeVisible()
+    const cprStyle = await cpr.evaluate((element) => {
+      const style = getComputedStyle(element)
+      return { image: style.backgroundImage, color: style.backgroundColor }
+    })
+    expect(cprStyle.image, "emergency button must not be covered by the default gradient").toBe("none")
+    expect(cprStyle.color).not.toBe("rgba(0, 0, 0, 0)")
+
+    await page.goto("/hero-signup")
+    const outline = page.getByRole("button", { name: "Preview Training Modules" })
+    await expect(outline).toBeVisible()
+    expect(await outline.evaluate((element) => getComputedStyle(element).backgroundImage)).toBe("none")
+  })
+
+  test("dashboard states that no live vitals exist and stops polling an unconfigured provider", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true })))
+    let vitalsRequests = 0
+    page.on("request", (request) => {
+      if (new URL(request.url()).pathname === "/api/vitals") vitalsRequests++
+    })
+
+    await page.goto("/")
+    const unavailable = page.getByTestId("vitals-unavailable")
+    await expect(unavailable).toBeVisible()
+    await expect(unavailable).toContainText("No live vitals")
+    await expect(unavailable).toContainText("call 911")
+    await expect(page.getByText("Initializing sensors")).toHaveCount(0)
+
+    await page.waitForTimeout(5000)
+    expect(vitalsRequests).toBe(1)
+  })
+
   test("serves a valid install manifest and icons", async ({ page, request }) => {
     await page.goto("/")
 

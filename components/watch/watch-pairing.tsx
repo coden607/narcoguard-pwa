@@ -27,7 +27,7 @@ export function WatchPairing() {
               <div className="absolute inset-0 blur-2xl bg-primary/50 animate-pulse" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold glow-text font-[family-name:var(--font-orbitron)]">PAIR NG WATCH</h2>
+              <h2 className="text-2xl font-bold glow-text font-orbitron">PAIR NG WATCH</h2>
               <p className="text-muted-foreground mt-2">
                 Connect your NG smartwatch to enable vital monitoring and emergency features
               </p>
@@ -46,7 +46,7 @@ export function WatchPairing() {
               <div className="absolute inset-0 blur-2xl bg-primary/50 animate-pulse" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold glow-text font-[family-name:var(--font-orbitron)]">SEARCHING...</h2>
+              <h2 className="text-2xl font-bold glow-text font-orbitron">SEARCHING...</h2>
               <p className="text-muted-foreground mt-2">Looking for nearby NG devices</p>
             </div>
           </>
@@ -59,7 +59,7 @@ export function WatchPairing() {
               <div className="absolute inset-0 blur-2xl bg-green-500/50 animate-pulse" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-green-500 glow-text font-[family-name:var(--font-orbitron)]">
+              <h2 className="text-2xl font-bold text-green-500 glow-text font-orbitron">
                 PAIRED SUCCESSFULLY
               </h2>
               <p className="text-muted-foreground mt-2">Your NG watch is now connected and monitoring your vitals</p>

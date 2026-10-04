@@ -530,7 +530,7 @@ export default function NGWatchPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <ParticleField count={80} />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5" />
 
       <div className="relative z-10 container mx-auto px-4 py-6">
         {/* Header */}
@@ -657,7 +657,7 @@ export default function NGWatchPage() {
         </section>
 
         {/* Funding CTA */}
-        <section className="mb-8 p-6 rounded-2xl neon-border bg-gradient-to-r from-green-500/20 via-primary/10 to-green-500/20">
+        <section className="mb-8 p-6 rounded-2xl neon-border bg-linear-to-r from-green-500/20 via-primary/10 to-green-500/20">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
               <h2 className="text-2xl font-bold text-balance">80 Watches for Field Evaluation</h2>
@@ -679,7 +679,7 @@ export default function NGWatchPage() {
           </div>
         </section>
 
-        <Tabs defaultValue="blueprint" className="space-y-6">
+        <Tabs defaultValue="blueprint" className="gap-8">
           <TabsList className="grid grid-cols-4 glass neon-border">
             <TabsTrigger value="blueprint">Blueprint</TabsTrigger>
             <TabsTrigger value="3d-view">3D View</TabsTrigger>
@@ -693,17 +693,17 @@ export default function NGWatchPage() {
               <h2 className="text-xl font-bold mb-2 text-center">Interactive Component Map - NarcoGuard NG Rev 4.2</h2>
               <p className="text-sm text-muted-foreground text-center mb-6">Click any component to see commercially available candidate part details and supplier information</p>
 
-              <div className="relative aspect-square max-w-2xl mx-auto bg-gradient-to-br from-zinc-900 to-background rounded-full neon-border overflow-hidden">
+              <div className="relative aspect-square max-w-2xl mx-auto bg-linear-to-br from-zinc-900 to-background rounded-full neon-border overflow-hidden">
                 <div className="absolute inset-0 opacity-35">
                   <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.18)_0,rgba(56,189,248,0.08)_20%,transparent_21%)]" />
-                  <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(148,163,184,0.22)_50%,transparent_51%),linear-gradient(transparent_49%,rgba(148,163,184,0.22)_50%,transparent_51%)] bg-[length:22px_22px]" />
+                  <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(148,163,184,0.22)_50%,transparent_51%),linear-gradient(transparent_49%,rgba(148,163,184,0.22)_50%,transparent_51%)] bg-size-[22px_22px]" />
                 </div>
                 <div className="absolute inset-6 rounded-full border-2 border-zinc-700" />
                 <div className="absolute inset-12 rounded-full border border-zinc-800" />
-                <div className="absolute inset-[4.5rem] rounded-full border border-zinc-800/50" />
-                <div className="absolute inset-[7rem] rounded-full border border-primary/20" />
-                <div className="absolute left-1/2 top-1/2 h-[86%] w-px -translate-x-1/2 -translate-y-1/2 bg-gradient-to-b from-transparent via-primary/40 to-transparent" />
-                <div className="absolute left-1/2 top-1/2 h-px w-[86%] -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+                <div className="absolute inset-18 rounded-full border border-zinc-800/50" />
+                <div className="absolute inset-28 rounded-full border border-primary/20" />
+                <div className="absolute left-1/2 top-1/2 h-[86%] w-px -translate-x-1/2 -translate-y-1/2 bg-linear-to-b from-transparent via-primary/40 to-transparent" />
+                <div className="absolute left-1/2 top-1/2 h-px w-[86%] -translate-x-1/2 -translate-y-1/2 bg-linear-to-r from-transparent via-primary/40 to-transparent" />
                 <div className="absolute right-4 top-4 rounded-lg border border-border/60 bg-black/40 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
                   Read order: 1 → 15
                 </div>
@@ -726,7 +726,7 @@ export default function NGWatchPage() {
                     }}
                     onClick={() => setSelectedComponent(selectedComponent === comp.id ? null : comp.id)}
                   >
-                    <span className="text-sm font-bold text-black drop-shadow-sm">{index + 1}</span>
+                    <span className="text-sm font-bold text-black drop-shadow-xs">{index + 1}</span>
                   </button>
                 ))}
 
@@ -734,7 +734,7 @@ export default function NGWatchPage() {
                   <div className="text-center">
                     <p className="text-2xl font-bold glow-text">NarcoGuard NG</p>
                     <p className="text-[10px] text-muted-foreground">REV 4.2</p>
-                    <p className="text-[10px] text-primary/80 mt-2 max-w-[14rem]">Kalman-filtered vitals, confidence-weighted fusion, and persistence gating reduce noise before any emergency action.</p>
+                    <p className="text-[10px] text-primary/80 mt-2 max-w-56">Kalman-filtered vitals, confidence-weighted fusion, and persistence gating reduce noise before any emergency action.</p>
                   </div>
                 </div>
               </div>
@@ -794,7 +794,7 @@ export default function NGWatchPage() {
 
                 <div
                   ref={containerRef}
-                  className="relative aspect-square bg-gradient-to-br from-background to-primary/10 rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing neon-border"
+                  className="relative aspect-square bg-linear-to-br from-background to-primary/10 rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing neon-border"
                   onMouseDown={() => setIsDragging(true)}
                   onMouseUp={() => setIsDragging(false)}
                   onMouseLeave={() => setIsDragging(false)}
@@ -808,32 +808,32 @@ export default function NGWatchPage() {
                     }}
                   >
                     <div className="relative w-64 h-64">
-                      <div className="absolute inset-4 rounded-full bg-gradient-to-br from-zinc-700 to-zinc-900 shadow-2xl neon-border" style={{ transform: "translateZ(20px)" }}>
-                        <div className="absolute inset-4 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 flex items-center justify-center overflow-hidden">
+                      <div className="absolute inset-4 rounded-full bg-linear-to-br from-zinc-700 to-zinc-900 shadow-2xl neon-border" style={{ transform: "translateZ(20px)" }}>
+                        <div className="absolute inset-4 rounded-full bg-linear-to-br from-primary/30 to-secondary/30 flex items-center justify-center overflow-hidden">
                           <div className="text-center">
                             <Heart className="w-8 h-8 text-red-500 mx-auto heartbeat" />
                             <p className="text-2xl font-bold mt-2">DATA UNAVAILABLE</p>
                             <p className="text-xs text-muted-foreground">Concept UI — no watch connected</p>
                             <p className="text-[10px] text-amber-300 mt-1">NOT A LIVE MEASUREMENT</p>
                           </div>
-                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/10 to-transparent animate-pulse" />
+                          <div className="absolute inset-0 bg-linear-to-b from-transparent via-primary/10 to-transparent animate-pulse" />
                         </div>
                       </div>
                       {/* Solar ring */}
                       <div className="absolute inset-2 rounded-full border-4 border-green-500/40" style={{ transform: "translateZ(22px)" }} />
                       {/* Naloxone cartridge */}
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-16 bg-gradient-to-r from-red-700 to-red-500 rounded-r-lg pulse-glow" style={{ transform: "translateZ(25px) translateX(10px)" }}>
+                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-16 bg-linear-to-r from-red-700 to-red-500 rounded-r-lg pulse-glow" style={{ transform: "translateZ(25px) translateX(10px)" }}>
                         <Syringe className="w-4 h-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90" />
                       </div>
                       {/* Crown with fingerprint */}
-                      <div className="absolute right-0 top-1/3 w-4 h-10 bg-gradient-to-r from-zinc-600 to-zinc-400 rounded-r flex items-center justify-center" style={{ transform: "translateZ(15px) translateX(6px)" }}>
+                      <div className="absolute right-0 top-1/3 w-4 h-10 bg-linear-to-r from-zinc-600 to-zinc-400 rounded-r flex items-center justify-center" style={{ transform: "translateZ(15px) translateX(6px)" }}>
                         <Fingerprint className="w-3 h-3 text-zinc-800" />
                       </div>
                       {/* Sealed service boundary: no external charging opening */}
                       <div className="absolute left-0 top-2/3 w-3 h-5 rounded-l border border-zinc-400/70 bg-zinc-700" style={{ transform: "translateZ(15px) translateX(-4px)" }}>
                         <Lock className="w-2 h-2 text-zinc-200 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
                       </div>
-                      <div className="absolute inset-[4.5rem] rounded-full border-2 border-purple-500/30 animate-spin" style={{ transform: "translateZ(8px)", animationDuration: "8s" }} />
+                      <div className="absolute inset-18 rounded-full border-2 border-purple-500/30 animate-spin" style={{ transform: "translateZ(8px)", animationDuration: "8s" }} />
                       {/* Straps */}
                       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-800 rounded-t-lg" style={{ transform: "translateZ(10px) translateY(-10px)" }} />
                       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-800 rounded-b-lg" style={{ transform: "translateZ(10px) translateY(10px)" }} />
@@ -876,7 +876,7 @@ export default function NGWatchPage() {
                   </div>
                 </HolographicCard>
 
-                <HolographicCard className="p-6 bg-gradient-to-r from-green-500/10 to-primary/10">
+                <HolographicCard className="p-6 bg-linear-to-r from-green-500/10 to-primary/10">
                   <h3 className="font-bold text-lg mb-2">Unit Cost Breakdown</h3>
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between"><span>Components ({billOfMaterials.reduce((n, c) => n + c.items.length, 0)} parts)</span><span className="font-mono">${componentBOMTotal.toFixed(2)}</span></div>
@@ -896,7 +896,7 @@ export default function NGWatchPage() {
                       <span>Complete Unit</span>
                       <span className="font-mono text-green-500">${totalWithNaloxone.toFixed(2)}</span>
                     </div>
-                    <div className="mt-3 p-3 bg-green-500/10 rounded-lg text-center">
+                    <div className="p-3 bg-green-500/10 rounded-lg text-center">
                       <p className="text-xs text-muted-foreground">80 units for Broome County pilot</p>
                       <p className="text-xl font-bold text-green-400">${fundingGoal80Units.toFixed(2)}</p>
                     </div>
@@ -954,7 +954,7 @@ export default function NGWatchPage() {
               ))}
 
               {/* Grand Total */}
-              <HolographicCard className="p-6 bg-gradient-to-r from-green-500/20 to-primary/20" glowIntensity="high">
+              <HolographicCard className="p-6 bg-linear-to-r from-green-500/20 to-primary/20" glowIntensity="high">
                 <h3 className="text-xl font-bold mb-4">Prototype Cost Summary - NarcoGuard NG</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="p-4 rounded-lg bg-background/50">

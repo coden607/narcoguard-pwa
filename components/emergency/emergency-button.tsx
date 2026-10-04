@@ -54,7 +54,7 @@ export function EmergencyButton() {
             text: shareText,
           })
         } catch {
-          console.log("[v0] Share cancelled or failed")
+          // The person cancelled the share sheet; nothing else to do.
         }
       } else {
         // Fallback: copy to clipboard
@@ -97,12 +97,12 @@ export function EmergencyButton() {
       <div className="relative">
         {/* Main Emergency Button */}
         <button onClick={handleEmergencyPress} className="w-full relative group text-left" aria-describedby="emergency-demo-note">
-          <div className="absolute inset-0 bg-gradient-to-r from-red-600 via-orange-600 to-red-600 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 emergency-pulse" />
+          <div className="absolute inset-0 bg-linear-to-r from-red-600 via-orange-600 to-red-600 rounded-2xl blur-xl opacity-75 group-hover:opacity-100 emergency-pulse" />
 
-          <div className="relative bg-gradient-to-br from-red-600 to-red-800 rounded-2xl p-8 emergency-pulse transform transition-all duration-300 group-hover:scale-[1.02] group-active:scale-95">
+          <div className="relative bg-linear-to-br from-red-600 to-red-800 rounded-2xl p-8 emergency-pulse transform transition-all duration-300 group-hover:scale-[1.02] group-active:scale-95">
             {/* Animated rings */}
             <div className="absolute inset-0 rounded-2xl overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent animate-pulse" />
+              <div className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent animate-pulse" />
             </div>
 
             <div className="relative flex items-center justify-center gap-6">
@@ -112,7 +112,7 @@ export function EmergencyButton() {
               </div>
 
               <div className="text-left">
-                <h2 className="text-4xl font-bold text-white glow-text font-[family-name:var(--font-orbitron)]">
+                <h2 className="text-4xl font-bold text-white glow-text font-orbitron">
                   EMERGENCY OPTIONS
                 </h2>
                 <p className="text-white/90 text-lg mt-1">Call 911 or open the response demo</p>

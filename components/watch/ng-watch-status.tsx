@@ -26,7 +26,7 @@ export function NGWatchStatus() {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="relative">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center pulse-glow">
+              <div className="w-12 h-12 rounded-lg bg-linear-to-br from-primary to-purple-500 flex items-center justify-center pulse-glow">
                 <Watch className="w-6 h-6 text-white" />
               </div>
               {isConnected && (
@@ -36,7 +36,7 @@ export function NGWatchStatus() {
               )}
             </div>
             <div>
-              <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)] flex items-center gap-2">
+              <h3 className="text-lg font-semibold font-orbitron flex items-center gap-2">
                 NARCOGUARD NG
                 <span className="text-xs px-2 py-0.5 rounded-full bg-primary/20 text-primary">CONCEPT ONLY</span>
               </h3>
@@ -56,7 +56,7 @@ export function NGWatchStatus() {
             </DialogTrigger>
             <DialogContent className="sm:max-w-2xl glass neon-border">
               <DialogHeader>
-                <DialogTitle className="font-[family-name:var(--font-orbitron)]">NarcoGuard NG Details</DialogTitle>
+                <DialogTitle className="font-orbitron">NarcoGuard NG Details</DialogTitle>
               </DialogHeader>
               <WatchDetails />
             </DialogContent>

@@ -3,7 +3,7 @@ import Link from "next/link"
 export default function Custom500() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-50 flex items-center justify-center px-6">
-      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-2xl shadow-cyan-950/30 backdrop-blur">
+      <div className="w-full max-w-lg rounded-3xl border border-white/10 bg-white/5 p-8 text-center shadow-2xl shadow-cyan-950/30 backdrop-blur-sm">
         <p className="text-sm font-semibold uppercase tracking-[0.35em] text-cyan-300">NarcoGuard</p>
         <h1 className="mt-4 text-3xl font-bold tracking-tight sm:text-4xl">Something went wrong</h1>
         <p className="mt-4 text-sm leading-6 text-slate-300 sm:text-base">

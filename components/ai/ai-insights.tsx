@@ -22,7 +22,7 @@ export function AIInsights() {
             <Brain className="w-6 h-6 text-primary rotate-3d" />
           </div>
           <div>
-            <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)]">AI INSIGHTS</h3>
+            <h3 className="text-lg font-semibold font-orbitron">AI INSIGHTS</h3>
             <p className="text-xs text-muted-foreground">Provider status</p>
           </div>
         </div>
@@ -50,7 +50,7 @@ export function AIInsights() {
         </div>
 
         {/* AI Learning indicator */}
-        <div className="mt-4 p-3 rounded-lg glass text-center">
+        <div className="p-3 rounded-lg glass text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <Brain className="w-4 h-4 text-primary pulse-glow" />
             <span className="text-sm font-medium">AI provider unavailable</span>

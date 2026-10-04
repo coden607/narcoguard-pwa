@@ -73,7 +73,7 @@ export function WatchDetails() {
           <h4 className="font-medium mb-3">3D Watch Model</h4>
           <div className="relative h-64 bg-muted/20 rounded-lg overflow-hidden flex items-center justify-center">
             <div className="relative w-32 h-32 rotate-3d">
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-primary to-purple-500 pulse-glow" />
+              <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-primary to-purple-500 pulse-glow" />
               <div className="absolute inset-2 rounded-xl bg-background flex items-center justify-center">
                 <Watch className="w-16 h-16 text-primary" />
               </div>

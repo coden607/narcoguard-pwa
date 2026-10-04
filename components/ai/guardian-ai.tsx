@@ -65,7 +65,7 @@ export function GuardianAingelAI() {
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center pulse-glow rotate-3d">
+            <div className="w-12 h-12 rounded-full bg-linear-to-br from-primary to-purple-500 flex items-center justify-center pulse-glow rotate-3d">
               <Brain className="w-6 h-6 text-white" />
             </div>
             <div className="absolute -top-1 -right-1">
@@ -73,7 +73,7 @@ export function GuardianAingelAI() {
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-semibold font-[family-name:var(--font-orbitron)]">GUARDIAN AINGEL</h3>
+            <h3 className="text-lg font-semibold font-orbitron">GUARDIAN AINGEL</h3>
             <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-muted-foreground" />
               <span className="text-xs text-muted-foreground">AI provider unavailable</span>

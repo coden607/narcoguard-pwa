@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
+import { interpretVitalsResponse, type VitalsResult } from "@/lib/vitals-response"
 
 export interface VitalSigns {
   heartRate: number
@@ -22,39 +23,79 @@ export interface OverdoseCheck {
   supportingSignals: number
 }
 
+export type VitalsStatus = "loading" | VitalsResult["status"]
+
+// Shared by every hook instance so components mounted together issue one request, and so an
+// explicit "no provider configured" answer is not re-polled for the rest of the page session.
+let inflight: Promise<VitalsResult> | null = null
+let unavailable: Extract<VitalsResult, { status: "unavailable" }> | null = null
+
+async function requestVitals(): Promise<VitalsResult> {
+  try {
+    const response = await fetch("/api/vitals", { cache: "no-store" })
+    const body: unknown = await response.json().catch(() => null)
+    return interpretVitalsResponse(response.ok, body)
+  } catch {
+    return { status: "error", message: "Vitals could not be loaded." }
+  }
+}
+
+function loadVitals(): Promise<VitalsResult> {
+  if (unavailable) return Promise.resolve(unavailable)
+  inflight ??= requestVitals().then((result) => {
+    if (result.status === "unavailable") unavailable = result
+    return result
+  }).finally(() => {
+    inflight = null
+  })
+  return inflight
+}
+
 export function useVitals(pollingInterval = 2000) {
   const [vitals, setVitals] = useState<VitalSigns | null>(null)
   const [overdoseCheck, setOverdoseCheck] = useState<OverdoseCheck | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [status, setStatus] = useState<VitalsStatus>("loading")
+  const [message, setMessage] = useState<string | null>(null)
 
-  const fetchVitals = useCallback(async () => {
-    try {
-      const response = await fetch("/api/vitals")
-      if (!response.ok) throw new Error("Failed to fetch vitals")
-
-      const data = await response.json()
-      setVitals(data.vitals)
-      setOverdoseCheck(data.overdoseCheck)
-      setError(null)
-
-      // Auto-trigger emergency if critical
-      if (data.overdoseCheck.severity === "critical") {
-        console.log("[v0] CRITICAL VITALS DETECTED - Auto-alerting")
-        // This would trigger auto-emergency in production
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error")
-    } finally {
-      setIsLoading(false)
+  const apply = useCallback((result: VitalsResult) => {
+    setStatus(result.status)
+    if (result.status === "live") {
+      setVitals(result.vitals)
+      setOverdoseCheck(result.overdoseCheck)
+      setMessage(null)
+    } else {
+      // Never keep showing earlier readings as if they were current.
+      setVitals(null)
+      setOverdoseCheck(null)
+      setMessage(result.message)
     }
   }, [])
 
-  useEffect(() => {
-    fetchVitals()
-    const interval = setInterval(fetchVitals, pollingInterval)
-    return () => clearInterval(interval)
-  }, [fetchVitals, pollingInterval])
+  const fetchVitals = useCallback(async () => apply(await loadVitals()), [apply])
 
-  return { vitals, overdoseCheck, isLoading, error, refetch: fetchVitals }
+  useEffect(() => {
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const tick = async () => {
+      const result = await loadVitals()
+      if (cancelled) return
+      apply(result)
+      if (result.status !== "unavailable") timer = setTimeout(tick, pollingInterval)
+    }
+    void tick()
+    return () => {
+      cancelled = true
+      if (timer) clearTimeout(timer)
+    }
+  }, [apply, pollingInterval])
+
+  return {
+    vitals,
+    overdoseCheck,
+    status,
+    isLoading: status === "loading",
+    error: status === "error" ? message : null,
+    message,
+    refetch: fetchVitals,
+  }
 }

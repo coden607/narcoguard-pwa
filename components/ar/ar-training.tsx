@@ -68,7 +68,7 @@ export function ARTraining() {
       <HolographicCard className="p-6" glowIntensity="high">
         <div className="flex items-center gap-4 mb-6">
           <div className="relative">
-            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-purple-500 flex items-center justify-center pulse-glow">
+            <div className="w-16 h-16 rounded-full bg-linear-to-br from-primary to-purple-500 flex items-center justify-center pulse-glow">
               <Camera className="w-8 h-8 text-white" />
             </div>
             <div className="absolute -top-1 -right-1">
@@ -76,7 +76,7 @@ export function ARTraining() {
             </div>
           </div>
           <div>
-            <h2 className="text-2xl font-bold glow-text font-[family-name:var(--font-orbitron)]">AR TRAINING</h2>
+            <h2 className="text-2xl font-bold glow-text font-orbitron">AR TRAINING</h2>
             <p className="text-muted-foreground">Interactive augmented reality training modules</p>
           </div>
         </div>

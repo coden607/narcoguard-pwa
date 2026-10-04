@@ -60,7 +60,7 @@ export default function FundPage() {
     <div className="min-h-screen bg-background">
       {/* Hero Section with Generated Images */}
       <section className="relative py-12 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/20 to-background" />
+        <div className="absolute inset-0 bg-linear-to-b from-primary/20 to-background" />
         <div className="relative z-10 max-w-6xl mx-auto">
           {/* Campaign Hero Image */}
           <div className="rounded-2xl overflow-hidden mb-8 border border-primary/30">

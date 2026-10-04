@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback } from "react"
 import { LocationService, type Location } from "@/lib/geolocation"
 
 const locationService = new LocationService()
-locationService.setSilentMode(true)
 
 export function useLocation(trackContinuously = false) {
   const [location, setLocation] = useState<Location | null>(null)

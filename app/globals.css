@@ -1,70 +1,140 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
 
-/* NarcoGuard dark theme with HSL colors for Tailwind v3 compatibility */
-:root {
-  --background: 230 48% 5%;
-  --foreground: 180 10% 98%;
-  --card: 226 42% 9%;
-  --card-foreground: 180 10% 98%;
-  --popover: 222 47% 7%;
-  --popover-foreground: 180 10% 98%;
-  --primary: 186 100% 50%;
-  --primary-foreground: 222 47% 6%;
-  --secondary: 45 100% 60%;
-  --secondary-foreground: 222 47% 6%;
-  --muted: 222 30% 15%;
-  --muted-foreground: 215 24% 72%;
-  --accent: 186 80% 55%;
-  --accent-foreground: 180 10% 98%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 180 10% 98%;
-  --border: 222 30% 20%;
-  --input: 222 30% 20%;
-  --ring: 186 100% 50%;
-  --radius: 0.75rem;
-  --chart-1: 186 100% 50%;
-  --chart-2: 45 100% 60%;
-  --chart-3: 142 76% 50%;
-  --chart-4: 280 80% 60%;
-  --chart-5: 0 84% 60%;
+@plugin 'tailwindcss-animate';
 
-  /* Custom Narcoguard effect colors */
-  --glow-primary: hsl(186 100% 50%);
-  --glow-emergency: hsl(0 84% 60%);
-  --glow-success: hsl(142 76% 50%);
-  --glow-warning: hsl(45 100% 60%);
-  --holographic-1: hsl(186 100% 50%);
-  --holographic-2: hsl(280 80% 60%);
-  --holographic-3: hsl(45 100% 60%);
+@source '../*.{js,ts,jsx,tsx,mdx}';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  --font-sans: var(--font-inter-face), system-ui, sans-serif;
+  --font-orbitron: var(--font-orbitron-face), system-ui, sans-serif;
+
+  --animate-pulse-glow: pulse-glow 2s ease-in-out infinite;
+  --animate-emergency-pulse: emergency-pulse 1s ease-in-out infinite;
+  --animate-holographic-shift: holographic-shift 3s ease infinite;
+  --animate-float: float 3s ease-in-out infinite;
+  --animate-shimmer: shimmer 2s infinite;
+  --animate-heartbeat: heartbeat 1.5s ease-in-out infinite;
+  --animate-glow-text: glow-text 2s ease-in-out infinite;
+  --animate-rotate-3d: rotate-3d 10s linear infinite;
+  --animate-slide-up: slide-up 0.5s ease-out;
 }
 
-.dark {
-  --background: 222 47% 6%;
-  --foreground: 180 10% 98%;
-  --card: 222 47% 8%;
-  --card-foreground: 180 10% 98%;
-  --popover: 222 47% 7%;
-  --popover-foreground: 180 10% 98%;
-  --primary: 186 100% 50%;
-  --primary-foreground: 222 47% 6%;
-  --secondary: 45 100% 60%;
-  --secondary-foreground: 222 47% 6%;
-  --muted: 222 30% 15%;
-  --muted-foreground: 215 24% 72%;
-  --accent: 186 80% 55%;
-  --accent-foreground: 180 10% 98%;
-  --destructive: 0 84% 60%;
-  --destructive-foreground: 180 10% 98%;
-  --border: 222 30% 20%;
-  --input: 222 30% 20%;
-  --ring: 186 100% 50%;
-  --chart-1: 186 100% 50%;
-  --chart-2: 45 100% 60%;
-  --chart-3: 142 76% 50%;
-  --chart-4: 280 80% 60%;
-  --chart-5: 0 84% 60%;
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+}
+
+@layer utilities {
+  /* NarcoGuard dark theme with HSL colors for Tailwind v3 compatibility */
+  :root {
+    --background: 230 48% 5%;
+    --foreground: 180 10% 98%;
+    --card: 226 42% 9%;
+    --card-foreground: 180 10% 98%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 180 10% 98%;
+    --primary: 186 100% 50%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 45 100% 60%;
+    --secondary-foreground: 222 47% 6%;
+    --muted: 222 30% 15%;
+    --muted-foreground: 215 24% 72%;
+    --accent: 186 80% 55%;
+    --accent-foreground: 180 10% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 180 10% 98%;
+    --border: 222 30% 20%;
+    --input: 222 30% 20%;
+    --ring: 186 100% 50%;
+    --radius: 0.75rem;
+    --chart-1: 186 100% 50%;
+    --chart-2: 45 100% 60%;
+    --chart-3: 142 76% 50%;
+    --chart-4: 280 80% 60%;
+    --chart-5: 0 84% 60%;
+
+    /* Custom Narcoguard effect colors */
+    --glow-primary: hsl(186 100% 50%);
+    --glow-emergency: hsl(0 84% 60%);
+    --glow-success: hsl(142 76% 50%);
+    --glow-warning: hsl(45 100% 60%);
+    --holographic-1: hsl(186 100% 50%);
+    --holographic-2: hsl(280 80% 60%);
+    --holographic-3: hsl(45 100% 60%);
+  }
+
+  .dark {
+    --background: 222 47% 6%;
+    --foreground: 180 10% 98%;
+    --card: 222 47% 8%;
+    --card-foreground: 180 10% 98%;
+    --popover: 222 47% 7%;
+    --popover-foreground: 180 10% 98%;
+    --primary: 186 100% 50%;
+    --primary-foreground: 222 47% 6%;
+    --secondary: 45 100% 60%;
+    --secondary-foreground: 222 47% 6%;
+    --muted: 222 30% 15%;
+    --muted-foreground: 215 24% 72%;
+    --accent: 186 80% 55%;
+    --accent-foreground: 180 10% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 180 10% 98%;
+    --border: 222 30% 20%;
+    --input: 222 30% 20%;
+    --ring: 186 100% 50%;
+    --chart-1: 186 100% 50%;
+    --chart-2: 45 100% 60%;
+    --chart-3: 142 76% 50%;
+    --chart-4: 280 80% 60%;
+    --chart-5: 0 84% 60%;
+  }
 }
 
 @layer base {

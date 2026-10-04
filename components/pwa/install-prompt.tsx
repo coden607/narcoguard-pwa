@@ -32,8 +32,8 @@ export function InstallPrompt() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 animate-slide-up">
-      <div className="relative overflow-hidden rounded-2xl border-2 border-primary/50 bg-gradient-to-br from-background/95 via-background/98 to-background/95 p-6 shadow-2xl backdrop-blur-xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 animate-pulse-glow" />
+      <div className="relative overflow-hidden rounded-2xl border-2 border-primary/50 bg-linear-to-br from-background/95 via-background/98 to-background/95 p-6 shadow-2xl backdrop-blur-xl">
+        <div className="absolute inset-0 bg-linear-to-r from-primary/20 via-accent/20 to-primary/20 animate-pulse-glow" />
 
         <button
           onClick={() => setShowPrompt(false)}
@@ -45,7 +45,7 @@ export function InstallPrompt() {
 
         <div className="relative space-y-4">
           <div className="flex items-start gap-4">
-            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-accent animate-float">
+            <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-linear-to-br from-primary to-accent animate-float">
               <Download className="h-7 w-7 text-primary-foreground" />
             </div>
 
@@ -61,7 +61,7 @@ export function InstallPrompt() {
             <Button
               onClick={handleInstall}
               disabled={installing}
-              className="flex-1 h-12 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold rounded-xl transition-all hover:scale-105"
+              className="flex-1 h-12 bg-linear-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold rounded-xl transition-all hover:scale-105"
             >
               {installing ? (
                 <>

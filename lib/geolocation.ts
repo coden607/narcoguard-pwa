@@ -20,7 +20,6 @@ export class LocationService {
   private maxRetries = 3
   private lastSuccessfulUpdate = 0
   private isTracking = false
-  private silentMode = true // Don't spam console with errors
 
   // Get current location only from the browser geolocation provider
   async getCurrentLocation(): Promise<Location | null> {
@@ -32,14 +31,12 @@ export class LocationService {
 
       // Return cached location if recent
       if (this.currentLocation && Date.now() - this.lastSuccessfulUpdate < 120000) {
-        if (!this.silentMode) console.log("[v0] Using cached location")
         resolve(this.currentLocation)
         return
       }
 
       // Set a shorter timeout to fail fast
       const timeoutId = setTimeout(() => {
-        if (!this.silentMode) console.log("[v0] Location request timed out, without a provider")
         resolve(this.currentLocation)
       }, 5000)
 
@@ -54,12 +51,10 @@ export class LocationService {
           }
           this.currentLocation = location
           this.lastSuccessfulUpdate = Date.now()
-          if (!this.silentMode) console.log("[v0] Location obtained:", { accuracy: location.accuracy })
           resolve(location)
         },
-        (error) => {
+        () => {
           clearTimeout(timeoutId)
-          if (!this.silentMode) console.log("[v0] Location unavailable:", error.message)
 
           // Always resolve with something - never reject
           resolve(this.currentLocation)
@@ -104,20 +99,12 @@ export class LocationService {
         this.lastSuccessfulUpdate = Date.now()
         this.retryCount = 0
 
-        if (!this.silentMode) {
-          console.log("[v0] Location updated:", {
-            lat: location.latitude.toFixed(6),
-            lng: location.longitude.toFixed(6),
-            accuracy: Math.round(location.accuracy),
-          })
-        }
 
         callback(location)
       },
       (error) => {
         // Silently handle errors - use cached location only
         if (error.code === error.PERMISSION_DENIED) {
-          if (!this.silentMode) console.log("[v0] Location permission denied")
           this.stopTracking()
           return
         } else {
@@ -193,10 +180,5 @@ export class LocationService {
       // Silently fail and return location without address
       return location
     }
-  }
-
-  // Enable/disable console logging
-  setSilentMode(silent: boolean) {
-    this.silentMode = silent
   }
 }

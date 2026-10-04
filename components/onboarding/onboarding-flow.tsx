@@ -106,13 +106,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const totalSteps = 12
 
   const nextStep = () => {
-    console.log("[v0] Current step:", step, "Total steps:", totalSteps)
-    console.log("[v0] Legal preferences:", preferences.legal)
     if (step < totalSteps - 1) {
       setStep(step + 1)
-      console.log("[v0] Moving to step:", step + 1)
-    } else {
-      console.log("[v0] Already at last step")
     }
   }
 
@@ -123,7 +118,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   }
 
   const completeOnboarding = () => {
-    console.log("[v0] Completing onboarding...")
     const finalPreferences = {
       name,
       hasCompletedOnboarding: true,
@@ -134,9 +128,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       features: preferences.features,
       legal: preferences.legal,
     }
-    console.log("[v0] Saving final preferences:", finalPreferences)
     saveUserPreferences(finalPreferences)
-    console.log("[v0] Preferences saved, calling onComplete")
     setTimeout(() => {
       onComplete()
     }, 100)
@@ -181,7 +173,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="w-32 h-32 mx-auto float-animation">
           <Image src="/images/narcoguard-icon.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
         </div>
-        <h1 className="text-5xl font-bold glow-text font-[family-name:var(--font-orbitron)]">WELCOME TO NARCOGUARD</h1>
+        <h1 className="text-5xl font-bold glow-text font-orbitron">WELCOME TO NARCOGUARD</h1>
         <div className="flex items-center justify-center gap-2 text-xl text-primary">
           <Syringe className="w-6 h-6" />
           <span className="font-semibold">NarcoGuard NG Development Concept</span>
@@ -193,7 +185,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           naloxone according to its instructions during a suspected overdose.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <HolographicCard className="p-6 text-center">
           <Syringe className="w-12 h-12 mx-auto mb-4 text-primary pulse-glow" />
           <h3 className="font-bold mb-2">Delivery Research</h3>
@@ -216,7 +208,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     <div key="guardian-aingel-intro" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-24 h-24 mx-auto relative">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary to-secondary rounded-full pulse-glow animate-spin-slow" />
+          <div className="absolute inset-0 bg-linear-to-br from-primary to-secondary rounded-full pulse-glow animate-spin-slow" />
           <div className="absolute inset-2 bg-background rounded-full flex items-center justify-center">
             <Sparkles className="w-12 h-12 text-primary" />
           </div>
@@ -235,14 +227,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         </h3>
         <ul className="space-y-3">
           <li className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
+            <AlertTriangle className="w-5 h-5 text-primary mt-0.5 shrink-0" />
             <div>
               <p className="font-semibold">Emergency Detection</p>
               <p className="text-sm text-muted-foreground">Monitor vitals and detect overdose signs automatically</p>
             </div>
           </li>
           <li className="flex items-start gap-3">
-            <MapPin className="w-5 h-5 text-secondary mt-0.5 flex-shrink-0" />
+            <MapPin className="w-5 h-5 text-secondary mt-0.5 shrink-0" />
             <div>
               <p className="font-semibold">Rescue Coordination</p>
               <p className="text-sm text-muted-foreground">
@@ -251,14 +243,14 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </div>
           </li>
           <li className="flex items-start gap-3">
-            <Phone className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+            <Phone className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
             <div>
               <p className="font-semibold">Emergency Response</p>
               <p className="text-sm text-muted-foreground">Call 911, alert contacts, and provide CPR/Narcan guidance</p>
             </div>
           </li>
           <li className="flex items-start gap-3">
-            <Heart className="w-5 h-5 text-pink-500 mt-0.5 flex-shrink-0" />
+            <Heart className="w-5 h-5 text-pink-500 mt-0.5 shrink-0" />
             <div>
               <p className="font-semibold">Recovery Support</p>
               <p className="text-sm text-muted-foreground">Connect you to resources and track your wellness journey</p>
@@ -690,23 +682,23 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <h4 className="font-semibold">Roles & Responsibilities:</h4>
           <ul className="space-y-3 text-sm">
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Respond to emergency alerts in your area</span>
             </li>
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Administer naloxone following AR-guided instructions</span>
             </li>
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Perform CPR if trained and necessary</span>
             </li>
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Stay with the person until EMS arrives</span>
             </li>
             <li className="flex items-start gap-3">
-              <Check className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+              <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
               <span>Protected by Good Samaritan laws</span>
             </li>
           </ul>
@@ -879,7 +871,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               id="acknowledgedGoodSamaritan"
               checked={preferences.legal.acknowledgedGoodSamaritan}
               onCheckedChange={(checked) => {
-                console.log("[v0] Good Samaritan acknowledged:", checked)
                 setPreferences({
                   ...preferences,
                   legal: { ...preferences.legal, acknowledgedGoodSamaritan: checked as boolean },
@@ -916,7 +907,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           className="p-6 bg-blue-500/30 rounded-lg border-4 border-blue-500 cursor-pointer hover:bg-blue-500/40 transition-colors"
           onClick={() => {
             const newValue = !preferences.legal.acceptedTerms
-            console.log("[v0] Terms checked:", newValue)
             setPreferences({
               ...preferences,
               legal: { ...preferences.legal, acceptedTerms: newValue },
@@ -928,7 +918,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               id="acceptedTerms"
               checked={preferences.legal.acceptedTerms}
               onCheckedChange={(checked) => {
-                console.log("[v0] Terms checked:", checked)
                 setPreferences({
                   ...preferences,
                   legal: { ...preferences.legal, acceptedTerms: checked as boolean },
@@ -954,7 +943,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </p>
             </div>
             {preferences.legal.acceptedTerms && (
-              <Check className="w-10 h-10 text-green-500 flex-shrink-0 animate-pulse" />
+              <Check className="w-10 h-10 text-green-500 shrink-0 animate-pulse" />
             )}
           </div>
         </div>
@@ -963,7 +952,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           className="p-6 bg-purple-500/30 rounded-lg border-4 border-purple-500 cursor-pointer hover:bg-purple-500/40 transition-colors"
           onClick={() => {
             const newValue = !preferences.legal.acceptedPrivacy
-            console.log("[v0] Privacy checked:", newValue)
             setPreferences({
               ...preferences,
               legal: { ...preferences.legal, acceptedPrivacy: newValue },
@@ -975,7 +963,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               id="acceptedPrivacy"
               checked={preferences.legal.acceptedPrivacy}
               onCheckedChange={(checked) => {
-                console.log("[v0] Privacy checked:", checked)
                 setPreferences({
                   ...preferences,
                   legal: { ...preferences.legal, acceptedPrivacy: checked as boolean },
@@ -1001,7 +988,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </p>
             </div>
             {preferences.legal.acceptedPrivacy && (
-              <Check className="w-10 h-10 text-green-500 flex-shrink-0 animate-pulse" />
+              <Check className="w-10 h-10 text-green-500 shrink-0 animate-pulse" />
             )}
           </div>
         </div>
@@ -1010,7 +997,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           className="p-6 bg-cyan-500/30 rounded-lg border-4 border-cyan-500 cursor-pointer hover:bg-cyan-500/40 transition-colors"
           onClick={() => {
             const newValue = !preferences.legal.acceptedHIPAA
-            console.log("[v0] HIPAA checked:", newValue)
             setPreferences({
               ...preferences,
               legal: { ...preferences.legal, acceptedHIPAA: newValue },
@@ -1022,7 +1008,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               id="acceptedHIPAA"
               checked={preferences.legal.acceptedHIPAA}
               onCheckedChange={(checked) => {
-                console.log("[v0] HIPAA checked:", checked)
                 setPreferences({
                   ...preferences,
                   legal: { ...preferences.legal, acceptedHIPAA: checked as boolean },
@@ -1039,7 +1024,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               </p>
             </div>
             {preferences.legal.acceptedHIPAA && (
-              <Check className="w-10 h-10 text-green-500 flex-shrink-0 animate-pulse" />
+              <Check className="w-10 h-10 text-green-500 shrink-0 animate-pulse" />
             )}
           </div>
         </div>
@@ -1076,10 +1061,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           {isInstallable ? (
             <GlowButton
               onClick={async () => {
-                console.log("[v0] Install button clicked")
                 const success = await installPWA()
                 if (success) {
-                  console.log("[v0] PWA installed successfully")
                   setTimeout(completeOnboarding, 1000)
                 }
               }}
@@ -1099,7 +1082,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
           <GlowButton
             onClick={() => {
-              console.log("[v0] Launch Dashboard clicked")
               completeOnboarding()
             }}
             className="w-full bg-green-500 hover:bg-green-600"
@@ -1157,18 +1139,12 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   const isContinueDisabled = isStep2Invalid || isStep10Invalid || isStep11Invalid
 
-  console.log("[v0] Step:", step, "Continue disabled:", isContinueDisabled, "Reasons:", {
-    isStep2Invalid,
-    isStep10Invalid,
-    isStep11Invalid,
-    legal: preferences.legal,
-  })
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <ParticleField count={50} />
 
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
 
       <div className="relative z-10 container mx-auto px-4 py-8">
         {/* Progress Bar */}
@@ -1181,7 +1157,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </div>
           <div className="h-2 bg-background/50 rounded-full overflow-hidden neon-border">
             <div
-              className="h-full bg-gradient-to-r from-primary to-secondary transition-all duration-500 pulse-glow"
+              className="h-full bg-linear-to-r from-primary to-secondary transition-all duration-500 pulse-glow"
               style={{ width: `${((step + 1) / totalSteps) * 100}%` }}
             />
           </div>
@@ -1211,10 +1187,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               {isInstallable && (
                 <GlowButton
                   onClick={async () => {
-                    console.log("[v0] Install button clicked")
                     const success = await installPWA()
                     if (success) {
-                      console.log("[v0] PWA installed successfully")
                       setTimeout(completeOnboarding, 500)
                     }
                   }}
@@ -1227,7 +1201,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
               <GlowButton
                 onClick={() => {
-                  console.log("[v0] Launch Dashboard button clicked")
                   completeOnboarding()
                 }}
                 className="w-full bg-green-500 hover:bg-green-600"

@@ -148,7 +148,7 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
       <ParticleField count={100} />
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
 
       <div className="relative z-10 container mx-auto px-4 py-6 space-y-6">
         {skippedSetup && (
@@ -167,7 +167,7 @@ export default function DashboardPage() {
         )}
 
         <HolographicCard
-          className="p-4 bg-gradient-to-r from-green-500/20 to-primary/20 border-green-500/50"
+          className="p-4 bg-linear-to-r from-green-500/20 to-primary/20 border-green-500/50"
           glowIntensity="medium"
         >
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
@@ -204,7 +204,7 @@ export default function DashboardPage() {
           </div>
         </HolographicCard>
 
-        <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 mb-8 dashboard-hero">
+        <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 dashboard-hero">
           <div className="flex items-center gap-4">
             <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 float-animation">
               <Image
@@ -216,7 +216,7 @@ export default function DashboardPage() {
               />
             </div>
             <div>
-              <h1 className="text-3xl sm:text-4xl font-bold glow-text font-[family-name:var(--font-orbitron)]">NARCOGUARD</h1>
+              <h1 className="text-3xl sm:text-4xl font-bold glow-text font-orbitron">NARCOGUARD</h1>
               <p className="text-primary text-sm font-semibold flex items-center gap-2">
                 <Syringe className="w-4 h-4" />
                 Public overdose-response software and wearable concept
@@ -244,13 +244,13 @@ export default function DashboardPage() {
           </div>
         </header>
 
-        <HolographicCard className="p-6 mb-6 bg-gradient-to-r from-primary/10 to-secondary/10" glowIntensity="high">
+        <HolographicCard className="p-6 bg-linear-to-r from-primary/10 to-secondary/10" glowIntensity="high">
           <div className="flex items-center gap-4">
             <div className="p-4 rounded-full bg-primary/20 pulse-glow">
               <Syringe className="w-8 h-8 text-primary" />
             </div>
             <div className="flex-1">
-              <h2 className="text-2xl font-bold glow-text font-[family-name:var(--font-orbitron)]">
+              <h2 className="text-2xl font-bold glow-text font-orbitron">
                 NARCOGUARD NG DEVELOPMENT CONCEPT
               </h2>
               <p className="text-muted-foreground mt-1 text-balance">
@@ -264,7 +264,7 @@ export default function DashboardPage() {
 
         <EmergencyButton />
 
-        <div className="mb-6 rounded-xl border border-primary/30 p-5">
+        <div className="rounded-xl border border-primary/30 p-5">
           <h2 className="text-xl font-semibold">Guardian Stability</h2>
           <p className="text-sm text-muted-foreground mb-3">Opt-in check-ins for food, sleep and everyday needs, with a next-day plan and resource starting points.</p>
           <Link href="/stability"><Button variant="outline">Open my needs planner</Button></Link>
@@ -339,7 +339,7 @@ export default function DashboardPage() {
         </div>
 
         <HolographicCard
-          className="p-8 bg-gradient-to-br from-green-500/10 via-primary/10 to-secondary/10"
+          className="p-8 bg-linear-to-br from-green-500/10 via-primary/10 to-secondary/10"
           glowIntensity="high"
         >
           <div className="text-center mb-8">
