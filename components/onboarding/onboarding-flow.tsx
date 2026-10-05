@@ -37,59 +37,9 @@ import {
 } from "@/lib/user-preferences"
 import { usePWAInstall } from "@/lib/hooks/use-pwa-install"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { GOOD_SAMARITAN_LAWS, GOOD_SAMARITAN_LAWS_REVIEWED, GOOD_SAMARITAN_SOURCES, goodSamaritanLawFor } from "@/lib/good-samaritan-laws"
 
-const US_STATES = [
-  "Alabama",
-  "Alaska",
-  "Arizona",
-  "Arkansas",
-  "California",
-  "Colorado",
-  "Connecticut",
-  "Delaware",
-  "Florida",
-  "Georgia",
-  "Hawaii",
-  "Idaho",
-  "Illinois",
-  "Indiana",
-  "Iowa",
-  "Kansas",
-  "Kentucky",
-  "Louisiana",
-  "Maine",
-  "Maryland",
-  "Massachusetts",
-  "Michigan",
-  "Minnesota",
-  "Mississippi",
-  "Missouri",
-  "Montana",
-  "Nebraska",
-  "Nevada",
-  "New Hampshire",
-  "New Jersey",
-  "New Mexico",
-  "New York",
-  "North Carolina",
-  "North Dakota",
-  "Ohio",
-  "Oklahoma",
-  "Oregon",
-  "Pennsylvania",
-  "Rhode Island",
-  "South Carolina",
-  "South Dakota",
-  "Tennessee",
-  "Texas",
-  "Utah",
-  "Vermont",
-  "Virginia",
-  "Washington",
-  "West Virginia",
-  "Wisconsin",
-  "Wyoming",
-]
+const US_STATES = GOOD_SAMARITAN_LAWS.map((law) => law.name)
 
 interface OnboardingFlowProps {
   /** Called after preferences are saved; pages that read the preferences store update on their own. */
@@ -203,7 +153,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       </div>
     </div>,
 
-    // Step 1: Meet Guardian Aingel
+    // Step 1: Meet Angel AI
     <div key="guardian-aingel-intro" className="space-y-6">
       <div className="text-center space-y-4">
         <div className="w-24 h-24 mx-auto relative">
@@ -212,10 +162,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <Sparkles className="w-12 h-12 text-primary" />
           </div>
         </div>
-        <h2 className="text-3xl font-bold glow-text">Meet Your Guardian Aingel</h2>
+        <h2 className="text-3xl font-bold glow-text">Meet Angel AI</h2>
         <p className="text-muted-foreground max-w-2xl mx-auto text-balance">
-          I'm the Guardian Aingel demo. Today I can walk you through the NarcoGuard concept, help you plan for everyday
-          needs, and point you to real resources. I can't monitor you, detect an overdose, or call anyone. If someone may
+          I'm Angel, your lifeline assistant, guardian and resource finder. I can help you find nearby treatment, food,
+          shelter and pharmacies, and plan small steps toward your goals. I can't monitor you, detect an overdose, or call anyone. If someone may
           be overdosing, call 911 and give naloxone.
         </p>
       </div>
@@ -279,7 +229,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             className="text-lg glass neon-border"
           />
           <p className="text-sm text-muted-foreground">
-            This helps Guardian Aingel provide personalized care and communicate with emergency responders.
+            Angel uses your first name to greet you. It stays on this device.
           </p>
         </div>
       </HolographicCard>
@@ -510,7 +460,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           + Add Naloxone Location
         </Button>
         <p className="text-sm text-muted-foreground text-center">
-          Guardian Aingel will guide responders to these locations with AR overlays
+          These locations are saved on this device so you can find them quickly.
         </p>
       </div>
     </div>,
@@ -808,15 +758,16 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="text-center space-y-4">
         <FileText className="w-16 h-16 mx-auto text-primary pulse-glow" />
         <h2 className="text-3xl font-bold glow-text">Good Samaritan Laws</h2>
-        <p className="text-muted-foreground">Legal protection for heroes</p>
+        <p className="text-muted-foreground">What the law in your state does and does not cover</p>
       </div>
       <HolographicCard className="p-8 max-w-2xl mx-auto space-y-6">
         <div className="space-y-4">
-          <div className="p-4 bg-green-500/10 rounded-lg border border-green-500/20">
-            <h4 className="font-semibold mb-2 text-green-500">You Are Protected</h4>
+          <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
+            <h4 className="font-semibold mb-2">What these laws usually cover</h4>
             <p className="text-sm text-muted-foreground">
-              Good Samaritan laws protect you from legal liability when you help someone in an emergency. This includes
-              administering naloxone and performing CPR.
+              Every state and DC has an overdose Good Samaritan law, but protection is limited. Most cover possessing small
+              amounts of drugs or paraphernalia found because you called for help. They usually do not cover selling drugs,
+              outstanding warrants or unrelated crimes, and some only give a defense in court. Always call 911 in an overdose.
             </p>
           </div>
 
@@ -846,15 +797,29 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </Select>
           </div>
 
-          {preferences.legal.state?.toLowerCase().includes("new york") && (
-            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <h4 className="font-semibold mb-2">New York Good Samaritan Law</h4>
-              <p className="text-sm text-muted-foreground">
-                New York's Good Samaritan law (NYS PHL 3000-a) provides immunity from criminal prosecution for drug
-                possession and paraphernalia when calling 911 or seeking medical help for an overdose.
-              </p>
-            </div>
-          )}
+          {(() => {
+            const law = goodSamaritanLawFor(preferences.legal.state)
+            if (!law) return null
+            return (
+              <div className="p-4 bg-primary/10 rounded-lg border border-primary/20 space-y-2" data-testid="state-law">
+                <h4 className="font-semibold">{law.name}</h4>
+                <p className="text-xs text-muted-foreground">{law.citation}</p>
+                <p className="text-sm">{law.summary}</p>
+                {law.limits && <p className="text-sm text-muted-foreground"><strong>Limits:</strong> {law.limits}</p>}
+              </div>
+            )
+          })()}
+
+          <p className="text-xs text-muted-foreground">
+            General information, not legal advice. Laws change; summaries reviewed {GOOD_SAMARITAN_LAWS_REVIEWED} from{" "}
+            {GOOD_SAMARITAN_SOURCES.map((source, i) => (
+              <span key={source.url}>
+                {i > 0 && " and "}
+                <a className="underline" href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a>
+              </span>
+            ))}
+            . Check the statute or a lawyer for your situation.
+          </p>
 
           <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/20">
             <h4 className="font-semibold mb-2">Advocacy & Change</h4>
@@ -887,7 +852,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             />
             <div className="space-y-1 flex-1">
               <Label htmlFor="acknowledgedGoodSamaritan" className="text-2xl font-bold cursor-pointer text-green-400">
-                ✓ I understand Good Samaritan protections
+                ✓ I understand these protections are limited and vary by state
               </Label>
               <p className="text-base text-green-200 font-semibold">Click the box to continue →</p>
             </div>
@@ -1041,7 +1006,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <ul className="space-y-2 text-sm text-muted-foreground">
             <li>• This app does not replace professional medical care</li>
             <li>• Always call 911 in life-threatening emergencies</li>
-            <li>• Guardian Aingel is a tool to support, not replace, human judgment</li>
+            <li>• Angel AI is a tool to support, not replace, human judgment</li>
             <li>• You can update these preferences anytime in Settings</li>
           </ul>
         </div>
@@ -1105,17 +1070,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
               <h5 className="font-semibold mb-1 flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" />
-                24/7 Protection Activated
+                Your setup is saved
               </h5>
-              <p className="text-sm text-muted-foreground">Guardian Aingel is now monitoring and ready to protect you</p>
+              <p className="text-sm text-muted-foreground">NarcoGuard does not monitor you or detect overdoses. If someone may be overdosing, call 911 and give naloxone.</p>
             </div>
             <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/20">
               <h5 className="font-semibold mb-1 flex items-center gap-2">
                 <Users className="w-5 h-5 text-secondary" />
-                Connected to Hero Network
+                Your contacts are on this device
               </h5>
               <p className="text-sm text-muted-foreground">
-                {emergencyContacts.length} emergency contacts and nearby heroes are ready
+                {emergencyContacts.length} emergency {emergencyContacts.length === 1 ? "contact" : "contacts"} saved. NarcoGuard does not contact them automatically.
               </p>
             </div>
             <div className="p-4 bg-pink-500/10 rounded-lg border border-pink-500/20">
@@ -1123,7 +1088,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
                 <Heart className="w-5 h-5 text-pink-500" />
                 Resources Available
               </h5>
-              <p className="text-sm text-muted-foreground">Access recovery support and training anytime</p>
+              <p className="text-sm text-muted-foreground">Ask Angel AI or search for help near you anytime</p>
             </div>
           </div>
         </div>

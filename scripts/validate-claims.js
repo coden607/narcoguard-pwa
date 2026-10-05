@@ -25,6 +25,9 @@ const forbidden = [
   /always watching over you/i,
   /We comply with HIPAA/i,
   /emergency coordination/i,
+  /24\/7 Protection Activated/i,
+  /is now monitoring/i,
+  /nearby heroes are ready/i,
 ]
 
 function filesIn(target) {

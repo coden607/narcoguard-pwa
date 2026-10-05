@@ -3,7 +3,7 @@ export default function PrivacyPolicy() {
     <main className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-4xl font-bold text-center">NarcoGuard Privacy</h1>
-        <p className="text-sm text-muted-foreground text-center">Updated September 27, 2026</p>
+        <p className="text-sm text-muted-foreground text-center">Updated October 4, 2026</p>
 
         <div className="space-y-6 text-sm text-muted-foreground">
           <section className="space-y-3">
@@ -31,6 +31,24 @@ export default function PrivacyPolicy() {
             <p>
               Resource links can open third-party websites or phone services. Those services have their own privacy
               practices. Check a service&apos;s details and availability before relying on it.
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Angel AI, nearby search and Bluetooth readings</h2>
+            <p>
+              Angel AI is off until you agree to start a chat. Your messages, and a ZIP code if you enter one, are sent
+              to Groq, an AI provider, to write replies. Groq states that it does not use API inputs or outputs for
+              training. NarcoGuard does not save the conversation; it is cleared when you leave the page.
+            </p>
+            <p>
+              &quot;Find help near me&quot; uses your location only when you tap &quot;Use my location&quot;, or the ZIP code you
+              type. Our server rounds coordinates to about one kilometer and sends them to SAMHSA&apos;s FindTreatment.gov
+              or OpenStreetMap services to get listings. We do not store or log the location.
+            </p>
+            <p>
+              Bluetooth heart-rate and blood-oxygen readings are shown only on your screen while connected. They are not
+              uploaded, saved or used to detect overdoses.
             </p>
           </section>
 

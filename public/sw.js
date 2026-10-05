@@ -1,4 +1,4 @@
-const CACHE_NAME = "narcoguard-shell-v2";
+const CACHE_NAME = "narcoguard-shell-v3";
 const APP_SHELL = [
   "/",
   "/offline.html",
@@ -6,6 +6,9 @@ const APP_SHELL = [
   "/icon-192.png",
   "/icon-512.png",
   "/apple-touch-icon.png",
+  "/icon-maskable-512.png",
+  "/images/narcoguard-icon-256.jpeg",
+  "/images/narcoguard-logo-96.webp",
 ];
 
 self.addEventListener("install", (event) => {

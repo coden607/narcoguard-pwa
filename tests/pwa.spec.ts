@@ -147,6 +147,7 @@ test.describe("PWA production flow", () => {
       expect.arrayContaining([
         expect.objectContaining({ src: "/icon-192.png", sizes: "192x192" }),
         expect.objectContaining({ src: "/icon-512.png", sizes: "512x512" }),
+        expect.objectContaining({ src: "/icon-maskable-512.png", sizes: "512x512", purpose: "maskable" }),
       ]),
     )
 
@@ -266,5 +267,91 @@ test.describe("PWA production flow", () => {
     await page.getByRole("button", { name: "Erase all Guardian data" }).click()
     await page.getByRole("button", { name: "Enable my private planner" }).click()
     await expect(meals).toHaveCount(0)
+  })
+
+  test("nearby help search validates ZIP, shows sourced listings with call-first notes, and keeps directory fallbacks", async ({ page }) => {
+    const requested: string[] = []
+    await page.route("**/api/resources/nearby**", async (route) => {
+      requested.push(new URL(route.request().url()).search)
+      await route.fulfill({ json: {
+        status: "ok",
+        results: [{ name: "Test Food Pantry", kind: "food", address: "1 Main St", phone: "518-555-0100", distanceMiles: 0.8, lat: 42.65, lon: -73.75, source: "OpenStreetMap contributors" }],
+        fallback: [{ title: "Find local help through 211", url: "https://www.211.org/get-help" }],
+      } })
+    })
+    await page.goto("/angel")
+    const search = page.getByTestId("nearby-resources")
+    await search.getByRole("button", { name: "Food" }).click()
+    await search.getByLabel("ZIP code").fill("122")
+    await search.getByRole("button", { name: "Search" }).click()
+    await expect(search.getByText("Enter a five-digit US ZIP code.")).toBeVisible()
+    expect(requested).toHaveLength(0)
+
+    await search.getByLabel("ZIP code").fill("12207")
+    await search.getByRole("button", { name: "Search" }).click()
+    await expect(search.getByText("Test Food Pantry")).toBeVisible()
+    await expect(search.getByRole("link", { name: "Call 518-555-0100" })).toHaveAttribute("href", "tel:5185550100")
+    await expect(search.getByText(/Source: OpenStreetMap contributors\. .*call first/)).toBeVisible()
+    await expect(search.getByRole("link", { name: "Find local help through 211" })).toBeVisible()
+    expect(requested).toEqual(["?kind=food&zip=12207"])
+  })
+
+  test("Angel AI says when it is not configured and the search still works without it", async ({ page }) => {
+    await page.goto("/angel")
+    await expect(page.getByTestId("angel-unavailable")).toBeVisible()
+    await expect(page.getByTestId("nearby-resources")).toBeVisible()
+  })
+
+  test("Angel AI requires consent and shows the 911 notice for an overdose message regardless of the reply", async ({ page }) => {
+    let body: { messages?: { role: string; content: string }[] } | undefined
+    await page.route("**/api/angel", async (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { available: true, provider: "Groq" } })
+      body = route.request().postDataJSON()
+      await route.fulfill({ json: { available: true, notices: ["If someone may be overdosing or isn't breathing: call 911 now, give naloxone (Narcan) if you have it, and stay with them."], reply: "Call 911 now." } })
+    })
+    await page.goto("/angel")
+    await expect(page.getByLabel("Message Angel")).toHaveCount(0)
+    await page.getByRole("button", { name: "I understand, talk to Angel" }).click()
+    await page.getByLabel("Message Angel").fill("my friend is overdosing")
+    await page.getByRole("button", { name: "Send message" }).click()
+    const conversation = page.getByLabel("Conversation with Angel")
+    await expect(conversation.getByRole("alert")).toContainText("call 911 now")
+    expect(body?.messages).toEqual([{ role: "user", content: "my friend is overdosing" }])
+    await page.getByRole("button", { name: "Clear conversation" }).click()
+    await expect(conversation.getByRole("alert")).toHaveCount(0)
+  })
+
+  test("dashboard offers a Bluetooth device connection without claiming detection", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true })))
+    await page.goto("/")
+    const ble = page.getByTestId("bluetooth-vitals")
+    await expect(ble).toBeVisible()
+    await expect(ble).toContainText("does not use these readings to detect overdoses")
+  })
+
+  test("Good Samaritan step shows the selected state's statute and limits, not a blanket promise", async ({ page }) => {
+    await page.goto("/")
+    await expect(page.getByText("You Are Protected")).toHaveCount(0)
+    for (let i = 0; i < 10; i++) {
+      const nameInput = page.getByPlaceholder("Enter your name")
+      if (await nameInput.isVisible()) await nameInput.fill("Sam")
+      await page.getByRole("button", { name: "Continue" }).click()
+    }
+    await expect(page.getByRole("heading", { name: "Good Samaritan Laws" })).toBeVisible()
+    await page.getByRole("combobox").click()
+    await page.getByRole("option", { name: "Texas" }).click()
+    const law = page.getByTestId("state-law")
+    await expect(law).toContainText("Tex. Health & Safety Code § 481.115(g)")
+    await expect(law).toContainText("defense in court, not immunity")
+    await expect(page.getByText("not legal advice", { exact: false })).toBeVisible()
+  })
+
+  test("the NarcoGuard logo appears in the header of every public page", async ({ page }) => {
+    for (const path of ["/", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/privacy", "/terms"]) {
+      await page.goto(path)
+      const logo = page.locator(".site-header .brand-mark img")
+      await expect(logo, path).toBeVisible()
+      expect(await logo.evaluate((img) => (img as HTMLImageElement).naturalWidth), path).toBeGreaterThan(0)
+    }
   })
 })
