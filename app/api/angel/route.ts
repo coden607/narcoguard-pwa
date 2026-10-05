@@ -112,6 +112,11 @@ export async function POST(request: Request) {
   } catch (error) {
     // Only the provider name and HTTP status are logged, never message content.
     console.warn(`[angel] ${provider.name} request failed: ${error instanceof ProviderError ? error.status : "network"}`)
+    // Rejected credentials or an account not yet enabled (e.g. AI Gateway before a card is on file):
+    // report Angel as switched off rather than as a temporary failure.
+    if (error instanceof ProviderError && (error.status === 401 || error.status === 403)) {
+      return NextResponse.json({ available: false, notices, message: "Angel AI is not switched on yet." }, { status: 503, headers: noStore })
+    }
     return NextResponse.json({ available: true, notices, error: "Angel couldn't respond right now. Try again, or use the search below." }, { status: 502, headers: noStore })
   }
 }

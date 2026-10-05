@@ -354,4 +354,72 @@ test.describe("PWA production flow", () => {
       expect(await logo.evaluate((img) => (img as HTMLImageElement).naturalWidth), path).toBeGreaterThan(0)
     }
   })
+
+  test("the Constitution is linked from the footer of every page", async ({ page }) => {
+    await page.goto("/privacy")
+    const link = page.locator(".site-footer").getByRole("link", { name: "Constitution" })
+    await expect(link).toHaveAttribute("href", "/constitution")
+    await link.click()
+    await expect(page.getByRole("heading", { level: 1 })).toContainText("Constitution")
+  })
+
+  test("hands-free voice sends what was heard and speaks the 911 notice first", async ({ page }) => {
+    await page.addInitScript(() => {
+      const spoken: string[] = []
+      ;(window as unknown as { __spoken: string[] }).__spoken = spoken
+      class FakeRecognition {
+        lang = ""; continuous = false; interimResults = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        static turns = 0
+        start() {
+          const turn = FakeRecognition.turns++
+          setTimeout(() => {
+            if (turn === 0) this.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: "my friend is overdosing" }], { isFinal: true })] })
+            else this.onerror?.({ error: "not-allowed" })
+            this.onend?.()
+          }, 50)
+        }
+        stop() { this.onend?.() }
+        abort() { this.onend?.() }
+      }
+      // Replace both names: current Chromium ships an unprefixed SpeechRecognition that would win.
+      for (const name of ["SpeechRecognition", "webkitSpeechRecognition"]) Object.defineProperty(window, name, { value: FakeRecognition, configurable: true, writable: true })
+      const synth = {
+        speak(u: { text: string; onend?: () => void }) { if (u.text.trim()) spoken.push(u.text); setTimeout(() => u.onend?.(), 10) },
+        cancel() {},
+      }
+      Object.defineProperty(window, "speechSynthesis", { value: synth, configurable: true })
+      ;(window as unknown as { SpeechSynthesisUtterance: unknown }).SpeechSynthesisUtterance = class { text: string; lang = ""; rate = 1; volume = 1; onend?: () => void; onerror?: () => void; constructor(t: string) { this.text = t } }
+    })
+    let body: { messages?: { content: string }[] } | undefined
+    await page.route("**/api/angel", async (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { available: true, provider: "Vercel AI Gateway" } })
+      body = route.request().postDataJSON()
+      await route.fulfill({ json: { available: true, notices: ["Call 911 now."], reply: "Stay with them." } })
+    })
+    await page.goto("/angel")
+    await page.getByRole("button", { name: "I understand, talk to Angel" }).click()
+    await page.getByRole("button", { name: "Hands-free conversation" }).click()
+    await expect(page.getByLabel("Conversation with Angel").getByRole("alert")).toContainText("Call 911 now.")
+    expect(body?.messages?.at(-1)?.content).toBe("my friend is overdosing")
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.join(" "))).toBe("Call 911 now. Stay with them.")
+    // The second turn's permission error ends hands-free with an explanation.
+    await expect(page.getByText("Microphone access was not allowed. You can still type.")).toBeVisible()
+    await expect(page.getByRole("button", { name: "Hands-free conversation" })).toHaveAttribute("aria-pressed", "false")
+  })
+
+  test("when the AI provider rejects access, Angel switches off but keeps the 911 notice visible", async ({ page }) => {
+    await page.route("**/api/angel", async (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { available: true, provider: "Vercel AI Gateway" } })
+      await route.fulfill({ status: 503, json: { available: false, notices: ["Call 911 now."], message: "Angel AI is not switched on yet." } })
+    })
+    await page.goto("/angel")
+    await page.getByRole("button", { name: "I understand, talk to Angel" }).click()
+    await page.getByLabel("Message Angel").fill("my friend is overdosing")
+    await page.getByRole("button", { name: "Send message" }).click()
+    await expect(page.getByTestId("angel-unavailable")).toBeVisible()
+    await expect(page.locator("main").getByRole("alert")).toContainText("Call 911 now.")
+  })
 })

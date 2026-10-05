@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
-import { Send, Sparkles } from "lucide-react"
+import { Mic, MicOff, Send, Sparkles, Volume2, VolumeX } from "lucide-react"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import type { NearbyResource } from "@/lib/resource-finder"
+import { useVoice } from "@/lib/hooks/use-voice"
+import { isFatalRecognitionError, speakableText } from "@/lib/voice"
 
 interface ChatMessage {
   id: string
@@ -29,6 +31,14 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string>()
   const endRef = useRef<HTMLDivElement>(null)
+  const messagesRef = useRef<ChatMessage[]>([])
+  const voice = useVoice()
+  const [readAloud, setReadAloud] = useState(false)
+  const [handsFree, setHandsFree] = useState(false)
+  const handsFreeRef = useRef(false)
+  const [voiceNote, setVoiceNote] = useState<string>()
+
+  useEffect(() => { messagesRef.current = messages }, [messages])
 
   useEffect(() => {
     let cancelled = false
@@ -45,10 +55,12 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: "nearest" }) }, [messages])
 
-  const send = async (text: string) => {
+  /** Sends a message and returns what Angel should say back (safety notices first), or null on failure. */
+  const send = async (text: string): Promise<string | null> => {
     const content = text.trim()
-    if (!content || busy) return
-    const next: ChatMessage[] = [...messages, { id: crypto.randomUUID(), role: "user", content }]
+    if (!content || busy) return null
+    const next: ChatMessage[] = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content }]
+    messagesRef.current = next
     setMessages(next)
     setInput("")
     setBusy(true)
@@ -59,16 +71,71 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: next.slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })), ...(/^\d{5}$/.test(zip) ? { zip } : {}) }),
       })
-      const body = (await response.json()) as { reply?: string; error?: string; notices?: string[]; resources?: ChatMessage["resources"] }
-      if (body.notices?.length || body.reply) {
-        setMessages((prev) => [...prev, { id: crypto.randomUUID(), role: "assistant", content: body.reply ?? "", notices: body.notices, resources: body.resources }])
+      const body = (await response.json()) as { available?: boolean; reply?: string; error?: string; notices?: string[]; resources?: ChatMessage["resources"] }
+      if (body.available === false) {
+        // The provider is not set up; fall back to the "not switched on" state with the search link.
+        if (body.notices?.length) setError(body.notices.join(" "))
+        handsFreeRef.current = false
+        setHandsFree(false)
+        setAvailable(false)
+        return body.notices?.length ? speakableText(body.notices, "") : null
       }
-      if (!response.ok || !body.reply) setError(body.error ?? "Angel couldn't respond right now.")
+      if (body.notices?.length || body.reply) {
+        const reply: ChatMessage = { id: crypto.randomUUID(), role: "assistant", content: body.reply ?? "", notices: body.notices, resources: body.resources }
+        messagesRef.current = [...messagesRef.current, reply]
+        setMessages(messagesRef.current)
+      }
+      if (!response.ok || !body.reply) {
+        const message = body.error ?? "Angel couldn't respond right now."
+        setError(message)
+        return speakableText(body.notices, message)
+      }
+      return speakableText(body.notices, body.reply)
     } catch {
       setError("Angel couldn't be reached. Check your connection.")
+      return null
     } finally {
       setBusy(false)
     }
+  }
+
+  const stopHandsFree = (note?: string) => {
+    handsFreeRef.current = false
+    setHandsFree(false)
+    voice.stopListening()
+    if (note) setVoiceNote(note)
+  }
+
+  /** One voice turn: listen, send, and read the answer aloud. Repeats while hands-free is on. */
+  const talk = async (alwaysSpeak: boolean) => {
+    let quietTurns = 0
+    do {
+      setVoiceNote(undefined)
+      const heard = await voice.listen()
+      if ("cancelled" in heard) return
+      if ("error" in heard) {
+        if (heard.error === "no-speech" && handsFreeRef.current && ++quietTurns < 3) continue
+        if (isFatalRecognitionError(heard.error)) stopHandsFree("Microphone access was not allowed. You can still type.")
+        else stopHandsFree(heard.error === "no-speech" ? "I didn't hear anything, so I stopped listening. Tap Talk to try again." : "Listening stopped. Tap Talk to try again.")
+        return
+      }
+      quietTurns = 0
+      const answer = await send(heard.text)
+      if (answer && (alwaysSpeak || readAloud || handsFreeRef.current)) await voice.speak(answer)
+    } while (handsFreeRef.current)
+  }
+
+  const startTalking = () => {
+    voice.primeSpeech()
+    void talk(false)
+  }
+
+  const toggleHandsFree = () => {
+    if (handsFreeRef.current) { stopHandsFree(); voice.cancelSpeech(); return }
+    voice.primeSpeech()
+    handsFreeRef.current = true
+    setHandsFree(true)
+    void talk(true)
   }
 
   return (
@@ -89,6 +156,10 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       </p>
 
       {available === null && <p className="text-sm text-muted-foreground" role="status">Checking whether Angel is available…</p>}
+      {available === false && error && (
+        // Safety notices for a message sent just before Angel turned out to be unavailable stay visible.
+        <p className="rounded-lg border border-destructive bg-destructive/10 p-3 text-sm font-semibold" role="alert">{error}</p>
+      )}
       {available === false && (
         <p className="text-sm" role="status" data-testid="angel-unavailable">
           Angel AI is not switched on yet. You can still <Link className="underline text-primary" href="/angel#nearby-heading">search for help near you</Link>.
@@ -100,7 +171,8 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
           <p className="text-sm">
             {provider === "Vercel AI Gateway"
               ? "Your messages are sent through Vercel AI Gateway to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."
-              : "Your messages are sent to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."}
+              : "Your messages are sent to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."}{" "}
+            If you use voice, your browser turns speech into text (Apple or Google may process the audio), and replies are read aloud on this device.{" "}
             NarcoGuard does not save your chat, and it disappears when you leave this page. Don&apos;t include names, addresses or other details that identify you.
           </p>
           <Button onClick={() => setConsented(true)}>I understand, talk to Angel</Button>
@@ -139,10 +211,34 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
           {error && <p className="text-sm" role="status">{error}</p>}
           <div className="flex flex-wrap gap-2">
             {SUGGESTIONS.map((suggestion) => (
-              <Button key={suggestion} type="button" size="sm" variant="outline" disabled={busy} onClick={() => void send(suggestion)}>{suggestion}</Button>
+              <Button key={suggestion} type="button" size="sm" variant="outline" disabled={busy} onClick={() => void send(suggestion).then((answer) => { if (answer && readAloud) void voice.speak(answer) })}>{suggestion}</Button>
             ))}
           </div>
-          <form className="flex flex-col sm:flex-row gap-2" onSubmit={(event) => { event.preventDefault(); void send(input) }}>
+          {(voice.sttSupported || voice.ttsSupported) && (
+            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Voice">
+              {voice.sttSupported && (
+                <Button type="button" variant={voice.listening && !handsFree ? "default" : "outline"} disabled={busy || handsFree} onClick={voice.listening ? voice.stopListening : startTalking}>
+                  {voice.listening && !handsFree ? <MicOff className="w-4 h-4 mr-2" aria-hidden="true" /> : <Mic className="w-4 h-4 mr-2" aria-hidden="true" />}
+                  {voice.listening && !handsFree ? "Stop" : "Talk"}
+                </Button>
+              )}
+              {voice.sttSupported && voice.ttsSupported && (
+                <Button type="button" variant={handsFree ? "default" : "outline"} aria-pressed={handsFree} onClick={toggleHandsFree}>
+                  {handsFree ? "End hands-free" : "Hands-free conversation"}
+                </Button>
+              )}
+              {voice.ttsSupported && (
+                <Button type="button" variant="outline" aria-pressed={readAloud} onClick={() => { if (readAloud) voice.cancelSpeech(); else voice.primeSpeech(); setReadAloud(!readAloud) }}>
+                  {readAloud ? <Volume2 className="w-4 h-4 mr-2" aria-hidden="true" /> : <VolumeX className="w-4 h-4 mr-2" aria-hidden="true" />}
+                  {readAloud ? "Reading replies aloud" : "Read replies aloud"}
+                </Button>
+              )}
+              <p className="w-full text-sm text-muted-foreground" role="status" aria-live="polite">
+                {voice.listening ? (voice.interim ? `Hearing: ${voice.interim}` : "Listening…") : voice.speaking ? "Angel is speaking…" : voiceNote ?? (handsFree ? "Hands-free is on." : "")}
+              </p>
+            </div>
+          )}
+          <form className="flex flex-col sm:flex-row gap-2" onSubmit={(event) => { event.preventDefault(); void send(input).then((answer) => { if (answer && readAloud) void voice.speak(answer) }) }}>
             <Input aria-label="Message Angel" maxLength={2000} value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type a message" className="flex-1" />
             <Input aria-label="ZIP code for searches (optional)" inputMode="numeric" maxLength={5} value={zip} onChange={(event) => setZip(event.target.value.replace(/\D/g, ""))} placeholder="ZIP (optional)" className="sm:w-32" />
             <Button type="submit" disabled={busy || !input.trim()} aria-label="Send message"><Send className="w-4 h-4" aria-hidden="true" /></Button>
