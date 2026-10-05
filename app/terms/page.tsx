@@ -77,6 +77,15 @@ export default function TermsOfService() {
           </section>
 
           <section>
+            <h2 className="text-2xl font-semibold mb-3">6b. Emergency Contact Texts</h2>
+            <p className="text-muted-foreground">
+              You may text only people who have agreed through the invite and code process, and only to ask for help. Texts can be
+              delayed, filtered by carriers or not delivered, and contacts may not see or act on them. Texting contacts does not
+              notify 911 or any emergency service; call 911 in an emergency. Message and data rates may apply to you and your contacts.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-2xl font-semibold mb-3">7. Limitation of Liability</h2>
             <p className="text-muted-foreground">
               Broome Estates LLC and NarcoGuard creators are not liable for any injuries, damages, or deaths resulting
