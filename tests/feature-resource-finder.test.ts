@@ -109,3 +109,37 @@ test("every kind has directory fallbacks ending with 211", async () => {
   for (const kind of RESOURCE_KINDS) assert.equal(fallbackLinks(kind).at(-1)?.url, "https://www.211.org/get-help")
   assert.ok(fallbackLinks("community").some((link) => link.url.startsWith("https://www.na.org/")))
 })
+
+test("Overpass requests are hedged across instances: a slow one is backed up, a failed one hands over, all failures are summarized", async () => {
+  const { fetchOverpass } = await import("../lib/resource-lookup")
+  const realFetch = globalThis.fetch
+  const calls: string[] = []
+  const respond = (behaviour: Record<string, "ok" | "slow" | "429">) => {
+    globalThis.fetch = (async (input: string | URL, init?: RequestInit) => {
+      const host = new URL(String(input)).hostname
+      calls.push(host)
+      assert.match(String(init?.body), /^data=/)
+      if (behaviour[host] === "429") return new Response("busy", { status: 429 })
+      if (behaviour[host] === "slow") {
+        return new Promise((_, reject) => init?.signal?.addEventListener("abort", () => reject(Object.assign(new Error("aborted"), { name: "TimeoutError" }))))
+      }
+      return new Response(JSON.stringify({ elements: [], from: host }), { status: 200 })
+    }) as typeof fetch
+  }
+  try {
+    respond({ a: "slow", b: "ok" })
+    assert.deepEqual(await fetchOverpass("q", ["https://a/api", "https://b/api"], 20, 1000), { elements: [], from: "b" })
+    assert.deepEqual(calls, ["a", "b"])
+
+    calls.length = 0
+    respond({ a: "429", b: "ok" })
+    const started = Date.now()
+    assert.deepEqual(await fetchOverpass("q", ["https://a/api", "https://b/api"], 5000, 1000), { elements: [], from: "b" })
+    assert.ok(Date.now() - started < 1000, "a failure starts the next instance without waiting for the hedge delay")
+
+    respond({ a: "429", b: "slow" })
+    await assert.rejects(fetchOverpass("q", ["https://a/api", "https://b/api"], 10, 50), /a responded 429; b TimeoutError/)
+  } finally {
+    globalThis.fetch = realFetch
+  }
+})

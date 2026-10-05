@@ -12,11 +12,20 @@ export interface ResourceLookup {
   fallback: { title: string; url: string }[]
 }
 
-// Public Overpass instances; the second is tried when the first times out or is rate-limited.
-const OVERPASS_ENDPOINTS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"]
+// Public Overpass instances. They are often busy, so a request that has not answered within
+// OVERPASS_HEDGE_MS is backed up by the next instance and the first good answer wins.
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.private.coffee/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter",
+]
+const OVERPASS_HEDGE_MS = 6_000
+const OVERPASS_TIMEOUT_MS = 25_000
 
-async function fetchJson(url: string, init?: RequestInit, timeoutMs = 12_000): Promise<unknown> {
-  const response = await fetch(url, { ...init, headers: { "User-Agent": USER_AGENT, Accept: "application/json", ...init?.headers }, signal: AbortSignal.timeout(timeoutMs), cache: "no-store" })
+async function fetchJson(url: string, init?: RequestInit, timeoutMs = 12_000, cancel?: AbortSignal): Promise<unknown> {
+  const signal = cancel ? AbortSignal.any([AbortSignal.timeout(timeoutMs), cancel]) : AbortSignal.timeout(timeoutMs)
+  const response = await fetch(url, { ...init, headers: { "User-Agent": USER_AGENT, Accept: "application/json", ...init?.headers }, signal, cache: "no-store" })
   if (!response.ok) throw new Error(`${new URL(url).hostname} responded ${response.status}`)
   return response.json()
 }
@@ -28,15 +37,52 @@ async function geocodeZip(zip: string): Promise<{ lat: number; lon: number } | u
   return Number.isFinite(lat) && Number.isFinite(lon) ? { lat: coarsen(lat), lon: coarsen(lon) } : undefined
 }
 
-async function fetchOverpass(query: string): Promise<unknown> {
-  const body = new URLSearchParams({ data: query }).toString()
-  for (const [index, endpoint] of OVERPASS_ENDPOINTS.entries()) {
-    try {
-      return await fetchJson(endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body }, 25_000)
-    } catch (error) {
-      if (index === OVERPASS_ENDPOINTS.length - 1) throw error
-    }
+class OverpassUnavailable extends Error {
+  constructor(readonly failures: string[]) {
+    super(failures.join("; "))
+    this.name = "OverpassUnavailable"
   }
+}
+
+/** Staggered requests across the public instances; resolves with the first successful answer. */
+export function fetchOverpass(query: string, endpoints = OVERPASS_ENDPOINTS, hedgeMs = OVERPASS_HEDGE_MS, timeoutMs = OVERPASS_TIMEOUT_MS): Promise<unknown> {
+  const body = new URLSearchParams({ data: query }).toString()
+  return new Promise((resolve, reject) => {
+    const done = new AbortController()
+    const failures: string[] = []
+    let next = 0
+    let pending = 0
+    let settled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const launch = () => {
+      clearTimeout(timer)
+      if (settled || next >= endpoints.length) return
+      const endpoint = endpoints[next++]
+      pending++
+      fetchJson(endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body }, timeoutMs, done.signal).then(
+        (data) => {
+          if (settled) return
+          settled = true
+          clearTimeout(timer)
+          done.abort()
+          resolve(data)
+        },
+        (error) => {
+          pending--
+          if (settled) return
+          // Host and status or error name only; never the query, which contains the location.
+          failures.push(error instanceof Error && /responded \d+$/.test(error.message) ? error.message : `${new URL(endpoint).hostname} ${error instanceof Error ? error.name : "failed"}`)
+          if (next < endpoints.length) launch()
+          else if (pending === 0) {
+            settled = true
+            reject(new OverpassUnavailable(failures))
+          }
+        },
+      )
+      timer = setTimeout(launch, hedgeMs)
+    }
+    launch()
+  })
 }
 
 async function resolveOrigin(origin: ResourceOrigin) {
@@ -44,6 +90,7 @@ async function resolveOrigin(origin: ResourceOrigin) {
 }
 
 function failureReason(error: unknown) {
+  if (error instanceof OverpassUnavailable) return error.message
   return error instanceof Error && /responded \d+$/.test(error.message) ? error.message : error instanceof Error ? error.name : "unknown"
 }
 
