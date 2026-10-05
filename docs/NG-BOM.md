@@ -2,6 +2,19 @@
 
 This document describes the current engineering concept. It is not a manufacturing drawing, medical-device specification, or evidence that the hardware can safely administer medication.
 
+## 2026-10-05 modernization (watch-only design)
+
+The candidate BOM on `/watch` was reviewed against current, buyable parts:
+
+- **Compute:** Snapdragon W5+ Gen 1 → **W5+ Gen 2** (announced Aug 2025; Skylo NB-NTN satellite SOS, Location ML 3.0 GNSS) ([CNX Software](https://www.cnx-software.com/2025/08/21/snapdragon-w5-and-w5-gen-2-wearable-platforms-gain-nb-ntn-satellite-support/)). The nRF5340 is kept as an independent safety MCU.
+- **Storage:** the listed Micron MT29F4G01 is 4 Gbit (512 MB) SPI NAND, too small for Wear OS → 32 GB eMMC 5.1, vendor by quote.
+- **Cellular:** SDX35 relabelled correctly as a **5G RedCap** modem with LTE Cat 4 fallback and L1+L5 GNSS ([CNX Software](https://www.cnx-software.com/2023/02/08/qualcomm-snapdragon-x35-5g-nr-light-modem-smartwatches-industrial-iot-xr-glasses/)). The Thales ELS62 (a separate LTE module, not an eSIM) is replaced by an ST4SIM eUICC; the separate Broadcom GNSS chip is removed as redundant.
+- **Removed:** Alta Devices GaAs solar (company shut down in 2019, [pv magazine](https://www.pv-magazine.com/2020/11/12/equipment-auction-sounds-final-note-for-hanergy-owned-alta-devices/)), kinetic and thermoelectric harvesters (wrist harvesting is far below a cellular watch's load), the "fingerprint" part (Goodix GH3220 is a heart-rate AFE, not a fingerprint sensor), the FSR skin-contact pad (contact comes from the PPG front end), the micro-valve and the separate speech-synthesis IC (the platform handles audio).
+- **Injector:** 30 G / 4 mm micro-needle and 0.4 mg dose removed as clinically inappropriate for intramuscular naloxone; needle, dose and drug container are now "to be specified" by clinical engineering and a licensed pharmaceutical partner, and the module is labelled future research requiring FDA review as a drug-device combination product.
+- **Claims removed:** "Same class as Apple Watch", Apple Pay, "Patent-Pending", HIPAA compliance, fixed accuracy figures (±1 BPM, ±2 % SpO2, ±0.1 °C), fixed weight, 2000-nit brightness and <3 s deployment. These remain targets to measure.
+
+Known limitation: published overdose-detection research mainly uses chest-worn respiration sensing ([PneumoWave protocol](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11422748/), [closed-loop injector](https://pmc.ncbi.nlm.nih.gov/articles/PMC11920833/)). Wrist-only detection of opioid-induced respiratory depression is unproven and is the largest technical risk of the watch-only design.
+
 ## Modular bill of materials
 
 | Module | Function | Replaceable boundary | Pre-prototype validation required |
@@ -67,7 +80,8 @@ Before a physical prototype is considered, the engineering review must add CAD i
 
 These links are manufacturer or standards-body sources used to bound the candidate claims; they do not constitute system validation:
 
-- [Qualcomm Snapdragon W5+ product brief](https://www.qualcomm.com/content/dam/qcomm-martech/dm-assets/documents/Snapdragon-W5-Plus-Gen-1-Wearable-Platforms-product-brief.pdf) — platform architecture and supported cellular/GNSS options.
+- [Qualcomm Snapdragon W5+ Gen 2 / W5 Gen 2 announcement coverage](https://www.cnx-software.com/2025/08/21/snapdragon-w5-and-w5-gen-2-wearable-platforms-gain-nb-ntn-satellite-support/) — current platform, satellite SOS and GNSS.
+- [Qualcomm Snapdragon X35 product brief](https://docs.qualcomm.com/doc/87-27160-1/87-27160-1_REV_A_Snapdragon_X35_5G_Modem-RF_System_Product_Brief.pdf) — 5G RedCap modem capabilities.
 - [Analog Devices MAX86178](https://www.analog.com/en/products/max86178.html) — PPG, ECG, and BioZ AFE capabilities.
 - [Texas Instruments BQ25619](https://www.ti.com/product/BQ25619) — single-cell, single-input charger/power-path constraints.
 - [Texas Instruments BQ51013B](https://www.ti.com/lit/ds/symlink/bq51013b.pdf) — Qi receiver constraints.

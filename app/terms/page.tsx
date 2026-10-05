@@ -3,7 +3,7 @@ export default function TermsOfService() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-4xl font-bold text-center">NarcoGuard Terms of Service</h1>
-        <p className="text-sm text-muted-foreground text-center">Last Updated: January 6, 2026</p>
+        <p className="text-sm text-muted-foreground text-center">Last Updated: October 5, 2026</p>
 
         <div className="space-y-6 text-sm">
           <section>
@@ -28,13 +28,13 @@ export default function TermsOfService() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-3">3. NG Watch Auto-Injection System</h2>
-            <p className="text-muted-foreground mb-3">The NarcoGuard 2 Watch with auto-injection technology:</p>
+            <h2 className="text-2xl font-semibold mb-3">3. NG Watch Concept</h2>
+            <p className="text-muted-foreground mb-3">The NarcoGuard NG watch is a design concept. Today:</p>
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>Is designed to administer naloxone automatically when an overdose is detected</li>
-              <li>May produce false positives or false negatives - it is not 100% accurate</li>
-              <li>Requires proper maintenance, charging, and cartridge replacement</li>
-              <li>Should be used in conjunction with Never Use Alone protocols</li>
+              <li>No NG watch has been built, tested or approved, and none is for sale</li>
+              <li>Nothing in the App detects overdoses or administers naloxone</li>
+              <li>Any future device that injects medication would need clinical testing and FDA approval before use</li>
+              <li>Always follow Never Use Alone practices and call 911 in an emergency</li>
             </ul>
           </section>
 
@@ -44,7 +44,7 @@ export default function TermsOfService() {
             <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
               <li>Provide accurate emergency contact information</li>
               <li>Keep the App updated with current naloxone locations</li>
-              <li>Allow location services for emergency response</li>
+              <li>Decide for yourself whether to share your location; the App works without it</li>
               <li>Not use the App for illegal activities</li>
               <li>Complete proper training before administering naloxone to others</li>
             </ul>
@@ -61,8 +61,18 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-semibold mb-3">6. Data Collection & Privacy</h2>
             <p className="text-muted-foreground">
-              We collect location data, vitals data, and emergency information to provide life-saving services. See our
-              Privacy Policy for details on data handling.
+              Most App data stays in your browser. Location is used only when you choose a nearby search, chats with
+              Angel AI are sent to an AI provider only after you agree, and Bluetooth readings stay on your screen. See
+              the Privacy Policy for details.
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-semibold mb-3">6a. Donations</h2>
+            <p className="text-muted-foreground">
+              Donations support development of the NarcoGuard NG concept and do not buy a device, service or early access.
+              Card donations are processed by Stripe. Donations are not tax-deductible. Refunds are available on request
+              within 30 days by emailing narcoguard607@gmail.com.
             </p>
           </section>
 

@@ -28,6 +28,10 @@ const forbidden = [
   /24\/7 Protection Activated/i,
   /is now monitoring/i,
   /nearby heroes are ready/i,
+  /Patent[- ]Pending/i,
+  /Compliant data handling/i,
+  /Same class as Apple/i,
+  /is designed to administer naloxone automatically/i,
 ]
 
 function filesIn(target) {

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import Image from "next/image"
+import { DonateForm } from "@/components/fund/donate-form"
 
 export default function FundPage() {
   const [copied, setCopied] = useState(false)
@@ -51,7 +52,7 @@ export default function FundPage() {
 
   const stats = [
     { value: "80", label: "Long-term prototype goal" },
-    { value: "$307", label: "Current hardware estimate" },
+    { value: "$325", label: "Component estimate (BOM)" },
     { value: "Public", label: "Development status" },
     { value: "Concept", label: "Not a medical device" },
   ]
@@ -230,13 +231,14 @@ export default function FundPage() {
             ))}
           </div>
 
-          <div className="mt-12 text-center">
-            <Button asChild size="lg" className="bg-green-500 hover:bg-green-600 text-white text-lg px-12 py-6">
-              <a href={GOFUNDME_URL} target="_blank" rel="noopener noreferrer">
-                <Heart className="mr-2 h-5 w-5" />
-                Donate Any Amount
-              </a>
-            </Button>
+          <div className="mt-12 space-y-8" id="donate">
+            <DonateForm fallbackUrl={GOFUNDME_URL} />
+            <div className="max-w-2xl mx-auto rounded-xl border p-5 text-sm text-muted-foreground space-y-2" id="donation-policy">
+              <h3 className="text-base font-semibold text-foreground">Donation policy</h3>
+              <p>Donations fund engineering, component evaluation and validation work on the NarcoGuard NG concept. A donation does not buy a device, a service or early access.</p>
+              <p>Donations are not tax-deductible. If you donated by mistake, email <a className="underline" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a> within 30 days for a refund.</p>
+              <p>Card payments are processed by Stripe and GoFundMe donations by GoFundMe; each has its own privacy policy. NarcoGuard does not receive your card details.</p>
+            </div>
           </div>
         </div>
       </section>

@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { GlowButton } from "@/components/effects/glow-button"
-import { Watch, Battery, Droplet, Wifi, Bluetooth, Sun, Zap, Activity, Settings, Package } from "lucide-react"
+import { Watch, Battery, Droplet, Wifi, Bluetooth, Zap, Activity, Settings, Package } from "lucide-react"
 import { Progress } from "@/components/ui/progress"
 
 export function WatchDetails() {
@@ -133,31 +133,6 @@ export function WatchDetails() {
 
         <div className="space-y-3">
           <h4 className="font-medium">Charging Methods</h4>
-
-          <div className="glass p-4 rounded-lg neon-border">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Sun className="w-6 h-6 text-yellow-500 pulse-glow" />
-                <div>
-                  <p className="font-medium">Solar Charging</p>
-                  <p className="text-xs text-muted-foreground">Unavailable until hardware validation</p>
-                </div>
-              </div>
-              <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
-            </div>
-          </div>
-
-          <div className="glass p-4 rounded-lg neon-border opacity-50">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Zap className="w-6 h-6 text-blue-500" />
-                <div>
-                  <p className="font-medium">Kinetic Charging</p>
-                  <p className="text-xs text-muted-foreground">Inactive - Movement required</p>
-                </div>
-              </div>
-            </div>
-          </div>
 
           <div className="glass p-4 rounded-lg neon-border opacity-50">
             <div className="flex items-center justify-between">
