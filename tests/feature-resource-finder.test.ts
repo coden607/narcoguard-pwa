@@ -15,7 +15,7 @@ test("haversine distance is in miles", () => {
 
 test("overpass queries search only the requested kind around the point", () => {
   const query = overpassQuery("shelter", 40.75, -73.99)
-  assert.match(query, /social_facility"="shelter"\]\(40.6063,-74.1797,40.8937,-73.8003\);/)
+  assert.match(query, /social_facility"="shelter"\]\["tourism"!~"\^\(hotel\)\$"\]\(40.6063,-74.1797,40.8937,-73.8003\);/)
   assert.doesNotMatch(query, /around/)
   assert.doesNotMatch(query, /pharmacy|food_bank/)
 })
