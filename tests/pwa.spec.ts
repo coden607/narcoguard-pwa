@@ -649,6 +649,17 @@ test.describe("Watch blueprint", () => {
       await expect(viewer.getByText(/3D needs WebGL/)).toBeVisible()
     }
   })
+
+  test("the owner lock keeps safety functions on a locked watch and never allows sale as a transfer", async ({ page }) => {
+    await page.goto("/watch")
+    await page.getByRole("tab", { name: "Owner Lock" }).click()
+    const lock = page.getByTestId("owner-lock")
+    await expect(lock.getByRole("img", { name: /Owner lock flow/ })).toBeVisible()
+    const locked = lock.locator("div").filter({ has: page.getByRole("heading", { name: "Locked", exact: true }) }).last()
+    await expect(locked.getByText("Works: SOS button")).toBeAttached()
+    await expect(locked.getByText("Off: Vitals monitoring")).toBeAttached()
+    await expect(lock.getByText("A sale or trade is never a reason.", { exact: false })).toBeVisible()
+  })
 })
 
 test.describe("Install on iPhone", () => {

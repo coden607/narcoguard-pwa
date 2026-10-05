@@ -20,7 +20,7 @@ export const WATCH_COMPONENTS: readonly WatchComponent[] = [
   { id: "gps", name: "GNSS + Satellite SOS", partNumber: "Platform GNSS + LDS antenna", color: "#01FF70", description: "Location from the platform/modem GNSS (no separate chip); satellite SOS via the W5+ Gen 2 platform. Field accuracy unverified." },
   { id: "crown", name: "Crown + SOS Button", partNumber: "Custom crown + seal + switch", color: "#AAAAAA", description: "Physical button to start a manual SOS or cancel a false alarm; sealing and press force require qualification." },
   { id: "sealed-charge", name: "Sealed Qi / Service Boundary", partNumber: "Qi receiver coil (TBD)", color: "#FFFFFF", description: "No external charging opening; Qi charging and gasketed internal service access are design targets." },
-  { id: "nfc", name: "NFC (Emergency ID)", partNumber: "ST54K", color: "#0074D9", description: "STMicro ST54K for an opt-in emergency medical-ID tap and pairing; payments would need Google Wallet certification (Apple Pay is not possible on non-Apple watches)." },
+  { id: "nfc", name: "NFC + secure element", partNumber: "ST54K", color: "#0074D9", description: "STMicro ST54K: NFC for an opt-in emergency medical-ID tap and pairing, plus the embedded secure element that holds the watch's private key and its owner record for the owner lock. Secure-element firmware is not written yet." },
 ]
 
 export const calloutNumber = (id: string) => WATCH_COMPONENTS.findIndex((component) => component.id === id) + 1
