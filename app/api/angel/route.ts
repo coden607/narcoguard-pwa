@@ -31,7 +31,7 @@ type ChatMessage = { role: string; content: string | null; tool_calls?: ToolCall
 type ToolCall = { id: string; type: "function"; function: { name: string; arguments: string } }
 
 class ProviderError extends Error {
-  constructor(readonly status: number) { super(`provider ${status}`) }
+  constructor(readonly status: number, readonly detail = "") { super(`provider ${status}`) }
 }
 
 async function complete(provider: AngelProvider, messages: ChatMessage[], withTools: boolean, maxTokens = 1024) {
@@ -48,7 +48,8 @@ async function complete(provider: AngelProvider, messages: ChatMessage[], withTo
     }),
     signal: AbortSignal.timeout(25_000),
   })
-  if (!response.ok) throw new ProviderError(response.status)
+  // The provider's own error text (never our request content) helps diagnose access problems.
+  if (!response.ok) throw new ProviderError(response.status, (await response.text().catch(() => "")).slice(0, 300))
   const body = (await response.json()) as { choices?: { message?: ChatMessage }[] }
   const message = body.choices?.[0]?.message
   if (!message) throw new ProviderError(0)
@@ -66,7 +67,7 @@ export async function GET(request: Request) {
       const reply = await complete(provider, [{ role: "system", content: "Reply with the single word OK." }, { role: "user", content: "ping" }], false, 64)
       return NextResponse.json({ ok: true, provider: provider.name, model: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
     } catch (error) {
-      return NextResponse.json({ ok: false, provider: provider.name, status: error instanceof ProviderError ? error.status : "network" }, { headers: noStore })
+      return NextResponse.json({ ok: false, provider: provider.name, status: error instanceof ProviderError ? error.status : "network", detail: error instanceof ProviderError ? error.detail : undefined }, { headers: noStore })
     }
   }
   return NextResponse.json({ available: Boolean(provider), provider: provider?.name ?? null }, { headers: noStore })
