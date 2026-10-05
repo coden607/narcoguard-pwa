@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import { CheckCircle2, Copy, MessageSquare, Phone, Send, Share2, Trash2, UserPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -15,19 +15,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { MAX_CONTACTS, alertMessage, inviteShareText } from "@/lib/contact-alerts-shared"
 import { clearEmergencyContacts, useEmergencyContacts, type StoredContact } from "@/lib/emergency-contacts-store"
-
-type Delivery = { name: string; masked: string; state: string; label: string; statusToken?: string }
+import { postJson, useContactAlert } from "@/lib/hooks/use-contact-alert"
 
 const inputClass = "w-full rounded border bg-background p-2"
-
-async function post<T>(url: string, body: unknown): Promise<{ ok: boolean; data: T & { error?: string } }> {
-  try {
-    const response = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) })
-    return { ok: response.ok, data: (await response.json()) as T & { error?: string } }
-  } catch {
-    return { ok: false, data: { error: "Could not reach NarcoGuard. Check your connection." } as T & { error?: string } }
-  }
-}
 
 function InviteActions({ contact, senderName }: { contact: StoredContact; senderName: string }) {
   const [copied, setCopied] = useState(false)
@@ -68,7 +58,7 @@ function PairForm({ contact, onPaired }: { contact: StoredContact; onPaired: (pr
     event.preventDefault()
     setBusy(true)
     setError(undefined)
-    const { ok, data } = await post<{ proof?: string }>("/api/contacts/pair", { token: contact.invite, code })
+    const { ok, data } = await postJson<{ proof?: string }>("/api/contacts/pair", { token: contact.invite, code })
     setBusy(false)
     if (ok && data.proof) onPaired(data.proof)
     else setError(data.error ?? "That code could not be checked.")
@@ -91,28 +81,12 @@ function invitedContact(name: string, masked: string, invite: string, link: stri
 
 export function EmergencyContacts() {
   const { state, update } = useEmergencyContacts()
-  const [available, setAvailable] = useState<boolean | null>(null)
+  const { available, sending, deliveries, note: sendNote, send: sendAlert } = useContactAlert()
   const [form, setForm] = useState({ name: "", phone: "" })
   const [formError, setFormError] = useState<string>()
   const [adding, setAdding] = useState(false)
   const [includeLocation, setIncludeLocation] = useState(false)
   const [confirm, setConfirm] = useState<null | { test: boolean; contacts: StoredContact[] }>(null)
-  const [sending, setSending] = useState(false)
-  const [deliveries, setDeliveries] = useState<Delivery[]>([])
-  const [sendNote, setSendNote] = useState<string>()
-  const pollRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    let cancelled = false
-    fetch("/api/contacts", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((body: { available?: boolean }) => { if (!cancelled) setAvailable(Boolean(body.available)) })
-      .catch(() => { if (!cancelled) setAvailable(false) })
-    return () => {
-      cancelled = true
-      if (pollRef.current) clearTimeout(pollRef.current)
-    }
-  }, [])
 
   const confirmed = state.contacts.filter((contact) => contact.status === "confirmed" && contact.proof)
   const senderName = state.senderName.trim()
@@ -123,7 +97,7 @@ export function EmergencyContacts() {
     if (!senderName) return setFormError("Add your name first, so your contact knows who is asking.")
     if (state.contacts.length >= MAX_CONTACTS) return setFormError(`You can add up to ${MAX_CONTACTS} contacts.`)
     setAdding(true)
-    const { ok, data } = await post<{ token?: string; link?: string; masked?: string }>("/api/contacts/invite", { contactName: form.name, phone: form.phone, senderName })
+    const { ok, data } = await postJson<{ token?: string; link?: string; masked?: string }>("/api/contacts/invite", { contactName: form.name, phone: form.phone, senderName })
     setAdding(false)
     if (!ok || !data.token || !data.link || !data.masked) return setFormError(data.error ?? "The invite could not be created.")
     const contact = invitedContact(form.name, data.masked, data.token, data.link)
@@ -136,45 +110,11 @@ export function EmergencyContacts() {
 
   const remove = (id: string) => update((current) => ({ ...current, contacts: current.contacts.filter((contact) => contact.id !== id) }))
 
-  const poll = (tokens: string[], attempt = 0) => {
-    if (tokens.length === 0 || attempt > 30) return
-    pollRef.current = setTimeout(async () => {
-      const { ok, data } = await post<{ statuses?: { token: string; state: string; label: string }[] }>("/api/alerts/status", { tokens })
-      if (!ok || !data.statuses) return poll(tokens, attempt + 1)
-      setDeliveries((current) => current.map((delivery) => {
-        const status = data.statuses!.find((entry) => entry.token === delivery.statusToken)
-        return status ? { ...delivery, state: status.state, label: status.label } : delivery
-      }))
-      poll(data.statuses.filter((status) => status.state === "pending" || status.state === "sent").map((status) => status.token), attempt + 1)
-    }, 4000)
-  }
-
   const send = async () => {
     if (!confirm) return
     const { test, contacts } = confirm
     setConfirm(null)
-    setSending(true)
-    setSendNote(undefined)
-    let location: { lat: number; lon: number } | undefined
-    if (!test && includeLocation && "geolocation" in navigator) {
-      location = await new Promise((resolve) =>
-        navigator.geolocation.getCurrentPosition(
-          (position) => resolve({ lat: position.coords.latitude, lon: position.coords.longitude }),
-          () => resolve(undefined),
-          { enableHighAccuracy: true, timeout: 10_000, maximumAge: 60_000 },
-        ),
-      )
-      if (!location) setSendNote("Your location could not be read, so the alert was sent without it.")
-    }
-    const { ok, data } = await post<{ results?: Delivery[] }>("/api/alerts", { proofs: contacts.map((contact) => contact.proof), test, location })
-    setSending(false)
-    if (!ok || !data.results) {
-      setDeliveries([])
-      setSendNote(data.error ?? "The alert could not be sent. Call 911 if you need help now.")
-      return
-    }
-    setDeliveries(data.results)
-    poll(data.results.flatMap((result) => (result.statusToken ? [result.statusToken] : [])))
+    await sendAlert({ contacts, test, includeLocation })
   }
 
   const preview = alertMessage({ senderName: senderName || "Your name", locationUrl: includeLocation ? "https://maps.google.com/?q=…" : undefined })

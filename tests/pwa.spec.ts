@@ -78,22 +78,36 @@ test.describe("PWA production flow", () => {
     await expect(page.getByRole("button", { name: "Skip Setup (Demo Mode)" })).toBeVisible()
   })
 
-  test("each opening of the emergency demo starts fresh", async ({ page }) => {
-    // This checks state, not animation: reduced motion makes the dialog close immediately.
+  test("the emergency button offers real actions and texts confirmed contacts only after a preview", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.addInitScript(() => localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true })))
     await page.goto("/")
     const trigger = page.getByRole("button", { name: /emergency options/i })
-
     await trigger.click()
-    await page.getByRole("button", { name: "Run Emergency Demo" }).click()
-    await expect(page.getByText("Starting the demonstration...")).toBeVisible()
+    const modal = page.getByTestId("emergency-modal")
+    await expect(modal.getByRole("link", { name: "Call 911" })).toHaveAttribute("href", "tel:911")
+    await expect(modal).toContainText("Give naloxone (Narcan): one spray in one nostril.")
+    await expect(modal.getByRole("link", { name: "Set them up" })).toHaveAttribute("href", "/contacts")
+    await expect(modal).not.toContainText(/demo/i)
     await page.keyboard.press("Escape")
-    await expect(page.getByRole("dialog")).toHaveCount(0)
 
+    const sent: unknown[] = []
+    await page.route("**/api/contacts", (route) => route.fulfill({ json: { available: true } }))
+    await page.route("**/api/alerts", async (route) => {
+      sent.push(route.request().postDataJSON())
+      await route.fulfill({ json: { results: [{ name: "Mary", masked: "(•••) •••-1234", state: "pending", label: "Sending…", statusToken: "t1" }] } })
+    })
+    await page.route("**/api/alerts/status", (route) => route.fulfill({ json: { statuses: [{ token: "t1", state: "delivered", label: "Delivered" }] } }))
+    await page.evaluate(() => localStorage.setItem("narcoguard_emergency_contacts_v1", JSON.stringify({ senderName: "Steve", contacts: [{ id: "1", name: "Mary", masked: "(•••) •••-1234", status: "confirmed", proof: "proof-1", addedAt: 1 }] })))
+    await page.reload()
     await trigger.click()
-    await expect(page.getByRole("button", { name: "Run Emergency Demo" })).toBeVisible()
-    await expect(page.getByText("Starting the demonstration...")).toHaveCount(0)
+    await page.getByRole("button", { name: "Text Mary" }).click()
+    await expect(page.getByTestId("emergency-alert-preview")).toContainText("NarcoGuard alert: Steve pressed their help button")
+    await page.getByLabel("Include my current location").uncheck()
+    expect(sent).toHaveLength(0)
+    await page.getByRole("button", { name: "Send now" }).click()
+    await expect(page.getByTestId("emergency-deliveries")).toContainText("Delivered", { timeout: 10_000 })
+    expect(sent).toEqual([{ proofs: ["proof-1"], test: false }])
   })
 
   test("mobile navigation closes after navigating", async ({ page }) => {
