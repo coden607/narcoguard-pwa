@@ -39,8 +39,18 @@ export function verify<K extends Payload["k"]>(token: unknown, secret: string, k
   }
 }
 
-export function issueAttempt(questionIds: string[], secret: string, now = Date.now()) {
-  const attempt: Attempt = { k: "attempt", id: randomUUID(), q: questionIds, iat: now, exp: now + ATTEMPT_TTL_MS }
+export const newAttemptId = () => randomUUID()
+
+/**
+ * Opaque option ids for one attempt. Without the secret, the ids a client sees reveal nothing
+ * about which option is correct, and they differ on every attempt.
+ */
+export function attemptLabeler(secret: string, attemptId: string) {
+  return (questionId: string, optionId: string) => createHmac("sha256", secret).update(`ng-hero-option:${attemptId}:${questionId}:${optionId}`).digest("base64url").slice(0, 16)
+}
+
+export function issueAttempt(questionIds: string[], secret: string, now = Date.now(), id = newAttemptId()) {
+  const attempt: Attempt = { k: "attempt", id, q: questionIds, iat: now, exp: now + ATTEMPT_TTL_MS }
   return { token: sign(attempt, secret), attempt }
 }
 

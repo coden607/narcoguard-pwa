@@ -323,9 +323,16 @@ function shuffled<T>(items: T[], random: () => number) {
 
 const secureRandom = () => crypto.getRandomValues(new Uint32Array(1))[0] / 2 ** 32
 
+/** Maps a bank option id to the id the client sees. Certified attempts use opaque per-attempt ids. */
+export type OptionLabeler = (questionId: string, optionId: string) => string
+const plainLabels: OptionLabeler = (_questionId, optionId) => optionId
+
 /** A fresh random draw with shuffled options and no answers. */
-export function drawQuestions(count = QUESTIONS_PER_ATTEMPT, random: () => number = secureRandom): PublicQuestion[] {
-  return shuffled(HERO_BANK, random).slice(0, count).map(({ id, topic, prompt, options }) => ({ id, topic, prompt, options: shuffled(options, random) }))
+export function drawQuestions(count = QUESTIONS_PER_ATTEMPT, random: () => number = secureRandom, label: OptionLabeler = plainLabels): PublicQuestion[] {
+  return shuffled(HERO_BANK, random).slice(0, count).map(({ id, topic, prompt, options }) => ({
+    id, topic, prompt,
+    options: shuffled(options, random).map((option) => ({ id: label(id, option.id), text: option.text })),
+  }))
 }
 
 export interface Grade {
@@ -336,11 +343,11 @@ export interface Grade {
 }
 
 /** 100% is required: every drawn question must be answered correctly. */
-export function gradeAttempt(questionIds: string[], answers: Record<string, unknown>): Grade | null {
+export function gradeAttempt(questionIds: string[], answers: Record<string, unknown>, label: OptionLabeler = plainLabels): Grade | null {
   if (questionIds.length !== QUESTIONS_PER_ATTEMPT || new Set(questionIds).size !== questionIds.length) return null
   const questions = questionIds.map((id) => HERO_BANK.find((question) => question.id === id))
   if (questions.some((question) => !question)) return null
-  const missed = (questions as BankQuestion[]).filter((question) => answers[question.id] !== question.answer)
+  const missed = (questions as BankQuestion[]).filter((question) => answers[question.id] !== label(question.id, question.answer))
   const correct = questionIds.length - missed.length
   return { passed: missed.length === 0, correct, total: questionIds.length, missed: missed.map(({ id, topic, prompt, why }) => ({ id, topic, prompt, why })) }
 }

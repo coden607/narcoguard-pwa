@@ -1,5 +1,5 @@
 import { clientKey, isSameOrigin, json, readJson } from "@/lib/api-helpers"
-import { heroSecret, issueAttempt, issueCertificate, markGraded, verify } from "@/lib/hero-certification"
+import { attemptLabeler, heroSecret, issueAttempt, issueCertificate, markGraded, newAttemptId, verify } from "@/lib/hero-certification"
 import { HERO_TEST_VERSION, drawQuestions, gradeAttempt } from "@/lib/hero-test-bank"
 import { getAuthContext, isAuthConfigured, serviceRest } from "@/lib/supabase-auth"
 
@@ -19,9 +19,10 @@ function limited(key: string) {
 
 export async function GET(request: Request) {
   if (limited(clientKey(request))) return json({ error: "Too many attempts this hour. Take a break and review the steps." }, 429)
-  const questions = drawQuestions()
   const secret = heroSecret()
-  const issued = secret ? issueAttempt(questions.map((question) => question.id), secret) : null
+  const attemptId = newAttemptId()
+  const questions = drawQuestions(undefined, undefined, secret ? attemptLabeler(secret, attemptId) : undefined)
+  const issued = secret ? issueAttempt(questions.map((question) => question.id), secret, Date.now(), attemptId) : null
   return json({ version: HERO_TEST_VERSION, questions, attempt: issued?.token ?? null, expiresAt: issued?.attempt.exp ?? null, certifying: Boolean(secret) })
 }
 
@@ -44,7 +45,8 @@ export async function POST(request: Request) {
     questionIds = Array.isArray(body.questionIds) ? body.questionIds.filter((id): id is string => typeof id === "string") : []
   }
 
-  const grade = gradeAttempt(questionIds, answers)
+  // Practice mode (no secret) uses plain option ids and never issues a certificate.
+  const grade = gradeAttempt(questionIds, answers, secret && attemptId ? attemptLabeler(secret, attemptId) : undefined)
   if (!grade) return json({ error: "Invalid attempt" }, 400)
   if (!grade.passed || !secret || !attemptId) return json({ ...grade, certificate: null, recorded: false })
 

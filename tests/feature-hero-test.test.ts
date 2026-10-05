@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert"
 import { test } from "node:test"
-import { ATTEMPT_TTL_MS, issueAttempt, issueCertificate, markGraded, verify, verifyCertificate } from "../lib/hero-certification"
+import { ATTEMPT_TTL_MS, attemptLabeler, issueAttempt, issueCertificate, markGraded, verify, verifyCertificate } from "../lib/hero-certification"
 import { HERO_BANK, QUESTIONS_PER_ATTEMPT, drawQuestions, gradeAttempt } from "../lib/hero-test-bank"
 
 const SECRET = "x".repeat(40)
@@ -72,4 +72,19 @@ test("the answer key is only imported by server code", async () => {
   }
   for (const dir of ["app", "components", "lib"]) walk(dir)
   assert.deepEqual(offenders, [])
+})
+
+test("certified attempts hide which option is correct behind per-attempt opaque ids", () => {
+  const labelA = attemptLabeler(SECRET, "attempt-a")
+  const labelB = attemptLabeler(SECRET, "attempt-b")
+  const draw = drawQuestions(undefined, undefined, labelA)
+  for (const question of draw) {
+    assert.ok(question.options.every((option) => /^[A-Za-z0-9_-]{16}$/.test(option.id)), "no plain a-d ids")
+    assert.equal(new Set(question.options.map((option) => option.id)).size, 4)
+  }
+  const ids = draw.map((question) => question.id)
+  const perfect = Object.fromEntries(ids.map((id) => [id, labelA(id, key[id])]))
+  assert.equal(gradeAttempt(ids, perfect, labelA)?.passed, true)
+  assert.equal(gradeAttempt(ids, Object.fromEntries(ids.map((id) => [id, key[id]])), labelA)?.passed, false, "plain ids do not pass a certified attempt")
+  assert.equal(gradeAttempt(ids, perfect, labelB)?.passed, false, "answers from another attempt do not carry over")
 })
