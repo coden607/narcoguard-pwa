@@ -3,7 +3,7 @@ export default function PrivacyPolicy() {
     <main className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-4xl font-bold text-center">NarcoGuard Privacy</h1>
-        <p className="text-sm text-muted-foreground text-center">Updated October 4, 2026</p>
+        <p className="text-sm text-muted-foreground text-center">Updated October 5, 2026</p>
 
         <div className="space-y-6 text-sm text-muted-foreground">
           <section className="space-y-3">
@@ -58,6 +58,18 @@ export default function PrivacyPolicy() {
               Card donations are processed by Stripe on its checkout page. NarcoGuard does not receive your card details;
               Stripe shares the amount and status of the payment so we can confirm it. GoFundMe donations are handled by
               GoFundMe under its own privacy policy.
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Emergency contact texts</h2>
+            <p>
+              Contacts you add are saved only on your device. To create an invite, NarcoGuard signs the contact&apos;s name, number and
+              your name into the invite link; it does not keep a copy. Your contact confirms their number with a code that Twilio
+              texts them, and only then can you text them. When you press send, NarcoGuard passes the number and the fixed message
+              (plus a map link, only if you choose to include your location) to Twilio, which delivers it and keeps delivery records
+              under its own privacy policy. NarcoGuard logs only how many texts were accepted, never names, numbers, locations or
+              message text. Contacts can reply STOP to stop all NarcoGuard texts.
             </p>
           </section>
 

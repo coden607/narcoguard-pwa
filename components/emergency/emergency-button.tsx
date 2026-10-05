@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { AlertTriangle, Phone, MapPin, Users } from "lucide-react"
+import Link from "next/link"
+import { AlertTriangle, MessageSquare, Phone, MapPin, Users } from "lucide-react"
 import { EmergencyModal } from "./emergency-modal"
 import { useLocation } from "@/lib/hooks/use-location"
 import { useVitals } from "@/lib/hooks/use-vitals"
@@ -135,7 +136,7 @@ export function EmergencyButton() {
           The in-app response flow is a demo and does not confirm that help was dispatched.
         </p>
 
-        <div className="grid grid-cols-1 min-[360px]:grid-cols-3 gap-3 mt-4">
+        <div className="grid grid-cols-2 min-[480px]:grid-cols-4 gap-3 mt-4">
           <button
             onClick={call911}
             className="glass neon-border p-4 rounded-xl hover:bg-primary/10 transition-all group"
@@ -143,6 +144,14 @@ export function EmergencyButton() {
             <Phone className="w-6 h-6 mx-auto mb-2 text-primary group-hover:pulse-glow" />
             <p className="text-xs text-center">Call 911</p>
           </button>
+
+          <Link
+            href="/contacts#alert"
+            className="glass neon-border p-4 rounded-xl hover:bg-primary/10 transition-all group"
+          >
+            <MessageSquare className="w-6 h-6 mx-auto mb-2 text-primary group-hover:pulse-glow" aria-hidden="true" />
+            <p className="text-xs text-center">Text My Contacts</p>
+          </Link>
 
           <button
             onClick={shareLocation}

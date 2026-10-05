@@ -515,6 +515,96 @@ test.describe("PWA production flow", () => {
   })
 })
 
+test.describe("Emergency contact texts", () => {
+  test("stay off and send nothing until the texting service is configured", async ({ page, request }) => {
+    const send = await request.post("/api/alerts", { data: { proofs: ["x"] } })
+    expect(send.status()).toBe(503)
+    expect(await send.json()).toMatchObject({ available: false })
+    expect((await request.post("/api/contacts/invite", { data: { phone: "6077721234", contactName: "Mary", senderName: "Steve" } })).status()).toBe(503)
+    await page.goto("/contacts")
+    await expect(page.getByTestId("alerts-unavailable")).toBeVisible()
+    await expect(page.getByRole("button", { name: "Create invite" })).toBeDisabled()
+    await expect(page.getByRole("link", { name: "Call 911" })).toHaveAttribute("href", "tel:911")
+  })
+
+  test("invite, pair, preview and send only after confirmation, then show delivery", async ({ page }) => {
+    const sent: unknown[] = []
+    await page.route("**/api/contacts", (route) => route.fulfill({ json: { available: true } }))
+    await page.route("**/api/contacts/invite", (route) => route.fulfill({ json: { token: "invite-1", link: "https://www.narcoguard.app/consent#invite-1", masked: "(•••) •••-1234" } }))
+    await page.route("**/api/contacts/pair", async (route) => {
+      const body = route.request().postDataJSON()
+      if (body.code !== "1234 5678") return route.fulfill({ status: 400, json: { error: "That code doesn't match." } })
+      await route.fulfill({ json: { proof: "proof-1", contact: { name: "Mary", masked: "(•••) •••-1234" } } })
+    })
+    await page.route("**/api/alerts", async (route) => {
+      sent.push(route.request().postDataJSON())
+      await route.fulfill({ json: { results: [{ name: "Mary", masked: "(•••) •••-1234", state: "pending", label: "Sending…", statusToken: "sid-1" }] } })
+    })
+    await page.route("**/api/alerts/status", (route) => route.fulfill({ json: { statuses: [{ token: "sid-1", state: "delivered", label: "Delivered" }] } }))
+
+    await page.goto("/contacts")
+    const contacts = page.getByTestId("emergency-contacts")
+    await contacts.getByLabel("Contact's name").fill("Mary")
+    await contacts.getByLabel("Their US mobile number").fill("(607) 772-1234")
+    await contacts.getByRole("button", { name: "Create invite" }).click()
+    await expect(contacts.getByRole("alert")).toContainText("Add your name first")
+    await contacts.getByLabel("Your name, as your contacts know you").fill("Steve")
+    await contacts.getByRole("button", { name: "Create invite" }).click()
+    const contact = contacts.getByTestId("contact")
+    await expect(contact).toContainText("Waiting for them to agree")
+    await expect(contact.getByRole("link", { name: "Text it from my phone" })).toHaveAttribute("href", /^sms:\?&body=Steve%20would%20like%20you/)
+
+    await contact.getByLabel("8-digit code from Mary").fill("1111 2222")
+    await contact.getByRole("button", { name: "Confirm contact" }).click()
+    await expect(contact.getByRole("alert")).toContainText("doesn't match")
+    await contact.getByLabel("8-digit code from Mary").fill("1234 5678")
+    await contact.getByRole("button", { name: "Confirm contact" }).click()
+    await expect(contact).toContainText("Agreed to alerts")
+
+    await page.reload()
+    await expect(page.getByTestId("contact")).toContainText("Agreed to alerts")
+    await expect(page.getByTestId("alert-preview")).toContainText("NarcoGuard alert: Steve pressed their help button")
+    await page.getByRole("button", { name: "Send alert to 1 contact" }).click()
+    const dialog = page.getByRole("alertdialog")
+    await expect(dialog).toContainText("Mary will get the text shown above")
+    await dialog.getByRole("button", { name: "Cancel" }).click()
+    expect(sent).toHaveLength(0)
+
+    await page.getByRole("button", { name: "Send alert to 1 contact" }).click()
+    await page.getByRole("alertdialog").getByRole("button", { name: "Send alert" }).click()
+    await expect(page.getByTestId("deliveries")).toContainText("Mary (•••) •••-1234: Sending…")
+    await expect(page.getByTestId("deliveries")).toContainText("Delivered", { timeout: 10_000 })
+    expect(sent).toEqual([{ proofs: ["proof-1"], test: false }])
+  })
+
+  test("a contact reads the invite, verifies their number and gets a pairing code, or declines", async ({ page }) => {
+    const payload = Buffer.from(JSON.stringify({ k: "invite", v: 1, p: "+16077721234", n: "Mary", s: "Steve", iat: Date.now() })).toString("base64url")
+    const token = `${payload}.signature`
+    const calls: unknown[] = []
+    await page.route("**/api/contacts/verify", async (route) => {
+      const body = route.request().postDataJSON()
+      calls.push(body)
+      await route.fulfill({ json: body.code ? { verified: true, pairingCode: "1234 5678" } : { sent: true, masked: "(•••) •••-1234" } })
+    })
+    await page.goto(`/consent#${token}`)
+    const flow = page.getByTestId("consent-flow")
+    await expect(flow.getByRole("heading", { name: "Be Steve's emergency contact?" })).toBeVisible()
+    await expect(flow).toContainText("NarcoGuard alert: Steve pressed their help button")
+    await expect(flow).toContainText("Reply STOP")
+    await flow.getByRole("button", { name: "I agree, text me a code" }).click()
+    await expect(flow).toContainText("We texted a code to (•••) •••-1234")
+    await flow.getByLabel("Code from the text").fill("654321")
+    await flow.getByRole("button", { name: "Confirm" }).click()
+    await expect(flow.getByTestId("pairing-code")).toHaveText("1234 5678")
+    expect(calls).toEqual([{ token }, { token, code: "654321" }])
+
+    await page.goto(`/consent#${token}x`)
+    await page.reload()
+    await page.getByRole("button", { name: "No thanks" }).click()
+    await expect(page.getByRole("status")).toContainText("Nothing was saved")
+  })
+})
+
 test.describe("Watch blueprint", () => {
   test("the engineering drawing lists every part and callouts open part details", async ({ page }) => {
     await page.goto("/watch")
