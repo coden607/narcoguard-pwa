@@ -1,4 +1,5 @@
 import { Lock, ShieldCheck, Unlock } from "lucide-react"
+import { WatchPairing } from "@/components/watch/watch-pairing"
 import { CONNECTED_FUNCTIONS, SAFETY_FUNCTIONS, TRANSFER_REASONS, allowedFunctions } from "@/lib/watch-ownership"
 
 const LABELS: Record<string, string> = {
@@ -71,7 +72,7 @@ export function OwnerLock() {
         <p className="text-sm text-muted-foreground">
           Each NG watch is registered to one owner at handover. A sold or traded watch cannot be registered again, so it is
           useless to a buyer except for the life-safety basics, which stay on for anyone because blocking help in an overdose
-          could cost a life. This is a design target; firmware and the registry service still have to be built and tested.
+          could cost a life. The registry service and Bluetooth pairing below are built; watch firmware and hardware still have to be built and tested.
         </p>
       </div>
 
@@ -116,6 +117,8 @@ export function OwnerLock() {
           <p className="text-muted-foreground">A sale or trade is never a reason. Each release is logged and the next owner record gets a higher generation.</p>
         </section>
       </div>
+
+      <WatchPairing />
 
       <section className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm space-y-2">
         <h3 className="font-semibold">Limits, stated plainly</h3>

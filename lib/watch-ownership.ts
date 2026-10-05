@@ -23,7 +23,9 @@ export type DeviceCertificate = { k: "device"; v: 1; serial: string; devicePubli
 export type OwnerBinding = { k: "binding"; v: 1; serial: string; owner: string; generation: number; boundAt: number }
 export type ActivationGrant = { k: "grant"; v: 1; serial: string; owner: string; generation: number; nonce: string; expiresAt: number }
 export type TransferRelease = { k: "release"; v: 1; serial: string; generation: number; reason: TransferReason; releasedAt: number }
-type SignedRecord = DeviceCertificate | OwnerBinding | ActivationGrant | TransferRelease
+/** Server-issued challenge the watch signs during registration, proving the phone holds the watch now. */
+export type RegistrationChallenge = { k: "challenge"; v: 1; nonce: string; expiresAt: number }
+type SignedRecord = DeviceCertificate | OwnerBinding | ActivationGrant | TransferRelease | RegistrationChallenge
 
 /** The only reasons NarcoGuard support releases a binding. A sale or trade is not one of them. */
 export const TRANSFER_REASONS = ["warranty-replacement", "recovered-after-theft", "owner-deceased-estate", "returned-to-program"] as const
@@ -183,4 +185,35 @@ export async function verifyDeviceResponse(input: { registryKey: CryptoKey; cert
 
 export async function signDeviceChallenge(devicePrivateKey: CryptoKey, serial: string, challenge: string) {
   return toB64(await subtle().sign(SIGN, devicePrivateKey, new TextEncoder().encode(`ng-device:${serial}:${challenge}`)))
+}
+
+/** Registry side: a short-lived signed challenge, so registration needs no server-side session state. */
+export async function issueRegistrationChallenge(registryPrivateKey: CryptoKey, now = Date.now()) {
+  return signRecord({ k: "challenge", v: 1, nonce: randomNonce(), expiresAt: now + GRANT_TTL_MS }, registryPrivateKey)
+}
+
+export async function checkRegistrationChallenge(token: unknown, registryKey: CryptoKey, now = Date.now()) {
+  const challenge = await verifyRecord(token, registryKey, "challenge")
+  return challenge && challenge.expiresAt >= now ? challenge : null
+}
+
+/** Reads the registry key pair from a private P-256 JWK (the public half drops the private scalar). */
+export async function registryKeysFromJwk(json: string | undefined) {
+  if (!json) return null
+  try {
+    const jwk = JSON.parse(json) as JsonWebKey
+    if (jwk.kty !== "EC" || jwk.crv !== "P-256" || !jwk.d) return null
+    const { d: _private, key_ops: _ops, ...publicJwk } = jwk
+    void _private
+    void _ops
+    return { privateKey: await importPrivateKey(jwk), publicKey: await importPublicKey(publicJwk) }
+  } catch {
+    return null
+  }
+}
+
+/** Minimal public JWK for a device certificate, keeping the record under the GATT value limit. */
+export async function compactPublicJwk(key: CryptoKey): Promise<JsonWebKey> {
+  const { kty, crv, x, y } = await subtle().exportKey("jwk", key)
+  return { kty, crv, x, y }
 }
