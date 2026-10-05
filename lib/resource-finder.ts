@@ -104,10 +104,21 @@ export const OSM_KIND_ORDER = RESOURCE_KINDS.filter((kind): kind is OsmKind => k
 
 const quote = (value: string) => JSON.stringify(value)
 
+/** South, west, north, east of a square around the point; Overpass answers bounding boxes from its spatial index. */
+export function boundingBox(lat: number, lon: number, radiusMeters: number): [number, number, number, number] {
+  const dLat = radiusMeters / 111_320
+  const dLon = radiusMeters / (111_320 * Math.max(Math.cos((lat * Math.PI) / 180), 0.01))
+  const round = (value: number) => Math.round(value * 10_000) / 10_000
+  return [round(lat - dLat), round(lon - dLon), round(lat + dLat), round(lon + dLon)]
+}
+
+// A bounding box, not (around:...): with a common tag such as amenity=toilets, "around" makes the
+// public servers scan every match worldwide and time out. Corners are trimmed by distance afterwards.
 function osmSelectors(kind: OsmKind, lat: number, lon: number, radius = OSM_KINDS[kind].radius): string {
   const { filters, exclude } = OSM_KINDS[kind]
   const excluded = Object.entries(exclude ?? {}).map(([key, values]) => `[${quote(key)}!~${quote(`^(${values.join("|")})$`)}]`).join("")
-  return filters.map((filter) => `nwr${Object.entries(filter).map(([key, value]) => `[${quote(key)}=${quote(value)}]`).join("")}${excluded}(around:${radius},${lat},${lon});`).join("")
+  const box = boundingBox(lat, lon, radius).join(",")
+  return filters.map((filter) => `nwr${Object.entries(filter).map(([key, value]) => `[${quote(key)}=${quote(value)}]`).join("")}${excluded}(${box});`).join("")
 }
 
 export function overpassQuery(kind: OsmKind, lat: number, lon: number, radius?: number): string {
@@ -198,7 +209,7 @@ export function parseOverpassNeeds(body: unknown, origin: { lat: number; lon: nu
   for (const element of elementsOf(body)) {
     const kind = osmKindOf(element.tags ?? {})
     const resource = kind && toResource(kind, element, origin)
-    if (kind && resource) grouped[kind].push(resource)
+    if (kind && resource && (resource.distanceMiles ?? 0) <= OSM_KINDS[kind].radius / 1609.344) grouped[kind].push(resource)
   }
   for (const kind of OSM_KIND_ORDER) grouped[kind] = nearestUnique(grouped[kind], limit)
   return grouped
@@ -246,7 +257,7 @@ export function fallbackLinks(kind: ResourceKind) {
     showers: [{ title: "HUD Find Shelter (shelters often offer showers)", url: "https://www.hud.gov/FindShelter" }],
     clinic: [{ title: "HRSA Find a Health Center (sliding-scale fees)", url: "https://findahealthcenter.hrsa.gov/" }],
     community: [
-      { title: "Narcotics Anonymous meeting search", url: "https://www.na.org/meetingsearch/" },
+      { title: "Narcotics Anonymous (meeting search on na.org)", url: "https://www.na.org/" },
       { title: "Alcoholics Anonymous meeting finder", url: "https://www.aa.org/find-aa" },
     ],
     jobs: [{ title: "CareerOneStop American Job Center finder", url: "https://www.careeronestop.org/LocalHelp/AmericanJobCenters/find-american-job-centers.aspx" }],

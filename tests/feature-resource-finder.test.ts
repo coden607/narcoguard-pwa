@@ -15,7 +15,8 @@ test("haversine distance is in miles", () => {
 
 test("overpass queries search only the requested kind around the point", () => {
   const query = overpassQuery("shelter", 40.75, -73.99)
-  assert.match(query, /social_facility"="shelter"\]\(around:16000,40.75,-73.99\)/)
+  assert.match(query, /social_facility"="shelter"\]\(40.6063,-74.1797,40.8937,-73.8003\);/)
+  assert.doesNotMatch(query, /around/)
   assert.doesNotMatch(query, /pharmacy|food_bank/)
 })
 
@@ -71,8 +72,8 @@ test("the combined needs query asks Overpass once for every kind, with per-kind 
   const { overpassNeedsQuery } = await import("../lib/resource-finder")
   const query = overpassNeedsQuery(40.75, -73.99)
   assert.match(query, /^\[out:json\]\[timeout:25\];\(/)
-  assert.match(query, /nwr\["amenity"="drinking_water"\]\["access"!~"\^\(private\|no\|customers\)\$"\]\(around:3000,40.75,-73.99\);/)
-  assert.match(query, /nwr\["amenity"="hospital"\]\["emergency"="yes"\]\(around:24000,40.75,-73.99\);/)
+  assert.match(query, /nwr\["amenity"="drinking_water"\]\["access"!~"\^\(private\|no\|customers\)\$"\]\(40.7231,-74.0256,40.7769,-73.9544\);/)
+  assert.match(query, /nwr\["amenity"="hospital"\]\["emergency"="yes"\]\(40.5344,-74.2746,40.9656,-73.7054\);/)
   for (const tag of ["food_bank", "shelter", "pharmacy", "toilets", "shower", "laundry", "clinic", "community_centre", "library", "employment_agency"]) assert.match(query, new RegExp(`"${tag}"`))
   assert.match(query, /\);out center tags;$/)
 })
@@ -89,6 +90,7 @@ test("combined results are sorted into kinds by tags, unnamed public amenities g
     { lat: 40.77, lon: -73.99, tags: { amenity: "library", name: "Main Library" } },
     { lat: 40.78, lon: -73.99, tags: { amenity: "pharmacy" } },
     { lat: 40.79, lon: -73.99, tags: { amenity: "bar", name: "Not a resource" } },
+    { lat: 40.78, lon: -73.99, tags: { amenity: "drinking_water", name: "Box corner, beyond 3 km" } },
   ] }, origin)
   assert.deepEqual(grouped.water.map((r) => r.name), ["Drinking water"])
   assert.deepEqual(grouped.toilets.map((r) => [r.name, r.hours]), [["Public toilet", "24/7"]])
