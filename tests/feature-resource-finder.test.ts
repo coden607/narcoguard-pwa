@@ -95,12 +95,15 @@ test("combined results are sorted into kinds by tags, unnamed public amenities g
     { lat: 40.77, lon: -73.99, tags: { amenity: "library", name: "Main Library" } },
     { lat: 40.78, lon: -73.99, tags: { amenity: "pharmacy" } },
     { lat: 40.79, lon: -73.99, tags: { amenity: "bar", name: "Not a resource" } },
+    { lat: 40.76, lon: -73.99, tags: { social_facility: "shelter", tourism: "hotel", name: "Hotel Shelter" } },
+    { lat: 40.76, lon: -73.99, tags: { social_facility: "shelter", name: "Night Shelter" } },
     { lat: 40.78, lon: -73.99, tags: { amenity: "drinking_water", name: "Box corner, beyond 2 km" } },
   ] }, origin)
   assert.deepEqual(grouped.water.map((r) => r.name), ["Drinking water"])
   assert.deepEqual(grouped.toilets.map((r) => [r.name, r.hours]), [["Public toilet", "24/7"]])
   assert.deepEqual(grouped.emergency.map((r) => r.name), ["General Hospital"])
   assert.deepEqual(grouped.library.map((r) => r.kind), ["library"])
+  assert.deepEqual(grouped.shelter.map((r) => r.name), ["Night Shelter"])
   assert.deepEqual(grouped.pharmacy, [], "a pharmacy without a name is not listed")
   assert.equal(osmKindOf({ amenity: "bar" }), undefined)
   assert.equal(osmKindOf({ social_facility: "food_bank", amenity: "social_facility" }), "food")

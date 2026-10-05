@@ -87,7 +87,8 @@ const NOT_PUBLIC = { access: ["private", "no", "customers"] }
 
 export const OSM_KINDS: Record<OsmKind, OsmKindSpec> = {
   food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }], radius: SEARCH_RADIUS_METERS },
-  shelter: { filters: [{ social_facility: "shelter" }], radius: SEARCH_RADIUS_METERS },
+  // Hotels contracted as temporary shelters are often mapped this way and go stale when contracts end.
+  shelter: { filters: [{ social_facility: "shelter" }], exclude: { tourism: ["hotel"] }, radius: SEARCH_RADIUS_METERS },
   water: { filters: [{ amenity: "drinking_water" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Drinking water" },
   toilets: { filters: [{ amenity: "toilets" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Public toilet" },
   showers: { filters: [{ amenity: "shower" }], exclude: NOT_PUBLIC, radius: SEARCH_RADIUS_METERS, unnamed: "Public shower" },
