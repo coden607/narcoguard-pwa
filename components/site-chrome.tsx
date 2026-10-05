@@ -44,6 +44,6 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <button className="menu-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-nav" aria-label="Toggle navigation">{open ? <X /> : <Menu />}</button>
     </div><nav id="mobile-nav" className={cn("mobile-nav", open && "is-open")} aria-label="Mobile navigation" aria-hidden={!open}>{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} tabIndex={open ? 0 : -1} aria-current={isActive(href) ? "page" : undefined} onClick={() => setOpen(false)} className={cn("nav-link", isActive(href) && "is-active")}><Icon aria-hidden="true" />{label}</Link>)}</nav></header>
     <main id="main-content" className="site-main">{children}</main>
-    <footer className="site-footer"><div><span className="brand-dot" />A public concept for stronger community response.</div><div className="footer-links"><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div></footer>
+    <footer className="site-footer"><div><span className="brand-dot" />A public concept for stronger community response.</div><div className="footer-links"><Link href="/constitution">Constitution</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div></footer>
   </div>
 }

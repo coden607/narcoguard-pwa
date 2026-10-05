@@ -38,7 +38,7 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-semibold text-foreground">Angel AI, nearby search and Bluetooth readings</h2>
             <p>
               Angel AI is off until you agree to start a chat. Your messages, and a ZIP code if you enter one, are sent
-              to Groq, an AI provider, to write replies. Groq states that it does not use API inputs or outputs for
+              to Groq, an AI provider, to write replies, either directly or through Vercel AI Gateway. Groq states that it does not use API inputs or outputs for
               training. NarcoGuard does not save the conversation; it is cleared when you leave the page.
             </p>
             <p>
