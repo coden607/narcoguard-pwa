@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState, useRef } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
 import { HolographicCard } from "@/components/effects/holographic-card"
@@ -9,9 +9,6 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   ArrowLeft,
-  RotateCcw,
-  ZoomIn,
-  ZoomOut,
   Syringe,
   Battery,
   Wifi,
@@ -29,6 +26,9 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { watchDesignCalculations, watchDesignModel } from "@/lib/watch-design"
+import { WATCH_COMPONENTS } from "@/lib/watch-components"
+import { EngineeringDrawing } from "@/components/watch/engineering-drawing"
+import { Watch3D } from "@/components/watch/watch-3d"
 
 // =============================================================================
 // CANDIDATE BILL OF MATERIALS - supplier and part numbers require confirmation.
@@ -422,33 +422,9 @@ const simulationPanels = [
 export default function NGWatchPage() {
   const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
-  const [rotation, setRotation] = useState({ x: -20, y: 30 })
-  const [zoom, setZoom] = useState(1)
-  const [isDragging, setIsDragging] = useState(false)
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    const x = ((e.clientY - rect.top) / rect.height - 0.5) * 60
-    const y = ((e.clientX - rect.left) / rect.width - 0.5) * 60
-    setRotation({ x: -x, y })
-  }
-
-  const watchComponents = [
-    { id: "snapdragon", name: "Snapdragon W5+ Gen 2", x: 40, y: 38, color: "#FF4136", description: "Qualcomm's current wearable platform (2025): 4nm, Wear OS, always-on co-processor, GNSS and satellite SOS messaging. NarcoGuard firmware does not exist yet." },
-    { id: "nordic", name: "nRF5340 Safety MCU", x: 60, y: 38, color: "#FF851B", description: "Independent microcontroller intended to keep sensing and local alarms running if the main OS fails; firmware not written." },
-    { id: "display", name: '1.45" LTPO AMOLED', x: 50, y: 50, color: "#FFDC00", description: "BOE 466x466 round display, 2000 nits, 1-120Hz adaptive. Always-on mode shows vitals without waking main processor." },
-    { id: "ppg-ecg", name: "MAX86178 PPG+ECG+BioZ", x: 50, y: 78, color: "#FF69B4", description: "Optical + electrical front end: heart rate, SpO2 estimate, single-lead ECG and skin contact. Wrist accuracy for overdose detection is unproven." },
-    { id: "naloxone", name: "Naloxone Module (research)", x: 85, y: 50, color: "#FF0000", description: "Future research only: drug container, needle and actuator would need clinical engineering, a pharmaceutical partner and FDA review. Not functional." },
-    { id: "battery", name: "500mAh Li-ion + Qi Charging", x: 15, y: 35, color: "#7FDBFF", description: "Certified cell with sealed Qi charging; runtime must be measured on a prototype." },
-    { id: "cellular", name: "5G RedCap + eSIM", x: 82, y: 28, color: "#39CCCC", description: "Snapdragon X35 RedCap modem with LTE fallback and an ST4SIM eSIM; carrier certification and antenna performance unverified." },
-    { id: "gps", name: "GNSS + Satellite SOS", x: 22, y: 22, color: "#01FF70", description: "Location from the platform/modem GNSS (no separate chip); satellite SOS via the W5+ Gen 2 platform. Field accuracy unverified." },
-    { id: "crown", name: "Crown + SOS Button", x: 82, y: 72, color: "#AAAAAA", description: "Physical button to start a manual SOS or cancel a false alarm; sealing and press force require qualification." },
-    { id: "sealed-charge", name: "Sealed Qi / Service Boundary", x: 18, y: 72, color: "#FFFFFF", description: "No external charging opening; Qi charging and gasketed internal service access are design targets." },
-    { id: "nfc", name: "NFC (Emergency ID)", x: 65, y: 18, color: "#0074D9", description: "STMicro ST54K for an opt-in emergency medical-ID tap and pairing; payments would need Google Wallet certification (Apple Pay is not possible on non-Apple watches)." },
-  ]
+  const watchComponents = WATCH_COMPONENTS
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -602,61 +578,8 @@ export default function NGWatchPage() {
           {/* Interactive Blueprint - DEFAULT TAB */}
           <TabsContent value="blueprint">
             <HolographicCard className="p-6" glowIntensity="medium">
-              <h2 className="text-xl font-bold mb-2 text-center">Interactive Component Map - NarcoGuard NG Rev 4.2</h2>
-              <p className="text-sm text-muted-foreground text-center mb-6">Click any component to see commercially available candidate part details and supplier information</p>
-
-              <div className="relative aspect-square max-w-2xl mx-auto bg-linear-to-br from-zinc-900 to-background rounded-full neon-border overflow-hidden">
-                <div className="absolute inset-0 opacity-35">
-                  <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.18)_0,rgba(56,189,248,0.08)_20%,transparent_21%)]" />
-                  <div className="absolute inset-0 bg-[linear-gradient(90deg,transparent_49%,rgba(148,163,184,0.22)_50%,transparent_51%),linear-gradient(transparent_49%,rgba(148,163,184,0.22)_50%,transparent_51%)] bg-size-[22px_22px]" />
-                </div>
-                <div className="absolute inset-6 rounded-full border-2 border-zinc-700" />
-                <div className="absolute inset-12 rounded-full border border-zinc-800" />
-                <div className="absolute inset-18 rounded-full border border-zinc-800/50" />
-                <div className="absolute inset-28 rounded-full border border-primary/20" />
-                <div className="absolute left-1/2 top-1/2 h-[86%] w-px -translate-x-1/2 -translate-y-1/2 bg-linear-to-b from-transparent via-primary/40 to-transparent" />
-                <div className="absolute left-1/2 top-1/2 h-px w-[86%] -translate-x-1/2 -translate-y-1/2 bg-linear-to-r from-transparent via-primary/40 to-transparent" />
-                <div className="absolute right-4 top-4 hidden md:block rounded-lg border border-border/60 bg-black/40 px-3 py-2 text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                  Read order: 1 → {watchComponents.length}
-                </div>
-                <div className="absolute left-4 bottom-4 hidden md:block max-w-[16rem] rounded-lg border border-border/60 bg-black/40 p-3 text-[10px] leading-relaxed text-muted-foreground">
-                  Engineering note: all dimensions shown here are concept targets. Final tooling requires tolerance stack-up, thermal soak, enclosure validation, and bench verification against real parts.
-                </div>
-
-                {watchComponents.map((comp, index) => (
-                  <button
-                    key={comp.id}
-                    type="button"
-                    aria-label={`${index + 1}. ${comp.name}`}
-                    aria-pressed={selectedComponent === comp.id}
-                    className={`absolute w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-125 ${
-                      selectedComponent === comp.id ? "ring-4 ring-white scale-125 z-20" : "z-10"
-                    }`}
-                    style={{
-                      left: `${comp.x}%`,
-                      top: `${comp.y}%`,
-                      transform: "translate(-50%, -50%)",
-                      backgroundColor: comp.color,
-                      boxShadow: `0 0 20px ${comp.color}80`,
-                    }}
-                    onClick={() => setSelectedComponent(selectedComponent === comp.id ? null : comp.id)}
-                  >
-                    <span className="text-sm font-bold text-black drop-shadow-xs">{index + 1}</span>
-                  </button>
-                ))}
-
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="text-center">
-                    <p className="text-2xl font-bold glow-text">NarcoGuard NG</p>
-                    <p className="text-[10px] text-muted-foreground">REV 4.2</p>
-                    <p className="text-[10px] text-primary/80 mt-2 max-w-56">Planned: filtered vitals, confidence-weighted fusion and persistence checks before any alert. Not yet validated.</p>
-                  </div>
-                </div>
-              </div>
-
-              <p className="md:hidden mt-4 text-xs leading-relaxed text-muted-foreground">
-                Read order: 1 → {watchComponents.length}. Engineering note: all dimensions shown here are concept targets. Final tooling requires tolerance stack-up, thermal soak, enclosure validation, and bench verification against real parts.
-              </p>
+              <h2 className="text-xl font-bold mb-2 text-center">Engineering Drawing — NarcoGuard NG Rev 4.2</h2>
+              <EngineeringDrawing selected={selectedComponent} onSelect={setSelectedComponent} />
 
               {selectedComponent && (
                 <div className="mt-6 p-4 rounded-lg bg-background/50 neon-border max-w-lg mx-auto">
@@ -708,62 +631,21 @@ export default function NGWatchPage() {
               <HolographicCard className="p-6" glowIntensity="high">
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Watch className="w-5 h-5 text-primary" />
-                  Interactive 3D Model
+                  Interactive 3D Model (to scale)
                 </h2>
 
-                <div
-                  ref={containerRef}
-                  className="relative aspect-square bg-linear-to-br from-background to-primary/10 rounded-2xl overflow-hidden cursor-grab active:cursor-grabbing neon-border"
-                  onMouseDown={() => setIsDragging(true)}
-                  onMouseUp={() => setIsDragging(false)}
-                  onMouseLeave={() => setIsDragging(false)}
-                  onMouseMove={handleMouseMove}
-                >
-                  <div
-                    className="absolute inset-0 flex items-center justify-center transition-transform duration-100"
-                    style={{
-                      transform: `perspective(1000px) rotateX(${rotation.x}deg) rotateY(${rotation.y}deg) scale(${zoom})`,
-                      transformStyle: "preserve-3d",
-                    }}
-                  >
-                    <div className="relative w-64 h-64">
-                      <div className="absolute inset-4 rounded-full bg-linear-to-br from-zinc-700 to-zinc-900 shadow-2xl neon-border" style={{ transform: "translateZ(20px)" }}>
-                        <div className="absolute inset-4 rounded-full bg-linear-to-br from-primary/30 to-secondary/30 flex items-center justify-center overflow-hidden">
-                          <div className="text-center">
-                            <Heart className="w-8 h-8 text-red-500 mx-auto heartbeat" />
-                            <p className="text-2xl font-bold mt-2">DATA UNAVAILABLE</p>
-                            <p className="text-xs text-muted-foreground">Concept UI — no watch connected</p>
-                            <p className="text-[10px] text-amber-300 mt-1">NOT A LIVE MEASUREMENT</p>
-                          </div>
-                          <div className="absolute inset-0 bg-linear-to-b from-transparent via-primary/10 to-transparent animate-pulse" />
-                        </div>
+                <Watch3D selected={selectedComponent} onSelect={setSelectedComponent} />
+                {selectedComponent && (
+                  <div className="mt-4 rounded-lg border border-primary/40 bg-background/50 p-4" aria-live="polite">
+                    {watchComponents.filter((c) => c.id === selectedComponent).map((comp) => (
+                      <div key={comp.id}>
+                        <h3 className="font-bold" style={{ color: comp.color }}>{comp.name}</h3>
+                        <p className="text-xs font-mono text-primary mt-1">{comp.partNumber}</p>
+                        <p className="text-sm text-muted-foreground mt-2">{comp.description}</p>
                       </div>
-                      {/* Naloxone cartridge */}
-                      <div className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-16 bg-linear-to-r from-red-700 to-red-500 rounded-r-lg pulse-glow" style={{ transform: "translateZ(25px) translateX(10px)" }}>
-                        <Syringe className="w-4 h-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90" />
-                      </div>
-                      {/* Crown / SOS button */}
-                      <div className="absolute right-0 top-1/3 w-4 h-10 bg-linear-to-r from-zinc-600 to-zinc-400 rounded-r flex items-center justify-center" style={{ transform: "translateZ(15px) translateX(6px)" }}>
-                        <span className="text-[6px] font-bold text-zinc-800">SOS</span>
-                      </div>
-                      {/* Sealed service boundary: no external charging opening */}
-                      <div className="absolute left-0 top-2/3 w-3 h-5 rounded-l border border-zinc-400/70 bg-zinc-700" style={{ transform: "translateZ(15px) translateX(-4px)" }}>
-                        <Lock className="w-2 h-2 text-zinc-200 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
-                      </div>
-                      <div className="absolute inset-18 rounded-full border-2 border-purple-500/30 animate-spin" style={{ transform: "translateZ(8px)", animationDuration: "8s" }} />
-                      {/* Straps */}
-                      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-800 rounded-t-lg" style={{ transform: "translateZ(10px) translateY(-10px)" }} />
-                      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-16 h-4 bg-zinc-800 rounded-b-lg" style={{ transform: "translateZ(10px) translateY(10px)" }} />
-                    </div>
+                    ))}
                   </div>
-
-                  <div className="absolute bottom-4 left-4 flex gap-2">
-                    <Button size="sm" variant="outline" className="glass bg-transparent" onClick={() => setRotation({ x: -20, y: 30 })}><RotateCcw className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="outline" className="glass bg-transparent" onClick={() => setZoom((z) => Math.min(z + 0.2, 2))}><ZoomIn className="w-4 h-4" /></Button>
-                    <Button size="sm" variant="outline" className="glass bg-transparent" onClick={() => setZoom((z) => Math.max(z - 0.2, 0.5))}><ZoomOut className="w-4 h-4" /></Button>
-                  </div>
-                  <p className="absolute bottom-4 right-4 text-xs text-muted-foreground">Drag to rotate</p>
-                </div>
+                )}
               </HolographicCard>
 
               <div className="space-y-4">

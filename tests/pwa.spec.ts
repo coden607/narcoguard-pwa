@@ -605,6 +605,38 @@ test.describe("Emergency contact texts", () => {
   })
 })
 
+test.describe("Watch blueprint", () => {
+  test("the engineering drawing lists every part and callouts open part details", async ({ page }) => {
+    await page.goto("/watch")
+    const drawing = page.getByTestId("engineering-drawing")
+    await expect(drawing.getByRole("group", { name: /concept engineering drawing/ })).toBeVisible()
+    await expect(drawing.getByText("PARTS LIST (CANDIDATE)")).toBeVisible()
+    await expect(drawing.getByText("NRF5340-QKAA-R7")).toBeVisible()
+    await expect(drawing.getByText("UNVERIFIED")).toBeVisible()
+    await drawing.getByRole("button", { name: "5. Naloxone Module (research)" }).first().click()
+    await expect(page.getByText(/Future research only/).first()).toBeVisible()
+    const download = page.waitForEvent("download")
+    await drawing.getByRole("button", { name: "Download SVG" }).click()
+    expect((await download).suggestedFilename()).toBe("narcoguard-ng-rev4.2-concept-drawing.svg")
+  })
+
+  test("the 3D tab loads a model or explains why it cannot", async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.goto("/watch")
+    await page.getByRole("tab", { name: "3D View" }).click()
+    const viewer = page.getByTestId("watch-3d")
+    await expect(viewer).not.toHaveAttribute("data-status", "loading", { timeout: 30_000 })
+    if ((await viewer.getAttribute("data-status")) === "ready") {
+      await expect(viewer.getByRole("img", { name: /3D model of the NarcoGuard NG/ })).toBeVisible()
+      await viewer.getByRole("slider").fill("100")
+      await expect(viewer.getByRole("slider")).toHaveAttribute("aria-valuetext", "100 percent apart")
+      await expect(viewer.getByRole("button", { name: "Auto-rotate" })).toHaveAttribute("aria-pressed", "false")
+    } else {
+      await expect(viewer.getByText(/3D needs WebGL/)).toBeVisible()
+    }
+  })
+})
+
 test.describe("Install on iPhone", () => {
   test.use({ userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1", viewport: { width: 390, height: 844 }, hasTouch: true })
 
