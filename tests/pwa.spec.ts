@@ -269,19 +269,24 @@ test.describe("PWA production flow", () => {
     await expect(meals).toHaveCount(0)
   })
 
-  test("nearby help search validates ZIP, shows sourced listings with call-first notes, and keeps directory fallbacks", async ({ page }) => {
+  test("one search finds every level of need, shows sourced listings with call-first notes, and keeps directory fallbacks", async ({ page }) => {
     const requested: string[] = []
-    await page.route("**/api/resources/nearby**", async (route) => {
+    const fallback = [{ title: "Find local help through 211", url: "https://www.211.org/get-help" }]
+    await page.route("**/api/resources/needs**", async (route) => {
       requested.push(new URL(route.request().url()).search)
       await route.fulfill({ json: {
-        status: "ok",
-        results: [{ name: "Test Food Pantry", kind: "food", address: "1 Main St", phone: "518-555-0100", distanceMiles: 0.8, lat: 42.65, lon: -73.75, source: "OpenStreetMap contributors" }],
-        fallback: [{ title: "Find local help through 211", url: "https://www.211.org/get-help" }],
+        status: "partial",
+        message: "One directory did not respond, so some needs show directories instead of listings.",
+        fetchedAt: new Date().toISOString(),
+        kinds: {
+          food: { status: "ok", fallback, results: [{ name: "Test Food Pantry", kind: "food", address: "1 Main St", phone: "518-555-0100", hours: "Mo-Fr 09:00-17:00", distanceMiles: 0.8, lat: 42.65, lon: -73.75, source: "OpenStreetMap contributors" }] },
+          water: { status: "ok", fallback, results: [] },
+          treatment: { status: "unavailable", fallback: [{ title: "Search FindTreatment.gov", url: "https://findtreatment.gov/" }, ...fallback], results: [] },
+        },
       } })
     })
-    await page.goto("/angel")
-    const search = page.getByTestId("nearby-resources")
-    await search.getByRole("button", { name: "Food" }).click()
+    await page.goto("/help")
+    const search = page.getByTestId("needs-finder")
     await search.getByLabel("ZIP code").fill("122")
     await search.getByRole("button", { name: "Search" }).click()
     await expect(search.getByText("Enter a five-digit US ZIP code.")).toBeVisible()
@@ -289,17 +294,61 @@ test.describe("PWA production flow", () => {
 
     await search.getByLabel("ZIP code").fill("12207")
     await search.getByRole("button", { name: "Search" }).click()
-    await expect(search.getByText("Test Food Pantry")).toBeVisible()
-    await expect(search.getByRole("link", { name: "Call 518-555-0100" })).toHaveAttribute("href", "tel:5185550100")
-    await expect(search.getByText(/Source: OpenStreetMap contributors\. .*call first/)).toBeVisible()
-    await expect(search.getByRole("link", { name: "Find local help through 211" })).toBeVisible()
-    expect(requested).toEqual(["?kind=food&zip=12207"])
+    for (const level of ["Basic needs", "Health and safety", "Recovery and connection", "Growth and goals"]) {
+      await expect(search.getByRole("heading", { name: level })).toBeVisible()
+    }
+    await expect(search.getByText("One directory did not respond")).toBeVisible()
+    const food = search.getByTestId("need-food")
+    await expect(food).toContainText("1 nearby · closest 0.8 mi")
+    await food.locator("summary").click()
+    await expect(food.getByText("Test Food Pantry")).toBeVisible()
+    await expect(food.getByText("Listed hours: Mo-Fr 09:00-17:00 (may be out of date)")).toBeVisible()
+    await expect(food.getByRole("link", { name: "Call 518-555-0100" })).toHaveAttribute("href", "tel:5185550100")
+    await expect(food.getByText(/Source: OpenStreetMap contributors\. .*call first/)).toBeVisible()
+    await expect(search.getByTestId("need-water")).toContainText("none listed nearby")
+    const treatment = search.getByTestId("need-treatment")
+    await treatment.locator("summary").click()
+    await expect(treatment.getByText("Live listings are unavailable right now.")).toBeVisible()
+    await expect(treatment.getByRole("link", { name: "Search FindTreatment.gov" })).toBeVisible()
+    // Kinds missing from the response still offer 211.
+    const jobs = search.getByTestId("need-jobs")
+    await jobs.locator("summary").click()
+    await expect(jobs.getByRole("link", { name: "Find local help through 211" })).toBeVisible()
+    expect(requested).toEqual(["?zip=12207"])
+  })
+
+  test("Find everything near me uses one location reading and says when permission is denied", async ({ page, context }) => {
+    const requested: string[] = []
+    await page.route("**/api/resources/needs**", async (route) => {
+      requested.push(new URL(route.request().url()).search)
+      await route.fulfill({ json: { status: "ok", fetchedAt: new Date().toISOString(), kinds: {} } })
+    })
+    // Headless Chromium never answers a permission prompt, so the denial is simulated.
+    await page.addInitScript(() => {
+      const real = navigator.geolocation.getCurrentPosition.bind(navigator.geolocation)
+      let calls = 0
+      navigator.geolocation.getCurrentPosition = (success, failure, options) => {
+        if (calls++ === 0) failure?.({ code: 1, message: "denied", PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 } as GeolocationPositionError)
+        else real(success, failure, options)
+      }
+    })
+    await page.goto("/help")
+    const search = page.getByTestId("needs-finder")
+    await search.getByRole("button", { name: "Find everything near me" }).click()
+    await expect(search.getByText("Location permission was not given. Enter a ZIP code instead.")).toBeVisible()
+    expect(requested).toHaveLength(0)
+
+    await context.grantPermissions(["geolocation"])
+    await context.setGeolocation({ latitude: 42.6526, longitude: -73.7562 })
+    await search.getByRole("button", { name: "Find everything near me" }).click()
+    await expect(search.getByRole("heading", { name: "Basic needs" })).toBeVisible()
+    expect(requested).toEqual(["?lat=42.6526&lon=-73.7562"])
   })
 
   test("Angel AI says when it is not configured and the search still works without it", async ({ page }) => {
     await page.goto("/angel")
     await expect(page.getByTestId("angel-unavailable")).toBeVisible()
-    await expect(page.getByTestId("nearby-resources")).toBeVisible()
+    await expect(page.getByTestId("needs-finder")).toBeVisible()
   })
 
   test("Angel AI requires consent and shows the 911 notice for an overdose message regardless of the reply", async ({ page }) => {
@@ -445,5 +494,54 @@ test.describe("PWA production flow", () => {
     await expect(page).toHaveURL(/\/fund\/thanks/)
     expect(requested).toEqual({ amount: 50 })
     await expect(page.getByRole("heading", { name: "Thank you for your donation" })).toBeVisible()
+  })
+
+  test("Chromium installs in one tap from the header once the browser offers it", async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as unknown as { __promptCalls: number }).__promptCalls = 0
+      window.addEventListener("load", () => {
+        const event = new Event("beforeinstallprompt") as Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: string }> }
+        event.prompt = async () => { (window as unknown as { __promptCalls: number }).__promptCalls++ }
+        event.userChoice = Promise.resolve({ outcome: "accepted" })
+        window.dispatchEvent(event)
+      })
+    })
+    await page.goto("/privacy")
+    const install = page.locator("header").getByRole("button", { name: "Install" })
+    await expect(install).toHaveAttribute("data-install-method", "prompt")
+    await install.click()
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __promptCalls: number }).__promptCalls)).toBe(1)
+    await expect(install).toHaveCount(0)
+  })
+})
+
+test.describe("Install on iPhone", () => {
+  test.use({ userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1", viewport: { width: 390, height: 844 }, hasTouch: true })
+
+  test("shows Add to Home Screen steps, and Later hides the banner across reloads", async ({ page }) => {
+    await page.goto("/privacy")
+    const banner = page.getByTestId("install-banner")
+    await expect(banner).toContainText("a few taps")
+    await banner.getByRole("button", { name: "Show me how" }).click()
+    const guide = page.getByRole("dialog", { name: "Install NarcoGuard" })
+    await expect(guide).toContainText("Add to Home Screen")
+    await expect(guide).toContainText("Open as Web App")
+    await page.keyboard.press("Escape")
+    await banner.getByRole("button", { name: "Later" }).click()
+    await expect(banner).toHaveCount(0)
+    await page.reload()
+    await page.waitForTimeout(2500)
+    await expect(page.getByTestId("install-banner")).toHaveCount(0)
+
+    await page.locator("header").getByRole("button", { name: "Install" }).click()
+    await expect(page.getByRole("dialog", { name: "Install NarcoGuard" })).toContainText("Share")
+  })
+
+  test("hides install once running from the home screen", async ({ page }) => {
+    await page.addInitScript(() => Object.defineProperty(navigator, "standalone", { value: true }))
+    await page.goto("/privacy")
+    await page.waitForTimeout(2500)
+    await expect(page.locator("header").getByRole("button", { name: "Install" })).toHaveCount(0)
+    await expect(page.getByTestId("install-banner")).toHaveCount(0)
   })
 })

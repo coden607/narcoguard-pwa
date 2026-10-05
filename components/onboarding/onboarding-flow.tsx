@@ -36,6 +36,7 @@ import {
   type NaloxoneLocation,
 } from "@/lib/user-preferences"
 import { usePWAInstall } from "@/lib/hooks/use-pwa-install"
+import { InstallButton } from "@/components/pwa/install-button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { GOOD_SAMARITAN_LAWS, GOOD_SAMARITAN_LAWS_REVIEWED, GOOD_SAMARITAN_SOURCES, goodSamaritanLawFor } from "@/lib/good-samaritan-laws"
 
@@ -52,7 +53,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([])
   const [naloxoneLocations, setNaloxoneLocations] = useState<NaloxoneLocation[]>([])
   const [preferences, setPreferences] = useState(getUserPreferences())
-  const { isInstallable, installPWA } = usePWAInstall()
+  const { isInstallable, isInstalled, installPWA, method } = usePWAInstall()
 
   const totalSteps = 12
 
@@ -1027,7 +1028,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="space-y-4">
           <h3 className="text-xl font-bold text-center">Install Narcoguard</h3>
           <p className="text-muted-foreground text-center">
-            Install the app on your device for instant access and offline functionality
+            Install the app for one-tap access from your home screen. Pages you have opened stay available offline.
           </p>
 
           {isInstallable ? (
@@ -1043,13 +1044,19 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             >
               Install & Launch Dashboard
             </GlowButton>
-          ) : (
+          ) : method !== "none" ? (
+            <div className="flex justify-center">
+              <InstallButton label="Show me how to install" />
+            </div>
+          ) : isInstalled ? (
             <div className="text-center space-y-2">
               <Check className="w-12 h-12 mx-auto text-green-500" />
-              <p className="text-sm text-muted-foreground">
-                App is already installed or will be available on your device
-              </p>
+              <p className="text-sm text-muted-foreground">NarcoGuard is installed on this device.</p>
             </div>
+          ) : (
+            <p className="text-sm text-muted-foreground text-center">
+              This browser can&apos;t install apps. Open narcoguard.app in Chrome, Edge or Safari to install, or bookmark this page.
+            </p>
           )}
 
           <GlowButton

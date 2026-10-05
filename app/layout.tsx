@@ -75,6 +75,8 @@ export default function RootLayout({
     <html lang="en" className={`dark ${inter.variable} ${orbitron.variable}`}>
       <head>
         <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined)`}</Script>
+        {/* Chromium fires beforeinstallprompt once, often before React hydrates; keep it for the install button. */}
+        <Script id="narcoguard-install" strategy="beforeInteractive">{`addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__ngInstallPrompt = e; dispatchEvent(new Event("ng-installprompt")) })`}</Script>
         <link rel="icon" href="/icon-dark-32x32.png" sizes="32x32" type="image/png" />
         <link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png" />
         <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
