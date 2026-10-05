@@ -1,17 +1,44 @@
-// Live nearby-resource lookup. Treatment comes from SAMHSA's FindTreatment.gov locator; food help,
-// shelters and pharmacies come from OpenStreetMap via the Overpass API. Neither source confirms
+// Live nearby-resource lookup. Treatment comes from SAMHSA's FindTreatment.gov locator; everything
+// else (food, shelter, water, toilets, clinics, libraries and more) comes from OpenStreetMap via the
+// Overpass API. Neither source confirms
 // hours, openings or eligibility, so every result is labelled with its source and "call first".
 // Location is rounded to about 1 km before it leaves the server and is never stored or logged.
 
-export const RESOURCE_KINDS = ["treatment", "food", "shelter", "pharmacy"] as const
+export const RESOURCE_KINDS = ["treatment", "food", "shelter", "pharmacy", "water", "toilets", "showers", "laundry", "emergency", "clinic", "community", "library", "jobs"] as const
 export type ResourceKind = typeof RESOURCE_KINDS[number]
+export type OsmKind = Exclude<ResourceKind, "treatment">
 
 export const RESOURCE_LABELS: Record<ResourceKind, string> = {
   treatment: "Treatment",
   food: "Food",
   shelter: "Shelter",
   pharmacy: "Pharmacy (naloxone is sold without a prescription; call to check stock)",
+  water: "Drinking water",
+  toilets: "Public toilets",
+  showers: "Showers",
+  laundry: "Laundry",
+  emergency: "Emergency rooms (in an emergency, call 911)",
+  clinic: "Clinics and health centers",
+  community: "Community centers",
+  library: "Libraries (free internet and computers)",
+  jobs: "Job help",
 }
+
+export const SHORT_LABELS: Record<ResourceKind, string> = {
+  treatment: "Treatment", food: "Food", shelter: "Shelter", pharmacy: "Pharmacy", water: "Water", toilets: "Toilets", showers: "Showers",
+  laundry: "Laundry", emergency: "Emergency room", clinic: "Clinics", community: "Community centers", library: "Libraries", jobs: "Job help",
+}
+
+/**
+ * Maslow's hierarchy as a way to organize a search, not a ranking of people or an order anyone must
+ * follow: every level is searched at once and any need can come first.
+ */
+export const NEED_LEVELS = [
+  { id: "basic", title: "Basic needs", kinds: ["food", "shelter", "water", "toilets", "showers", "laundry"] },
+  { id: "safety", title: "Health and safety", kinds: ["emergency", "clinic", "pharmacy"] },
+  { id: "connection", title: "Recovery and connection", kinds: ["treatment", "community"] },
+  { id: "growth", title: "Growth and goals", kinds: ["library", "jobs"] },
+] as const satisfies readonly { id: string; title: string; kinds: readonly ResourceKind[] }[]
 
 export interface NearbyResource {
   name: string
@@ -19,6 +46,8 @@ export interface NearbyResource {
   address?: string
   phone?: string
   website?: string
+  /** Opening hours as listed by the source; may be out of date. */
+  hours?: string
   distanceMiles?: number
   lat?: number
   lon?: number
@@ -27,6 +56,8 @@ export interface NearbyResource {
 
 export const SEARCH_RADIUS_METERS = 16_000 // about 10 miles
 export const MAX_RESULTS = 10
+/** Listings shown per kind when every level is searched at once. */
+export const MAX_RESULTS_PER_KIND = 5
 
 /** Rounds coordinates to 2 decimals (about 1.1 km) so precise location never leaves the server. */
 export function coarsen(value: number): number {
@@ -41,15 +72,60 @@ export function haversineMiles(aLat: number, aLon: number, bLat: number, bLon: n
   return Math.round(3958.8 * 2 * Math.asin(Math.sqrt(h)) * 10) / 10
 }
 
-const OSM_FILTERS: Record<Exclude<ResourceKind, "treatment">, string[]> = {
-  food: ['nwr["social_facility"="food_bank"]', 'nwr["social_facility"="soup_kitchen"]', 'nwr["amenity"="food_bank"]'],
-  shelter: ['nwr["social_facility"="shelter"]'],
-  pharmacy: ['nwr["amenity"="pharmacy"]', 'nwr["healthcare"="pharmacy"]'],
+interface OsmKindSpec {
+  /** Each entry is a set of tags that must all match. */
+  filters: Record<string, string>[]
+  /** Tag values that rule a place out, e.g. toilets for customers only. */
+  exclude?: Record<string, string[]>
+  /** Dense kinds use a smaller radius so the nearest places are not crowded out. */
+  radius: number
+  /** Name shown for places that usually have none, such as a public drinking fountain. */
+  unnamed?: string
 }
 
-export function overpassQuery(kind: Exclude<ResourceKind, "treatment">, lat: number, lon: number, radius = SEARCH_RADIUS_METERS): string {
-  const around = `(around:${radius},${lat},${lon})`
-  return `[out:json][timeout:20];(${OSM_FILTERS[kind].map((filter) => `${filter}${around};`).join("")});out center tags 60;`
+const NOT_PUBLIC = { access: ["private", "no", "customers"] }
+
+export const OSM_KINDS: Record<OsmKind, OsmKindSpec> = {
+  food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }], radius: SEARCH_RADIUS_METERS },
+  shelter: { filters: [{ social_facility: "shelter" }], radius: SEARCH_RADIUS_METERS },
+  water: { filters: [{ amenity: "drinking_water" }], exclude: NOT_PUBLIC, radius: 3_000, unnamed: "Drinking water" },
+  toilets: { filters: [{ amenity: "toilets" }], exclude: NOT_PUBLIC, radius: 3_000, unnamed: "Public toilet" },
+  showers: { filters: [{ amenity: "shower" }], exclude: NOT_PUBLIC, radius: SEARCH_RADIUS_METERS, unnamed: "Public shower" },
+  laundry: { filters: [{ shop: "laundry" }], radius: 8_000 },
+  emergency: { filters: [{ amenity: "hospital", emergency: "yes" }], radius: 24_000 },
+  clinic: { filters: [{ amenity: "clinic" }, { healthcare: "clinic" }, { healthcare: "centre" }], radius: 8_000 },
+  pharmacy: { filters: [{ amenity: "pharmacy" }, { healthcare: "pharmacy" }], radius: 8_000 },
+  community: { filters: [{ amenity: "community_centre" }, { social_facility: "outreach" }], radius: 8_000 },
+  library: { filters: [{ amenity: "library" }], exclude: NOT_PUBLIC, radius: 8_000 },
+  jobs: { filters: [{ office: "employment_agency" }], radius: 24_000 },
+}
+
+export const OSM_KIND_ORDER = RESOURCE_KINDS.filter((kind): kind is OsmKind => kind !== "treatment")
+
+const quote = (value: string) => JSON.stringify(value)
+
+function osmSelectors(kind: OsmKind, lat: number, lon: number, radius = OSM_KINDS[kind].radius): string {
+  const { filters, exclude } = OSM_KINDS[kind]
+  const excluded = Object.entries(exclude ?? {}).map(([key, values]) => `[${quote(key)}!~${quote(`^(${values.join("|")})$`)}]`).join("")
+  return filters.map((filter) => `nwr${Object.entries(filter).map(([key, value]) => `[${quote(key)}=${quote(value)}]`).join("")}${excluded}(around:${radius},${lat},${lon});`).join("")
+}
+
+export function overpassQuery(kind: OsmKind, lat: number, lon: number, radius?: number): string {
+  return `[out:json][timeout:20];(${osmSelectors(kind, lat, lon, radius)});out center tags;`
+}
+
+/** One request for every OpenStreetMap kind, so public Overpass servers are not hit a dozen times. */
+export function overpassNeedsQuery(lat: number, lon: number): string {
+  return `[out:json][timeout:25];(${OSM_KIND_ORDER.map((kind) => osmSelectors(kind, lat, lon)).join("")});out center tags;`
+}
+
+/** The kind a place belongs to, checked in display order; undefined when nothing matches. */
+export function osmKindOf(tags: Record<string, string>): OsmKind | undefined {
+  return OSM_KIND_ORDER.find((kind) => {
+    const { filters, exclude } = OSM_KINDS[kind]
+    if (Object.entries(exclude ?? {}).some(([key, values]) => values.includes(tags[key]))) return false
+    return filters.some((filter) => Object.entries(filter).every(([key, value]) => tags[key] === value))
+  })
 }
 
 const str = (value: unknown, max = 160) => (typeof value === "string" && value.trim() ? value.trim().slice(0, max) : undefined)
@@ -71,35 +147,61 @@ const httpUrl = (value: unknown) => {
 
 interface OverpassElement { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }
 
-export function parseOverpass(kind: Exclude<ResourceKind, "treatment">, body: unknown, origin: { lat: number; lon: number }): NearbyResource[] {
-  const elements = (body as { elements?: OverpassElement[] } | null)?.elements
-  if (!Array.isArray(elements)) return []
-  const seen = new Set<string>()
-  const results: NearbyResource[] = []
-  for (const element of elements) {
-    const tags = element.tags ?? {}
-    const name = str(tags.name)
-    const lat = element.lat ?? element.center?.lat
-    const lon = element.lon ?? element.center?.lon
-    if (!name || lat === undefined || lon === undefined) continue
-    const key = `${name.toLowerCase()}|${lat.toFixed(3)}|${lon.toFixed(3)}`
-    if (seen.has(key)) continue
-    seen.add(key)
-    const street = [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(" ")
-    const address = [street, tags["addr:city"], tags["addr:state"], tags["addr:postcode"]].filter(Boolean).join(", ") || undefined
-    results.push({
-      name,
-      kind,
-      address,
-      phone: str(tags.phone ?? tags["contact:phone"], 40),
-      website: httpUrl(tags.website ?? tags["contact:website"]),
-      lat,
-      lon,
-      distanceMiles: haversineMiles(origin.lat, origin.lon, lat, lon),
-      source: "OpenStreetMap contributors",
-    })
+function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: number; lon: number }): NearbyResource | undefined {
+  const tags = element.tags ?? {}
+  const name = str(tags.name) ?? OSM_KINDS[kind].unnamed
+  const lat = element.lat ?? element.center?.lat
+  const lon = element.lon ?? element.center?.lon
+  if (!name || lat === undefined || lon === undefined) return undefined
+  const street = [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(" ")
+  const address = [street, tags["addr:city"], tags["addr:state"], tags["addr:postcode"]].filter(Boolean).join(", ") || undefined
+  return {
+    name,
+    kind,
+    address,
+    phone: str(tags.phone ?? tags["contact:phone"], 40),
+    website: httpUrl(tags.website ?? tags["contact:website"]),
+    hours: str(tags.opening_hours, 80),
+    lat,
+    lon,
+    distanceMiles: haversineMiles(origin.lat, origin.lon, lat, lon),
+    source: "OpenStreetMap contributors",
   }
-  return results.sort((a, b) => (a.distanceMiles ?? 0) - (b.distanceMiles ?? 0)).slice(0, MAX_RESULTS)
+}
+
+function nearestUnique(resources: NearbyResource[], limit: number): NearbyResource[] {
+  const seen = new Set<string>()
+  return resources
+    .sort((a, b) => (a.distanceMiles ?? 0) - (b.distanceMiles ?? 0))
+    .filter((resource) => {
+      const key = `${resource.name.toLowerCase()}|${resource.lat?.toFixed(3)}|${resource.lon?.toFixed(3)}`
+      if (seen.has(key)) return false
+      seen.add(key)
+      return true
+    })
+    .slice(0, limit)
+}
+
+const elementsOf = (body: unknown) => {
+  const elements = (body as { elements?: OverpassElement[] } | null)?.elements
+  return Array.isArray(elements) ? elements : []
+}
+
+/** Parses a single-kind query; the query already selected the kind, so tags are not re-checked. */
+export function parseOverpass(kind: OsmKind, body: unknown, origin: { lat: number; lon: number }): NearbyResource[] {
+  return nearestUnique(elementsOf(body).flatMap((element) => toResource(kind, element, origin) ?? []), MAX_RESULTS)
+}
+
+/** Sorts a combined query's places into kinds by their tags, nearest first. */
+export function parseOverpassNeeds(body: unknown, origin: { lat: number; lon: number }, limit = MAX_RESULTS_PER_KIND): Record<OsmKind, NearbyResource[]> {
+  const grouped = Object.fromEntries(OSM_KIND_ORDER.map((kind) => [kind, [] as NearbyResource[]])) as Record<OsmKind, NearbyResource[]>
+  for (const element of elementsOf(body)) {
+    const kind = osmKindOf(element.tags ?? {})
+    const resource = kind && toResource(kind, element, origin)
+    if (kind && resource) grouped[kind].push(resource)
+  }
+  for (const kind of OSM_KIND_ORDER) grouped[kind] = nearestUnique(grouped[kind], limit)
+  return grouped
 }
 
 /** FindTreatment needs "lat,lon" in sAddr; a bare ZIP is ignored and silently falls back to a default location. */
@@ -137,9 +239,17 @@ export function parseFindTreatment(body: unknown): NearbyResource[] {
 
 /** Directory pages a person can always use when live results are empty or unavailable. */
 export function fallbackLinks(kind: ResourceKind) {
-  const links = [{ title: "Find local help through 211", url: "https://www.211.org/get-help" }]
-  if (kind === "treatment") links.unshift({ title: "Search FindTreatment.gov", url: "https://findtreatment.gov/" })
-  if (kind === "food") links.unshift({ title: "Feeding America food bank locator", url: "https://www.feedingamerica.org/find-your-local-foodbank" })
-  if (kind === "shelter") links.unshift({ title: "HUD Find Shelter", url: "https://www.hud.gov/FindShelter" })
-  return links
+  const directories: Partial<Record<ResourceKind, { title: string; url: string }[]>> = {
+    treatment: [{ title: "Search FindTreatment.gov", url: "https://findtreatment.gov/" }],
+    food: [{ title: "Feeding America food bank locator", url: "https://www.feedingamerica.org/find-your-local-foodbank" }],
+    shelter: [{ title: "HUD Find Shelter", url: "https://www.hud.gov/FindShelter" }],
+    showers: [{ title: "HUD Find Shelter (shelters often offer showers)", url: "https://www.hud.gov/FindShelter" }],
+    clinic: [{ title: "HRSA Find a Health Center (sliding-scale fees)", url: "https://findahealthcenter.hrsa.gov/" }],
+    community: [
+      { title: "Narcotics Anonymous meeting search", url: "https://www.na.org/meetingsearch/" },
+      { title: "Alcoholics Anonymous meeting finder", url: "https://www.aa.org/find-aa" },
+    ],
+    jobs: [{ title: "CareerOneStop American Job Center finder", url: "https://www.careeronestop.org/LocalHelp/AmericanJobCenters/find-american-job-centers.aspx" }],
+  }
+  return [...(directories[kind] ?? []), { title: "Find local help through 211", url: "https://www.211.org/get-help" }]
 }

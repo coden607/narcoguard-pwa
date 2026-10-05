@@ -58,3 +58,52 @@ test("fallback directories are always available, with 211 last", () => {
   // The ZIP is never put into third-party URLs.
   assert.equal(fallbackLinks("treatment")[0].url, "https://findtreatment.gov/")
 })
+
+test("every kind belongs to exactly one need level, and every OpenStreetMap kind has filters", async () => {
+  const { NEED_LEVELS, RESOURCE_KINDS, OSM_KINDS } = await import("../lib/resource-finder")
+  const levelled = NEED_LEVELS.flatMap((level) => [...level.kinds])
+  assert.deepEqual([...levelled].sort(), [...RESOURCE_KINDS].sort())
+  assert.equal(new Set(levelled).size, levelled.length)
+  for (const spec of Object.values(OSM_KINDS)) assert.ok(spec.filters.length > 0 && spec.radius > 0)
+})
+
+test("the combined needs query asks Overpass once for every kind, with per-kind radius and public-access filters", async () => {
+  const { overpassNeedsQuery } = await import("../lib/resource-finder")
+  const query = overpassNeedsQuery(40.75, -73.99)
+  assert.match(query, /^\[out:json\]\[timeout:25\];\(/)
+  assert.match(query, /nwr\["amenity"="drinking_water"\]\["access"!~"\^\(private\|no\|customers\)\$"\]\(around:3000,40.75,-73.99\);/)
+  assert.match(query, /nwr\["amenity"="hospital"\]\["emergency"="yes"\]\(around:24000,40.75,-73.99\);/)
+  for (const tag of ["food_bank", "shelter", "pharmacy", "toilets", "shower", "laundry", "clinic", "community_centre", "library", "employment_agency"]) assert.match(query, new RegExp(`"${tag}"`))
+  assert.match(query, /\);out center tags;$/)
+})
+
+test("combined results are sorted into kinds by tags, unnamed public amenities get a plain name, and private ones are dropped", async () => {
+  const { parseOverpassNeeds, osmKindOf } = await import("../lib/resource-finder")
+  const origin = { lat: 40.75, lon: -73.99 }
+  const grouped = parseOverpassNeeds({ elements: [
+    { lat: 40.751, lon: -73.99, tags: { amenity: "drinking_water" } },
+    { lat: 40.752, lon: -73.99, tags: { amenity: "toilets", access: "customers" } },
+    { lat: 40.753, lon: -73.99, tags: { amenity: "toilets", opening_hours: "24/7" } },
+    { lat: 40.76, lon: -73.99, tags: { amenity: "hospital", emergency: "yes", name: "General Hospital" } },
+    { lat: 40.76, lon: -73.99, tags: { amenity: "hospital", emergency: "no", name: "Rehab Hospital" } },
+    { lat: 40.77, lon: -73.99, tags: { amenity: "library", name: "Main Library" } },
+    { lat: 40.78, lon: -73.99, tags: { amenity: "pharmacy" } },
+    { lat: 40.79, lon: -73.99, tags: { amenity: "bar", name: "Not a resource" } },
+  ] }, origin)
+  assert.deepEqual(grouped.water.map((r) => r.name), ["Drinking water"])
+  assert.deepEqual(grouped.toilets.map((r) => [r.name, r.hours]), [["Public toilet", "24/7"]])
+  assert.deepEqual(grouped.emergency.map((r) => r.name), ["General Hospital"])
+  assert.deepEqual(grouped.library.map((r) => r.kind), ["library"])
+  assert.deepEqual(grouped.pharmacy, [], "a pharmacy without a name is not listed")
+  assert.equal(osmKindOf({ amenity: "bar" }), undefined)
+  assert.equal(osmKindOf({ social_facility: "food_bank", amenity: "social_facility" }), "food")
+  const many = parseOverpassNeeds({ elements: Array.from({ length: 9 }, (_, i) => ({ lat: 40.75 + i / 100, lon: -73.99, tags: { amenity: "library", name: `L${8 - i}` } })) }, origin)
+  assert.deepEqual(many.library.map((r) => r.name), ["L8", "L7", "L6", "L5", "L4"])
+  assert.equal(Object.keys(parseOverpassNeeds(null, origin)).length, 12)
+})
+
+test("every kind has directory fallbacks ending with 211", async () => {
+  const { RESOURCE_KINDS } = await import("../lib/resource-finder")
+  for (const kind of RESOURCE_KINDS) assert.equal(fallbackLinks(kind).at(-1)?.url, "https://www.211.org/get-help")
+  assert.ok(fallbackLinks("community").some((link) => link.url.startsWith("https://www.na.org/")))
+})

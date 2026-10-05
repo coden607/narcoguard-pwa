@@ -397,6 +397,10 @@
 .nav-link:hover { color: white; background: rgba(255,255,255,.07); transform: translateY(-1px); }
 .nav-link.is-active { color: #07111c; background: linear-gradient(135deg,#67e8f9,#6ee7b7); box-shadow: 0 8px 24px -12px #22d3ee; }
 .menu-button { display: grid; place-items: center; width: 2.75rem; height: 2.75rem; border-radius: .9rem; color: white; border: 1px solid rgba(255,255,255,.13); background: rgba(255,255,255,.07); }
+.header-actions { display: flex; align-items: center; gap: .5rem; flex: none; }
+.install-button { display: inline-flex; align-items: center; gap: .4rem; min-height: 2.75rem; padding: 0 .9rem; border-radius: .9rem; color: #07111c; background: linear-gradient(135deg,#67e8f9,#6ee7b7); font-size: .8rem; font-weight: 800; box-shadow: 0 8px 24px -12px #22d3ee; }
+.install-button svg { width: 1rem; height: 1rem; }
+.install-button:disabled { opacity: .7; }
 .mobile-nav { display: grid; grid-template-rows: 0fr; width: min(100% - 2rem, 90rem); margin-inline: auto; overflow: hidden; transition: grid-template-rows .25s ease, padding .25s ease; }
 .mobile-nav::before { content: ""; min-height: 0; }
 .mobile-nav > * { display: none; }
@@ -440,6 +444,9 @@ input:focus,textarea:focus,select:focus { border-color: rgba(103,232,249,.7) !im
 @media (min-width: 768px) {
   .site-main { padding-bottom: 1rem; }
   .site-footer { flex-direction: row; justify-content: space-between; text-align: left; }
+}
+/* Eight links need about 1200px; narrower screens use the menu button. */
+@media (min-width: 1200px) {
   .desktop-nav { display: flex; }
   .menu-button,.mobile-nav { display: none; }
 }

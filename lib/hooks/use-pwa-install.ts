@@ -1,61 +1,70 @@
 "use client"
 
-import { useState, useEffect, useSyncExternalStore } from "react"
+import { useSyncExternalStore } from "react"
+import { installMethod, type InstallMethod } from "@/lib/install-platform"
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>
 }
 
-const STANDALONE_QUERY = "(display-mode: standalone)"
-
-function subscribeToDisplayMode(onChange: () => void) {
-  const query = window.matchMedia(STANDALONE_QUERY)
-  query.addEventListener("change", onChange)
-  return () => query.removeEventListener("change", onChange)
+declare global {
+  interface Window { __ngInstallPrompt?: BeforeInstallPromptEvent | null; __ngInstalled?: boolean }
 }
 
-const isStandalone = () => window.matchMedia(STANDALONE_QUERY).matches
+const STANDALONE_QUERY = "(display-mode: standalone)"
+const CHANGE = "ng-installprompt"
+
+// The layout's inline script stores Chromium's one-time install prompt on window before React loads.
+function subscribe(onChange: () => void) {
+  const query = window.matchMedia(STANDALONE_QUERY)
+  const captureLate = (event: Event) => {
+    event.preventDefault()
+    window.__ngInstallPrompt = event as BeforeInstallPromptEvent
+    onChange()
+  }
+  const installed = () => {
+    window.__ngInstalled = true
+    window.__ngInstallPrompt = null
+    onChange()
+  }
+  query.addEventListener("change", onChange)
+  window.addEventListener(CHANGE, onChange)
+  window.addEventListener("beforeinstallprompt", captureLate)
+  window.addEventListener("appinstalled", installed)
+  return () => {
+    query.removeEventListener("change", onChange)
+    window.removeEventListener(CHANGE, onChange)
+    window.removeEventListener("beforeinstallprompt", captureLate)
+    window.removeEventListener("appinstalled", installed)
+  }
+}
+
+// iOS home-screen apps report navigator.standalone rather than the display-mode media query.
+const isInstalledNow = () => window.__ngInstalled === true || window.matchMedia(STANDALONE_QUERY).matches || (navigator as Navigator & { standalone?: boolean }).standalone === true
+
+const snapshot = (): InstallMethod | "installed" => {
+  if (isInstalledNow()) return "installed"
+  return installMethod({ userAgent: navigator.userAgent, maxTouchPoints: navigator.maxTouchPoints ?? 0, canPrompt: Boolean(window.__ngInstallPrompt) })
+}
 
 export function usePWAInstall() {
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [installedThisSession, setInstalledThisSession] = useState(false)
-  const runningStandalone = useSyncExternalStore(subscribeToDisplayMode, isStandalone, () => false)
-  const isInstalled = runningStandalone || installedThisSession
-  const isInstallable = deferredPrompt !== null && !isInstalled
+  const state = useSyncExternalStore(subscribe, snapshot, () => "none" as const)
+  const isInstalled = state === "installed"
+  const method: InstallMethod = isInstalled ? "none" : state
+  const isInstallable = method === "prompt"
 
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault()
-      setDeferredPrompt(e as BeforeInstallPromptEvent)
-    }
-
-    const handleAppInstalled = () => {
-      setInstalledThisSession(true)
-      setDeferredPrompt(null)
-    }
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
-    window.addEventListener("appinstalled", handleAppInstalled)
-
-    return () => {
-      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt)
-      window.removeEventListener("appinstalled", handleAppInstalled)
-    }
-  }, [])
-
+  /** Shows the browser's own install dialog; resolves true when the person accepts. */
   const installPWA = async () => {
-    if (!deferredPrompt) {
-      return false
-    }
-
-    await deferredPrompt.prompt()
-    const { outcome } = await deferredPrompt.userChoice
-
+    const prompt = window.__ngInstallPrompt
+    if (!prompt) return false
+    await prompt.prompt()
+    const { outcome } = await prompt.userChoice
     // A prompt can only be used once, whatever the person chose.
-    setDeferredPrompt(null)
+    window.__ngInstallPrompt = null
+    window.dispatchEvent(new Event(CHANGE))
     return outcome === "accepted"
   }
 
-  return { isInstallable, isInstalled, installPWA }
+  return { isInstallable, isInstalled, installPWA, method }
 }

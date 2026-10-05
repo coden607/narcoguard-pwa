@@ -12,9 +12,8 @@ export function QuickActions() {
     window.location.href = "tel:1-800-662-4357" // SAMHSA National Helpline - verified correct
   }
 
-  const findResources = async () => {
-    // Open SAMHSA treatment locator
-    window.open("https://findtreatment.gov/", "_blank")
+  const findResources = () => {
+    router.push("/help")
   }
 
   const openHeroNetwork = () => {

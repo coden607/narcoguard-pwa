@@ -1,4 +1,4 @@
-import { coarsen, fallbackLinks, findTreatmentUrl, overpassQuery, parseFindTreatment, parseOverpass, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
+import { coarsen, fallbackLinks, findTreatmentUrl, MAX_RESULTS_PER_KIND, OSM_KIND_ORDER, overpassNeedsQuery, overpassQuery, parseFindTreatment, parseOverpass, parseOverpassNeeds, RESOURCE_KINDS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 
 const USER_AGENT = "NarcoGuard/2.0 (+https://www.narcoguard.app)"
 
@@ -28,33 +28,88 @@ async function geocodeZip(zip: string): Promise<{ lat: number; lon: number } | u
   return Number.isFinite(lat) && Number.isFinite(lon) ? { lat: coarsen(lat), lon: coarsen(lon) } : undefined
 }
 
+async function fetchOverpass(query: string): Promise<unknown> {
+  const body = new URLSearchParams({ data: query }).toString()
+  for (const [index, endpoint] of OVERPASS_ENDPOINTS.entries()) {
+    try {
+      return await fetchJson(endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body }, 25_000)
+    } catch (error) {
+      if (index === OVERPASS_ENDPOINTS.length - 1) throw error
+    }
+  }
+}
+
+async function resolveOrigin(origin: ResourceOrigin) {
+  return "zip" in origin ? geocodeZip(origin.zip) : { lat: coarsen(origin.lat), lon: coarsen(origin.lon) }
+}
+
+function failureReason(error: unknown) {
+  return error instanceof Error && /responded \d+$/.test(error.message) ? error.message : error instanceof Error ? error.name : "unknown"
+}
+
 /** Looks up live listings. Never logs the location; failures are reported by kind only. */
 export async function lookupResources(kind: ResourceKind, origin: ResourceOrigin): Promise<ResourceLookup> {
   const fallback = fallbackLinks(kind)
   try {
-    const point = "zip" in origin ? await geocodeZip(origin.zip) : { lat: coarsen(origin.lat), lon: coarsen(origin.lon) }
+    const point = await resolveOrigin(origin)
     if (!point) return { status: "unavailable", message: "That ZIP code could not be located.", results: [], fallback }
     let results: NearbyResource[]
     if (kind === "treatment") {
       results = parseFindTreatment(await fetchJson(findTreatmentUrl(point.lat, point.lon)))
     } else {
-      const body = new URLSearchParams({ data: overpassQuery(kind, point.lat, point.lon) }).toString()
-      let data: unknown
-      for (const [index, endpoint] of OVERPASS_ENDPOINTS.entries()) {
-        try {
-          data = await fetchJson(endpoint, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body }, 22_000)
-          break
-        } catch (error) {
-          if (index === OVERPASS_ENDPOINTS.length - 1) throw error
-        }
-      }
-      results = parseOverpass(kind, data, point)
+      results = parseOverpass(kind, await fetchOverpass(overpassQuery(kind, point.lat, point.lon)), point)
     }
     return { status: "ok", fetchedAt: new Date().toISOString(), results, fallback }
   } catch (error) {
     // Only the upstream host and status are logged, never the location or query.
-    const reason = error instanceof Error && /responded \d+$/.test(error.message) ? error.message : error instanceof Error ? error.name : "unknown"
-    console.warn(`[resources] ${kind} lookup unavailable: ${reason}`)
+    console.warn(`[resources] ${kind} lookup unavailable: ${failureReason(error)}`)
     return { status: "unavailable", message: "The live directory did not respond. Use the links below.", results: [], fallback }
   }
+}
+
+export interface KindLookup {
+  status: "ok" | "unavailable"
+  results: NearbyResource[]
+  fallback: { title: string; url: string }[]
+}
+
+export interface NeedsLookup {
+  status: "ok" | "partial" | "unavailable"
+  message?: string
+  fetchedAt?: string
+  kinds: Record<ResourceKind, KindLookup>
+}
+
+/**
+ * Searches every need at once: one FindTreatment request and one combined Overpass request, run in
+ * parallel. If one source fails, the other's listings are still returned and the failed kinds say so.
+ */
+export async function lookupNeeds(origin: ResourceOrigin): Promise<NeedsLookup> {
+  const unavailable = (kind: ResourceKind): KindLookup => ({ status: "unavailable", results: [], fallback: fallbackLinks(kind) })
+  const allUnavailable = () => Object.fromEntries(RESOURCE_KINDS.map((kind) => [kind, unavailable(kind)])) as Record<ResourceKind, KindLookup>
+  let point: { lat: number; lon: number } | undefined
+  try {
+    point = await resolveOrigin(origin)
+  } catch (error) {
+    console.warn(`[resources] needs lookup geocoding unavailable: ${failureReason(error)}`)
+    return { status: "unavailable", message: "The ZIP code could not be looked up right now. Use the directories below.", kinds: allUnavailable() }
+  }
+  if (!point) return { status: "unavailable", message: "That ZIP code could not be located.", kinds: allUnavailable() }
+  const here = point
+
+  const [treatment, osm] = await Promise.allSettled([
+    fetchJson(findTreatmentUrl(here.lat, here.lon)).then((body) => parseFindTreatment(body).slice(0, MAX_RESULTS_PER_KIND)),
+    fetchOverpass(overpassNeedsQuery(here.lat, here.lon)).then((body) => parseOverpassNeeds(body, here)),
+  ])
+  if (treatment.status === "rejected") console.warn(`[resources] treatment lookup unavailable: ${failureReason(treatment.reason)}`)
+  if (osm.status === "rejected") console.warn(`[resources] OpenStreetMap lookup unavailable: ${failureReason(osm.reason)}`)
+
+  const kinds = allUnavailable()
+  if (treatment.status === "fulfilled") kinds.treatment = { status: "ok", results: treatment.value, fallback: fallbackLinks("treatment") }
+  if (osm.status === "fulfilled") for (const kind of OSM_KIND_ORDER) kinds[kind] = { status: "ok", results: osm.value[kind], fallback: fallbackLinks(kind) }
+
+  const failures = [treatment, osm].filter((result) => result.status === "rejected").length
+  const status = failures === 0 ? "ok" : failures === 2 ? "unavailable" : "partial"
+  const message = status === "ok" ? undefined : status === "partial" ? "One directory did not respond, so some needs show directories instead of listings." : "The live directories did not respond. Use the directories below."
+  return { status, message, fetchedAt: new Date().toISOString(), kinds }
 }

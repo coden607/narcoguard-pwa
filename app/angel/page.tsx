@@ -1,10 +1,10 @@
 import type { Metadata } from "next"
 import { AngelAI } from "@/components/ai/angel-ai"
-import { NearbyResources } from "@/components/resources/nearby-resources"
+import { NeedsFinder } from "@/components/resources/needs-finder"
 
 export const metadata: Metadata = {
   title: "Angel AI and nearby help | NarcoGuard",
-  description: "Chat with Angel AI about next steps and goals, and search public directories for treatment, food, shelter and pharmacies near you.",
+  description: "Chat with Angel AI about next steps and goals, and search public directories for every kind of help near you, from food and shelter to treatment and job help.",
 }
 
 export default function AngelPage() {
@@ -19,7 +19,7 @@ export default function AngelPage() {
       </header>
       <AngelAI />
       <div className="border rounded-xl p-5">
-        <NearbyResources />
+        <NeedsFinder />
       </div>
     </main>
   )
