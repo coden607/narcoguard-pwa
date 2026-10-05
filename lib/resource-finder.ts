@@ -88,16 +88,16 @@ const NOT_PUBLIC = { access: ["private", "no", "customers"] }
 export const OSM_KINDS: Record<OsmKind, OsmKindSpec> = {
   food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }], radius: SEARCH_RADIUS_METERS },
   shelter: { filters: [{ social_facility: "shelter" }], radius: SEARCH_RADIUS_METERS },
-  water: { filters: [{ amenity: "drinking_water" }], exclude: NOT_PUBLIC, radius: 3_000, unnamed: "Drinking water" },
-  toilets: { filters: [{ amenity: "toilets" }], exclude: NOT_PUBLIC, radius: 3_000, unnamed: "Public toilet" },
+  water: { filters: [{ amenity: "drinking_water" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Drinking water" },
+  toilets: { filters: [{ amenity: "toilets" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Public toilet" },
   showers: { filters: [{ amenity: "shower" }], exclude: NOT_PUBLIC, radius: SEARCH_RADIUS_METERS, unnamed: "Public shower" },
-  laundry: { filters: [{ shop: "laundry" }], radius: 8_000 },
-  emergency: { filters: [{ amenity: "hospital", emergency: "yes" }], radius: 24_000 },
-  clinic: { filters: [{ amenity: "clinic" }, { healthcare: "clinic" }, { healthcare: "centre" }], radius: 8_000 },
-  pharmacy: { filters: [{ amenity: "pharmacy" }, { healthcare: "pharmacy" }], radius: 8_000 },
-  community: { filters: [{ amenity: "community_centre" }, { social_facility: "outreach" }], radius: 8_000 },
-  library: { filters: [{ amenity: "library" }], exclude: NOT_PUBLIC, radius: 8_000 },
-  jobs: { filters: [{ office: "employment_agency" }], radius: 24_000 },
+  laundry: { filters: [{ shop: "laundry" }], radius: 5_000 },
+  emergency: { filters: [{ amenity: "hospital", emergency: "yes" }], radius: SEARCH_RADIUS_METERS },
+  clinic: { filters: [{ amenity: "clinic" }, { healthcare: "clinic" }, { healthcare: "centre" }], radius: 5_000 },
+  pharmacy: { filters: [{ amenity: "pharmacy" }, { healthcare: "pharmacy" }], radius: 5_000 },
+  community: { filters: [{ amenity: "community_centre" }, { social_facility: "outreach" }], radius: 5_000 },
+  library: { filters: [{ amenity: "library" }], exclude: NOT_PUBLIC, radius: 6_000 },
+  jobs: { filters: [{ office: "employment_agency" }], radius: SEARCH_RADIUS_METERS },
 }
 
 export const OSM_KIND_ORDER = RESOURCE_KINDS.filter((kind): kind is OsmKind => kind !== "treatment")
@@ -125,9 +125,18 @@ export function overpassQuery(kind: OsmKind, lat: number, lon: number, radius?: 
   return `[out:json][timeout:20];(${osmSelectors(kind, lat, lon, radius)});out center tags;`
 }
 
-/** One request for every OpenStreetMap kind, so public Overpass servers are not hit a dozen times. */
-export function overpassNeedsQuery(lat: number, lon: number): string {
-  return `[out:json][timeout:25];(${OSM_KIND_ORDER.map((kind) => osmSelectors(kind, lat, lon)).join("")});out center tags;`
+/**
+ * Two lighter requests instead of one: everyday places close by, and sparser services searched
+ * wider. In dense cities a single query for everything is too heavy for the public servers, and
+ * splitting means one half can still answer if the other fails.
+ */
+export const OSM_QUERY_GROUPS: readonly (readonly OsmKind[])[] = [
+  ["water", "toilets", "pharmacy", "clinic", "laundry", "community", "library"],
+  ["food", "shelter", "showers", "emergency", "jobs"],
+]
+
+export function overpassNeedsQuery(lat: number, lon: number, kinds: readonly OsmKind[] = OSM_KIND_ORDER): string {
+  return `[out:json][timeout:20][maxsize:67108864];(${kinds.map((kind) => osmSelectors(kind, lat, lon)).join("")});out center tags;`
 }
 
 /** The kind a place belongs to, checked in display order; undefined when nothing matches. */

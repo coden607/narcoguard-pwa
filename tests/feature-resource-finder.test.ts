@@ -68,14 +68,19 @@ test("every kind belongs to exactly one need level, and every OpenStreetMap kind
   for (const spec of Object.values(OSM_KINDS)) assert.ok(spec.filters.length > 0 && spec.radius > 0)
 })
 
-test("the combined needs query asks Overpass once for every kind, with per-kind radius and public-access filters", async () => {
-  const { overpassNeedsQuery } = await import("../lib/resource-finder")
-  const query = overpassNeedsQuery(40.75, -73.99)
-  assert.match(query, /^\[out:json\]\[timeout:25\];\(/)
-  assert.match(query, /nwr\["amenity"="drinking_water"\]\["access"!~"\^\(private\|no\|customers\)\$"\]\(40.7231,-74.0256,40.7769,-73.9544\);/)
-  assert.match(query, /nwr\["amenity"="hospital"\]\["emergency"="yes"\]\(40.5344,-74.2746,40.9656,-73.7054\);/)
-  for (const tag of ["food_bank", "shelter", "pharmacy", "toilets", "shower", "laundry", "clinic", "community_centre", "library", "employment_agency"]) assert.match(query, new RegExp(`"${tag}"`))
-  assert.match(query, /\);out center tags;$/)
+test("needs are fetched in two lighter Overpass queries that together cover every OpenStreetMap kind once", async () => {
+  const { overpassNeedsQuery, OSM_QUERY_GROUPS, OSM_KIND_ORDER } = await import("../lib/resource-finder")
+  const grouped = OSM_QUERY_GROUPS.flat()
+  assert.deepEqual([...grouped].sort(), [...OSM_KIND_ORDER].sort())
+  assert.equal(new Set(grouped).size, grouped.length)
+  const near = overpassNeedsQuery(40.75, -73.99, OSM_QUERY_GROUPS[0])
+  assert.match(near, /^\[out:json\]\[timeout:20\]\[maxsize:67108864\];\(/)
+  assert.match(near, /nwr\["amenity"="drinking_water"\]\["access"!~"\^\(private\|no\|customers\)\$"\]\(40.732,-74.0137,40.768,-73.9663\);/)
+  assert.doesNotMatch(near, /hospital|food_bank/)
+  const wide = overpassNeedsQuery(40.75, -73.99, OSM_QUERY_GROUPS[1])
+  assert.match(wide, /nwr\["amenity"="hospital"\]\["emergency"="yes"\]\(40.6063,-74.1797,40.8937,-73.8003\);/)
+  assert.match(wide, /\);out center tags;$/)
+  for (const tag of ["food_bank", "shelter", "shower", "employment_agency"]) assert.match(wide, new RegExp(`"${tag}"`))
 })
 
 test("combined results are sorted into kinds by tags, unnamed public amenities get a plain name, and private ones are dropped", async () => {
@@ -90,7 +95,7 @@ test("combined results are sorted into kinds by tags, unnamed public amenities g
     { lat: 40.77, lon: -73.99, tags: { amenity: "library", name: "Main Library" } },
     { lat: 40.78, lon: -73.99, tags: { amenity: "pharmacy" } },
     { lat: 40.79, lon: -73.99, tags: { amenity: "bar", name: "Not a resource" } },
-    { lat: 40.78, lon: -73.99, tags: { amenity: "drinking_water", name: "Box corner, beyond 3 km" } },
+    { lat: 40.78, lon: -73.99, tags: { amenity: "drinking_water", name: "Box corner, beyond 2 km" } },
   ] }, origin)
   assert.deepEqual(grouped.water.map((r) => r.name), ["Drinking water"])
   assert.deepEqual(grouped.toilets.map((r) => [r.name, r.hours]), [["Public toilet", "24/7"]])

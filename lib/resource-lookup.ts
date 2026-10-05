@@ -1,4 +1,4 @@
-import { coarsen, fallbackLinks, findTreatmentUrl, MAX_RESULTS_PER_KIND, OSM_KIND_ORDER, overpassNeedsQuery, overpassQuery, parseFindTreatment, parseOverpass, parseOverpassNeeds, RESOURCE_KINDS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
+import { coarsen, fallbackLinks, findTreatmentUrl, MAX_RESULTS_PER_KIND, OSM_QUERY_GROUPS, overpassNeedsQuery, overpassQuery, parseFindTreatment, parseOverpass, parseOverpassNeeds, RESOURCE_KINDS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 
 const USER_AGENT = "NarcoGuard/2.0 (+https://www.narcoguard.app)"
 
@@ -144,19 +144,26 @@ export async function lookupNeeds(origin: ResourceOrigin): Promise<NeedsLookup> 
   if (!point) return { status: "unavailable", message: "That ZIP code could not be located.", kinds: allUnavailable() }
   const here = point
 
-  const [treatment, osm] = await Promise.allSettled([
+  const [treatment, ...osm] = await Promise.allSettled([
     fetchJson(findTreatmentUrl(here.lat, here.lon)).then((body) => parseFindTreatment(body).slice(0, MAX_RESULTS_PER_KIND)),
-    fetchOverpass(overpassNeedsQuery(here.lat, here.lon)).then((body) => parseOverpassNeeds(body, here)),
+    ...OSM_QUERY_GROUPS.map((group) => fetchOverpass(overpassNeedsQuery(here.lat, here.lon, group)).then((body) => parseOverpassNeeds(body, here))),
   ])
   if (treatment.status === "rejected") console.warn(`[resources] treatment lookup unavailable: ${failureReason(treatment.reason)}`)
-  if (osm.status === "rejected") console.warn(`[resources] OpenStreetMap lookup unavailable: ${failureReason(osm.reason)}`)
 
   const kinds = allUnavailable()
   if (treatment.status === "fulfilled") kinds.treatment = { status: "ok", results: treatment.value, fallback: fallbackLinks("treatment") }
-  if (osm.status === "fulfilled") for (const kind of OSM_KIND_ORDER) kinds[kind] = { status: "ok", results: osm.value[kind], fallback: fallbackLinks(kind) }
+  OSM_QUERY_GROUPS.forEach((group, index) => {
+    const result = osm[index]
+    if (result.status === "rejected") {
+      console.warn(`[resources] OpenStreetMap group ${index + 1} unavailable: ${failureReason(result.reason)}`)
+      return
+    }
+    for (const kind of group) kinds[kind] = { status: "ok", results: result.value[kind], fallback: fallbackLinks(kind) }
+  })
 
-  const failures = [treatment, osm].filter((result) => result.status === "rejected").length
-  const status = failures === 0 ? "ok" : failures === 2 ? "unavailable" : "partial"
-  const message = status === "ok" ? undefined : status === "partial" ? "One directory did not respond, so some needs show directories instead of listings." : "The live directories did not respond. Use the directories below."
+  const sources = [treatment, ...osm]
+  const failures = sources.filter((result) => result.status === "rejected").length
+  const status = failures === 0 ? "ok" : failures === sources.length ? "unavailable" : "partial"
+  const message = status === "ok" ? undefined : status === "partial" ? "Some directories did not respond, so those needs show directory links instead of listings." : "The live directories did not respond. Use the directories below."
   return { status, message, fetchedAt: new Date().toISOString(), kinds }
 }
