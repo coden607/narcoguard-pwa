@@ -1,19 +1,18 @@
 import { NextResponse } from "next/server"
 import {
-  ANGEL_DEFAULT_MODEL,
   angelRequestSchema,
   buildChatMessages,
   FIND_RESOURCES_TOOL,
   findResourcesArgsSchema,
   safetyNotices,
 } from "@/lib/angel-ai"
+import { resolveAngelProvider, type AngelProvider } from "@/lib/angel-provider"
 import { lookupResources, type ResourceLookup } from "@/lib/resource-lookup"
 
-// Conversations are relayed to Groq to generate a reply and are not stored or logged by NarcoGuard.
+// Conversations are relayed to the AI provider to generate a reply and are not stored or logged by NarcoGuard.
 // Upstream directories and the AI provider can be slow; allow time for one fallback attempt.
 export const maxDuration = 60
 
-const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 const noStore = { "Cache-Control": "private, no-store" }
 
 // Best-effort per-instance limit so one client cannot exhaust the free-tier quota.
@@ -31,34 +30,51 @@ function rateLimited(key: string, now = Date.now()) {
 type ChatMessage = { role: string; content: string | null; tool_calls?: ToolCall[]; tool_call_id?: string }
 type ToolCall = { id: string; type: "function"; function: { name: string; arguments: string } }
 
-async function complete(apiKey: string, model: string, messages: ChatMessage[], withTools: boolean) {
-  const response = await fetch(GROQ_URL, {
+class ProviderError extends Error {
+  constructor(readonly status: number) { super(`provider ${status}`) }
+}
+
+async function complete(provider: AngelProvider, messages: ChatMessage[], withTools: boolean, maxTokens = 1024) {
+  const response = await fetch(provider.url, {
     method: "POST",
-    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${provider.token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model,
+      model: provider.model,
       messages,
       temperature: 0.4,
-      max_completion_tokens: 1024,
-      ...(model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {}),
+      max_completion_tokens: maxTokens,
+      ...provider.extraBody,
       ...(withTools ? { tools: [FIND_RESOURCES_TOOL], tool_choice: "auto" } : {}),
     }),
     signal: AbortSignal.timeout(25_000),
   })
-  if (!response.ok) throw new Error(`provider ${response.status}`)
+  if (!response.ok) throw new ProviderError(response.status)
   const body = (await response.json()) as { choices?: { message?: ChatMessage }[] }
   const message = body.choices?.[0]?.message
-  if (!message) throw new Error("provider empty")
+  if (!message) throw new ProviderError(0)
   return message
 }
 
-export async function GET() {
-  return NextResponse.json({ available: Boolean(process.env.GROQ_API_KEY), provider: "Groq" }, { headers: noStore })
+const providerFor = (request: Request) => resolveAngelProvider(process.env, request.headers.get("x-vercel-oidc-token"))
+
+export async function GET(request: Request) {
+  const provider = providerFor(request)
+  // Preview-only health probe with a fixed prompt (no user content) to verify provider access.
+  if (new URL(request.url).searchParams.has("probe") && process.env.VERCEL_ENV !== "production") {
+    if (!provider) return NextResponse.json({ ok: false, provider: null }, { headers: noStore })
+    try {
+      const reply = await complete(provider, [{ role: "system", content: "Reply with the single word OK." }, { role: "user", content: "ping" }], false, 64)
+      return NextResponse.json({ ok: true, provider: provider.name, model: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
+    } catch (error) {
+      return NextResponse.json({ ok: false, provider: provider.name, status: error instanceof ProviderError ? error.status : "network" }, { headers: noStore })
+    }
+  }
+  return NextResponse.json({ available: Boolean(provider), provider: provider?.name ?? null }, { headers: noStore })
 }
 
 export async function POST(request: Request) {
-  const apiKey = process.env.GROQ_API_KEY
-  if (!apiKey) return NextResponse.json({ available: false, message: "Angel AI is not configured yet." }, { status: 503, headers: noStore })
+  const provider = providerFor(request)
+  if (!provider) return NextResponse.json({ available: false, message: "Angel AI is not configured yet." }, { status: 503, headers: noStore })
 
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
   if (rateLimited(forwarded)) return NextResponse.json({ error: "Too many messages. Wait a minute and try again." }, { status: 429, headers: noStore })
@@ -68,11 +84,10 @@ export async function POST(request: Request) {
 
   const latest = parsed.data.messages.at(-1)
   const notices = latest?.role === "user" ? safetyNotices(latest.content) : []
-  const model = process.env.GROQ_MODEL || ANGEL_DEFAULT_MODEL
   const messages: ChatMessage[] = buildChatMessages(parsed.data)
 
   try {
-    let reply = await complete(apiKey, model, messages, true)
+    let reply = await complete(provider, messages, true)
     let resources: (ResourceLookup & { kind: string }) | undefined
     const call = reply.tool_calls?.find((c) => c.function?.name === "find_resources")
     if (call) {
@@ -89,12 +104,13 @@ export async function POST(request: Request) {
           ? { status: result.status, results: result.results.map(({ name, address, phone, distanceMiles, source }) => ({ name, address, phone, distanceMiles, source })), fallback: result.fallback }
           : { error: "A valid kind and 5-digit ZIP code are required." }),
       })
-      reply = await complete(apiKey, model, messages, false)
+      reply = await complete(provider, messages, false)
     }
     const text = reply.content?.trim() || "I couldn't put together a reply. Please try asking another way."
     return NextResponse.json({ available: true, notices, reply: text, resources }, { headers: noStore })
-  } catch {
-    console.warn("[angel] provider request failed")
+  } catch (error) {
+    // Only the provider name and HTTP status are logged, never message content.
+    console.warn(`[angel] ${provider.name} request failed: ${error instanceof ProviderError ? error.status : "network"}`)
     return NextResponse.json({ available: true, notices, error: "Angel couldn't respond right now. Try again, or use the search below." }, { status: 502, headers: noStore })
   }
 }

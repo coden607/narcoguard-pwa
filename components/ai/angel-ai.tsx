@@ -21,6 +21,7 @@ const SUGGESTIONS = ["Help me set a goal for this week", "Find food help near me
 export function AngelAI({ compact = false }: { compact?: boolean }) {
   // Conversations live only in this component's memory; nothing is saved to the device or server.
   const [available, setAvailable] = useState<boolean | null>(null)
+  const [provider, setProvider] = useState<string | null>(null)
   const [consented, setConsented] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
@@ -33,7 +34,11 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     let cancelled = false
     fetch("/api/angel", { cache: "no-store" })
       .then((response) => response.json())
-      .then((body: { available?: boolean }) => { if (!cancelled) setAvailable(Boolean(body.available)) })
+      .then((body: { available?: boolean; provider?: string | null }) => {
+        if (cancelled) return
+        setAvailable(Boolean(body.available))
+        setProvider(body.provider ?? null)
+      })
       .catch(() => { if (!cancelled) setAvailable(false) })
     return () => { cancelled = true }
   }, [])
@@ -93,7 +98,9 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       {available && !consented && (
         <div className="space-y-3 rounded-lg border p-4" data-testid="angel-consent">
           <p className="text-sm">
-            Your messages are sent to Groq, an AI provider, to write Angel&apos;s replies. Groq says it does not train on them.
+            {provider === "Vercel AI Gateway"
+              ? "Your messages are sent through Vercel AI Gateway to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."
+              : "Your messages are sent to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."}
             NarcoGuard does not save your chat, and it disappears when you leave this page. Don&apos;t include names, addresses or other details that identify you.
           </p>
           <Button onClick={() => setConsented(true)}>I understand, talk to Angel</Button>
