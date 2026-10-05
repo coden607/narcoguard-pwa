@@ -16,7 +16,7 @@ const links = [
   { href: "/ar", label: "Training", icon: Sparkles },
   { href: "/hero-signup", label: "Hero Network", icon: ShieldCheck },
   { href: "/fund", label: "Support", icon: HeartPulse },
-  { href: "/auth", label: "Account", icon: LogIn },
+  { href: "/account", label: "Account", icon: LogIn },
 ]
 
 export function SiteChrome({ children }: { children: React.ReactNode }) {

@@ -29,6 +29,7 @@ import { watchDesignCalculations, watchDesignModel } from "@/lib/watch-design"
 import { WATCH_COMPONENTS } from "@/lib/watch-components"
 import { EngineeringDrawing } from "@/components/watch/engineering-drawing"
 import { Watch3D } from "@/components/watch/watch-3d"
+import { OwnerLock } from "@/components/watch/owner-lock"
 
 // =============================================================================
 // CANDIDATE BILL OF MATERIALS - supplier and part numbers require confirmation.
@@ -568,11 +569,12 @@ export default function NGWatchPage() {
         </section>
 
         <Tabs defaultValue="blueprint" className="gap-8">
-          <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4 glass neon-border">
+          <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-5 glass neon-border">
             <TabsTrigger value="blueprint">Blueprint</TabsTrigger>
             <TabsTrigger value="3d-view">3D View</TabsTrigger>
             <TabsTrigger value="bom">Bill of Materials</TabsTrigger>
             <TabsTrigger value="specs">Full Specifications</TabsTrigger>
+            <TabsTrigger value="owner-lock">Owner Lock</TabsTrigger>
           </TabsList>
 
           {/* Interactive Blueprint - DEFAULT TAB */}
@@ -797,6 +799,12 @@ export default function NGWatchPage() {
           </TabsContent>
 
           {/* Technical Specifications */}
+          <TabsContent value="owner-lock">
+            <HolographicCard className="p-6" glowIntensity="medium">
+              <OwnerLock />
+            </HolographicCard>
+          </TabsContent>
+
           <TabsContent value="specs">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {[

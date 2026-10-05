@@ -78,22 +78,36 @@ test.describe("PWA production flow", () => {
     await expect(page.getByRole("button", { name: "Skip Setup (Demo Mode)" })).toBeVisible()
   })
 
-  test("each opening of the emergency demo starts fresh", async ({ page }) => {
-    // This checks state, not animation: reduced motion makes the dialog close immediately.
+  test("the emergency button offers real actions and texts confirmed contacts only after a preview", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.addInitScript(() => localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true })))
     await page.goto("/")
     const trigger = page.getByRole("button", { name: /emergency options/i })
-
     await trigger.click()
-    await page.getByRole("button", { name: "Run Emergency Demo" }).click()
-    await expect(page.getByText("Starting the demonstration...")).toBeVisible()
+    const modal = page.getByTestId("emergency-modal")
+    await expect(modal.getByRole("link", { name: "Call 911" })).toHaveAttribute("href", "tel:911")
+    await expect(modal).toContainText("Give naloxone (Narcan): one spray in one nostril.")
+    await expect(modal.getByRole("link", { name: "Set them up" })).toHaveAttribute("href", "/contacts")
+    await expect(modal).not.toContainText(/demo/i)
     await page.keyboard.press("Escape")
-    await expect(page.getByRole("dialog")).toHaveCount(0)
 
+    const sent: unknown[] = []
+    await page.route("**/api/contacts", (route) => route.fulfill({ json: { available: true } }))
+    await page.route("**/api/alerts", async (route) => {
+      sent.push(route.request().postDataJSON())
+      await route.fulfill({ json: { results: [{ name: "Mary", masked: "(•••) •••-1234", state: "pending", label: "Sending…", statusToken: "t1" }] } })
+    })
+    await page.route("**/api/alerts/status", (route) => route.fulfill({ json: { statuses: [{ token: "t1", state: "delivered", label: "Delivered" }] } }))
+    await page.evaluate(() => localStorage.setItem("narcoguard_emergency_contacts_v1", JSON.stringify({ senderName: "Steve", contacts: [{ id: "1", name: "Mary", masked: "(•••) •••-1234", status: "confirmed", proof: "proof-1", addedAt: 1 }] })))
+    await page.reload()
     await trigger.click()
-    await expect(page.getByRole("button", { name: "Run Emergency Demo" })).toBeVisible()
-    await expect(page.getByText("Starting the demonstration...")).toHaveCount(0)
+    await page.getByRole("button", { name: "Text Mary" }).click()
+    await expect(page.getByTestId("emergency-alert-preview")).toContainText("NarcoGuard alert: Steve pressed their help button")
+    await page.getByLabel("Include my current location").uncheck()
+    expect(sent).toHaveLength(0)
+    await page.getByRole("button", { name: "Send now" }).click()
+    await expect(page.getByTestId("emergency-deliveries")).toContainText("Delivered", { timeout: 10_000 })
+    expect(sent).toEqual([{ proofs: ["proof-1"], test: false }])
   })
 
   test("mobile navigation closes after navigating", async ({ page }) => {
@@ -634,6 +648,104 @@ test.describe("Watch blueprint", () => {
     } else {
       await expect(viewer.getByText(/3D needs WebGL/)).toBeVisible()
     }
+  })
+
+  test("the owner lock keeps safety functions on a locked watch and never allows sale as a transfer", async ({ page }) => {
+    await page.goto("/watch")
+    await page.getByRole("tab", { name: "Owner Lock" }).click()
+    const lock = page.getByTestId("owner-lock")
+    await expect(lock.getByRole("img", { name: /Owner lock flow/ })).toBeVisible()
+    const locked = lock.locator("div").filter({ has: page.getByRole("heading", { name: "Locked", exact: true }) }).last()
+    await expect(locked.getByText("Works: SOS button")).toBeAttached()
+    await expect(locked.getByText("Off: Vitals monitoring")).toBeAttached()
+    await expect(lock.getByText("A sale or trade is never a reason.", { exact: false })).toBeVisible()
+  })
+})
+
+test.describe("Hero certification", () => {
+  test("the test runs in lockdown mode and leaving the screen voids the attempt", async ({ page }) => {
+    await page.goto("/hero-signup")
+    await page.getByRole("button", { name: "Start the test in lockdown mode" }).click()
+    const running = page.getByTestId("hero-test-running")
+    await expect(running.getByText("Question 1 of 12")).toBeVisible()
+    await running.getByRole("radio").first().check()
+    await running.getByRole("button", { name: "Next" }).click()
+    await expect(running.getByText("Question 2 of 12")).toBeVisible()
+    await page.evaluate(() => window.dispatchEvent(new Event("blur")))
+    await expect(page.getByTestId("hero-test-voided")).toContainText("Attempt voided")
+    await expect(page.getByRole("button", { name: "Take a new test" })).toBeVisible()
+  })
+
+  test("a perfect score earns a certificate; anything less shows what to review", async ({ page }) => {
+    const questions = Array.from({ length: 12 }, (_, i) => ({ id: `q${i}`, topic: "Topic", prompt: `Question ${i}`, options: [{ id: "a", text: "Right" }, { id: "b", text: "Wrong" }] }))
+    let graded = 0
+    await page.route("**/api/heroes/test", (route) => route.request().method() === "GET"
+      ? route.fulfill({ json: { version: 1, questions, attempt: "attempt-token", expiresAt: Date.now() + 1_200_000, certifying: true } })
+      : route.fulfill({ json: graded++ === 0
+        ? { passed: false, correct: 11, total: 12, missed: [{ id: "q0", topic: "Topic", prompt: "Question 0", why: "Because of the reason." }], certificate: null, recorded: false }
+        : { passed: true, correct: 12, total: 12, missed: [], certificate: "cert-token", recorded: false } }))
+    await page.route("**/api/heroes", (route) => route.fulfill({ json: { enrollment: false, certification: true, nearbyRequests: false } }))
+    await page.goto("/hero-signup")
+    for (const attempt of [0, 1]) {
+      await page.getByRole("button", { name: attempt === 0 ? "Start the test in lockdown mode" : "Take a new test" }).click()
+      const running = page.getByTestId("hero-test-running")
+      for (let i = 0; i < 12; i++) {
+        await running.getByRole("radio", { name: "Right" }).check()
+        await running.getByRole("button", { name: i === 11 ? "Submit for grading" : "Next" }).click()
+      }
+      const result = page.getByTestId("hero-test-result")
+      if (attempt === 0) {
+        await expect(result).toContainText("Not passed: 11 of 12")
+        await expect(result).toContainText("Because of the reason.")
+      } else {
+        await expect(result).toContainText("Passed: 12 of 12")
+      }
+    }
+    await expect(page.getByTestId("hero-enroll")).toContainText("You have a certificate on this device")
+    expect(await page.evaluate(() => localStorage.getItem("narcoguard_hero_certificate_v1"))).toBe("cert-token")
+  })
+})
+
+test.describe("Account", () => {
+  test("the account page says plainly when accounts are off and never blocks help", async ({ page }) => {
+    await page.route("**/api/auth", (route) => route.fulfill({ json: { available: false, authenticated: false, user: null } }))
+    await page.goto("/account")
+    await expect(page.getByTestId("account-unavailable")).toContainText("Everything works on this device without an account")
+  })
+
+  test("a signed-in person can back up and restore contacts with a passphrase", async ({ page }) => {
+    let stored: unknown = null
+    await page.route("**/api/auth", (route) => route.fulfill({ json: { available: true, authenticated: true, user: { email: "sam@example.com" } } }))
+    await page.route("**/api/account/vault", async (route) => {
+      if (route.request().method() === "PUT") {
+        stored = (route.request().postDataJSON() as { sealed: unknown }).sealed
+        return route.fulfill({ json: { saved: true } })
+      }
+      return route.fulfill({ json: { vault: stored ? { sealed: stored, version: 1, updatedAt: new Date().toISOString() } : null } })
+    })
+    await page.addInitScript(() => {
+      if (!sessionStorage.getItem("seeded")) {
+        localStorage.setItem("narcoguard_emergency_contacts_v1", JSON.stringify({ senderName: "Sam", contacts: [{ id: "c1", name: "Alex", masked: "•••• 1234", status: "confirmed", proof: "p", addedAt: 1 }] }))
+        sessionStorage.setItem("seeded", "1")
+      }
+    })
+    await page.goto("/account")
+    const panel = page.getByTestId("account-signed-in")
+    await expect(panel).toContainText("sam@example.com")
+    await panel.getByLabel("Passphrase", { exact: true }).fill("correct horse battery")
+    await panel.getByLabel(/Repeat passphrase/).fill("correct horse battery")
+    await panel.getByRole("button", { name: "Back up now" }).click()
+    await expect(page.getByText(/Backed up\. Only your passphrase/)).toBeVisible({ timeout: 20_000 })
+    expect(JSON.stringify(stored)).not.toContain("Alex")
+
+    await page.evaluate(() => localStorage.removeItem("narcoguard_emergency_contacts_v1"))
+    await panel.getByLabel("Passphrase", { exact: true }).fill("wrong passphrase!!")
+    await panel.getByRole("button", { name: "Restore to this device" }).click()
+    await expect(page.getByText("That passphrase does not open this backup.")).toBeVisible({ timeout: 20_000 })
+    await panel.getByLabel("Passphrase", { exact: true }).fill("correct horse battery")
+    await panel.getByRole("button", { name: "Restore to this device" }).click()
+    await expect(page.getByText(/Restored 1 contact/)).toBeVisible({ timeout: 20_000 })
+    expect(await page.evaluate(() => localStorage.getItem("narcoguard_emergency_contacts_v1"))).toContain("Alex")
   })
 })
 

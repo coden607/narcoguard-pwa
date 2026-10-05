@@ -43,13 +43,14 @@ export async function refreshSession(refreshToken: string) {
   return (await response.json()) as SupabaseSession
 }
 
-export async function getSession() {
+/** The signed-in user plus their access token, refreshing the session when needed. */
+export async function getAuthContext(): Promise<{ user: { id: string; email?: string }; accessToken: string } | null> {
   const store = await cookies()
   const accessToken = store.get(ACCESS_COOKIE)?.value
   const refreshToken = store.get(REFRESH_COOKIE)?.value
   if (accessToken) {
     const response = await supabaseRequest("/auth/v1/user", { headers: { Authorization: `Bearer ${accessToken}` } })
-    if (response.ok) return (await response.json()) as { id: string; email?: string }
+    if (response.ok) return { user: (await response.json()) as { id: string; email?: string }, accessToken }
   }
   if (!refreshToken) return null
   const session = await refreshSession(refreshToken)
@@ -58,7 +59,32 @@ export async function getSession() {
     return null
   }
   await storeSession(session)
-  return session.user ? { id: session.user.id, email: session.user.email } : null
+  return session.user ? { user: { id: session.user.id, email: session.user.email }, accessToken: session.access_token } : null
+}
+
+export async function getSession() {
+  return (await getAuthContext())?.user ?? null
+}
+
+export const isAuthConfigured = () => Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
+
+/** PostgREST call as the signed-in user, so row-level security applies. */
+export function userRest(accessToken: string, path: string, init: RequestInit = {}) {
+  const headers = new Headers(init.headers)
+  headers.set("Authorization", `Bearer ${accessToken}`)
+  return supabaseRequest(`/rest/v1/${path}`, { ...init, headers })
+}
+
+/** PostgREST call with the service role (bypasses RLS). Server-only writes the client must not make itself. */
+export function serviceRest(path: string, init: RequestInit = {}) {
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY
+  if (!key) throw new Error("Supabase service access is not configured")
+  const { url } = getSupabaseConfig()
+  const headers = new Headers(init.headers)
+  headers.set("apikey", key)
+  headers.set("Authorization", `Bearer ${key}`)
+  headers.set("Content-Type", "application/json")
+  return fetch(`${url}/rest/v1/${path}`, { ...init, headers, cache: "no-store" })
 }
 
 export async function storeSession(session: SupabaseSession) {

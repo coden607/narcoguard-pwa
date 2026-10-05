@@ -74,6 +74,20 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Accounts, backup, watch registration and Hero certificates</h2>
+            <p>
+              An account is optional and never needed for emergency help. Encrypted backup seals your contacts and settings on your
+              device with a passphrase NarcoGuard never receives; we store only the encrypted result and cannot read it. Your Guardian
+              planner is never included. You can delete the backup at any time.
+            </p>
+            <p>
+              Registering a NarcoGuard watch stores its serial number with your account and a salted hash of your account id, so the watch
+              can unlock only for you. It does not use or store your location. Hero certification stores only that you passed, the test
+              version and the dates; your answers are graded and discarded, never stored or logged.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="text-2xl font-semibold text-foreground">Emergency and health limitations</h2>
             <p>
               The public app is a software and wearable research concept, not an emergency dispatch service or a

@@ -281,6 +281,32 @@ function SectionView() {
   )
 }
 
+function CaseBackDetail() {
+  const scale = 0.78
+  const cx = 169
+  const cy = 181
+  const r = (mm: number) => mm * scale
+  const { caseRadius, opticalWindowDiameter, qiCoil } = ENVELOPE
+  const textRadius = r(18.3)
+  const arc = `M ${cx - textRadius} ${cy} A ${textRadius} ${textRadius} 0 1 1 ${cx + textRadius} ${cy} A ${textRadius} ${textRadius} 0 1 1 ${cx - textRadius} ${cy}`
+  return (
+    <g>
+      <text x={135} y={155} fontSize={2.6} fontWeight={700} fill={C.line}>DETAIL C — CASE BACK MARKING</text>
+      <text x={135} y={158.6} fontSize={2} fill={C.faint}>SCALE 0.78 : 1 · OWNER LOCK, SERIAL IS AN EXAMPLE</text>
+      <circle cx={cx} cy={cy} r={r(caseRadius)} fill="none" stroke={C.line} strokeWidth={0.45} />
+      <circle cx={cx} cy={cy} r={r(caseRadius - 1.5)} fill="#2a4a6e" fillOpacity={0.5} stroke={C.line} strokeWidth={0.25} />
+      <circle cx={cx} cy={cy} r={r(qiCoil.outer / 2)} fill="none" stroke={C.copper} strokeWidth={0.2} strokeDasharray="1.2 0.8" />
+      <circle cx={cx} cy={cy} r={r(qiCoil.inner / 2)} fill="none" stroke={C.copper} strokeWidth={0.2} strokeDasharray="1.2 0.8" />
+      <circle cx={cx} cy={cy} r={r(opticalWindowDiameter / 2)} fill={C.glass} fillOpacity={0.35} stroke={C.line} strokeWidth={0.25} />
+      <path id="case-back-arc" d={arc} fill="none" />
+      <text fontSize={1.55} fill={C.line} letterSpacing={0.12}>
+        <textPath href="#case-back-arc" startOffset="2%">NG-7K2P-Q9XD · REGISTERED TO ITS OWNER · NOT FOR RESALE · NARCOGUARD.APP</textPath>
+      </text>
+      <text x={cx} y={cy + r(9.5)} textAnchor="middle" fontSize={1.6} fill={C.faint}>LASER MARK, DEPTH TBD</text>
+    </g>
+  )
+}
+
 function Table({ x, y, title, columns, rows, widths }: { x: number; y: number; title: string; columns: string[]; rows: string[][]; widths: number[] }) {
   const rowH = 4.1
   const total = widths.reduce((a, b) => a + b, 0)
@@ -380,6 +406,7 @@ export function EngineeringDrawing({ selected, onSelect }: { selected: string | 
           {SECTION_CALLOUTS.map((spec) => <Callout key={`s-${spec.id}`} spec={spec} selected={selected} onSelect={select} />)}
 
           <Table x={135} y={124} title="LAYER STACK (z FROM CASE BACK, mm)" columns={["LAYER", "z", "THK"]} widths={[44, 15, 9]} rows={layerRows} />
+          <CaseBackDetail />
           <Table x={207} y={124} title="PARTS LIST (CANDIDATE)" columns={["#", "ITEM", "PART NO."]} widths={[5, 40, 37]} rows={partRows} />
 
           <g fontSize={2.15} fill={C.line}>

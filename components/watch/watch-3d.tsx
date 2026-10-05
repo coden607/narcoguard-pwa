@@ -56,6 +56,28 @@ function drawWatchFace(canvas: HTMLCanvasElement) {
   ctx.fillText("concept display", c, c + size * 0.19)
 }
 
+/** Laser marking on the case back: serial (example) and the owner-lock notice, set around the rim. */
+function drawCaseBackMark(canvas: HTMLCanvasElement) {
+  const size = canvas.width
+  const ctx = canvas.getContext("2d")!
+  ctx.clearRect(0, 0, size, size)
+  const text = "NG-7K2P-Q9XD · REGISTERED TO ITS OWNER · NOT FOR RESALE · NARCOGUARD.APP · "
+  const radius = size * 0.43
+  ctx.fillStyle = "rgba(225,230,238,0.9)"
+  ctx.font = `600 ${size * 0.03}px ui-monospace, monospace`
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+  const step = (Math.PI * 2) / text.length
+  for (let i = 0; i < text.length; i++) {
+    const angle = -Math.PI / 2 + i * step
+    ctx.save()
+    ctx.translate(size / 2 + Math.cos(angle) * radius, size / 2 + Math.sin(angle) * radius)
+    ctx.rotate(angle + Math.PI / 2)
+    ctx.fillText(text[i], 0, 0)
+    ctx.restore()
+  }
+}
+
 export function Watch3D({ selected, onSelect }: { selected: string | null; onSelect: (id: string | null) => void }) {
   const mountRef = useRef<HTMLDivElement>(null)
   const apiRef = useRef<SceneApi | null>(null)
@@ -203,7 +225,15 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
         led.position.set(Math.cos(angle) * 3.4, -0.32, Math.sin(angle) * 3.4)
         leds.add(led)
       }
-      backGroup.add(back, opticalWindow, coil, flexMesh, leds)
+      const markCanvas = document.createElement("canvas")
+      markCanvas.width = markCanvas.height = 1024
+      drawCaseBackMark(markCanvas)
+      const markTexture = track(new THREE.CanvasTexture(markCanvas))
+      markTexture.colorSpace = THREE.SRGBColorSpace
+      const mark = mesh(new THREE.CircleGeometry(caseRadius - 2.4, 128), track(new THREE.MeshStandardMaterial({ map: markTexture, transparent: true, roughness: 0.6, metalness: 0.2, depthWrite: false })), "nfc")
+      mark.rotation.x = Math.PI / 2
+      mark.position.y = -0.03
+      backGroup.add(back, opticalWindow, coil, flexMesh, leds, mark)
 
       // Battery and main board.
       const battery = part("battery")

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { clearSession, ensureProfile, getSession, signIn, signUp, storeSession } from "@/lib/supabase-auth"
+import { clearSession, ensureProfile, getSession, isAuthConfigured, signIn, signUp, storeSession } from "@/lib/supabase-auth"
 
 const schema = z.object({
   action: z.enum(["login", "signup", "logout"]),
@@ -20,9 +20,10 @@ function isSameOrigin(request: Request) {
 }
 
 export async function GET() {
+  if (!isAuthConfigured()) return NextResponse.json({ available: false, authenticated: false, user: null }, { headers: { "Cache-Control": "private, no-store" } })
   try {
     const user = await getSession()
-    return NextResponse.json({ authenticated: Boolean(user), user: user ? { id: user.id, email: user.email } : null })
+    return NextResponse.json({ available: true, authenticated: Boolean(user), user: user ? { id: user.id, email: user.email } : null })
   } catch {
     return NextResponse.json({ error: "Authentication service is unavailable" }, { status: 503 })
   }
@@ -30,6 +31,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   if (!isSameOrigin(request)) return NextResponse.json({ error: "Cross-origin request rejected" }, { status: 403 })
+  if (!isAuthConfigured()) return NextResponse.json({ error: "Accounts are not switched on yet. Everything else works without one." }, { status: 503 })
   try {
     const input = schema.parse(await request.json())
     if (input.action === "logout") {
