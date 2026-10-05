@@ -22,11 +22,9 @@ import {
   DollarSign,
   Package,
   ExternalLink,
-  Sun,
-  Fingerprint,
   Watch,
   Cog,
-  Thermometer,
+  Satellite,
   Lock,
 } from "lucide-react"
 import Link from "next/link"
@@ -39,20 +37,20 @@ import { watchDesignCalculations, watchDesignModel } from "@/lib/watch-design"
 const billOfMaterials = [
   {
     category: "Main Processing Unit",
-    description: "Dual-processor architecture for health AI + smartwatch OS simultaneously",
+    description: "Main Wear OS platform plus an independent safety microcontroller",
     items: [
       {
-        name: "Qualcomm Snapdragon W5+ Gen 1",
-        description: "Primary smartwatch SoC - 4nm, quad-core Cortex-A53 1.7GHz, Adreno 702 GPU, same chip as Samsung Galaxy Watch 6",
+        name: "Qualcomm Snapdragon W5+ Gen 2",
+        description: "Current Qualcomm wearable platform (announced Aug 2025): 4nm SoC with always-on co-processor, Wear OS support, Location ML 3.0 GNSS and Skylo NB-NTN satellite emergency messaging. Requires a Qualcomm customer agreement; price is an estimate.",
         quantity: 1,
-        unitPrice: 24.00,
+        unitPrice: 26.00,
         supplier: "Qualcomm",
-        partNumber: "SW5100",
-        datasheet: "qualcomm.com/products/wearables",
+        partNumber: "W5+ Gen 2 (confirm SKU with Qualcomm)",
+        datasheet: "qualcomm.com/wearables",
       },
       {
-        name: "Nordic nRF5340 Co-Processor",
-        description: "Dedicated always-on health monitoring co-processor, dual-core ARM Cortex-M33, handles vitals + overdose AI while main SoC sleeps",
+        name: "Nordic nRF5340 Safety MCU",
+        description: "Independent low-power microcontroller that keeps sensor sampling and local alarms running if the main OS crashes or reboots. Algorithms on it are unvalidated.",
         quantity: 1,
         unitPrice: 8.50,
         supplier: "Nordic Semiconductor",
@@ -60,13 +58,13 @@ const billOfMaterials = [
         datasheet: "nordicsemi.com/nRF5340",
       },
       {
-        name: "Micron MT29F4G01ABAFDWB",
-        description: "4GB NAND flash storage for OS, apps, health data, maps",
+        name: "32 GB eMMC 5.1 storage",
+        description: "Storage for Wear OS, apps and on-device logs. Wear OS needs far more than the 4 Gbit (512 MB) SPI NAND previously listed. Vendor (Samsung, Kioxia or Micron) to be selected by quote.",
         quantity: 1,
-        unitPrice: 3.20,
-        supplier: "Micron Technology",
-        partNumber: "MT29F4G01ABAFDWB-IT:F",
-        datasheet: "micron.com",
+        unitPrice: 6.00,
+        supplier: "Samsung / Kioxia / Micron (TBD)",
+        partNumber: "TBD (32 GB eMMC 5.1)",
+        datasheet: "jedec.org (eMMC 5.1)",
       },
       {
         name: "Micron MT53E512M32D2DS-046",
@@ -80,17 +78,17 @@ const billOfMaterials = [
     ],
   },
   {
-    category: "Health & Biometric Sensors (Candidate)",
+    category: "Health Sensors (Candidate)",
     description: "Candidate sensor array for research; accuracy and overdose-detection performance are unverified",
     items: [
       {
-        name: "Maxim MAX86178",
-        description: "Optical PPG + ECG + BioZ combo sensor - heart rate, SpO2, single-lead ECG, body impedance. Same class as Apple Watch Series 9 sensor",
+        name: "Analog Devices MAX86178",
+        description: "Optical PPG + ECG + bioimpedance analog front end: heart rate, SpO2 estimate, single-lead ECG and skin-contact detection. Wrist SpO2 accuracy, especially across skin tones, must be validated.",
         quantity: 1,
         unitPrice: 12.50,
         supplier: "Analog Devices (Maxim)",
         partNumber: "MAX86178",
-        datasheet: "maximintegrated.com/MAX86178",
+        datasheet: "analog.com/MAX86178",
       },
       {
         name: "Bosch BMP390",
@@ -103,7 +101,7 @@ const billOfMaterials = [
       },
       {
         name: "STMicro LSM6DSO32X",
-        description: "6-axis IMU (accelerometer 32g + gyroscope) for fall detection, step counting, sleep tracking, kinetic energy measurement",
+        description: "6-axis IMU (32 g accelerometer + gyroscope) for motion, falls, sleep and motion-artifact rejection in the vitals pipeline",
         quantity: 1,
         unitPrice: 4.20,
         supplier: "STMicroelectronics",
@@ -129,50 +127,32 @@ const billOfMaterials = [
         datasheet: "melexis.com/MLX90632",
       },
       {
-        name: "ams AS7038RB",
-        description: "Electrodermal activity (EDA/GSR) sensor for stress monitoring and cEDA (like Fitbit Sense)",
+        name: "ams-OSRAM AS7038RB",
+        description: "Candidate secondary biosensor front end for electrodermal/stress research; confirm feature set and long-term availability before committing",
         quantity: 1,
         unitPrice: 3.90,
         supplier: "ams-OSRAM",
         partNumber: "AS7038RB",
         datasheet: "ams-osram.com",
       },
-      {
-        name: "Goodix GH3220",
-        description: "Optical fingerprint sensor embedded in crown button - biometric lock ties watch to registered owner, prevents resale/theft",
-        quantity: 1,
-        unitPrice: 4.50,
-        supplier: "Goodix Technology",
-        partNumber: "GH3220",
-        datasheet: "goodix.com",
-      },
-      {
-        name: "Interlink FSR 402",
-        description: "Force-sensitive resistor for skin contact detection before injection",
-        quantity: 1,
-        unitPrice: 4.50,
-        supplier: "Interlink Electronics",
-        partNumber: "FSR-402",
-        datasheet: "interlinkelectronics.com",
-      },
     ],
   },
   {
-    category: "Connectivity (sealed eSIM + multi-band)",
+    category: "Connectivity (5G RedCap + eSIM + satellite SOS)",
     description: "Candidate standalone connectivity; carrier and RF integration are unverified",
     items: [
       {
-        name: "Qualcomm SDX35 4G LTE Modem (Candidate)",
-        description: "Candidate 4G LTE wearable modem path; carrier, antenna, eSIM, and regulatory integration are unverified",
+        name: "Qualcomm Snapdragon X35 (SDX35) 5G RedCap modem",
+        description: "5G NR-Light (RedCap) modem with LTE Cat 4 fallback and L1+L5 GNSS, designed for wearables. Carrier certification, antenna design and power budget unverified.",
         quantity: 1,
         unitPrice: 18.00,
         supplier: "Qualcomm",
         partNumber: "SDX35",
-        datasheet: "qualcomm.com",
+        datasheet: "qualcomm.com (Snapdragon X35 product brief)",
       },
       {
         name: "STMicro ST54K NFC Controller",
-        description: "NFC for contactless payments (Google Pay), emergency ID scan, and quick device pairing",
+        description: "NFC for an emergency medical-ID tap and pairing. Contactless payments would need Google Wallet certification; Apple Pay is not available on non-Apple watches.",
         quantity: 1,
         unitPrice: 2.80,
         supplier: "STMicroelectronics",
@@ -180,17 +160,8 @@ const billOfMaterials = [
         datasheet: "st.com/ST54",
       },
       {
-        name: "Broadcom BCM47765 GNSS",
-        description: "Candidate multi-constellation GNSS path; accuracy depends on antenna, RF design, sky view, corrections, and field testing",
-        quantity: 1,
-        unitPrice: 5.50,
-        supplier: "Broadcom",
-        partNumber: "BCM47765",
-        datasheet: "broadcom.com",
-      },
-      {
-        name: "Infineon CYW43022 Wi-Fi/BT",
-        description: "Candidate Wi-Fi/Bluetooth combo; standard and RF integration require confirmation",
+        name: "Infineon CYW43022 Wi-Fi/Bluetooth",
+        description: "Candidate low-power Wi-Fi + Bluetooth LE combo for phone pairing and Wi-Fi sync; confirm compatibility with the W5+ Gen 2 reference design",
         quantity: 1,
         unitPrice: 4.80,
         supplier: "Infineon (Cypress)",
@@ -198,64 +169,37 @@ const billOfMaterials = [
         datasheet: "infineon.com/CYW43022",
       },
       {
-        name: "Thales ELS62T1 eSIM",
-        description: "Embedded SIM chip (eUICC) with remote provisioning, supports any carrier worldwide",
+        name: "STMicro ST4SIM-200M eSIM (eUICC)",
+        description: "Embedded SIM for standalone cellular with remote carrier provisioning (GSMA). Replaces the previously listed Thales ELS62, which is a separate LTE module, not an eSIM.",
         quantity: 1,
         unitPrice: 2.50,
-        supplier: "Thales Group",
-        partNumber: "ELS62T1",
-        datasheet: "thalesgroup.com",
+        supplier: "STMicroelectronics",
+        partNumber: "ST4SIM-200M",
+        datasheet: "st.com/ST4SIM",
       },
       {
-        name: "Taoglas FXP840.07.0100A",
-        description: "Ultra-wideband (UWB) ceramic antenna for precise indoor positioning and Find My Watch",
+        name: "Cellular/GNSS/Wi-Fi antenna set (custom)",
+        description: "Antennas co-designed with the titanium case (for example by Taoglas or Ignion); a metal case needs dedicated antenna slots or a ceramic/sapphire window",
         quantity: 1,
         unitPrice: 3.20,
-        supplier: "Taoglas",
-        partNumber: "FXP840.07.0100A",
+        supplier: "Taoglas / Ignion (TBD)",
+        partNumber: "TBD (custom)",
         datasheet: "taoglas.com",
       },
     ],
   },
   {
-    category: "Candidate Sealed Power System (harvesting + Qi)",
-    description: "Candidate power architecture. Harvesting, battery life, thermal behavior, and safety require bench validation.",
+    category: "Sealed Power System (battery + Qi)",
+    description: "Battery with sealed Qi charging. Solar, kinetic and thermoelectric harvesters were removed: on a wrist they produce microwatts to a few milliwatts, far below a cellular smartwatch's load, and the listed solar supplier (Alta Devices) shut down in 2019.",
     items: [
       {
-        name: "Samsung SDI 503535 LiPo Cell",
-        description: "500mAh curved lithium polymer battery, custom form factor to match case curvature. 800+ charge cycle life",
+        name: "500 mAh Li-ion polymer cell (certified)",
+        description: "Custom-shape lithium-polymer cell with protection circuit; must hold IEC 62133-2 and UN38.3 certification. Supplier (e.g. ATL, Amperex, or other wearable-cell maker) to be quoted.",
         quantity: 1,
         unitPrice: 8.50,
-        supplier: "Samsung SDI",
-        partNumber: "503535",
-        datasheet: "samsungsdi.com",
-      },
-      {
-        name: "Alta Devices Single-Junction GaAs Solar Cell",
-        description: "Candidate flexible solar source; output, area, illumination, orientation, thermal behavior, and conversion losses are unverified",
-        quantity: 1,
-        unitPrice: 18.00,
-        supplier: "Alta Devices (Hanergy)",
-        partNumber: "AltaDevices-FlexCell-1W",
-        datasheet: "altadevices.com",
-      },
-      {
-        name: "Kinetron MGS 26.4 Micro Energy Generator",
-        description: "Candidate kinetic source; harvested power and mechanical integration require measurement",
-        quantity: 1,
-        unitPrice: 22.00,
-        supplier: "Kinetron BV",
-        partNumber: "MGS-26.4",
-        datasheet: "kinetron.eu",
-      },
-      {
-        name: "Micropelt MPG-D751 Thermogenerator",
-        description: "Candidate thermoelectric source; output depends on thermal path and environment and requires measurement",
-        quantity: 1,
-        unitPrice: 14.00,
-        supplier: "Micropelt GmbH",
-        partNumber: "MPG-D751",
-        datasheet: "micropelt.com",
+        supplier: "Qualified wearable-cell supplier (TBD)",
+        partNumber: "TBD (500 mAh)",
+        datasheet: "iec.ch (IEC 62133-2)",
       },
       {
         name: "Texas Instruments BQ51013B",
@@ -277,7 +221,7 @@ const billOfMaterials = [
       },
       {
         name: "Texas Instruments BQ25619",
-        description: "Single-input battery charger/power-path IC candidate; separate source arbitration and regulation would be required for multiple harvesters",
+        description: "Single-cell charger with power path and low quiescent current, fed by the Qi receiver",
         quantity: 1,
         unitPrice: 3.50,
         supplier: "Texas Instruments",
@@ -291,17 +235,17 @@ const billOfMaterials = [
     description: "Candidate display, audio, and haptic modules; brightness, acoustics, ingress, and reliability require qualification",
     items: [
       {
-        name: 'BOE 1.45" LTPO AMOLED Display',
-        description: '1.45" round 466x466 LTPO AMOLED, 326 PPI, 2000 nits peak brightness, always-on display 1-120Hz adaptive refresh. Same class as Apple Watch Series 9',
+        name: "1.4–1.5 in round LTPO AMOLED module",
+        description: "Round always-on-capable AMOLED with touch; resolution, brightness and price from a supplier quote (e.g. BOE, Samsung Display)",
         quantity: 1,
         unitPrice: 32.00,
-        supplier: "BOE Technology",
-        partNumber: "AV145ZPM-N10",
+        supplier: "BOE / Samsung Display (TBD)",
+        partNumber: "TBD (quote)",
         datasheet: "boe.com",
       },
       {
         name: "Knowles SPH0645LM4H-B MEMS Mic",
-        description: "Digital MEMS microphone with noise cancellation for voice commands, emergency calls, voice-to-text",
+        description: "Digital I2S MEMS microphone for voice input to Angel AI and calls; behind a waterproof acoustic membrane",
         quantity: 1,
         unitPrice: 1.50,
         supplier: "Knowles Corporation",
@@ -309,17 +253,17 @@ const billOfMaterials = [
         datasheet: "knowles.com",
       },
       {
-        name: "AAC ACAM3825-T-A1 Micro Speaker",
-        description: "Candidate micro-speaker; acoustic output and emergency-alarm audibility require enclosure measurements",
+        name: "Micro speaker (sealed, wearable-grade)",
+        description: "Waterproof micro speaker for alarms and voice; part selected after measuring alarm loudness in the enclosure",
         quantity: 1,
         unitPrice: 2.20,
-        supplier: "AAC Technologies",
-        partNumber: "ACAM3825-T-A1",
+        supplier: "AAC Technologies / Knowles (TBD)",
+        partNumber: "TBD",
         datasheet: "aactechnologies.com",
       },
       {
         name: "TDK PowerHap 1204H018V",
-        description: "Piezoelectric haptic actuator for precise taptic feedback (Apple-quality haptics). Waveform library for distinct notification patterns",
+        description: "Piezoelectric haptic actuator for distinct alert vibration patterns",
         quantity: 1,
         unitPrice: 3.80,
         supplier: "TDK Corporation",
@@ -329,12 +273,12 @@ const billOfMaterials = [
     ],
   },
   {
-    category: "Naloxone Auto-Injection System (Patent-Pending)",
-    description: "Research-only medication-delivery concept. No actuator, cartridge, or medication behavior is implemented or validated",
+    category: "Naloxone Delivery Module (future research only)",
+    description: "Research-only concept. A wearable that injects a drug is an FDA-regulated drug-device combination product; nothing here is implemented, tested or approved",
     items: [
       {
         name: "Faulhaber 0206B Micro DC Motor",
-        description: "1.9mm diameter coreless micro motor drives the injection plunger. 0.07mNm torque, 16000 RPM. Swiss precision manufacturing",
+        description: "1.9 mm coreless micro motor considered for driving a plunger. Force, speed and reliability for an injection must be proven on a bench before any further design.",
         quantity: 1,
         unitPrice: 28.00,
         supplier: "Faulhaber Group",
@@ -342,46 +286,28 @@ const billOfMaterials = [
         datasheet: "faulhaber.com/0206B",
       },
       {
-        name: "Custom Micro-Needle Cartridge Assembly",
-        description: " candidate 316L stainless steel retractable 30-gauge micro-needle (0.3mm), spring-loaded with 4mm penetration depth. Needle retracts and locks after use",
+        name: "Needle and insertion mechanism (to be specified)",
+        description: "Needle gauge, length and insertion speed must be set by clinical engineering for intramuscular naloxone. The 30-gauge, 4 mm micro-needle previously listed does not match how naloxone is injected. (For reference, the discontinued Evzio auto-injector delivered 2 mg in 0.4 mL.)",
         quantity: 1,
         unitPrice: 15.00,
-        supplier: "Nanopass Technologies / Custom",
-        partNumber: "NG-NEEDLE-30G-4MM",
-        datasheet: "nanopass.com",
+        supplier: "Medical-device contract manufacturer (TBD)",
+        partNumber: "TBD",
+        datasheet: "fda.gov (combination products)",
       },
       {
-        name: "Naloxone Cartridge Housing (Modular)",
-        description: "Candidate COC reservoir concept; capacity, sterility, shelf life, and snap-fit sealing require validated packaging and stability data",
+        name: "Naloxone primary container (to be specified)",
+        description: "Drug container must come from a licensed drug manufacturer with stability, sterility and shelf-life data; it cannot be filled by NarcoGuard",
         quantity: 1,
         unitPrice: 8.00,
-        supplier: "Gerresheimer AG / Custom",
-        partNumber: "NG-CART-COC-04ML",
-        datasheet: "gerresheimer.com",
-      },
-      {
-        name: "Takasago Fluidic SMVT Micro Valve",
-        description: "Normally-closed micro solenoid valve controls naloxone flow. 0.5ms response time, zero dead volume",
-        quantity: 1,
-        unitPrice: 12.00,
-        supplier: "Takasago Fluidic Systems",
-        partNumber: "SMVT-3M2-NO",
-        datasheet: "takasago-fluidics.com",
-      },
-      {
-        name: "Epson S1V30340 Voice Synth IC",
-        description: "Dedicated speech synthesis chip for verbal overdose alerts and Narcan administration guidance during emergency",
-        quantity: 1,
-        unitPrice: 4.50,
-        supplier: "Epson",
-        partNumber: "S1V30340",
-        datasheet: "epson.com",
+        supplier: "Licensed pharmaceutical partner (TBD)",
+        partNumber: "TBD",
+        datasheet: "fda.gov",
       },
     ],
   },
   {
     category: "Enclosure, Strap & Modular Assembly",
-    description: "Built to last a lifetime with individually replaceable modules. Biometric-locked to prevent theft/resale",
+    description: "Titanium case with controlled-service modules; ingress, durability and skin-contact qualification required",
     items: [
       {
         name: "Grade 5 Titanium (Ti-6Al-4V) Case",
@@ -464,10 +390,10 @@ const calculateBOMTotal = () => {
 const componentBOMTotal = calculateBOMTotal()
 const assemblyLabor = 35.00
 const qualityTesting = 25.00
-const fdaCertification = 15.00
+const complianceTesting = 15.00
 const packaging = 8.00
 const naloxoneRefill = 42.00
-const totalPerUnit = componentBOMTotal + assemblyLabor + qualityTesting + fdaCertification + packaging
+const totalPerUnit = componentBOMTotal + assemblyLabor + qualityTesting + complianceTesting + packaging
 const totalWithNaloxone = totalPerUnit + naloxoneRefill
 const fundingGoal80Units = totalWithNaloxone * 80
 
@@ -484,7 +410,7 @@ const simulationPanels = [
   {
     label: "Power margin",
     value: "Unverified",
-    detail: "Harvesting and load figures are design targets, not measured data",
+    detail: "Battery and load figures are design targets, not measured data",
   },
   {
     label: "BOM integrity",
@@ -511,20 +437,17 @@ export default function NGWatchPage() {
   }
 
   const watchComponents = [
-    { id: "snapdragon", name: "Snapdragon W5+ SoC", x: 40, y: 38, color: "#FF4136", description: "Qualcomm SW5100 - quad-core 4nm processor running Wear OS with NarcoGuard custom firmware. 1.7GHz, Adreno 702 GPU." },
-    { id: "nordic", name: "Nordic nRF5340 Co-Processor", x: 60, y: 38, color: "#FF851B", description: "Candidate low-power processing path; firmware power draw and clinical performance are unverified." },
+    { id: "snapdragon", name: "Snapdragon W5+ Gen 2", x: 40, y: 38, color: "#FF4136", description: "Qualcomm's current wearable platform (2025): 4nm, Wear OS, always-on co-processor, GNSS and satellite SOS messaging. NarcoGuard firmware does not exist yet." },
+    { id: "nordic", name: "nRF5340 Safety MCU", x: 60, y: 38, color: "#FF851B", description: "Independent microcontroller intended to keep sensing and local alarms running if the main OS fails; firmware not written." },
     { id: "display", name: '1.45" LTPO AMOLED', x: 50, y: 50, color: "#FFDC00", description: "BOE 466x466 round display, 2000 nits, 1-120Hz adaptive. Always-on mode shows vitals without waking main processor." },
-    { id: "ppg-ecg", name: "MAX86178 PPG+ECG+BioZ", x: 50, y: 78, color: "#FF69B4", description: "Tri-mode optical/electrical heart sensor. Continuous PPG, on-demand single-lead ECG, bioimpedance for body composition." },
-    { id: "naloxone", name: "Auto-Injection Module", x: 85, y: 50, color: "#FF0000", description: "Faulhaber micro-motor + retractable 30G needle + 0.4ml naloxone cartridge. Deploys in within a future validated timing target. Snap-fit replaceable." },
-    { id: "solar", name: "GaAs Solar Cell Ring", x: 50, y: 15, color: "#2ECC40", description: "Candidate solar concept; measured output and thermal integration are unverified." },
-    { id: "kinetic", name: "Kinetic Rotor (Seiko-style)", x: 18, y: 50, color: "#B10DC9", description: "Candidate kinetic concept; measured output and mechanical integration are unverified." },
-    { id: "thermo", name: "Thermoelectric Generator", x: 35, y: 86, color: "#FF6600", description: "Candidate thermoelectric concept; measured output and thermal path are unverified." },
-    { id: "battery", name: "500mAh LiPo + Qi Charging", x: 15, y: 35, color: "#7FDBFF", description: "Candidate battery and single-input charger; source arbitration and safety design are not implemented." },
-    { id: "cellular", name: "4G LTE + eSIM concept", x: 82, y: 28, color: "#39CCCC", description: "Candidate cellular architecture; carrier certification, antenna performance, eSIM provisioning, and standalone behavior are unverified." },
-    { id: "gps", name: "Multi-constellation GNSS concept", x: 22, y: 22, color: "#01FF70", description: "Candidate GNSS path; accuracy and RF integration are unverified." },
-    { id: "fingerprint", name: "Crown Fingerprint Sensor", x: 82, y: 72, color: "#AAAAAA", description: "Proposed biometric access-control concept; no implementation or security validation." },
+    { id: "ppg-ecg", name: "MAX86178 PPG+ECG+BioZ", x: 50, y: 78, color: "#FF69B4", description: "Optical + electrical front end: heart rate, SpO2 estimate, single-lead ECG and skin contact. Wrist accuracy for overdose detection is unproven." },
+    { id: "naloxone", name: "Naloxone Module (research)", x: 85, y: 50, color: "#FF0000", description: "Future research only: drug container, needle and actuator would need clinical engineering, a pharmaceutical partner and FDA review. Not functional." },
+    { id: "battery", name: "500mAh Li-ion + Qi Charging", x: 15, y: 35, color: "#7FDBFF", description: "Certified cell with sealed Qi charging; runtime must be measured on a prototype." },
+    { id: "cellular", name: "5G RedCap + eSIM", x: 82, y: 28, color: "#39CCCC", description: "Snapdragon X35 RedCap modem with LTE fallback and an ST4SIM eSIM; carrier certification and antenna performance unverified." },
+    { id: "gps", name: "GNSS + Satellite SOS", x: 22, y: 22, color: "#01FF70", description: "Location from the platform/modem GNSS (no separate chip); satellite SOS via the W5+ Gen 2 platform. Field accuracy unverified." },
+    { id: "crown", name: "Crown + SOS Button", x: 82, y: 72, color: "#AAAAAA", description: "Physical button to start a manual SOS or cancel a false alarm; sealing and press force require qualification." },
     { id: "sealed-charge", name: "Sealed Qi / Service Boundary", x: 18, y: 72, color: "#FFFFFF", description: "No external charging opening; Qi charging and gasketed internal service access are design targets." },
-    { id: "nfc", name: "NFC (Payments + ID)", x: 65, y: 18, color: "#0074D9", description: "STMicro ST54K - Google Pay, Apple Pay. Also stores encrypted emergency medical ID scannable by first responders." },
+    { id: "nfc", name: "NFC (Emergency ID)", x: 65, y: 18, color: "#0074D9", description: "STMicro ST54K for an opt-in emergency medical-ID tap and pairing; payments would need Google Wallet certification (Apple Pay is not possible on non-Apple watches)." },
   ]
 
   return (
@@ -604,14 +527,14 @@ export default function NGWatchPage() {
 
           <div className="space-y-6">
             <HolographicCard className="p-6">
-              <h3 className="font-bold text-lg mb-4">State-of-the-Art Candidate Parts</h3>
+              <h3 className="font-bold text-lg mb-4">Current Candidate Parts</h3>
               <div className="space-y-3 text-sm">
                 {[
-                  ["Compute", "Qualcomm SW5100", "Snapdragon W5+ Gen 1"],
+                  ["Compute", "W5+ Gen 2", "Qualcomm Snapdragon (2025)"],
                   ["Health MCU", "NRF5340-QKAA-R7", "Nordic nRF5340"],
                   ["Vitals AFE", "MAX86178", "Analog Devices / Maxim"],
                   ["Motion", "LSM6DSO32XTR", "STMicroelectronics"],
-                  ["GNSS", "BCM47765", "Broadcom dual-band L1/L5"],
+                  ["Cellular", "SDX35", "Snapdragon X35 5G RedCap"],
                   ["Barometer", "BMP390", "Bosch Sensortec"],
                 ].map(([system, part, maker]) => (
                   <div key={part} className="grid grid-cols-[.8fr_1fr] gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0">
@@ -643,17 +566,6 @@ export default function NGWatchPage() {
               <p className="mt-2 text-sm text-muted-foreground">{panel.detail}</p>
             </HolographicCard>
           ))}
-        </section>
-
-        {/* Anti-Theft / Biometric Lock Callout */}
-        <section className="mb-6 p-4 rounded-xl border border-amber-500/30 bg-amber-500/5">
-          <div className="flex items-start gap-3">
-            <Lock className="w-6 h-6 text-amber-400 mt-0.5 shrink-0" />
-            <div>
-              <h3 className="font-bold text-amber-300">Proposed Biometric Access Control (Unverified)</h3>
-              <p className="text-sm text-muted-foreground mt-1">A proposed biometric access-control concept is shown for research discussion only. No fingerprint lock, tamper detection, factory-reset restriction, or alerting behavior is implemented or validated.</p>
-            </div>
-          </div>
         </section>
 
         {/* Funding CTA */}
@@ -737,7 +649,7 @@ export default function NGWatchPage() {
                   <div className="text-center">
                     <p className="text-2xl font-bold glow-text">NarcoGuard NG</p>
                     <p className="text-[10px] text-muted-foreground">REV 4.2</p>
-                    <p className="text-[10px] text-primary/80 mt-2 max-w-56">Kalman-filtered vitals, confidence-weighted fusion, and persistence gating reduce noise before any emergency action.</p>
+                    <p className="text-[10px] text-primary/80 mt-2 max-w-56">Planned: filtered vitals, confidence-weighted fusion and persistence checks before any alert. Not yet validated.</p>
                   </div>
                 </div>
               </div>
@@ -780,7 +692,7 @@ export default function NGWatchPage() {
                 </div>
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-xs uppercase tracking-[0.16em] text-primary">Power balance</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Harvesting and load balance are unverified until measured on a populated prototype.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Battery life and load balance are unverified until measured on a populated prototype.</p>
                 </div>
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-xs uppercase tracking-[0.16em] text-primary">Runtime model</p>
@@ -826,15 +738,13 @@ export default function NGWatchPage() {
                           <div className="absolute inset-0 bg-linear-to-b from-transparent via-primary/10 to-transparent animate-pulse" />
                         </div>
                       </div>
-                      {/* Solar ring */}
-                      <div className="absolute inset-2 rounded-full border-4 border-green-500/40" style={{ transform: "translateZ(22px)" }} />
                       {/* Naloxone cartridge */}
                       <div className="absolute right-0 top-1/2 -translate-y-1/2 w-8 h-16 bg-linear-to-r from-red-700 to-red-500 rounded-r-lg pulse-glow" style={{ transform: "translateZ(25px) translateX(10px)" }}>
                         <Syringe className="w-4 h-4 text-white absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90" />
                       </div>
-                      {/* Crown with fingerprint */}
+                      {/* Crown / SOS button */}
                       <div className="absolute right-0 top-1/3 w-4 h-10 bg-linear-to-r from-zinc-600 to-zinc-400 rounded-r flex items-center justify-center" style={{ transform: "translateZ(15px) translateX(6px)" }}>
-                        <Fingerprint className="w-3 h-3 text-zinc-800" />
+                        <span className="text-[6px] font-bold text-zinc-800">SOS</span>
                       </div>
                       {/* Sealed service boundary: no external charging opening */}
                       <div className="absolute left-0 top-2/3 w-3 h-5 rounded-l border border-zinc-400/70 bg-zinc-700" style={{ transform: "translateZ(15px) translateX(-4px)" }}>
@@ -860,17 +770,15 @@ export default function NGWatchPage() {
                 <HolographicCard className="p-6">
                   <h3 className="font-bold text-lg mb-4 flex items-center gap-2">
                     <Shield className="w-5 h-5 text-green-500" />
-                    Key Differentiators vs. Apple/Fitbit/Garmin
+                    What would set NG apart (targets)
                   </h3>
                   <div className="space-y-3">
                     {[
                       { icon: Syringe, color: "text-red-500", title: "Proposed Naloxone Delivery", desc: "No production watch currently offers this validated capability" },
-                      { icon: Fingerprint, color: "text-amber-400", title: "Proposed Access Control", desc: "Research concept; not implemented or security-validated" },
-                      { icon: Sun, color: "text-green-500", title: "Candidate Power Sources", desc: "Harvesting and battery life require measured prototype data" },
+                      { icon: Satellite, color: "text-green-500", title: "Satellite SOS", desc: "W5+ Gen 2 platform supports satellite emergency messaging where carriers enable it" },
                       { icon: Cog, color: "text-purple-400", title: "Fully Modular", desc: "Modules are replaceable only through a controlled service procedure; every opened seal requires replacement and pressure retest." },
-                      { icon: Heart, color: "text-pink-500", title: "Candidate Sensors", desc: "PPG + ECG + BioZ + EDA + skin temperature; accuracy unverified" },
+                      { icon: Heart, color: "text-pink-500", title: "Candidate Sensors", desc: "PPG + SpO2 + ECG + motion + skin temperature; overdose detection from the wrist is unproven" },
                       { icon: Cpu, color: "text-blue-400", title: "Candidate Processing", desc: "Wearable compute architecture; firmware and clinical performance unverified" },
-                      { icon: Thermometer, color: "text-orange-400", title: "Thermoelectric Concept", desc: "Output depends on thermal path and must be measured" },
                       ].map((feature, i) => (
                       <div key={i} className="flex items-center gap-3 p-3 rounded-lg bg-background/50">
                         <feature.icon className={`w-5 h-5 ${feature.color} shrink-0`} />
@@ -889,7 +797,7 @@ export default function NGWatchPage() {
                     <div className="flex justify-between"><span>Components ({billOfMaterials.reduce((n, c) => n + c.items.length, 0)} parts)</span><span className="font-mono">${componentBOMTotal.toFixed(2)}</span></div>
                     <div className="flex justify-between"><span>Assembly Labor</span><span className="font-mono">${assemblyLabor.toFixed(2)}</span></div>
                     <div className="flex justify-between"><span>QA/Testing (10-point)</span><span className="font-mono">${qualityTesting.toFixed(2)}</span></div>
-                    <div className="flex justify-between"><span>FDA/CE Certification</span><span className="font-mono">${fdaCertification.toFixed(2)}</span></div>
+                    <div className="flex justify-between"><span>Compliance testing allocation (excludes FDA submission costs)</span><span className="font-mono">${complianceTesting.toFixed(2)}</span></div>
                     <div className="flex justify-between"><span>Packaging + Charger</span><span className="font-mono">${packaging.toFixed(2)}</span></div>
                     <div className="border-t border-primary/30 pt-2 flex justify-between font-bold">
                       <span>Hardware Total</span>
@@ -974,8 +882,8 @@ export default function NGWatchPage() {
                     <p className="text-xl font-bold font-mono">${assemblyLabor.toFixed(2)}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-background/50">
-                    <p className="text-xs text-muted-foreground">QA + FDA</p>
-                    <p className="text-xl font-bold font-mono">${(qualityTesting + fdaCertification).toFixed(2)}</p>
+                    <p className="text-xs text-muted-foreground">QA + compliance</p>
+                    <p className="text-xl font-bold font-mono">${(qualityTesting + complianceTesting).toFixed(2)}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-background/50">
                     <p className="text-xs text-muted-foreground">Packaging</p>
@@ -1013,81 +921,73 @@ export default function NGWatchPage() {
                 {
                   icon: Cpu, color: "text-primary", title: "Processing & Memory",
                   specs: [
-                    ["Primary SoC", "Qualcomm Snapdragon W5+ Gen 1 (4nm)"],
-                    ["CPU", "Quad-core Cortex-A53 @ 1.7GHz"],
-                    ["GPU", "Adreno 702"],
-                    ["Co-Processor", "Nordic nRF5340 (always-on health AI)"],
+                    ["Primary SoC", "Qualcomm Snapdragon W5+ Gen 2 (4nm, 2025)"],
+                    ["Always-on", "Platform co-processor for low-power sensing"],
+                    ["Safety MCU", "Nordic nRF5340 (independent alarm path)"],
                     ["RAM", "2GB LPDDR4X"],
-                    ["Storage", "4GB NAND Flash"],
-                    ["OS", "Wear OS 5 + NarcoGuard Custom Firmware"],
+                    ["Storage", "32GB eMMC 5.1"],
+                    ["OS", "Wear OS (NarcoGuard app not yet written)"],
                   ]
                 },
                 {
-                  icon: Heart, color: "text-red-500", title: "Health Sensors ( candidate)",
+                  icon: Heart, color: "text-red-500", title: "Health Sensors (candidate)",
                   specs: [
-                    ["Optical PPG", "Maxim MAX86178 multi-wavelength, +/-1 BPM"],
+                    ["Optical PPG", "Analog Devices MAX86178 (accuracy to be measured)"],
                     ["ECG", "Single-lead electrocardiogram (on-demand)"],
-                    ["SpO2", "Continuous blood oxygen, +/-2%"],
+                    ["SpO2", "Wrist estimate; accuracy across skin tones must be validated"],
                     ["BioZ", "Body impedance analysis (hydration, composition)"],
-                    ["Skin Temperature", "Melexis MLX90632 IR, +/-0.1C"],
-                    ["EDA/GSR", "ams AS7038RB electrodermal activity (stress)"],
+                    ["Skin Temperature", "Melexis MLX90632 IR (trend only)"],
+                    ["EDA (research)", "ams-OSRAM AS7038RB candidate"],
                     ["Motion", "STMicro LSM6DSO32X 6-axis IMU (32g)"],
                     ["Compass", "STMicro LIS2MDL 3-axis magnetometer"],
                     ["Barometer", "Bosch BMP390 (altitude, weather)"],
-                    ["Fall Detection", "AI-based impact + orientation analysis"],
+                    ["Fall Detection", "Planned; algorithm not written"],
                   ]
                 },
                 {
                   icon: Wifi, color: "text-cyan-400", title: "Connectivity",
                   specs: [
-                    ["Cellular", "Qualcomm SDX35 4G LTE candidate; integration unverified"],
-                    ["eSIM", "Thales ELS62T1 eUICC candidate; carrier support unverified"],
+                    ["Cellular", "Snapdragon X35 5G RedCap + LTE fallback; carrier certification unverified"],
+                    ["eSIM", "STMicro ST4SIM-200M eUICC; carrier support unverified"],
+                    ["Satellite", "SOS messaging via W5+ Gen 2 (Skylo NB-NTN) where available"],
                     ["Wi-Fi", "Infineon CYW43022 candidate; Wi-Fi standard and RF integration unverified"],
-                    ["Bluetooth", "5.3 LE + BLE Audio (LE Audio codec)"],
-                    ["GNSS", "Broadcom BCM47765 L1+L5 dual-band"],
-                    ["NFC", "STMicro ST54K (payments + emergency ID)"],
-                    ["UWB", "Taoglas FXP840 - precise indoor positioning"],
+                    ["Bluetooth", "Bluetooth LE (version per final radio)"],
+                    ["GNSS", "Platform/modem GNSS (L1+L5 capable); no separate chip"],
+                    ["NFC", "STMicro ST54K (emergency ID; payments need certification)"],
                   ]
                 },
                 {
                   icon: Battery, color: "text-green-500", title: "Candidate Sealed Power System",
                   specs: [
-                    ["Battery", "500mAh battery candidate; exact cell, protection, and certification unverified"],
-                    ["Battery Life", "Runtime unverified; energy-harvesting and battery tests required"],
-                    ["Solar", "Candidate GaAs solar source; output unverified"],
-                    ["Kinetic", "Candidate kinetic source; output unverified"],
-                    ["Thermoelectric", "Candidate thermoelectric source; output unverified"],
+                    ["Battery", "500mAh Li-ion polymer, IEC 62133-2 / UN38.3 certified cell required"],
+                    ["Battery Life", "Unknown until measured; cellular watches typically need daily charging"],
+                    ["Energy harvesting", "Removed: wrist harvesters cannot power a cellular watch"],
                     ["Wireless Charging", "Qi (TI BQ51013B, 5W)"],
                     ["Charging boundary", "No external USB-C port; sealed Qi charging target"],
-                    ["Emergency Reserve", "6-hour low-power mode"],
+                    ["Low-battery mode", "Target: keep alarms and SOS working; duration to be measured"],
                   ]
                 },
                 {
-                  icon: Syringe, color: "text-red-500", title: "Naloxone Auto-Injection",
+                  icon: Syringe, color: "text-red-500", title: "Naloxone Delivery (future research)",
                   specs: [
-                    ["Motor", "Faulhaber 0206B coreless micro DC motor"],
-                    ["Needle", "30-gauge 316L stainless, retractable"],
-                    ["Penetration Depth", "4mm subcutaneous"],
-                    ["Dosage", "0.4mg naloxone hydrochloride"],
-                    ["Deployment Speed", "< 3 seconds from trigger"],
-                    ["Cartridge Life", "Shelf life and storage require validated sterile packaging and stability data"],
-                    ["Replacement", "Snap-fit modular. Tool-free swap"],
-                    ["Trigger", "Automatic (vitals AI) or manual SOS"],
-                    ["Valve", "Takasago SMVT 0.5ms micro solenoid"],
-                    ["Voice Alert", "Epson S1V30340 speech synth IC"],
+                    ["Status", "Not built, not tested, not approved"],
+                    ["Regulation", "FDA drug-device combination product (approval required)"],
+                    ["Dose & route", "To be set by clinicians (prior auto-injector: 2 mg / 0.4 mL IM or SC)"],
+                    ["Needle", "Gauge and length to be specified for intramuscular delivery"],
+                    ["Drug supply", "Licensed pharmaceutical partner with stability data"],
+                    ["Actuator", "Faulhaber 0206B candidate; force and reliability unproven"],
+                    ["Trigger", "Would require validated detection plus a person-confirmable cancel"],
                   ]
                 },
                 {
                   icon: Smartphone, color: "text-blue-500", title: "Display, Audio & Haptics",
                   specs: [
-                    ["Display", '1.45" BOE LTPO AMOLED 466x466 (326 PPI)'],
-                    ["Brightness", "2000 nits peak (outdoor readable)"],
-                    ["Refresh Rate", "1-120Hz adaptive (LTPO)"],
-                    ["Always-On", "Yes, 1Hz AOD mode"],
+                    ["Display", "1.4–1.5 in round LTPO AMOLED (supplier quote pending)"],
+                    ["Always-On", "Target, with low-power refresh"],
                     ["Glass", "Lab-grown sapphire crystal (9H)"],
-                    ["Touch", "Capacitive with wet-finger + glove mode"],
-                    ["Speaker", "AAC ACAM3825 candidate; acoustic output unverified"],
-                    ["Microphone", "Knowles SPH0645 MEMS + ANC"],
+                    ["Touch", "Capacitive touch"],
+                    ["Speaker", "Sealed micro speaker; alarm loudness to be measured"],
+                    ["Microphone", "Knowles SPH0645 MEMS (voice for Angel AI)"],
                     ["Haptics", "TDK PowerHap 1204H piezoelectric"],
                   ]
                 },
@@ -1096,26 +996,23 @@ export default function NGWatchPage() {
                   specs: [
                     ["Case", "Grade 5 Titanium (Ti-6Al-4V) + PVD"],
                     ["Back", "Zirconia ceramic with sensor windows"],
-                    ["Dimensions", "46mm x 46mm x 14.2mm"],
-                    ["Weight", "74g (with cartridge and strap)"],
+                    ["Dimensions", "Target 46mm case, about 14mm thick (CAD pending)"],
+                    ["Weight", "Unknown until a prototype is built"],
                     ["Water Rating", "Target IP68/ISO 22810; qualification unverified"],
-                    ["Temp Range", "-20C to +55C operating"],
+                    ["Temp Range", "Target -20C to +55C (untested)"],
                     ["Strap", "22mm quick-release candidate silicone; biocompatibility and ingress effects unverified"],
-                    ["Gaskets", "Parker Viton fluoroelastomer"],
-                    ["Modular Parts", "Battery, cartridge, strap, glass; service seals require post-service pressure testing"],
+                    ["Gaskets", "Fluoroelastomer (FKM) seals, supplier TBD"],
+                    ["Modular Parts", "Battery, strap, glass; service seals require post-service pressure testing"],
                   ]
                 },
                 {
-                  icon: Lock, color: "text-amber-400", title: "Security & Anti-Theft",
+                  icon: Lock, color: "text-amber-400", title: "Security & Privacy (targets)",
                   specs: [
-                    ["Fingerprint", "Goodix GH3220 in crown button"],
-                    ["Biometric Lock", "Owner-only unlock, cannot be reset"],
-                    ["Tamper Detection", "Alerts on unauthorized removal"],
-                    ["Encryption", "AES-256 for health data at rest"],
-                    ["HIPAA", "Compliant data handling"],
-                    ["Kill Switch", "Remote wipe via Find My Watch"],
-                    ["Device ID", "Unique engraved + digital certificate"],
-                    ["Activation Lock", "Tied to NarcoGuard account forever"],
+                    ["Screen lock", "PIN/pattern via Wear OS"],
+                    ["Encryption", "Target: encrypted storage via the platform; not yet verified"],
+                    ["Health privacy", "Privacy and security review required; no HIPAA claim is made"],
+                    ["Lost device", "Target: remote lock/erase; not implemented"],
+                    ["Device ID", "Serial number + device certificate (target)"],
                   ]
                 },
               ].map((section, idx) => (

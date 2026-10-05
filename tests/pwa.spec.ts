@@ -422,4 +422,28 @@ test.describe("PWA production flow", () => {
     await expect(page.getByTestId("angel-unavailable")).toBeVisible()
     await expect(page.locator("main").getByRole("alert")).toContainText("Call 911 now.")
   })
+
+  test("donations fall back to GoFundMe until Stripe is configured", async ({ page }) => {
+    await page.goto("/fund")
+    await expect(page.getByTestId("donate-fallback")).toBeVisible()
+    await expect(page.getByRole("link", { name: "Donate on GoFundMe" })).toHaveAttribute("href", /gofund\.me/)
+    await expect(page.locator("#donation-policy")).toContainText("not tax-deductible")
+  })
+
+  test("in test mode a chosen amount opens Stripe checkout", async ({ page }) => {
+    let requested: unknown
+    await page.route("**/api/donate", async (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { available: true, mode: "test" } })
+      requested = route.request().postDataJSON()
+      await route.fulfill({ json: { url: "/fund/thanks?session_id=cs_test_123", mode: "test" } })
+    })
+    await page.goto("/fund")
+    const form = page.getByTestId("donate-form")
+    await expect(form).toContainText("Test mode")
+    await form.getByRole("button", { name: "$50", exact: true }).click()
+    await form.getByRole("button", { name: "Donate $50" }).click()
+    await expect(page).toHaveURL(/\/fund\/thanks/)
+    expect(requested).toEqual({ amount: 50 })
+    await expect(page.getByRole("heading", { name: "Thank you for your donation" })).toBeVisible()
+  })
 })

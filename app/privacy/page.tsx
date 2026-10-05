@@ -53,6 +53,15 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Donations</h2>
+            <p>
+              Card donations are processed by Stripe on its checkout page. NarcoGuard does not receive your card details;
+              Stripe shares the amount and status of the payment so we can confirm it. GoFundMe donations are handled by
+              GoFundMe under its own privacy policy.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="text-2xl font-semibold text-foreground">Emergency and health limitations</h2>
             <p>
               The public app is a software and wearable research concept, not an emergency dispatch service or a
