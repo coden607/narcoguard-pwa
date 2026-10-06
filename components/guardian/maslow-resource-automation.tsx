@@ -150,12 +150,13 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
                   <h4 className="font-medium">{RESOURCE_LABELS[kind]}</h4>
                   {lookup.results.length > 0 ? (
                     <ul className="space-y-2">
-                      {lookup.results.slice(0, 3).map((resource) => (
+                      {lookup.results.slice(0, 3).map((resource, optionIndex) => (
                         <li key={resourceKey(resource)} className="rounded border p-3">
-                          <strong>{resource.name}</strong>
+                          <strong>{["Option A", "Option B", "Option C"][optionIndex] ?? "Option"}: {resource.name}</strong>
                           {resource.distanceMiles !== undefined && <span className="text-sm"> · {resource.distanceMiles} mi</span>}
                           {resource.address && <span className="block text-sm">{resource.address}</span>}
                           {resource.hours && <span className="block text-sm">Listed hours: {resource.hours}</span>}
+                          {explainResource(resource, preferences, feedback).map((reason) => <span key={reason} className="block text-xs">{reason}</span>)}
                           <span className="block text-xs text-muted-foreground">Source: {resource.source}. Call first to confirm current availability, eligibility, price, and hours. Distance is nearby straight-line context, not a promised route or detour time.</span>
                           <span className="block text-sm space-x-3 mt-1">
                             {resource.phone && <a className="underline text-primary" href={"tel:" + resource.phone.replace(/[^\d+]/g, "")}>Call</a>}
