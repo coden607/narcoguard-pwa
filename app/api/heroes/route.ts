@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   if (!isSameOrigin(request)) return json({ error: "Cross-origin request rejected" }, 403)
   if (!enrollmentAvailable()) return json({ error: "Hero enrollment is not switched on yet." }, 503)
   const body = await readJson(request)
+  if (!acceptsHeroNaloxoneAttestation(body?.naloxoneOnCall)) return json({ error: "Confirm that you will carry naloxone whenever you choose to be available as a Hero." }, 400)
   const certificate = verifyCertificate(body?.certificate, heroSecret()!)
   if (!certificate) return json({ error: "Pass the certification test with every answer correct before enrolling." }, 403)
   const auth = await getAuthContext().catch(() => null)
