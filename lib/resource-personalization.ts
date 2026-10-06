@@ -87,3 +87,17 @@ export function rankResources(
       return aScore - bScore || (a.distanceMiles ?? 999) - (b.distanceMiles ?? 999)
     })
 }
+
+
+export function explainResource(resource: NearbyResource, preferences: ResourcePreferences, feedback: readonly ResourceFeedback[]): string[] {
+  const reasons: string[] = []
+  const value = new Map(feedback.map((item) => [item.key, item.value])).get(resourceKey(resource))
+  if (value === "worked") reasons.push("You marked this option as having worked before.")
+  if (resource.distanceMiles !== undefined) {
+    if (preferences.maxDistanceMiles !== null) reasons.push(`Within your ${preferences.maxDistanceMiles}-mile preference.`)
+    else reasons.push(`${resource.distanceMiles} miles away by straight-line distance.`)
+  }
+  if (resource.kind === "food" && preferences.preferFreeFood) reasons.push("Matches your preference for free/community food first.")
+  if (resource.kind === "quick-meal") reasons.push("A quick-meal option; price, route time, and current hours are not verified.")
+  return reasons.slice(0, 3)
+}
