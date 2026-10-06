@@ -18,6 +18,9 @@ type HeroRow = {
   on_call_since: string | null
 }
 
+const today = () => new Date().toISOString().slice(0, 10)
+const isCurrentReady = (hero: HeroRow) => hero.enrolled && hero.naloxone_ready && Boolean(hero.naloxone_expires_on && hero.naloxone_expires_on >= today()) && new Date(hero.expires_at).getTime() > Date.now()
+
 async function ownHeroRow(userId: string): Promise<HeroRow | null> {
   const response = await serviceRest(
     `hero_certifications?auth_user_id=eq.${encodeURIComponent(userId)}&select=auth_user_id,test_version,passed_at,expires_at,enrolled,naloxone_ready,naloxone_expires_on,on_call,on_call_since`,
@@ -31,11 +34,29 @@ const validDate = (value: unknown): value is string => typeof value === "string"
 
 export async function GET() {
   const auth = await getAuthContext().catch(() => null)
-  const hero = auth ? await ownHeroRow(auth.user.id) : null
+  let hero = auth ? await ownHeroRow(auth.user.id) : null
+  if (hero?.on_call && !isCurrentReady(hero)) {
+    await serviceRest(`hero_certifications?auth_user_id=eq.${encodeURIComponent(hero.auth_user_id)}`, {
+      method: "PATCH",
+      headers: { Prefer: "return=representation" },
+      body: JSON.stringify({ on_call: false }),
+    }).catch(() => null)
+    hero = { ...hero, on_call: false, on_call_since: null }
+  }
+
+  let onCallCount = 0
+  if (enrollmentAvailable()) {
+    const response = await serviceRest(
+      `hero_certifications?on_call=eq.true&enrolled=eq.true&naloxone_ready=eq.true&naloxone_expires_on=gte.${today()}&expires_at=gt.${encodeURIComponent(new Date().toISOString())}&select=auth_user_id`,
+    ).catch(() => null)
+    if (response?.ok) onCallCount = ((await response.json()) as { auth_user_id: string }[]).length
+  }
+
   return json({
     enrollment: enrollmentAvailable(),
     certification: Boolean(heroSecret()),
     nearbyRequests: false,
+    onCallCount,
     hero,
   })
 }
@@ -75,7 +96,7 @@ export async function PATCH(request: Request) {
   const nextNaloxoneReady = body?.naloxoneReady === true
   const nextExpiry = validDate(body?.naloxoneExpiresOn) ? body.naloxoneExpiresOn : null
   const wantsOnCall = body?.onCall === true
-  const expiryOk = Boolean(nextExpiry && nextExpiry >= new Date().toISOString().slice(0, 10))
+  const expiryOk = Boolean(nextExpiry && nextExpiry >= today())
   const certOk = new Date(existing.expires_at).getTime() > Date.now()
 
   if (wantsOnCall && (!nextNaloxoneReady || !expiryOk || !certOk)) {
