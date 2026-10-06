@@ -4,13 +4,14 @@
 // hours, openings or eligibility, so every result is labelled with its source and "call first".
 // Location is rounded to about 1 km before it leaves the server and is never stored or logged.
 
-export const RESOURCE_KINDS = ["treatment", "food", "shelter", "pharmacy", "water", "toilets", "showers", "laundry", "emergency", "clinic", "community", "library", "jobs"] as const
+export const RESOURCE_KINDS = ["treatment", "food", "quick-meal", "shelter", "pharmacy", "water", "toilets", "showers", "laundry", "emergency", "clinic", "community", "library", "jobs"] as const
 export type ResourceKind = typeof RESOURCE_KINDS[number]
 export type OsmKind = Exclude<ResourceKind, "treatment">
 
 export const RESOURCE_LABELS: Record<ResourceKind, string> = {
   treatment: "Treatment",
-  food: "Food",
+  food: "Free/community food",
+  "quick-meal": "Quick meal / coffee options (price not verified)",
   shelter: "Shelter",
   pharmacy: "Pharmacy (naloxone is sold without a prescription; call to check stock)",
   water: "Drinking water",
@@ -25,7 +26,7 @@ export const RESOURCE_LABELS: Record<ResourceKind, string> = {
 }
 
 export const SHORT_LABELS: Record<ResourceKind, string> = {
-  treatment: "Treatment", food: "Food", shelter: "Shelter", pharmacy: "Pharmacy", water: "Water", toilets: "Toilets", showers: "Showers",
+  treatment: "Treatment", food: "Free food", "quick-meal": "Quick meal", shelter: "Shelter", pharmacy: "Pharmacy", water: "Water", toilets: "Toilets", showers: "Showers",
   laundry: "Laundry", emergency: "Emergency room", clinic: "Clinics", community: "Community centers", library: "Libraries", jobs: "Job help",
 }
 
@@ -34,7 +35,7 @@ export const SHORT_LABELS: Record<ResourceKind, string> = {
  * follow: every level is searched at once and any need can come first.
  */
 export const NEED_LEVELS = [
-  { id: "basic", title: "Basic needs", kinds: ["food", "shelter", "water", "toilets", "showers", "laundry"] },
+  { id: "basic", title: "Basic needs", kinds: ["food", "quick-meal", "shelter", "water", "toilets", "showers", "laundry"] },
   { id: "safety", title: "Health and safety", kinds: ["emergency", "clinic", "pharmacy"] },
   { id: "connection", title: "Recovery and connection", kinds: ["treatment", "community"] },
   { id: "growth", title: "Growth and goals", kinds: ["library", "jobs"] },
@@ -87,6 +88,7 @@ const NOT_PUBLIC = { access: ["private", "no", "customers"] }
 
 export const OSM_KINDS: Record<OsmKind, OsmKindSpec> = {
   food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }], radius: SEARCH_RADIUS_METERS },
+  "quick-meal": { filters: [{ amenity: "fast_food" }, { amenity: "cafe" }, { shop: "convenience" }, { shop: "supermarket" }], radius: 5_000 },
   // Hotels contracted as temporary shelters are often mapped this way and go stale when contracts end.
   shelter: { filters: [{ social_facility: "shelter" }], exclude: { tourism: ["hotel"] }, radius: SEARCH_RADIUS_METERS },
   water: { filters: [{ amenity: "drinking_water" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Drinking water" },
@@ -263,6 +265,7 @@ export function fallbackLinks(kind: ResourceKind) {
   const directories: Partial<Record<ResourceKind, { title: string; url: string }[]>> = {
     treatment: [{ title: "Search FindTreatment.gov", url: "https://findtreatment.gov/" }],
     food: [{ title: "Feeding America food bank locator", url: "https://www.feedingamerica.org/find-your-local-foodbank" }],
+    "quick-meal": [{ title: "Search nearby food in your maps app", url: "https://www.google.com/maps/search/food/" }],
     shelter: [{ title: "HUD Find Shelter", url: "https://www.hud.gov/FindShelter" }],
     showers: [{ title: "HUD Find Shelter (shelters often offer showers)", url: "https://www.hud.gov/FindShelter" }],
     clinic: [{ title: "HRSA Find a Health Center (sliding-scale fees)", url: "https://findahealthcenter.hrsa.gov/" }],
