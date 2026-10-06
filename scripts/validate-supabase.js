@@ -41,7 +41,7 @@ const requiredChecks = [
 
 const failures = []
 for (const table of requiredTables) {
-  if (!new RegExp(`create table if not exists ${table}\\b`, "i").test(migrations)) {
+  if (!new RegExp(`create table if not exists (?:public\\.)?${table}\\b`, "i").test(migrations)) {
     failures.push(`missing table definition: ${table}`)
   }
 }
