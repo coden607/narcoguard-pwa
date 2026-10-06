@@ -157,7 +157,7 @@ export default function StabilityPage() {
             </div>
           </div>)}
         </div>}
-      </section>
+      </section>}
       <section className="border rounded-xl p-5 space-y-4" aria-live="polite">
         <h2 className="text-xl font-semibold">Pre-warning & next action</h2>
         {prevention.level === "steady" ? <p>No change that needs attention is visible in the information you chose to record today. Unknown answers stay unknown.</p> : <>
