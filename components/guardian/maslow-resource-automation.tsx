@@ -50,7 +50,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
       })
       .finally(() => { if (!controller.signal.aborted) setLoading(false) })
     return () => controller.abort()
-  }, [key])
+  }, [key, kinds, zip])
 
   if (needs.length === 0) return null
 
