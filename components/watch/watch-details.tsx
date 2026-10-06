@@ -89,7 +89,7 @@ export function WatchDetails() {
               <span className="text-sm font-medium">Heart Rate</span>
               <span className="text-2xl font-bold glow-text">Unavailable</span>
             </div>
-            <Progress value={60} className="h-2 pulse-glow" />
+            <Progress value={0} className="h-2" />
             <p className="text-xs text-muted-foreground mt-2">No verified sensor data available</p>
           </div>
 
@@ -98,7 +98,7 @@ export function WatchDetails() {
               <span className="text-sm font-medium">Blood Oxygen (SpO2)</span>
               <span className="text-2xl font-bold glow-text">Unavailable</span>
             </div>
-            <Progress value={98} className="h-2 pulse-glow" />
+            <Progress value={0} className="h-2" />
             <p className="text-xs text-muted-foreground mt-2">No verified sensor data available</p>
           </div>
 
@@ -207,7 +207,7 @@ export function WatchDetails() {
               <p className="text-sm">Current Version: Not available</p>
               <p className="text-xs text-muted-foreground">No firmware service connected</p>
             </div>
-            <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
+            <div className="w-2 h-2 rounded-full bg-amber-500" />
           </div>
         </div>
 

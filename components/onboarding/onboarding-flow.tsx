@@ -480,7 +480,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="flex items-start space-x-3">
             <Checkbox
               id="neverUseAlone"
-              checked={preferences.features.neverUseAlone}
+              disabled
+              checked={false}
               onCheckedChange={(checked) =>
                 setPreferences({
                   ...preferences,
@@ -495,7 +496,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <p className="text-sm text-muted-foreground">
                 Not active: NarcoGuard cannot monitor you or send help if you stop responding. Don't use alone; have
                 someone with you who has naloxone, and call 911 if someone may be overdosing.
-                to check-ins
               </p>
             </div>
           </div>
@@ -516,7 +516,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="flex items-start space-x-3">
             <Checkbox
               id="autoDetection"
-              checked={preferences.features.autoDetection}
+              disabled
+              checked={false}
               onCheckedChange={(checked) =>
                 setPreferences({
                   ...preferences,
@@ -547,10 +548,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             />
             <div className="space-y-1">
               <Label htmlFor="voiceActivation" className="text-base font-semibold cursor-pointer">
-                Voice Activation (planned)
+                Angel voice controls
               </Label>
               <p className="text-sm text-muted-foreground">
-                Not active: voice commands do not trigger any response.
+                Enables push-to-talk, hands-free conversation, and spoken replies inside Angel AI when your browser supports speech. This is not an always-listening wake word.
               </p>
             </div>
           </div>
@@ -588,7 +589,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="flex items-start space-x-3">
           <Checkbox
             id="shareWithHeroes"
-            checked={preferences.privacy.shareWithHeroes}
+            disabled
+            checked={false}
             onCheckedChange={(checked) =>
               setPreferences({
                 ...preferences,
