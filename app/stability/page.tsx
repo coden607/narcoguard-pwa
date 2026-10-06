@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -34,6 +34,14 @@ export default function StabilityPage() {
   const [planLocation, setPlanLocation] = useState("")
   const [planNeed, setPlanNeed] = useState<Need | "">("")
   const now = useLocalDate()
+  const [clockTime, setClockTime] = useState("00:00")
+
+  useEffect(() => {
+    const updateClock = () => setClockTime(new Date().toTimeString().slice(0, 5))
+    updateClock()
+    const timer = window.setInterval(updateClock, 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const update = (next: GuardianState) => {
     saveGuardianState(window.localStorage, next)
@@ -47,7 +55,7 @@ export default function StabilityPage() {
   const prevention = analyzePreventionPatterns(state.entries, today)
   const suggested = suggestedNeeds(prevention)
   const needsHelp = NEEDS.filter((need) => today.needs[need] === "needs-help")
-  const proactive = anticipateResourceNeeds({ entries: state.entries, today, plan: state.plan, now: { date: now, time: new Date().toTimeString().slice(0, 5) } })
+  const proactive = anticipateResourceNeeds({ entries: state.entries, today, plan: state.plan, now: { date: now, time: clockTime } })
   const pendingQuestions = questionsForUnknowns(today, proactive)
   const proactiveNeeds = proactive.map((cue) => cue.need)
   const resourceNeeds = [...new Set([...needsHelp, ...suggested, ...proactiveNeeds])]
