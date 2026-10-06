@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Mic, MicOff, Send, Sparkles, Volume2, VolumeX } from "lucide-react"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import type { NearbyResource } from "@/lib/resource-finder"
 import { useVoice } from "@/lib/hooks/use-voice"
 import { isFatalRecognitionError, speakableText } from "@/lib/voice"
+import { parseAngelLocalCommand } from "@/lib/angel-voice-commands"
 
 interface ChatMessage {
   id: string
@@ -21,6 +23,7 @@ interface ChatMessage {
 const SUGGESTIONS = ["Help me set a goal for this week", "Find food help near me", "How do I get naloxone?"]
 
 export function AngelAI({ compact = false }: { compact?: boolean }) {
+  const router = useRouter()
   // Conversations live only in this component's memory; nothing is saved to the device or server.
   const [available, setAvailable] = useState<boolean | null>(null)
   const [provider, setProvider] = useState<string | null>(null)
@@ -59,6 +62,22 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const send = async (text: string): Promise<string | null> => {
     const content = text.trim()
     if (!content || busy) return null
+    const local = parseAngelLocalCommand(content)
+    if (local?.type === "navigate") {
+      router.push(local.href)
+      return `Opening ${local.href === "/stability" ? "your needs planner" : local.href === "/ar" ? "training" : "help"}.`
+    }
+    if (local?.type === "clear") {
+      messagesRef.current = []
+      setMessages([])
+      return "Conversation cleared."
+    }
+    if (local?.type === "read_aloud") {
+      if (local.enabled) voice.primeSpeech()
+      else voice.cancelSpeech()
+      setReadAloud(local.enabled)
+      return local.enabled ? "Read aloud is on." : "Read aloud is off."
+    }
     const next: ChatMessage[] = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content }]
     messagesRef.current = next
     setMessages(next)

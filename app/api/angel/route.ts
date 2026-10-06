@@ -6,7 +6,8 @@ import {
   findResourcesArgsSchema,
   safetyNotices,
 } from "@/lib/angel-ai"
-import { resolveAngelProvider, type AngelProvider } from "@/lib/angel-provider"
+import { modelForAngelTask, resolveAngelProvider, type AngelProvider } from "@/lib/angel-provider"
+import { routeAngelTurn } from "@/lib/angel-routing"
 import { lookupResources, type ResourceLookup } from "@/lib/resource-lookup"
 
 // Conversations are relayed to the AI provider to generate a reply and are not stored or logged by NarcoGuard.
@@ -34,14 +35,14 @@ class ProviderError extends Error {
   constructor(readonly status: number, readonly detail = "") { super(`provider ${status}`) }
 }
 
-async function complete(provider: AngelProvider, messages: ChatMessage[], withTools: boolean, maxTokens = 1024) {
+async function complete(provider: AngelProvider, messages: ChatMessage[], withTools: boolean, maxTokens = 1024, temperature = 0.4, model = provider.model) {
   const response = await fetch(provider.url, {
     method: "POST",
     headers: { Authorization: `Bearer ${provider.token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: provider.model,
+      model,
       messages,
-      temperature: 0.4,
+      temperature,
       max_completion_tokens: maxTokens,
       ...provider.extraBody,
       ...(withTools ? { tools: [FIND_RESOURCES_TOOL], tool_choice: "auto" } : {}),
@@ -86,9 +87,11 @@ export async function POST(request: Request) {
   const latest = parsed.data.messages.at(-1)
   const notices = latest?.role === "user" ? safetyNotices(latest.content) : []
   const messages: ChatMessage[] = buildChatMessages(parsed.data)
+  const route = routeAngelTurn(latest?.content ?? "")
 
   try {
-    let reply = await complete(provider, messages, true)
+    const model = modelForAngelTask(provider, route.task)
+    let reply = await complete(provider, messages, route.useTools, route.maxTokens, route.temperature, model)
     let resources: (ResourceLookup & { kind: string }) | undefined
     const call = reply.tool_calls?.find((c) => c.function?.name === "find_resources")
     if (call) {
@@ -105,7 +108,7 @@ export async function POST(request: Request) {
           ? { status: result.status, results: result.results.map(({ name, address, phone, distanceMiles, source }) => ({ name, address, phone, distanceMiles, source })), fallback: result.fallback }
           : { error: "A valid kind and 5-digit ZIP code are required." }),
       })
-      reply = await complete(provider, messages, false)
+      reply = await complete(provider, messages, false, route.maxTokens, route.temperature, model)
     }
     const text = reply.content?.trim() || "I couldn't put together a reply. Please try asking another way."
     return NextResponse.json({ available: true, notices, reply: text, resources }, { headers: noStore })

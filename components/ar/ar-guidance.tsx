@@ -112,7 +112,7 @@ export function ARGuidance() {
 
   if (!isActive) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4" id="ar-guidance">
         <HolographicCard className="p-8 text-center" glowIntensity="high">
           <div className="space-y-6">
             <div className="relative inline-block">

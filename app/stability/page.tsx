@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/lib/guardian-stability"
 import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
 import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
+import { anticipateResourceNeeds, questionsForUnknowns } from "@/lib/proactive-resource-needs"
 import { CalmingAudio } from "@/components/calming-audio"
 import { MealLogSection } from "@/components/guardian/meal-log-section"
 import { MaslowResourceAutomation } from "@/components/guardian/maslow-resource-automation"
@@ -33,6 +34,14 @@ export default function StabilityPage() {
   const [planLocation, setPlanLocation] = useState("")
   const [planNeed, setPlanNeed] = useState<Need | "">("")
   const now = useLocalDate()
+  const [clockTime, setClockTime] = useState("00:00")
+
+  useEffect(() => {
+    const updateClock = () => setClockTime(new Date().toTimeString().slice(0, 5))
+    updateClock()
+    const timer = window.setInterval(updateClock, 60_000)
+    return () => window.clearInterval(timer)
+  }, [])
 
   const update = (next: GuardianState) => {
     saveGuardianState(window.localStorage, next)
@@ -46,7 +55,10 @@ export default function StabilityPage() {
   const prevention = analyzePreventionPatterns(state.entries, today)
   const suggested = suggestedNeeds(prevention)
   const needsHelp = NEEDS.filter((need) => today.needs[need] === "needs-help")
-  const resourceNeeds = [...new Set([...needsHelp, ...suggested])]
+  const proactive = anticipateResourceNeeds({ entries: state.entries, today, plan: state.plan, now: { date: now, time: clockTime } })
+  const pendingQuestions = questionsForUnknowns(today, proactive)
+  const proactiveNeeds = proactive.map((cue) => cue.need)
+  const resourceNeeds = [...new Set([...needsHelp, ...suggested, ...proactiveNeeds])]
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
 
   const updateCheckIn = (need: Need, status: NeedStatus | undefined) => {
@@ -126,6 +138,26 @@ export default function StabilityPage() {
           <button disabled={state.paused} className="underline ml-auto" onClick={() => update({ ...state, plan: state.plan.filter((candidate) => candidate.id !== item.id) })}>Remove</button>
         </li>)}</ul>
       </section>
+      {proactive.length > 0 && <section className="border rounded-xl p-5 space-y-4" aria-live="polite">
+        <h2 className="text-xl font-semibold">Plan ahead before a need becomes urgent</h2>
+        <p className="text-sm text-muted-foreground">These cues use only information you chose to record. NarcoGuard can search early, but it does not turn missing logs into facts.</p>
+        <ul className="space-y-3">{proactive.map((cue) => <li key={cue.id} className="rounded-lg border p-3">
+          <strong>{cue.title}</strong>
+          <span className="block text-sm">{cue.detail}</span>
+          <span className="block text-xs text-muted-foreground mt-1">Planning horizon: {cue.horizon} · Resource category: {names[cue.need]}</span>
+        </li>)}</ul>
+        {pendingQuestions.length > 0 && <div className="space-y-3">
+          <h3 className="font-semibold">Confirm anything uncertain</h3>
+          {pendingQuestions.map((item) => <div key={item.id} className="rounded-lg border p-3">
+            <p>{item.question}</p>
+            <p className="text-xs text-muted-foreground">{item.reason}</p>
+            <div className="flex gap-2 mt-2">
+              <Button disabled={state.paused} variant="outline" onClick={() => updateCheckIn(item.need, "met")}>Yes, met</Button>
+              <Button disabled={state.paused} variant="outline" onClick={() => updateCheckIn(item.need, "needs-help")}>No, find help</Button>
+            </div>
+          </div>)}
+        </div>}
+      </section>}
       <section className="border rounded-xl p-5 space-y-4" aria-live="polite">
         <h2 className="text-xl font-semibold">Pre-warning & next action</h2>
         {prevention.level === "steady" ? <p>No change that needs attention is visible in the information you chose to record today. Unknown answers stay unknown.</p> : <>
