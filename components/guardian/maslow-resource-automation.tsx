@@ -26,6 +26,8 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const key = zip + "|" + kinds.join(",")
+  const allKinds = [...new Set(MASLOW_LEVELS.flatMap((level) => level.kinds as readonly ResourceKind[]))]
+  const otherKinds = allKinds.filter((kind) => !kinds.includes(kind))
 
   useEffect(() => {
     if (!zip || kinds.length === 0) {
@@ -115,6 +117,31 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
           </section>
         )
       })}
+
+      {data && otherKinds.length > 0 && (
+        <details className="rounded-lg border p-4">
+          <summary className="font-medium cursor-pointer">More resources across the full Maslow framework</summary>
+          <p className="text-sm text-muted-foreground mt-2">These are not inferred deficiencies. They are optional resources for connection, stability, independence and user-chosen goals.</p>
+          <div className="mt-3 space-y-3">
+            {MASLOW_LEVELS.map((level) => {
+              const optionalKinds = (level.kinds as readonly ResourceKind[]).filter((kind) => otherKinds.includes(kind))
+              if (optionalKinds.length === 0) return null
+              return <div key={"other-" + level.id}>
+                <h3 className="font-semibold">{level.title}</h3>
+                <div className="text-sm space-y-1">{optionalKinds.map((kind) => {
+                  const lookup = data.kinds[kind]
+                  const first = lookup.results[0]
+                  return <p key={"other-" + kind}>
+                    <strong>{RESOURCE_LABELS[kind]}:</strong>{" "}
+                    {first ? <>{first.name}{first.distanceMiles !== undefined ? " · " + first.distanceMiles + " mi" : ""}</> : "No nearby listing returned."}
+                    {" "}<a className="underline text-primary" href={lookup.fallback[0]?.url || "https://www.211.org/get-help"} target="_blank" rel="noopener noreferrer">Directory ↗</a>
+                  </p>
+                })}</div>
+              </div>
+            })}
+          </div>
+        </details>
+      )}
     </div>
   )
 }
