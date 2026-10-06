@@ -242,11 +242,18 @@ export default function DashboardPage() {
 
         <EmergencyButton />
 
-        <div className="rounded-xl border border-primary/30 p-5">
-          <h2 className="text-xl font-semibold">Guardian Stability</h2>
-          <p className="text-sm text-muted-foreground mb-3">Opt-in check-ins for food, sleep and everyday needs, with a next-day plan and resource starting points.</p>
-          <Link href="/stability"><Button variant="outline">Open my needs planner</Button></Link>
-          <Link href="/constitution" className="ml-3 underline text-sm">Read the founding Constitution</Link>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="rounded-xl border border-primary/30 p-5">
+            <h2 className="text-xl font-semibold">Guardian Stability</h2>
+            <p className="text-sm text-muted-foreground mb-3">Opt-in check-ins for food, sleep and everyday needs, with a next-day plan and resource starting points.</p>
+            <Link href="/stability"><Button variant="outline">Open my needs planner</Button></Link>
+            <Link href="/constitution" className="ml-3 underline text-sm">Read the founding Constitution</Link>
+          </div>
+          <div className="rounded-xl border border-primary/30 p-5">
+            <h2 className="text-xl font-semibold">Daily Life</h2>
+            <p className="text-sm text-muted-foreground mb-3">Optional wake-up prompts, morning briefing, routines, schedule, thought/mood/gratitude/wins journals, and evening reset.</p>
+            <Link href="/daily-life"><Button variant="outline">Open Daily Life</Button></Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
