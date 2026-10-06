@@ -34,7 +34,8 @@
     "test:vitals": "node --import tsx --test tests/vitals-response.test.ts",
     "test:features": "node --import tsx --test tests/feature-*.test.ts",
     "audit:deps": "node scripts/audit-gate.js",
-    "validate:agent-skills": "node scripts/validate-agent-skills.mjs"
+    "validate:agent-skills": "node scripts/validate-agent-skills.mjs",
+    "setup:agent-skills": "bash scripts/bootstrap-agent-skills.sh"
   },
   "overrides": {
     "next": {
