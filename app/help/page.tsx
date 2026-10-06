@@ -12,7 +12,7 @@ export default function HelpPage() {
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Find help</h1>
         <p className="text-muted-foreground">
-          Listings are grouped from basic needs up to growth and goals. The grouping is only a guide: everyone decides what matters first, and help is never conditional on anything else.
+          Listings are grouped by Maslow's hierarchy, from physiological needs up through safety, belonging, esteem and self-actualization. The grouping only organizes the search: you decide what matters first, and help is never conditional on anything else.
         </p>
       </header>
       <div className="border rounded-xl p-5">

@@ -34,10 +34,11 @@ export const SHORT_LABELS: Record<ResourceKind, string> = {
  * follow: every level is searched at once and any need can come first.
  */
 export const NEED_LEVELS = [
-  { id: "basic", title: "Basic needs", kinds: ["food", "shelter", "water", "toilets", "showers", "laundry"] },
-  { id: "safety", title: "Health and safety", kinds: ["emergency", "clinic", "pharmacy"] },
-  { id: "connection", title: "Recovery and connection", kinds: ["treatment", "community"] },
-  { id: "growth", title: "Growth and goals", kinds: ["library", "jobs"] },
+  { id: "physiological", title: "Physiological — food, water, shelter, hygiene", kinds: ["food", "shelter", "water", "toilets", "showers", "laundry"] },
+  { id: "safety", title: "Safety — health and emergency care", kinds: ["emergency", "clinic", "pharmacy"] },
+  { id: "belonging", title: "Belonging — recovery and connection", kinds: ["treatment", "community"] },
+  { id: "esteem", title: "Esteem — work and contribution", kinds: ["jobs"] },
+  { id: "self-actualization", title: "Self-actualization — learning and goals", kinds: ["library"] },
 ] as const satisfies readonly { id: string; title: string; kinds: readonly ResourceKind[] }[]
 
 export interface NearbyResource {

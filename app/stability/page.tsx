@@ -7,10 +7,11 @@ import {
   clearGuardianState, defaultGuardianState, earlyWarning, NEEDS, patternInsights, saveGuardianState,
   type GuardianState, type Need, type NeedStatus,
 } from "@/lib/guardian-stability"
-import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
+import { normalizePostalCode } from "@/lib/guardian-resources"
 import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
 import { CalmingAudio } from "@/components/calming-audio"
 import { MealLogSection } from "@/components/guardian/meal-log-section"
+import { MatchedResources } from "@/components/resources/matched-resources"
 import { notifyGuardianChange, useGuardianState, useLocalDate } from "@/lib/hooks/use-guardian-state"
 
 const names: Record<Need, string> = {
@@ -140,8 +141,7 @@ export default function StabilityPage() {
           <input disabled={state.paused} inputMode="numeric" maxLength={10} className="block bg-background border rounded p-2" value={state.postalCode} onChange={(event) => update({ ...state, postalCode: event.target.value })} placeholder="ZIP code" />
         </label>
         {state.postalCode && !normalizePostalCode(state.postalCode) && <p className="text-sm">Enter a five-digit US ZIP code, or leave it blank.</p>}
-        {needsHelp.length === 0 && <p className="text-muted-foreground">Mark a need above to see relevant starting points.</p>}
-        {needsHelp.map((need) => <div key={need} className="space-y-2"><h3 className="font-semibold">{names[need]}</h3>{resourcesForNeed(need, normalizePostalCode(state.postalCode)).map((link) => <p key={link.url}><a href={link.url} target="_blank" rel="noopener noreferrer" className="underline text-primary">{link.title} ↗</a><span className="block text-sm text-muted-foreground">{link.description}</span></p>)}</div>)}
+        <MatchedResources needs={needsHelp} postalCode={normalizePostalCode(state.postalCode)} />
       </section>
       <section className="border rounded-xl p-5 space-y-3">
         <h2 className="text-xl font-semibold">Your patterns and support</h2>

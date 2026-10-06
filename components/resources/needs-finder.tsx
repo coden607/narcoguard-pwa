@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { LocateFixed } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
@@ -73,6 +73,7 @@ export function NeedsFinder() {
     setBusy(true)
     setNotice(undefined)
     try {
+      if ("zip" in origin) sessionStorage.setItem("ng-resource-zip", origin.zip)
       const params = new URLSearchParams("zip" in origin ? { zip: origin.zip } : { lat: String(origin.lat), lon: String(origin.lon) })
       const response = await fetch(`/api/resources/needs?${params}`, { cache: "no-store" })
       const body = (await response.json()) as NeedsResponse
@@ -83,6 +84,15 @@ export function NeedsFinder() {
       setBusy(false)
     }
   }
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem("ng-resource-zip")
+    if (!saved || !/^\d{5}$/.test(saved)) return
+    setZip(saved)
+    void lookup({ zip: saved })
+    // Replay only the ZIP from this tab session. Location is not stored.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const findNearMe = () => {
     if (!("geolocation" in navigator)) {
@@ -106,7 +116,7 @@ export function NeedsFinder() {
       <div className="space-y-1">
         <h2 id="needs-heading" className="text-xl font-semibold">Find help near me</h2>
         <p className="text-sm text-muted-foreground">
-          One search covers every level of need, from food, water and shelter to health care, recovery, libraries and job help. Start wherever you need to.
+          One search covers Maslow's hierarchy: food, water and shelter, then health and safety, recovery and connection, work, and learning. Start wherever you need to.
         </p>
       </div>
       <div className="flex flex-col sm:flex-row gap-2">
