@@ -27,7 +27,8 @@ export default function HeroSignup() {
   const certificate = fresh ?? saved
   const [status, setStatus] = useState<Status | null>(null)
   const [note, setNote] = useState<string>()
-  const [busy, setBusy] = useState(false)\n  const [naloxoneOnCall, setNaloxoneOnCall] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [naloxoneOnCall, setNaloxoneOnCall] = useState(false)
 
   useEffect(() => {
     let cancelled = false
