@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import type { Need } from "@/lib/guardian-stability"
 import { normalizePostalCode } from "@/lib/guardian-resources"
 import { MASLOW_LEVELS, resourceKindsForNeeds } from "@/lib/maslow-resources"
@@ -21,38 +21,31 @@ type NeedsLookup = {
 
 export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonly Need[]; postalCode: string }) {
   const zip = normalizePostalCode(postalCode)
-  const kinds = useMemo(() => resourceKindsForNeeds(needs), [needs])
-  const [data, setData] = useState<NeedsLookup | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState("")
-  const key = zip + "|" + kinds.join(",")
+  const kinds = resourceKindsForNeeds(needs)
+  const [request, setRequest] = useState<{ zip: string; data?: NeedsLookup; error?: string }>({ zip: "" })
+  const data = request.zip === zip ? request.data ?? null : null
+  const error = request.zip === zip ? request.error ?? "" : ""
+  const loading = Boolean(zip) && request.zip !== zip
   const allKinds = [...new Set(MASLOW_LEVELS.flatMap((level) => level.kinds as readonly ResourceKind[]))]
   const otherKinds = allKinds.filter((kind) => !kinds.includes(kind))
 
   useEffect(() => {
-    if (!zip || kinds.length === 0) {
-      setData(null)
-      setError("")
-      setLoading(false)
-      return
-    }
+    if (!zip) return
     const controller = new AbortController()
-    setLoading(true)
-    setError("")
     fetch("/api/resources/needs?zip=" + encodeURIComponent(zip), { cache: "no-store", signal: controller.signal })
       .then(async (response) => {
         const body = await response.json() as NeedsLookup | { error?: string }
         if (!response.ok && !("kinds" in body)) throw new Error(body.error || "Resource lookup is unavailable.")
         return body as NeedsLookup
       })
-      .then((body) => setData(body))
-      .catch((cause: unknown) => {
-        if (controller.signal.aborted) return
-        setError(cause instanceof Error ? cause.message : "Resource lookup is unavailable.")
+      .then((body) => {
+        if (!controller.signal.aborted) setRequest({ zip, data: body })
       })
-      .finally(() => { if (!controller.signal.aborted) setLoading(false) })
+      .catch((cause: unknown) => {
+        if (!controller.signal.aborted) setRequest({ zip, error: cause instanceof Error ? cause.message : "Resource lookup is unavailable." })
+      })
     return () => controller.abort()
-  }, [key, kinds, zip])
+  }, [zip])
 
   if (needs.length === 0) return null
 
@@ -97,7 +90,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
                           {resource.hours && <span className="block text-sm">Listed hours: {resource.hours}</span>}
                           <span className="block text-xs text-muted-foreground">Source: {resource.source}. Call first to confirm current availability, eligibility and hours.</span>
                           <span className="block text-sm space-x-3 mt-1">
-                            {resource.phone && <a className="underline text-primary" href={"tel:" + resource.phone.replace(/[^\\d+]/g, "")}>Call</a>}
+                            {resource.phone && <a className="underline text-primary" href={"tel:" + resource.phone.replace(/[^\d+]/g, "")}>Call</a>}
                             {resource.website && <a className="underline text-primary" href={resource.website} target="_blank" rel="noopener noreferrer">Website ↗</a>}
                           </span>
                         </li>
