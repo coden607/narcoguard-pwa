@@ -41,7 +41,7 @@ export default function HeroSignup() {
   const [status, setStatus] = useState<Status | null>(null)
   const [note, setNote] = useState<string>()
   const [busy, setBusy] = useState(false)
-  const today = useLocalDate()
+  const today = useLocalDate() ?? ""
   const [naloxoneReady, setNaloxoneReady] = useState(false)
   const [naloxoneExpiresOn, setNaloxoneExpiresOn] = useState("")
 
@@ -111,8 +111,8 @@ export default function HeroSignup() {
   }
 
   const hero = status?.hero ?? null
-  const certCurrent = Boolean(hero && hero.expires_at.slice(0, 10) >= today)
-  const naloxoneCurrent = Boolean(naloxoneReady && naloxoneExpiresOn && naloxoneExpiresOn >= today)
+  const certCurrent = Boolean(today && hero && hero.expires_at.slice(0, 10) >= today)
+  const naloxoneCurrent = Boolean(today && naloxoneReady && naloxoneExpiresOn && naloxoneExpiresOn >= today)
   const readyForCall = Boolean(hero?.enrolled && certCurrent && naloxoneCurrent)
 
   return (
