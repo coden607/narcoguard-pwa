@@ -17,12 +17,15 @@ The camera is **not** an always-on monitor and must not be used for covert surve
 ## Hardware requirements
 
 1. Front-facing or outward-facing low-power camera suitable for close-range scanning and training overlays.
-2. Physical camera-active LED wired to the camera power rail so software cannot turn the camera on without the indicator.
-3. Hardware privacy shutter or electrical camera-disable switch in later prototype revisions.
-4. No camera buffer retained across reboots.
-5. Camera remains powered down unless an explicit user action starts a camera task.
-6. Audio capture is independent from camera capture and requires its own permission/indicator.
-7. Camera failure must not block SOS, naloxone guidance, emergency calling, or basic Guardian resource access.
+2. Separate physical **camera-active LED** wired to the camera power rail so software cannot power the camera without the light being on.
+3. Separate physical **microphone-active LED** wired to the microphone/codec capture-enable path so software cannot record audio without the mic indicator being on.
+4. Camera and microphone indicators must be visually distinct and remain lit for the full duration of capture, including background capture states.
+5. The app/watch UI must mirror these hardware states with accessible text/icons such as “Camera on” and “Microphone on”; the software indicator supplements but never replaces the hardwired lights.
+6. Hardware privacy shutter or electrical camera-disable switch in later prototype revisions, plus a hardware microphone mute/disable control where practical.
+7. No camera or microphone buffer retained across reboots.
+8. Camera and microphone remain powered down unless an explicit user action starts a task that requires them.
+9. Audio capture is independent from camera capture and requires its own permission and indicator.
+10. Sensor failure or denied permission must not block SOS, naloxone guidance, emergency calling, or basic Guardian resource access.
 
 ## Software/privacy contract
 
