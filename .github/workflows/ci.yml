@@ -22,6 +22,7 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
+      - run: npm run validate:agent-skills
       - run: npm run lint
       - run: npm run validate:production
       - run: npm run validate:env
