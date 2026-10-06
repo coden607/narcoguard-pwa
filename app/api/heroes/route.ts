@@ -1,5 +1,5 @@
 import { isSameOrigin, json, readJson } from "@/lib/api-helpers"
-import { heroSecret, verifyCertificate } from "@/lib/hero-certification"
+import { acceptsHeroNaloxoneAttestation, heroSecret, verifyCertificate } from "@/lib/hero-certification"
 import { getAuthContext, isAuthConfigured, serviceRest } from "@/lib/supabase-auth"
 
 // Hero enrollment: a signed-in account with a valid 100% certificate. Nearby help requests stay
