@@ -17,7 +17,10 @@ export function LifeSupportTools() {
   const [task, setTask] = useState("")
   const [doc, setDoc] = useState("")
 
-  useEffect(() => setState(readLifeSupportState(window.localStorage)), [])
+  useEffect(() => {
+    const timer = window.setTimeout(() => setState(readLifeSupportState(window.localStorage)), 0)
+    return () => window.clearTimeout(timer)
+  }, [])
   const update = (next: LifeSupportState) => {
     saveLifeSupportState(window.localStorage, next)
     setState(next)
