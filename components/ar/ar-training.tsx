@@ -1,138 +1,135 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useSyncExternalStore } from "react"
+import Link from "next/link"
+import { Award, BookOpen, CheckCircle, Clock } from "lucide-react"
 import { HolographicCard } from "@/components/effects/holographic-card"
-import { GlowButton } from "@/components/effects/glow-button"
-import { Camera, Play, Award, Clock, Target } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { LESSONS, LESSON_PROGRESS_KEY, parseProgress } from "@/lib/response-guides"
 
-interface TrainingModule {
-  id: string
-  title: string
-  description: string
-  duration: string
-  difficulty: "beginner" | "intermediate" | "advanced"
-  completed: boolean
+// Self-paced lessons. Progress is kept on this device only. The practice question checks
+// understanding; certification is the Hero test, graded on NarcoGuard's server.
+
+const listeners = new Set<() => void>()
+let memory: string | null = null
+const readRaw = () => {
+  try {
+    return localStorage.getItem(LESSON_PROGRESS_KEY)
+  } catch {
+    return memory
+  }
+}
+const subscribe = (listener: () => void) => {
+  listeners.add(listener)
+  return () => listeners.delete(listener)
+}
+const saveDone = (ids: string[]) => {
+  const raw = JSON.stringify(ids)
+  try {
+    localStorage.setItem(LESSON_PROGRESS_KEY, raw)
+  } catch {
+    memory = raw
+  }
+  listeners.forEach((listener) => listener())
 }
 
 export function ARTraining() {
-  const [modules] = useState<TrainingModule[]>([
-    {
-      id: "naloxone-basic",
-      title: "Naloxone Administration Basics",
-      description: "Learn the fundamentals of naloxone administration with AR guidance",
-      duration: "10 min",
-      difficulty: "beginner",
-      completed: false,
-    },
-    {
-      id: "cpr-basics",
-      title: "CPR Fundamentals",
-      description: "Master chest compressions and rescue breathing techniques",
-      duration: "15 min",
-      difficulty: "beginner",
-      completed: false,
-    },
-    {
-      id: "emergency-response",
-      title: "Emergency Response Protocol",
-      description: "Complete emergency response from recognition to recovery",
-      duration: "20 min",
-      difficulty: "intermediate",
-      completed: false,
-    },
-    {
-      id: "advanced-scenarios",
-      title: "Advanced Scenarios",
-      description: "Handle complex situations with multiple casualties",
-      duration: "30 min",
-      difficulty: "advanced",
-      completed: false,
-    },
-  ])
+  const raw = useSyncExternalStore(subscribe, readRaw, () => null)
+  const done = parseProgress(raw)
+  const [open, setOpen] = useState<string | null>(null)
+  const [choice, setChoice] = useState<number | null>(null)
+  const totalMinutes = LESSONS.reduce((sum, lesson) => sum + lesson.minutes, 0)
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "beginner":
-        return "text-green-500"
-      case "intermediate":
-        return "text-yellow-500"
-      case "advanced":
-        return "text-red-500"
-      default:
-        return "text-muted-foreground"
-    }
+  const toggle = (id: string) => {
+    setChoice(null)
+    setOpen(open === id ? null : id)
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="lessons">
       <HolographicCard className="p-6" glowIntensity="high">
         <div className="flex items-center gap-4 mb-6">
-          <div className="relative">
-            <div className="w-16 h-16 rounded-full bg-linear-to-br from-primary to-purple-500 flex items-center justify-center pulse-glow">
-              <Camera className="w-8 h-8 text-white" />
-            </div>
-            <div className="absolute -top-1 -right-1">
-              <Award className="w-6 h-6 text-secondary pulse-glow" />
-            </div>
+          <div className="w-16 h-16 rounded-full bg-linear-to-br from-primary to-purple-500 flex items-center justify-center">
+            <BookOpen className="w-8 h-8 text-white" aria-hidden="true" />
           </div>
           <div>
-            <h2 className="text-2xl font-bold glow-text font-orbitron">AR TRAINING</h2>
-            <p className="text-muted-foreground">Interactive augmented reality training modules</p>
+            <h2 className="text-2xl font-bold glow-text font-orbitron">LESSONS</h2>
+            <p className="text-muted-foreground">Short lessons, each with a practice question. Progress stays on this device.</p>
           </div>
         </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-3 gap-4">
           <div className="glass p-4 rounded-lg text-center">
-            <Target className="w-6 h-6 mx-auto mb-2 text-primary pulse-glow" />
-            <p className="text-2xl font-bold glow-text">0/4</p>
+            <p className="text-2xl font-bold glow-text" data-testid="lessons-done">{done.length}/{LESSONS.length}</p>
             <p className="text-xs text-muted-foreground">Completed</p>
           </div>
           <div className="glass p-4 rounded-lg text-center">
-            <Clock className="w-6 h-6 mx-auto mb-2 text-secondary pulse-glow" />
-            <p className="text-2xl font-bold glow-text">75m</p>
-            <p className="text-xs text-muted-foreground">Total Time</p>
+            <p className="text-2xl font-bold glow-text">{totalMinutes}m</p>
+            <p className="text-xs text-muted-foreground">Total time</p>
           </div>
-          <div className="glass p-4 rounded-lg text-center">
-            <Award className="w-6 h-6 mx-auto mb-2 text-yellow-500 pulse-glow" />
-            <p className="text-2xl font-bold glow-text">0</p>
-            <p className="text-xs text-muted-foreground">Certificates</p>
-          </div>
+          <Link href="/hero-signup" className="glass p-4 rounded-lg text-center hover:bg-primary/10">
+            <Award className="w-6 h-6 mx-auto text-yellow-500" aria-hidden="true" />
+            <p className="text-xs text-muted-foreground mt-1">Take the Hero test</p>
+          </Link>
         </div>
       </HolographicCard>
 
-      {/* Training modules */}
-      <div className="space-y-4">
-        {modules.map((module) => (
-          <HolographicCard key={module.id} className="p-6">
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <h3 className="text-lg font-semibold">{module.title}</h3>
-                  <span className={`text-xs px-2 py-1 rounded-full glass ${getDifficultyColor(module.difficulty)}`}>
-                    {module.difficulty}
-                  </span>
-                </div>
-                <p className="text-sm text-muted-foreground mb-3">{module.description}</p>
-                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3" />
-                    <span>{module.duration}</span>
+      <ul className="space-y-4">
+        {LESSONS.map((lesson) => {
+          const isDone = done.includes(lesson.id)
+          const isOpen = open === lesson.id
+          const answered = isOpen && choice !== null
+          const correct = answered && choice === lesson.check.answer
+          return (
+            <li key={lesson.id}>
+              <HolographicCard className="p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
+                      {isDone && <CheckCircle className="h-5 w-5 text-green-500" aria-label="Completed" />}
+                      {lesson.title}
+                    </h3>
+                    <p className="flex items-center gap-1 text-xs text-muted-foreground"><Clock className="h-3 w-3" aria-hidden="true" />{lesson.minutes} min</p>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Camera className="w-3 h-3" />
-                    <span>AR Required</span>
-                  </div>
+                  <Button type="button" variant={isOpen ? "outline" : "default"} aria-expanded={isOpen} onClick={() => toggle(lesson.id)}>
+                    {isOpen ? "Close" : isDone ? "Review" : "Start"}
+                  </Button>
                 </div>
-              </div>
-              <GlowButton variant="default">
-                <Play className="w-4 h-4 mr-2" />
-                Start
-              </GlowButton>
-            </div>
-          </HolographicCard>
-        ))}
-      </div>
+                {isOpen && (
+                  <div className="mt-4 space-y-4">
+                    <ul className="list-disc space-y-1 pl-5 text-sm">
+                      {lesson.points.map((point) => <li key={point}>{point}</li>)}
+                    </ul>
+                    <fieldset className="space-y-2">
+                      <legend className="font-medium">Practice: {lesson.check.question}</legend>
+                      {lesson.check.options.map((option, optionIndex) => (
+                        <label key={option} className={`flex cursor-pointer items-start gap-2 rounded-lg border p-2 text-sm ${choice === optionIndex ? "border-primary" : ""}`}>
+                          <input type="radio" name={`check-${lesson.id}`} checked={choice === optionIndex} onChange={() => setChoice(optionIndex)} className="mt-1" />
+                          {option}
+                        </label>
+                      ))}
+                    </fieldset>
+                    {answered && (
+                      <p className={`text-sm ${correct ? "text-green-400" : "text-amber-300"}`} role="status">
+                        {correct ? "Correct. " : "Not quite. "}{lesson.check.why}
+                      </p>
+                    )}
+                    {correct && !isDone && (
+                      <Button type="button" onClick={() => { saveDone([...done, lesson.id]); setOpen(null); setChoice(null) }}>Mark lesson complete</Button>
+                    )}
+                  </div>
+                )}
+              </HolographicCard>
+            </li>
+          )
+        })}
+      </ul>
+
+      <p className="text-sm text-muted-foreground">
+        Hands-on CPR and naloxone classes from a local health department or the Red Cross are strongly recommended. Lessons are general information, not medical advice.
+      </p>
+      {done.length > 0 && (
+        <Button type="button" variant="ghost" size="sm" onClick={() => saveDone([])}>Reset lesson progress</Button>
+      )}
     </div>
   )
 }

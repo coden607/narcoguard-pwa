@@ -749,6 +749,44 @@ test.describe("Account", () => {
   })
 })
 
+test.describe("Training", () => {
+  test("guides advance only when the person taps Next and the CPR beat counts compressions", async ({ page }) => {
+    await page.clock.install()
+    await page.goto("/ar")
+    await page.getByRole("button", { name: "Start CPR Guide" }).click()
+    const guide = page.getByTestId("guide-screen")
+    await expect(guide.getByText("Step 1 of 5")).toBeVisible()
+    await expect(guide.getByRole("link", { name: "Call 911" })).toHaveAttribute("href", "tel:911")
+    await page.clock.runFor(60_000)
+    await expect(guide.getByText("Step 1 of 5"), "steps never advance on their own").toBeVisible()
+    await guide.getByRole("button", { name: "Next step" }).click()
+    await guide.getByRole("button", { name: "Next step" }).click()
+    const beat = guide.getByTestId("cpr-metronome")
+    await beat.getByRole("button", { name: "Start beat" }).click()
+    await page.clock.runFor(5_500)
+    await expect(beat).toContainText("10 compressions")
+    await beat.getByRole("button", { name: "Stop beat" }).click()
+    await guide.getByRole("button", { name: "Exit" }).click()
+    await expect(guide).toBeHidden()
+  })
+
+  test("a lesson is completed only after a correct practice answer and progress survives reload", async ({ page }) => {
+    await page.goto("/ar")
+    const lessons = page.getByTestId("lessons")
+    await expect(lessons.getByTestId("lessons-done")).toHaveText("0/5")
+    const first = lessons.getByRole("listitem").filter({ hasText: "Recognize an opioid overdose" })
+    await first.getByRole("button", { name: "Start" }).click()
+    await first.getByRole("radio", { name: "Agitated with very large pupils" }).check()
+    await expect(first.getByText(/Not quite/)).toBeVisible()
+    await expect(first.getByRole("button", { name: "Mark lesson complete" })).toHaveCount(0)
+    await first.getByRole("radio", { name: /Won't wake up/ }).check()
+    await first.getByRole("button", { name: "Mark lesson complete" }).click()
+    await expect(lessons.getByTestId("lessons-done")).toHaveText("1/5")
+    await page.reload()
+    await expect(page.getByTestId("lessons-done")).toHaveText("1/5")
+  })
+})
+
 test.describe("Install on iPhone", () => {
   test.use({ userAgent: "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1", viewport: { width: 390, height: 844 }, hasTouch: true })
 
