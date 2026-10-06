@@ -72,7 +72,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
       </div>
 
       {data && MASLOW_LEVELS.map((level) => {
-        const levelKinds = level.kinds.filter((kind) => kinds.includes(kind))
+        const levelKinds = (level.kinds as readonly ResourceKind[]).filter((kind) => kinds.includes(kind))
         if (levelKinds.length === 0) return null
         return (
           <section key={level.id} className="rounded-lg border p-4 space-y-3">
