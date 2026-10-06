@@ -42,7 +42,7 @@ export default function HeroSignup() {
     setBusy(true)
     setNote(undefined)
     try {
-      const response = await fetch("/api/heroes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ certificate }) })
+      const response = await fetch("/api/heroes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ certificate, naloxoneOnCall }) })
       const body = (await response.json()) as { enrolled?: boolean; error?: string }
       if (response.status === 401) setNote("Sign in first, then come back to enroll.")
       else setNote(body.enrolled ? "You are enrolled in the Hero Network." : (body.error ?? "Enrollment failed."))
@@ -92,11 +92,17 @@ export default function HeroSignup() {
             ) : status && !status.enrollment ? (
               <p className="text-sm text-muted-foreground">You have a certificate on this device. Enrollment is not switched on yet; it will use your certificate once it is.</p>
             ) : (
-              <Button type="button" onClick={enroll} disabled={busy || !status}>{busy ? "Enrolling…" : "Enroll with my certificate"}</Button>
+              <>
+                <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+                  <input type="checkbox" checked={naloxoneOnCall} onChange={(event) => setNaloxoneOnCall(event.target.checked)} />
+                  <span>I confirm that whenever I choose to be available/on call as a Hero, I will carry naloxone that I know how to use and will pause availability if I do not have it. This is a self-attestation, not NarcoGuard verification.</span>
+                </label>
+                <Button type="button" onClick={enroll} disabled={busy || !status || !naloxoneOnCall}>{busy ? "Enrolling…" : "Enroll with my certificate"}</Button>
+              </>
             )}
             {note && <p className="text-sm" role="status">{note} {note.startsWith("Sign in") && <Link href="/auth" className="underline text-primary">Sign in</Link>}</p>}
             <p className="text-sm text-muted-foreground">
-              Nearby help requests are not live. Before they can be, they need a separate safety and privacy review, your explicit opt-in, and a way to pause or leave at any time.
+              Nearby help requests are not live. Before they can be, they need a separate safety and privacy review, your explicit opt-in, a per-session naloxone-readiness check, and a way to pause or leave at any time.
               Heroes never replace 911.
             </p>
           </section>
