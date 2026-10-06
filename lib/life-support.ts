@@ -51,7 +51,6 @@ export function readLifeSupportState(storage: LifeSupportStorage): LifeSupportSt
     const raw = storage.getItem(LIFE_SUPPORT_STORAGE_KEY)
     if (!raw) return defaultLifeSupportState()
     const input = JSON.parse(raw) as Partial<LifeSupportState>
-    const defaults = defaultLifeSupportState()
     return {
       enabled: input.enabled === true,
       topGoal: clean(input.topGoal, 200),
