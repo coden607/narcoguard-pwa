@@ -21,6 +21,7 @@ const requiredTables = [
   "activity_log",
   "legal_agreements",
   "emergency_contacts",
+  "hero_certifications",
 ]
 
 const requiredChecks = [
@@ -34,11 +35,13 @@ const requiredChecks = [
   ["contact ownership index", /create index if not exists emergency_contacts_user_idx/i],
   ["agreement ownership index", /create index if not exists legal_agreements_user_idx/i],
   ["service-only donations", /Donations and activity logs contain administrative/i],
+  ["hero readiness RLS", /alter table public\.hero_certifications enable row level security/i],
+  ["hero on-call readiness guard", /hero_on_call_requires_readiness/i],
 ]
 
 const failures = []
 for (const table of requiredTables) {
-  if (!new RegExp(`create table if not exists ${table}\\b`, "i").test(migrations)) {
+  if (!new RegExp(`create table if not exists (?:public\\.)?${table}\\b`, "i").test(migrations)) {
     failures.push(`missing table definition: ${table}`)
   }
 }
