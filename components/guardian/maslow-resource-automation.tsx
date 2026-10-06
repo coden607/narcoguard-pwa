@@ -6,7 +6,7 @@ import { normalizePostalCode } from "@/lib/guardian-resources"
 import { MASLOW_LEVELS, resourceKindsForNeeds } from "@/lib/maslow-resources"
 import { RESOURCE_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 import {
-  defaultResourcePreferences,
+  defaultResourcePreferences,\n  explainResource,
   rankResources,
   readResourceFeedback,
   readResourcePreferences,
