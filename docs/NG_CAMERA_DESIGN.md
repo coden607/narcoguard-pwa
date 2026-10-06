@@ -39,3 +39,28 @@ The camera is **not** an always-on monitor and must not be used for covert surve
 ## Prototype validation
 
 Camera prototypes must test: denied permission, revoked permission mid-session, backgrounding, low light, camera unavailable, browser unsupported, offline mode, visible indicator behavior, and emergency-path independence.
+
+
+## Women-centered watch variant
+
+NarcoGuard NG should include a women-centered industrial-design variant rather than treating one oversized unisex shell as the only form factor.
+
+### Design goals
+
+- Smaller case and shorter lug-to-lug geometry for narrower wrists while preserving the same safety functions.
+- Multiple strap lengths and soft, replaceable bands that avoid pressure points during sleep.
+- Rounded case edges, low profile, and a lighter visual footprint suitable for continuous wear.
+- Same sensor, battery, SOS, camera/microphone privacy-indicator, and emergency-path requirements as every other NG variant; appearance must never reduce safety capability.
+- Optional jewelry-inspired finishes and interchangeable bands without making the device look like a medical alarm.
+- Controls sized for reliable one-handed use with long nails, gloves, tremor, or reduced dexterity.
+- Camera and microphone indicator lights remain clearly visible from normal viewing angles.
+- Haptics, speaker, microphone, and display remain strong enough to be noticed in noisy environments.
+- No gendered health assumptions: the variant is an ergonomic and aesthetic option, available to any user.
+
+### Prototype sizes
+
+Evaluate at least two case classes instead of a single shell:
+- Compact: approximately 38–40 mm class for smaller wrists.
+- Standard: approximately 42–45 mm class for larger batteries or users who prefer a larger display.
+
+Final dimensions require battery, antenna, sensor, thermal, accessibility, and wearability validation.
