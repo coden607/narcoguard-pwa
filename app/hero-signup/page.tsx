@@ -9,6 +9,7 @@ import { Award, BookOpen, Heart, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { CertificationTest, HERO_CERTIFICATE_KEY } from "@/components/hero/certification-test"
+import { useLocalDate } from "@/lib/hooks/use-guardian-state"
 
 type HeroState = {
   test_version: number
@@ -40,6 +41,7 @@ export default function HeroSignup() {
   const [status, setStatus] = useState<Status | null>(null)
   const [note, setNote] = useState<string>()
   const [busy, setBusy] = useState(false)
+  const today = useLocalDate()
   const [naloxoneReady, setNaloxoneReady] = useState(false)
   const [naloxoneExpiresOn, setNaloxoneExpiresOn] = useState("")
 
@@ -109,8 +111,8 @@ export default function HeroSignup() {
   }
 
   const hero = status?.hero ?? null
-  const certCurrent = Boolean(hero && new Date(hero.expires_at).getTime() > Date.now())
-  const naloxoneCurrent = Boolean(naloxoneReady && naloxoneExpiresOn && naloxoneExpiresOn >= new Date().toISOString().slice(0, 10))
+  const certCurrent = Boolean(hero && hero.expires_at.slice(0, 10) >= today)
+  const naloxoneCurrent = Boolean(naloxoneReady && naloxoneExpiresOn && naloxoneExpiresOn >= today)
   const readyForCall = Boolean(hero?.enrolled && certCurrent && naloxoneCurrent)
 
   return (
