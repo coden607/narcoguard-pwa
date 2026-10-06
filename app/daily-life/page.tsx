@@ -73,12 +73,21 @@ export default function DailyLifePage() {
     setWeatherStatus("Requesting your location for this one weather lookup…")
     navigator.geolocation.getCurrentPosition(async (position) => {
       try {
-        const params = new URLSearchParams({ lat: String(position.coords.latitude), lon: String(position.coords.longitude) })
-        const response = await fetch("/api/daily-life/weather?" + params, { cache: "no-store" })
-        const body = await response.json() as { summary?: string; error?: string }
-        if (!response.ok || !body.summary) throw new Error(body.error || "Weather lookup failed.")
-        setWeather(body.summary)
-        setWeatherStatus("Weather updated. Your location was used only for this lookup.")
+        const params = new URLSearchParams({
+          latitude: position.coords.latitude.toFixed(2),
+          longitude: position.coords.longitude.toFixed(2),
+          current: "temperature_2m,apparent_temperature,weather_code",
+          temperature_unit: "fahrenheit",
+          timezone: "auto",
+        })
+        const response = await fetch("https://api.open-meteo.com/v1/forecast?" + params, { cache: "no-store" })
+        const body = await response.json() as { current?: { temperature_2m?: number; apparent_temperature?: number; weather_code?: number } }
+        const current = body.current
+        if (!response.ok || !current || typeof current.temperature_2m !== "number") throw new Error("Weather lookup failed.")
+        const condition = current.weather_code === 0 ? "clear" : (current.weather_code ?? 99) <= 3 ? "partly cloudy" : (current.weather_code ?? 99) >= 51 && (current.weather_code ?? 99) <= 67 ? "rainy" : (current.weather_code ?? 99) >= 71 && (current.weather_code ?? 99) <= 77 ? "snowy" : (current.weather_code ?? 99) >= 95 ? "stormy" : "mixed conditions"
+        const feels = typeof current.apparent_temperature === "number" ? `, feels like ${Math.round(current.apparent_temperature)}°F` : ""
+        setWeather(`Weather: ${condition}, ${Math.round(current.temperature_2m)}°F${feels}.`)
+        setWeatherStatus("Weather updated from Open-Meteo using an approximate location for this lookup.")
       } catch (error) {
         setWeatherStatus(error instanceof Error ? error.message : "Weather lookup failed.")
       }
