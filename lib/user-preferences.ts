@@ -63,12 +63,12 @@ const DEFAULT_PREFERENCES: UserPreferences = {
   },
   privacy: {
     incognitoMode: false,
-    shareWithHeroes: true,
+    shareWithHeroes: false,
     anonymousMode: false,
   },
   features: {
-    neverUseAlone: true,
-    autoDetection: true,
+    neverUseAlone: false,
+    autoDetection: false,
     voiceActivation: true,
   },
   legal: {

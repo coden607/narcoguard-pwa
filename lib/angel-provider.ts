@@ -9,6 +9,8 @@ export interface AngelProvider {
   url: string
   token: string
   model: string
+  fastModel?: string
+  reasoningModel?: string
   /** Provider-specific request fields merged into every chat completion request. */
   extraBody: Record<string, unknown>
 }
@@ -23,6 +25,8 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
       url: "https://api.groq.com/openai/v1/chat/completions",
       token: env.GROQ_API_KEY,
       model,
+      fastModel: env.GROQ_FAST_MODEL,
+      reasoningModel: env.GROQ_REASONING_MODEL,
       extraBody: model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {},
     }
   }
@@ -33,8 +37,16 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
       url: "https://ai-gateway.vercel.sh/v1/chat/completions",
       token: gatewayToken,
       model: env.ANGEL_GATEWAY_MODEL || ANGEL_DEFAULT_MODEL,
+      fastModel: env.ANGEL_GATEWAY_FAST_MODEL,
+      reasoningModel: env.ANGEL_GATEWAY_REASONING_MODEL,
       extraBody: { providerOptions: { gateway: { order: ["groq"] } } },
     }
   }
   return null
+}
+
+export function modelForAngelTask(provider: AngelProvider, task: "quick" | "resource" | "reasoning"): string {
+  if (task === "reasoning") return provider.reasoningModel || provider.model
+  if (task === "quick" || task === "resource") return provider.fastModel || provider.model
+  return provider.model
 }

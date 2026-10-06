@@ -162,7 +162,7 @@ export function ARGuidance() {
   const [mode, setMode] = useState<GuideMode | null>(null)
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" id="ar-guidance">
       <HolographicCard className="p-6 sm:p-8 text-center" glowIntensity="high">
         <h2 className="text-2xl font-bold glow-text font-orbitron">STEP-BY-STEP GUIDES</h2>
         <p className="text-muted-foreground mt-2">

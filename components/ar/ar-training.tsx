@@ -46,7 +46,7 @@ export function ARTraining() {
   }
 
   return (
-    <div className="space-y-6" data-testid="lessons">
+    <div className="space-y-6" id="training-modules" data-testid="lessons">
       <HolographicCard className="p-6" glowIntensity="high">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 rounded-full bg-linear-to-br from-primary to-purple-500 flex items-center justify-center">
