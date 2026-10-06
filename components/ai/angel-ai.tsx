@@ -11,6 +11,7 @@ import type { NearbyResource } from "@/lib/resource-finder"
 import { useVoice } from "@/lib/hooks/use-voice"
 import { isFatalRecognitionError, speakableText } from "@/lib/voice"
 import { parseAngelLocalCommand } from "@/lib/angel-voice-commands"
+import { useUserPreferences } from "@/lib/hooks/use-user-preferences"
 
 interface ChatMessage {
   id: string
@@ -24,6 +25,8 @@ const SUGGESTIONS = ["Help me set a goal for this week", "Find food help near me
 
 export function AngelAI({ compact = false }: { compact?: boolean }) {
   const router = useRouter()
+  const preferences = useUserPreferences()
+  const voiceEnabled = preferences?.features.voiceActivation ?? true
   // Conversations live only in this component's memory; nothing is saved to the device or server.
   const [available, setAvailable] = useState<boolean | null>(null)
   const [provider, setProvider] = useState<string | null>(null)
@@ -72,7 +75,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       setMessages([])
       return "Conversation cleared."
     }
-    if (local?.type === "read_aloud") {
+    if (local?.type === "read_aloud" && voiceEnabled) {
       if (local.enabled) voice.primeSpeech()
       else voice.cancelSpeech()
       setReadAloud(local.enabled)
@@ -233,7 +236,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
               <Button key={suggestion} type="button" size="sm" variant="outline" disabled={busy} onClick={() => void send(suggestion).then((answer) => { if (answer && readAloud) void voice.speak(answer) })}>{suggestion}</Button>
             ))}
           </div>
-          {(voice.sttSupported || voice.ttsSupported) && (
+          {voiceEnabled && (voice.sttSupported || voice.ttsSupported) && (
             <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Voice">
               {voice.sttSupported && (
                 <Button type="button" variant={voice.listening && !handsFree ? "default" : "outline"} disabled={busy || handsFree} onClick={voice.listening ? voice.stopListening : startTalking}>
@@ -257,6 +260,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
               </p>
             </div>
           )}
+          {!voiceEnabled && <p className="text-xs text-muted-foreground">Voice controls are off in setup preferences. Text chat still works.</p>}
           <form className="flex flex-col sm:flex-row gap-2" onSubmit={(event) => { event.preventDefault(); void send(input).then((answer) => { if (answer && readAloud) void voice.speak(answer) }) }}>
             <Input aria-label="Message Angel" maxLength={2000} value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type a message" className="flex-1" />
             <Input aria-label="ZIP code for searches (optional)" inputMode="numeric" maxLength={5} value={zip} onChange={(event) => setZip(event.target.value.replace(/\D/g, ""))} placeholder="ZIP (optional)" className="sm:w-32" />
