@@ -1,0 +1,20 @@
+{
+  "source": "https://github.com/coden607/skills.git",
+  "commit": "5f2d831e20cd4e9f153438ea0171d08532d492bc",
+  "skills": [
+    "route-with-jev",
+    "maintain-second-brain",
+    "isolate-agent-runs",
+    "run-software-factory",
+    "enforce-with-hooks",
+    "route-interrupts",
+    "compress-token-spend",
+    "adaptive-persona",
+    "jev-gate"
+  ],
+  "installTargets": [
+    ".agent-skills/vendor",
+    ".claude/skills",
+    ".codex/skills"
+  ]
+}
