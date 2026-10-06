@@ -43,9 +43,9 @@ export default function DailyLifePage() {
   const [weatherStatus, setWeatherStatus] = useState("")
 
   useEffect(() => {
-    setState(readDailyLifeState(window.localStorage))
+    const load = window.setTimeout(() => setState(readDailyLifeState(window.localStorage)), 0)
     const timer = window.setInterval(() => setNow(timeString()), 60_000)
-    return () => window.clearInterval(timer)
+    return () => { window.clearTimeout(load); window.clearInterval(timer) }
   }, [])
 
   useEffect(() => {
@@ -211,6 +211,8 @@ export default function DailyLifePage() {
       <p>Review what matters for tomorrow: unfinished schedule items, your first appointment, food/transport needs, clothes or laundry, phone/watch charging, and anything you want to move forward.</p>
       <p className="text-sm text-muted-foreground">This is a prompt, not a score. Skipping it never blocks help or other NarcoGuard features.</p>
     </section>}
+
+    <LifeSupportTools />
 
     <section className="border rounded-xl p-5 space-y-3">
       <h2 className="text-xl font-semibold">Privacy & control</h2>
