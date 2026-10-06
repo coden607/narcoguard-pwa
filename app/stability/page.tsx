@@ -11,6 +11,7 @@ import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
 import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
 import { CalmingAudio } from "@/components/calming-audio"
 import { MealLogSection } from "@/components/guardian/meal-log-section"
+import { MaslowResourceAutomation } from "@/components/guardian/maslow-resource-automation"
 import { notifyGuardianChange, useGuardianState, useLocalDate } from "@/lib/hooks/use-guardian-state"
 
 const names: Record<Need, string> = {
@@ -45,6 +46,7 @@ export default function StabilityPage() {
   const prevention = analyzePreventionPatterns(state.entries, today)
   const suggested = suggestedNeeds(prevention)
   const needsHelp = NEEDS.filter((need) => today.needs[need] === "needs-help")
+  const resourceNeeds = [...new Set([...needsHelp, ...suggested])]
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
 
   const updateCheckIn = (need: Need, status: NeedStatus | undefined) => {
@@ -136,11 +138,12 @@ export default function StabilityPage() {
       </section>
       <section className="border rounded-xl p-5 space-y-4">
         <h2 className="text-xl font-semibold">Find a next step</h2>
-        <label className="block">Your ZIP code (optional; enter it on the service directory)
+        <label className="block">Your ZIP code (optional; used to look up nearby public resources)
           <input disabled={state.paused} inputMode="numeric" maxLength={10} className="block bg-background border rounded p-2" value={state.postalCode} onChange={(event) => update({ ...state, postalCode: event.target.value })} placeholder="ZIP code" />
         </label>
         {state.postalCode && !normalizePostalCode(state.postalCode) && <p className="text-sm">Enter a five-digit US ZIP code, or leave it blank.</p>}
         {needsHelp.length === 0 && <p className="text-muted-foreground">Mark a need above to see relevant starting points.</p>}
+        <MaslowResourceAutomation needs={resourceNeeds} postalCode={state.postalCode} />
         {needsHelp.map((need) => <div key={need} className="space-y-2"><h3 className="font-semibold">{names[need]}</h3>{resourcesForNeed(need, normalizePostalCode(state.postalCode)).map((link) => <p key={link.url}><a href={link.url} target="_blank" rel="noopener noreferrer" className="underline text-primary">{link.title} ↗</a><span className="block text-sm text-muted-foreground">{link.description}</span></p>)}</div>)}
       </section>
       <section className="border rounded-xl p-5 space-y-3">
