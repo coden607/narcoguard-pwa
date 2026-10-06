@@ -24,6 +24,8 @@ type KindLookup = {
   fallback: { title: string; url: string }[]
 }
 
+const ALL_RESOURCE_KINDS = [...new Set(MASLOW_LEVELS.flatMap((level) => level.kinds as readonly ResourceKind[]))]
+
 type NeedsLookup = {
   status: "ok" | "partial" | "unavailable"
   message?: string
@@ -44,8 +46,11 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
   const otherKinds = allKinds.filter((kind) => !kinds.includes(kind))
 
   useEffect(() => {
-    setPreferences(readResourcePreferences(window.localStorage))
-    setFeedback(readResourceFeedback(window.localStorage))
+    const timer = window.setTimeout(() => {
+      setPreferences(readResourcePreferences(window.localStorage))
+      setFeedback(readResourceFeedback(window.localStorage))
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   useEffect(() => {
@@ -69,12 +74,12 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
   const ranked = useMemo(() => {
     if (!data) return null
     const next = {} as Record<ResourceKind, KindLookup>
-    for (const kind of allKinds) {
+    for (const kind of ALL_RESOURCE_KINDS) {
       const lookup = data.kinds[kind]
       next[kind] = lookup ? { ...lookup, results: rankResources(lookup.results, preferences, feedback) } : { status: "unavailable", results: [], fallback: [] }
     }
     return next
-  }, [data, preferences, feedback, allKinds])
+  }, [data, preferences, feedback])
 
   const updatePreferences = (next: ResourcePreferences) => {
     saveResourcePreferences(window.localStorage, next)
