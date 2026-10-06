@@ -138,7 +138,7 @@ export default function StabilityPage() {
       </section>
       <section className="border rounded-xl p-5 space-y-4">
         <h2 className="text-xl font-semibold">Find a next step</h2>
-        <label className="block">Your ZIP code (optional; enter it on the service directory)
+        <label className="block">Your ZIP code (optional; used to look up nearby public resources)
           <input disabled={state.paused} inputMode="numeric" maxLength={10} className="block bg-background border rounded p-2" value={state.postalCode} onChange={(event) => update({ ...state, postalCode: event.target.value })} placeholder="ZIP code" />
         </label>
         {state.postalCode && !normalizePostalCode(state.postalCode) && <p className="text-sm">Enter a five-digit US ZIP code, or leave it blank.</p>}
