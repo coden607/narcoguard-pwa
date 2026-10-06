@@ -134,7 +134,7 @@ export function overpassQuery(kind: OsmKind, lat: number, lon: number, radius?: 
  * splitting means one half can still answer if the other fails.
  */
 export const OSM_QUERY_GROUPS: readonly (readonly OsmKind[])[] = [
-  ["water", "toilets", "pharmacy", "clinic", "laundry", "community", "library"],
+  ["quick-meal", "water", "toilets", "pharmacy", "clinic", "laundry", "community", "library"],
   ["food", "shelter", "showers", "emergency", "jobs"],
 ]
 
