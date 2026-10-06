@@ -7,3 +7,8 @@
 - `/validate` (`.claude/commands/validate.md`): comprehensive validation and repair of confirmed regressions.
 - `release` skill (`.claude/skills/release/SKILL.md`): branch, gate, preview, PR, merge, production deploy and live verification, with the required human approval before production.
 - `.mcp.json`: `next-devtools` (Next.js 16 docs and diagnostics) and `playwright` (browser checks), both pinned. Vercel and GitHub access come from the session's connectors; locally, add your own with `claude mcp add`.
+
+## Links for the owner
+
+- Every link given to the owner must be a full, clickable `https://` URL that opens the exact page or setting meant (for example the project's Vercel environment-variables page, not the Vercel homepage).
+- Never hand over placeholder links such as `https://<project-ref>.supabase.co`. When the exact URL depends on something you cannot see, give the closest real clickable link (Supabase's `https://supabase.com/dashboard/project/_/...` routes ask which project to open) and say what is missing.
