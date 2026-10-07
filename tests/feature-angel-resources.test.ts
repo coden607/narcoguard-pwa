@@ -48,6 +48,7 @@ test("results are trimmed for the screen, stripped of coordinates for the model,
   const forModel = JSON.stringify(resourcesForModel(resources))
   assert.ok(!forModel.includes("42.1") && !forModel.includes("-75.9"), "no coordinates go to the model")
   assert.match(forModel, /Pantry A/)
+  assert.doesNotMatch(forModel, /1 Main St/, "street addresses would reveal the area, so they stay on screen only")
   assert.doesNotMatch(forModel, /"D"/, "only the top three places per need")
   const spoken = spokenResourceSummary(resources)
   assert.match(spoken, /For free food: Pantry A, 0.4 miles away\./)
@@ -56,6 +57,8 @@ test("results are trimmed for the screen, stripped of coordinates for the model,
   assert.match(spoken, /treatment search is not available right now/)
   assert.match(spoken, /Call first to confirm\.$/)
   assert.equal(spokenResourceSummary(undefined), "")
+  const six = toAngelResources({ status: "ok", groups: (["food", "water", "toilets", "showers", "laundry", "jobs"] as const).map((kind) => ({ kind, status: "ok" as const, results: [place(`${kind} place`, 1)], fallback: [] })) })
+  assert.match(spokenResourceSummary(six), /For job help: jobs place/, "every need searched is read aloud, up to the six allowed")
 })
 
 test("stated needs in plain words turn on resource search", () => {
@@ -68,6 +71,9 @@ test("location voice commands stay on the device", () => {
   assert.deepEqual(parseAngelLocalCommand("Use my location."), { type: "location", enabled: true })
   assert.deepEqual(parseAngelLocalCommand("share my current location"), { type: "location", enabled: true })
   assert.deepEqual(parseAngelLocalCommand("stop using my location"), { type: "location", enabled: false })
+  assert.deepEqual(parseAngelLocalCommand("Stop sharing my location."), { type: "location", enabled: false })
+  assert.deepEqual(parseAngelLocalCommand("forget my current location"), { type: "location", enabled: false })
+  assert.deepEqual(parseAngelLocalCommand("turn off my location"), { type: "location", enabled: false })
   assert.equal(parseAngelLocalCommand("where is my location history"), null)
 })
 
@@ -97,5 +103,59 @@ test("lookupKinds asks only for the needs requested and widens sparse ones that 
     assert.equal(result.status, "ok")
   } finally {
     globalThis.fetch = realFetch
+  }
+})
+
+test("lookupKinds says a sparse need is unavailable when the wider search fails, and stops at the deadline", async () => {
+  const { lookupKinds } = await import("../lib/resource-lookup")
+  const realFetch = globalThis.fetch
+  let calls = 0
+  globalThis.fetch = (async () => {
+    calls++
+    if (calls === 1) return new Response(JSON.stringify({ elements: [] }), { status: 200 })
+    return new Response("busy", { status: 504 })
+  }) as typeof fetch
+  try {
+    const result = await lookupKinds(["food"], { lat: 40.75, lon: -73.99 })
+    assert.equal(result.groups[0].status, "unavailable", "an unfinished wider search is not reported as 'nothing nearby'")
+    assert.equal(result.status, "partial")
+  } finally {
+    globalThis.fetch = realFetch
+  }
+
+  globalThis.fetch = ((_input: string | URL, init?: RequestInit) => new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("aborted"))))) as typeof fetch
+  try {
+    const started = Date.now()
+    const result = await lookupKinds(["food", "treatment"], { lat: 40.75, lon: -73.99 }, Date.now() + 300)
+    assert.ok(Date.now() - started < 2_000, "a hung directory does not hold the reply past the deadline")
+    assert.equal(result.status, "unavailable")
+    assert.ok(result.groups.every((group) => group.status === "unavailable" && group.fallback.length >= 0))
+  } finally {
+    globalThis.fetch = realFetch
+  }
+})
+
+test("an overdose message is answered without directory searches so the 911 notice is not delayed", async () => {
+  const { POST } = await import("../app/api/angel/route")
+  const realFetch = globalThis.fetch
+  const saved = process.env.GROQ_API_KEY
+  process.env.GROQ_API_KEY = "test-key"
+  const toolsOffered: boolean[] = []
+  globalThis.fetch = (async (_input: string | URL, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body))
+    toolsOffered.push(Array.isArray(body.tools))
+    return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: "Call 911 now." } }] }), { status: 200 })
+  }) as typeof fetch
+  try {
+    const ask = (content: string) => POST(new Request("http://localhost/api/angel", { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": `test-${content.length}` }, body: JSON.stringify({ messages: [{ role: "user", content }], location: { lat: 42.1, lon: -75.91 } }) }))
+    const urgent = await (await ask("my friend can't breathe and is overdosing")).json()
+    assert.ok(urgent.notices.length > 0)
+    assert.equal(toolsOffered.at(-1), false, "no search tools are offered for an emergency message")
+    await ask("I need food and somewhere to sleep")
+    assert.equal(toolsOffered.at(-1), true, "ordinary needs still get searches")
+  } finally {
+    globalThis.fetch = realFetch
+    if (saved === undefined) delete process.env.GROQ_API_KEY
+    else process.env.GROQ_API_KEY = saved
   }
 })

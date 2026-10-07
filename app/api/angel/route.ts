@@ -79,6 +79,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const startedAt = Date.now()
   const provider = providerFor(request)
   if (!provider) return NextResponse.json({ available: false, message: "Angel AI is not configured yet." }, { status: 503, headers: noStore })
 
@@ -95,7 +96,8 @@ export async function POST(request: Request) {
 
   try {
     const model = modelForAngelTask(provider, route.task)
-    let reply = await complete(provider, messages, route.useTools, route.maxTokens, route.temperature, model)
+    // Overdose or crisis messages get the fastest possible reply: no directory searches before the 911/988 notice.
+    let reply = await complete(provider, messages, route.useTools && notices.length === 0, route.maxTokens, route.temperature, model)
     let resources: AngelResources | undefined
     // Every find_resources call in the reply is answered; their needs are searched together in one lookup.
     const calls = (reply.tool_calls ?? []).filter((c) => c.function?.name === "find_resources").slice(0, 3)
@@ -113,7 +115,8 @@ export async function POST(request: Request) {
       if (kinds.length === 0) toolResult = { error: "Give at least one known kind of place." }
       else if (!origin) toolResult = { error: "No location yet. Ask for a 5-digit ZIP code, or suggest tapping 'Use my location'." }
       else {
-        resources = toAngelResources(await lookupKinds(kinds, origin))
+        // Leave time for the second completion (25 s timeout) within the 60 s route limit.
+        resources = toAngelResources(await lookupKinds(kinds, origin, startedAt + (maxDuration - 30) * 1000))
         toolResult = resourcesForModel(resources)
       }
       messages.push({ role: "assistant", content: reply.content ?? null, tool_calls: calls })

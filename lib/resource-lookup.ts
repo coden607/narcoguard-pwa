@@ -196,7 +196,16 @@ export interface KindsLookup {
  * Searches only the needs asked for (used by Angel): FindTreatment for treatment, one OpenStreetMap
  * request for everything else, and one wider search for sparse needs that came back empty.
  */
-export async function lookupKinds(kinds: readonly ResourceKind[], origin: ResourceOrigin): Promise<KindsLookup> {
+/** Rejects when the deadline passes, so a slow directory cannot hold up the reply. */
+function beforeDeadline<T>(promise: Promise<T>, deadline: number): Promise<T> {
+  const remaining = deadline - Date.now()
+  if (remaining <= 0) return Promise.reject(new Error("deadline"))
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const timeout = new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("deadline")), remaining) })
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer))
+}
+
+export async function lookupKinds(kinds: readonly ResourceKind[], origin: ResourceOrigin, deadline = Date.now() + 30_000): Promise<KindsLookup> {
   const wanted = orderByMaslow(kinds)
   const unavailable = (kind: ResourceKind) => ({ kind, status: "unavailable" as const, results: [], fallback: fallbackLinks(kind) })
   let point: { lat: number; lon: number } | undefined
@@ -211,8 +220,8 @@ export async function lookupKinds(kinds: readonly ResourceKind[], origin: Resour
   const osmKinds = wanted.filter((kind): kind is OsmKind => kind !== "treatment")
 
   const [treatment, osm] = await Promise.allSettled([
-    wanted.includes("treatment") ? fetchJson(findTreatmentUrl(here.lat, here.lon)).then((body) => parseFindTreatment(body).slice(0, MAX_RESULTS_PER_KIND)) : Promise.resolve([]),
-    osmKinds.length > 0 ? fetchOverpass(overpassNeedsQuery(here.lat, here.lon, osmKinds)).then((body) => parseOverpassNeeds(body, here)) : Promise.resolve(undefined),
+    wanted.includes("treatment") ? beforeDeadline(fetchJson(findTreatmentUrl(here.lat, here.lon)).then((body) => parseFindTreatment(body).slice(0, MAX_RESULTS_PER_KIND)), deadline) : Promise.resolve([]),
+    osmKinds.length > 0 ? beforeDeadline(fetchOverpass(overpassNeedsQuery(here.lat, here.lon, osmKinds)).then((body) => parseOverpassNeeds(body, here)), deadline) : Promise.resolve(undefined),
   ])
   if (treatment.status === "rejected") console.warn(`[resources] treatment lookup unavailable: ${failureReason(treatment.reason)}`)
   if (osm.status === "rejected") console.warn(`[resources] OpenStreetMap lookup unavailable: ${failureReason(osm.reason)}`)
@@ -223,21 +232,25 @@ export async function lookupKinds(kinds: readonly ResourceKind[], origin: Resour
   })
 
   const empty = groups.filter((group) => group.status === "ok" && group.results.length === 0 && (WIDEN_KINDS as readonly ResourceKind[]).includes(group.kind)).map((group) => group.kind as OsmKind)
+  let widenFailed = false
   if (empty.length > 0) {
     try {
-      const wider = parseOverpassNeeds(await fetchOverpass(overpassNeedsQuery(here.lat, here.lon, empty, WIDE_RADIUS_METERS)), here, MAX_RESULTS_PER_KIND, WIDE_RADIUS_METERS)
+      const wider = parseOverpassNeeds(await beforeDeadline(fetchOverpass(overpassNeedsQuery(here.lat, here.lon, empty, WIDE_RADIUS_METERS)), deadline), here, MAX_RESULTS_PER_KIND, WIDE_RADIUS_METERS)
       for (const group of groups) {
         const found = group.kind !== "treatment" && empty.includes(group.kind) ? wider[group.kind] : []
         if (found.length > 0) Object.assign(group, { results: found, widenedMiles: Math.round(WIDE_RADIUS_METERS / 1609.344) })
       }
     } catch (error) {
+      // The wider search did not finish, so "nothing nearby" is not known: say the search is unavailable instead.
+      widenFailed = true
       console.warn(`[resources] wider search unavailable: ${failureReason(error)}`)
+      for (const group of groups) if (group.kind !== "treatment" && empty.includes(group.kind)) Object.assign(group, { status: "unavailable" })
     }
   }
 
   const used = [wanted.includes("treatment") ? treatment : undefined, osmKinds.length > 0 ? osm : undefined].filter((result) => result !== undefined)
   const failures = used.filter((result) => result.status === "rejected").length
-  const status = failures === 0 ? "ok" : failures === used.length ? "unavailable" : "partial"
+  const status = failures === used.length && used.length > 0 ? "unavailable" : failures > 0 || widenFailed ? "partial" : "ok"
   const message = status === "ok" ? undefined : status === "partial" ? "Some directories did not respond, so those needs show directory links instead of listings." : "The live directories did not respond. Use the directories below."
   return { status, message, fetchedAt: new Date().toISOString(), groups }
 }

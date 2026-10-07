@@ -16,6 +16,6 @@ export function parseAngelLocalCommand(text: string): AngelLocalCommand | null {
   if (/^(turn on|enable|start) (read aloud|reading aloud|voice replies)$/.test(value)) return { type: "read_aloud", enabled: true }
   if (/^(turn off|disable|stop) (read aloud|reading aloud|voice replies)$/.test(value)) return { type: "read_aloud", enabled: false }
   if (/^(use|share) my (current )?location( for searches)?$/.test(value)) return { type: "location", enabled: true }
-  if (/^(stop using|forget|don't use|do not use) my location$/.test(value)) return { type: "location", enabled: false }
+  if (/^(stop using|stop sharing|turn off|forget|don't use|do not use) my (current )?location$/.test(value)) return { type: "location", enabled: false }
   return null
 }
