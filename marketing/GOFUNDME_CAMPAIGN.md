@@ -50,7 +50,7 @@ The app also has features that are **built but switched off** until they pass a 
 
 ### The goal: $36,032
 
-That is the current estimate for 80 prototype builds, at about $450 each including assembly, testing, packaging and a naloxone refill. Progress and spending are reported in updates.
+The goal is sized at up to 80 prototype builds, at the current estimate of about $450 each including assembly, testing, packaging and a naloxone refill. Some of what is raised also goes to the other costs below, such as bench test equipment, expert review and keeping the free app running, so the actual number of builds will be lower. Updates will report how many were built and how the money was split.
 
 ### Where your money goes
 
@@ -68,7 +68,7 @@ A donation does not buy a device, a service or early access. Donations are not t
 - **Spending reports.** I'll post what was spent and on what, with receipts available on request.
 - **Honest updates.** You'll see photos and video of prototype and test progress, including what didn't work.
 - **No hype.** I won't call anything finished, approved or life-saving before it has been tested and reviewed.
-- **Privacy first.** No personal health or location data is sold or shared, and help in the app never depends on making an account.
+- **Privacy first.** Personal data is never sold, and help in the app never depends on making an account. Some features need outside services: Angel sends your messages to an AI provider only after you agree to start a chat, and nearby searches send a location rounded to about 1 km to public directories. NarcoGuard does not store or log either.
 
 ### How you can help
 

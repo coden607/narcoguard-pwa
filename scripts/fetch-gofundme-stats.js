@@ -2,7 +2,7 @@ const fs = require("fs")
 const path = require("path")
 
 async function fetchGoFundMeStats() {
-  const gofundmeUrl = process.env.GOFUNDME_URL || "https://gofund.me/ac8905cca"
+  const gofundmeUrl = process.env.GOFUNDME_URL || "https://gofund.me/9acf270ea"
 
   try {
     console.log("[v0] Fetching GoFundMe campaign stats...")

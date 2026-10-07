@@ -348,7 +348,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <p className="text-muted-foreground mb-4">
-                Goal: <span className="text-green-400 font-bold">{formatUsd(FUNDING_GOAL)}</span> for {PROTOTYPE_UNITS} prototype builds and testing
+                Goal: <span className="text-green-400 font-bold">{formatUsd(FUNDING_GOAL)}</span> for up to {PROTOTYPE_UNITS} prototype builds and testing
               </p>
               <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer" className="block">
                 <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold text-lg py-6">
