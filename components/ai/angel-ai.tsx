@@ -12,6 +12,10 @@ import { useVoice } from "@/lib/hooks/use-voice"
 import { isFatalRecognitionError, speakableText } from "@/lib/voice"
 import { parseAngelLocalCommand } from "@/lib/angel-voice-commands"
 import { useUserPreferences } from "@/lib/hooks/use-user-preferences"
+import { readDailyLifeState } from "@/lib/daily-life"
+import { readLifeSupportState } from "@/lib/life-support"
+import { readResourcePreferences } from "@/lib/resource-personalization"
+import { angelContextHasContent, buildAngelLocalContext } from "@/lib/angel-context"
 
 interface ChatMessage {
   id: string
@@ -43,6 +47,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const [handsFree, setHandsFree] = useState(false)
   const handsFreeRef = useRef(false)
   const [voiceNote, setVoiceNote] = useState<string>()
+  const [usePlanningContext, setUsePlanningContext] = useState(false)
 
   useEffect(() => { messagesRef.current = messages }, [messages])
 
@@ -68,7 +73,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     const local = parseAngelLocalCommand(content)
     if (local?.type === "navigate") {
       router.push(local.href)
-      return `Opening ${local.href === "/stability" ? "your needs planner" : local.href === "/ar" ? "training" : "help"}.`
+      return `Opening ${local.href === "/stability" ? "your needs planner" : local.href === "/daily-life" ? "Daily Life" : local.href === "/ar" ? "training" : "help"}.`
     }
     if (local?.type === "clear") {
       messagesRef.current = []
@@ -88,10 +93,26 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     setBusy(true)
     setError(undefined)
     try {
+      let localContext
+      if (usePlanningContext) {
+        const now = new Date()
+        const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+        const context = buildAngelLocalContext(
+          readDailyLifeState(window.localStorage),
+          readLifeSupportState(window.localStorage),
+          readResourcePreferences(window.localStorage),
+          date,
+        )
+        if (angelContextHasContent(context)) localContext = context
+      }
       const response = await fetch("/api/angel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next.slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })), ...(/^\d{5}$/.test(zip) ? { zip } : {}) }),
+        body: JSON.stringify({
+          messages: next.slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })),
+          ...(/^\d{5}$/.test(zip) ? { zip } : {}),
+          ...(localContext ? { localContext } : {}),
+        }),
       })
       const body = (await response.json()) as { available?: boolean; reply?: string; error?: string; notices?: string[]; resources?: ChatMessage["resources"] }
       if (body.available === false) {
@@ -263,6 +284,10 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
             </div>
           )}
           {!voiceEnabled && <p className="text-xs text-muted-foreground">Voice controls are off in setup preferences. Text chat still works.</p>}
+          <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+            <input type="checkbox" checked={usePlanningContext} onChange={(event) => setUsePlanningContext(event.target.checked)} />
+            <span><strong>Use my local planning context for this chat.</strong> Angel may receive my top goal, constraints, upcoming schedule, enabled routines, transport choices, and resource preferences. Journal text and my personal crisis-plan text are never included. Nothing is sent unless I turn this on.</span>
+          </label>
           <form className="flex flex-col sm:flex-row gap-2" onSubmit={(event) => { event.preventDefault(); void send(input).then((answer) => { if (answer && readAloud) void voice.speak(answer) }) }}>
             <Input aria-label="Message Angel" maxLength={2000} value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type a message" className="flex-1" />
             <Input aria-label="ZIP code for searches (optional)" inputMode="numeric" maxLength={5} value={zip} onChange={(event) => setZip(event.target.value.replace(/\D/g, ""))} placeholder="ZIP (optional)" className="sm:w-32" />

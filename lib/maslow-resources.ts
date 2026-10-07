@@ -2,7 +2,7 @@ import type { Need } from "./guardian-stability"
 import type { ResourceKind } from "./resource-finder"
 
 export const MASLOW_LEVELS = [
-  { id: "physiological", title: "Physiological essentials", description: "Food, water, rest, shelter, toilets, hygiene and laundry.", kinds: ["food", "water", "shelter", "toilets", "showers", "laundry"] },
+  { id: "physiological", title: "Physiological essentials", description: "Food, water, rest, shelter, toilets, hygiene and laundry.", kinds: ["food", "quick-meal", "water", "shelter", "toilets", "showers", "laundry"] },
   { id: "safety", title: "Safety and health", description: "Medical care, pharmacies and treatment support.", kinds: ["emergency", "clinic", "pharmacy", "treatment"] },
   { id: "belonging", title: "Connection and belonging", description: "Community and recovery-support connections.", kinds: ["community"] },
   { id: "esteem", title: "Stability and independence", description: "Employment help and places with free internet or computers.", kinds: ["jobs", "library"] },
@@ -10,7 +10,7 @@ export const MASLOW_LEVELS = [
 ] as const satisfies readonly { id: string; title: string; description: string; kinds: readonly ResourceKind[] }[]
 
 export const NEED_RESOURCE_KINDS: Record<Need, readonly ResourceKind[]> = {
-  food: ["food"],
+  food: ["food", "quick-meal"],
   water: ["water"],
   sleep: ["shelter"],
   hygiene: ["showers", "toilets"],

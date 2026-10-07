@@ -109,7 +109,7 @@ test("combined results are sorted into kinds by tags, unnamed public amenities g
   assert.equal(osmKindOf({ social_facility: "food_bank", amenity: "social_facility" }), "food")
   const many = parseOverpassNeeds({ elements: Array.from({ length: 9 }, (_, i) => ({ lat: 40.75 + i / 100, lon: -73.99, tags: { amenity: "library", name: `L${8 - i}` } })) }, origin)
   assert.deepEqual(many.library.map((r) => r.name), ["L8", "L7", "L6", "L5", "L4"])
-  assert.equal(Object.keys(parseOverpassNeeds(null, origin)).length, 12)
+  assert.equal(Object.keys(parseOverpassNeeds(null, origin)).length, 13)
 })
 
 test("every kind has directory fallbacks ending with 211", async () => {

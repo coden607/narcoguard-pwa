@@ -9,9 +9,20 @@ export const ANGEL_DEFAULT_MODEL = "openai/gpt-oss-120b"
 export const MAX_MESSAGES = 20
 export const MAX_MESSAGE_CHARS = 2000
 
+const compactList = z.array(z.string().trim().min(1).max(240)).max(12)
+const angelLocalContextSchema = z.object({
+  topGoal: z.string().trim().min(1).max(200).optional(),
+  constraints: compactList.optional(),
+  upcoming: compactList.max(5).optional(),
+  routines: compactList.max(8).optional(),
+  transport: compactList.max(3).optional(),
+  resourcePreferences: compactList.max(6).optional(),
+}).strict()
+
 export const angelRequestSchema = z.object({
   messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().trim().min(1).max(MAX_MESSAGE_CHARS) })).min(1).max(MAX_MESSAGES),
   zip: z.string().regex(/^\d{5}$/).optional(),
+  localContext: angelLocalContextSchema.optional(),
 })
 export type AngelRequest = z.infer<typeof angelRequestSchema>
 
@@ -24,6 +35,7 @@ export const ANGEL_SYSTEM_PROMPT = [
   "- You are not a doctor, lawyer or emergency service. Do not diagnose, give dosing instructions, or say whether someone is safe. Do not claim NarcoGuard monitors anyone, detects overdoses or contacts anyone.",
   "- Never promise that a service has openings, a bed, a meal or an appointment. Say listings come from public directories and to call first.",
   "- Do not ask for full names, exact addresses or other identifying details. Do not repeat back sensitive details unnecessarily.",
+  "- When optional personal planning context is provided, use it to tailor options to the person's stated goals, constraints, schedule, routines, transportation, and resource preferences. Do not treat it as diagnosis or certainty, and explain why a suggestion fits when useful.",
   "- To find places near the person, call the find_resources tool. It needs a 5-digit ZIP code; if you do not have one, ask for it or suggest the 'Find everything near me' search on this page, which can use their location.",
   "- Overdose Good Samaritan laws differ by state and are limited; suggest the app's state summary and checking the statute rather than giving legal advice.",
 ].join("\n")
@@ -63,6 +75,13 @@ export function safetyNotices(text: string): string[] {
 
 /** Builds the provider request; the system prompt is always first and the ZIP is offered only if the person shared it. */
 export function buildChatMessages(request: AngelRequest) {
-  const context = request.zip ? [{ role: "system" as const, content: `The person shared ZIP code ${request.zip} for resource searches.` }] : []
+  const context: { role: "system"; content: string }[] = []
+  if (request.zip) context.push({ role: "system", content: `The person shared ZIP code ${request.zip} for resource searches.` })
+  if (request.localContext) {
+    context.push({
+      role: "system",
+      content: "Optional person-selected planning context (not a medical record; use only to tailor practical suggestions): " + JSON.stringify(request.localContext),
+    })
+  }
   return [{ role: "system" as const, content: ANGEL_SYSTEM_PROMPT }, ...context, ...request.messages]
 }

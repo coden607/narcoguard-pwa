@@ -1,16 +1,31 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import type { Need } from "@/lib/guardian-stability"
 import { normalizePostalCode } from "@/lib/guardian-resources"
 import { MASLOW_LEVELS, resourceKindsForNeeds } from "@/lib/maslow-resources"
 import { RESOURCE_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
+import {
+  defaultResourcePreferences,
+  explainResource,
+  rankResources,
+  readResourceFeedback,
+  readResourcePreferences,
+  resourceKey,
+  saveResourceFeedback,
+  saveResourcePreferences,
+  type ResourceFeedback,
+  type ResourceFeedbackValue,
+  type ResourcePreferences,
+} from "@/lib/resource-personalization"
 
 type KindLookup = {
   status: "ok" | "unavailable"
   results: NearbyResource[]
   fallback: { title: string; url: string }[]
 }
+
+const ALL_RESOURCE_KINDS = [...new Set(MASLOW_LEVELS.flatMap((level) => level.kinds as readonly ResourceKind[]))]
 
 type NeedsLookup = {
   status: "ok" | "partial" | "unavailable"
@@ -23,11 +38,21 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
   const zip = normalizePostalCode(postalCode)
   const kinds = resourceKindsForNeeds(needs)
   const [request, setRequest] = useState<{ zip: string; data?: NeedsLookup; error?: string }>({ zip: "" })
+  const [preferences, setPreferences] = useState<ResourcePreferences>(defaultResourcePreferences())
+  const [feedback, setFeedback] = useState<ResourceFeedback[]>([])
   const data = request.zip === zip ? request.data ?? null : null
   const error = request.zip === zip ? request.error ?? "" : ""
   const loading = Boolean(zip) && request.zip !== zip
   const allKinds = [...new Set(MASLOW_LEVELS.flatMap((level) => level.kinds as readonly ResourceKind[]))]
   const otherKinds = allKinds.filter((kind) => !kinds.includes(kind))
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setPreferences(readResourcePreferences(window.localStorage))
+      setFeedback(readResourceFeedback(window.localStorage))
+    }, 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     if (!zip) return
@@ -47,6 +72,26 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
     return () => controller.abort()
   }, [zip])
 
+  const ranked = useMemo(() => {
+    if (!data) return null
+    const next = {} as Record<ResourceKind, KindLookup>
+    for (const kind of ALL_RESOURCE_KINDS) {
+      const lookup = data.kinds[kind]
+      next[kind] = lookup ? { ...lookup, results: rankResources(lookup.results, preferences, feedback) } : { status: "unavailable", results: [], fallback: [] }
+    }
+    return next
+  }, [data, preferences, feedback])
+
+  const updatePreferences = (next: ResourcePreferences) => {
+    saveResourcePreferences(window.localStorage, next)
+    setPreferences(next)
+  }
+  const recordFeedback = (resource: NearbyResource, value: ResourceFeedbackValue) => {
+    const row = { key: resourceKey(resource), value, updatedAt: new Date().toISOString() }
+    saveResourceFeedback(window.localStorage, row)
+    setFeedback(readResourceFeedback(window.localStorage))
+  }
+
   if (needs.length === 0) return null
 
   if (!zip) return (
@@ -58,16 +103,40 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
 
   return (
     <div className="space-y-4" aria-live="polite">
-      <div className="rounded-lg border p-4">
-        <p className="font-medium">Automatic Maslow-based resource match</p>
-        <p className="text-sm text-muted-foreground">Based only on needs you marked or voluntary signals you recorded. Lower-level needs are shown first for convenience, but you may use any resource in any order.</p>
-        {loading && <p className="text-sm mt-2">Checking nearby public directories…</p>}
-        {error && <p className="text-sm mt-2">Live lookup failed: {error} Directory links remain available below.</p>}
-        {data?.message && <p className="text-sm mt-2">{data.message}</p>}
+      <div className="rounded-lg border p-4 space-y-3">
+        <div>
+          <p className="font-medium">Automatic Maslow-based resource match</p>
+          <p className="text-sm text-muted-foreground">Based only on needs you marked or voluntary signals you recorded. Lower-level needs are shown first for convenience, but you may use any resource in any order.</p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-3">
+          <label className="text-sm">Maximum distance, if you want one
+            <input
+              aria-label="Maximum resource distance"
+              inputMode="decimal"
+              className="block w-full border rounded p-2 bg-background"
+              placeholder="No limit"
+              value={preferences.maxDistanceMiles ?? ""}
+              onChange={(e) => {
+                const raw=e.target.value.trim()
+                const value=raw ? Number(raw) : null
+                updatePreferences({ ...preferences, maxDistanceMiles: value !== null && Number.isFinite(value) && value > 0 ? Math.min(value, 100) : null })
+              }}
+            />
+          </label>
+          <label className="flex gap-2 items-center text-sm mt-6">
+            <input type="checkbox" checked={preferences.preferFreeFood} onChange={(e)=>updatePreferences({ ...preferences, preferFreeFood:e.target.checked })} />
+            Prefer free/community food before paid quick-meal options
+          </label>
+        </div>
+        <p className="text-xs text-muted-foreground">Preferences and “worked / closed / too far / not for me” feedback stay in this browser and only affect your ranking.</p>
+        {loading && <p className="text-sm">Checking nearby public directories…</p>}
+        {error && <p className="text-sm">Live lookup failed: {error} Directory links remain available below.</p>}
+        {data?.message && <p className="text-sm">{data.message}</p>}
       </div>
 
-      {data && MASLOW_LEVELS.map((level) => {
-        const levelKinds = (level.kinds as readonly ResourceKind[]).filter((kind) => kinds.includes(kind))
+      {ranked && MASLOW_LEVELS.map((level) => {
+        let levelKinds = (level.kinds as readonly ResourceKind[]).filter((kind) => kinds.includes(kind))
+        if (preferences.preferFreeFood) levelKinds = [...levelKinds].sort((a,b)=>a==="food"?-1:b==="food"?1:a==="quick-meal"?1:b==="quick-meal"?-1:0)
         if (levelKinds.length === 0) return null
         return (
           <section key={level.id} className="rounded-lg border p-4 space-y-3">
@@ -76,28 +145,33 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
               <p className="text-sm text-muted-foreground">{level.description}</p>
             </div>
             {levelKinds.map((kind) => {
-              const lookup = data.kinds[kind]
+              const lookup = ranked[kind]
               return (
                 <div key={kind} className="space-y-2">
                   <h4 className="font-medium">{RESOURCE_LABELS[kind]}</h4>
                   {lookup.results.length > 0 ? (
                     <ul className="space-y-2">
-                      {lookup.results.slice(0, 3).map((resource) => (
-                        <li key={kind + "|" + resource.name + "|" + (resource.address ?? resource.distanceMiles ?? "")} className="rounded border p-3">
-                          <strong>{resource.name}</strong>
+                      {lookup.results.slice(0, 3).map((resource, optionIndex) => (
+                        <li key={resourceKey(resource)} className="rounded border p-3">
+                          <strong>{["Option A", "Option B", "Option C"][optionIndex] ?? "Option"}: {resource.name}</strong>
                           {resource.distanceMiles !== undefined && <span className="text-sm"> · {resource.distanceMiles} mi</span>}
                           {resource.address && <span className="block text-sm">{resource.address}</span>}
                           {resource.hours && <span className="block text-sm">Listed hours: {resource.hours}</span>}
-                          <span className="block text-xs text-muted-foreground">Source: {resource.source}. Call first to confirm current availability, eligibility and hours.</span>
+                          {explainResource(resource, preferences, feedback).map((reason) => <span key={reason} className="block text-xs">{reason}</span>)}
+                          <span className="block text-xs text-muted-foreground">Source: {resource.source}. Call first to confirm current availability, eligibility, price, and hours. Distance is nearby straight-line context, not a promised route or detour time.</span>
                           <span className="block text-sm space-x-3 mt-1">
                             {resource.phone && <a className="underline text-primary" href={"tel:" + resource.phone.replace(/[^\d+]/g, "")}>Call</a>}
                             {resource.website && <a className="underline text-primary" href={resource.website} target="_blank" rel="noopener noreferrer">Website ↗</a>}
+                            {resource.lat !== undefined && resource.lon !== undefined && <a className="underline text-primary" href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(resource.lat + "," + resource.lon)}`} target="_blank" rel="noopener noreferrer">Directions ↗</a>}
                           </span>
+                          <div className="flex flex-wrap gap-2 mt-2 text-xs" aria-label={`Feedback for ${resource.name}`}>
+                            {([["worked","Worked"],["closed","Closed"],["too-far","Too far"],["not-for-me","Not for me"]] as const).map(([value,label])=><button key={value} type="button" className="border rounded px-2 py-1" onClick={()=>recordFeedback(resource,value)}>{label}</button>)}
+                          </div>
                         </li>
                       ))}
                     </ul>
                   ) : (
-                    <p className="text-sm text-muted-foreground">No nearby listing was returned for this category. This does not mean no service exists.</p>
+                    <p className="text-sm text-muted-foreground">No nearby listing matched your current filters. This does not mean no service exists.</p>
                   )}
                   <div className="text-sm">
                     {lookup.fallback.map((fallback) => (
@@ -111,7 +185,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
         )
       })}
 
-      {data && otherKinds.length > 0 && (
+      {ranked && otherKinds.length > 0 && (
         <details className="rounded-lg border p-4">
           <summary className="font-medium cursor-pointer">More resources across the full Maslow framework</summary>
           <p className="text-sm text-muted-foreground mt-2">These are not inferred deficiencies. They are optional resources for connection, stability, independence and user-chosen goals.</p>
@@ -122,7 +196,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
               return <div key={"other-" + level.id}>
                 <h3 className="font-semibold">{level.title}</h3>
                 <div className="text-sm space-y-1">{optionalKinds.map((kind) => {
-                  const lookup = data.kinds[kind]
+                  const lookup = ranked[kind]
                   const first = lookup.results[0]
                   return <p key={"other-" + kind}>
                     <strong>{RESOURCE_LABELS[kind]}:</strong>{" "}
