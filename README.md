@@ -40,5 +40,3 @@ Run `npm run verify` before a release. This checks lint, types, production and c
 ## License
 
 MIT. Contributions do not confer ownership, employment, payment, or governance authority.
-
-<!-- CI diagnostic: post-PR54 integration build -->
