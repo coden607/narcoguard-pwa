@@ -16,14 +16,14 @@ const LEVELS = [
   {
     id: "safety",
     title: "2. Safety and health",
-    covers: "Overdose response, naloxone, clinics, pharmacies, emergency rooms and treatment.",
-    links: [{ href: "/", label: "Dashboard: emergency steps and 911" }, { href: "/ar", label: "Training: overdose and CPR guides" }, { href: "/help", label: "Find Help: clinics, pharmacies, treatment" }],
+    covers: "Overdose response, naloxone, clinics, pharmacies and emergency rooms.",
+    links: [{ href: "/", label: "Dashboard: emergency steps and 911" }, { href: "/ar", label: "Training: overdose and CPR guides" }, { href: "/help", label: "Find Help: clinics, pharmacies, emergency rooms" }],
   },
   {
     id: "belonging",
-    title: "3. Connection and belonging",
-    covers: "Someone to talk to, peer support, community spaces and people you trust.",
-    links: [{ href: "/angel", label: "Angel AI: talk it through" }, { href: "/contacts", label: "Emergency contacts you choose" }, { href: "/hero-signup", label: "Hero Network: train to help others" }],
+    title: "3. Recovery and connection",
+    covers: "Treatment, someone to talk to, peer support, community spaces and people you trust.",
+    links: [{ href: "/help", label: "Find Help: treatment and community" }, { href: "/angel", label: "Angel AI: talk it through" }, { href: "/contacts", label: "Emergency contacts you choose" }, { href: "/hero-signup", label: "Hero Network: train to help others" }],
   },
   {
     id: "esteem",
@@ -89,12 +89,15 @@ export default function AboutPage() {
             <ol className="list-decimal pl-6 space-y-2">
               <li>
                 <strong className="text-foreground">Say what you need in your own words.</strong> Type something like &quot;I&apos;m
-                hungry and need somewhere to sleep&quot; on Find Help, or tell Angel. Matching runs on your device; your words go to the AI
-                only if you tap to let it read them.
+                hungry and need somewhere to sleep&quot; on Find Help. Find Help matches your words on your device; they go to the AI only
+                if you tap &quot;Let AI read my words&quot;. Angel is different: once you agree to start a chat, each message you send goes
+                to the AI provider so it can answer. Conversations are not stored.
               </li>
               <li>
-                <strong className="text-foreground">See your basic needs first.</strong> Nearby places are listed with food, water and
-                shelter on top, then health, connection and growth. If nothing is close, the search widens and says how far.
+                <strong className="text-foreground">See your needs first.</strong> The needs you name are shown first, with basic
+                needs leading when you name several. Every other kind of help follows in the same order: basic needs, health and
+                safety, recovery and connection, then growth. If no food, shelter or showers are close, those three are searched farther
+                out and labelled with the distance.
               </li>
               <li>
                 <strong className="text-foreground">Choose a goal.</strong> Angel listens to what you want and helps break it into small,

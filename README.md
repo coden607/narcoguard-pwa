@@ -25,15 +25,15 @@ NarcoGuard is organized around [Maslow's hierarchy of needs](https://www.narcogu
 | Level | What it covers | Where it lives |
 | --- | --- | --- |
 | 1. Body and basic needs | Food, water, a place to sleep, toilets, showers, laundry | Find Help needs search (`/help`), Guardian planner check-in (`/stability`) |
-| 2. Safety and health | Overdose response, naloxone, clinics, pharmacies, emergency rooms, treatment | Dashboard emergency steps, Training (`/ar`), Find Help |
-| 3. Connection and belonging | Someone to talk to, peer support, community spaces, trusted contacts | Angel AI (`/angel`), emergency contacts, Hero Network |
+| 2. Safety and health | Overdose response, naloxone, clinics, pharmacies, emergency rooms | Dashboard emergency steps, Training (`/ar`), Find Help |
+| 3. Recovery and connection | Treatment, someone to talk to, peer support, community spaces, trusted contacts | Find Help, Angel AI (`/angel`), emergency contacts, Hero Network |
 | 4. Stability and independence | Work, internet and phone charging, skills | Find Help job help and libraries, Hero certification |
 | 5. Growth and goals | The person's own goals, broken into steps | Guardian planner goals and tomorrow's task, Angel AI |
 
 How it works:
 
-1. **Say it in your own words.** "I'm hungry and need somewhere to sleep" is matched on the device (`lib/need-intent.ts`). The words go to the AI provider only if the person taps "Let AI read my words".
-2. **Basic needs are listed first.** Nearby results are ordered by level. Food, shelter and showers widen from 10 to about 25 miles when nothing is close, and are labelled as farther away.
+1. **Say it in your own words.** On Find Help, "I'm hungry and need somewhere to sleep" is matched on the device (`lib/need-intent.ts`). The words go to the AI provider only if the person taps "Let AI read my words". Angel chat is separate: after the person agrees to start a chat, each message is sent to the AI provider to get a reply, and conversations are not stored.
+2. **Stated needs first.** The needs a person names are shown first, with basic needs leading when several are named. All other categories follow in the levels used by Find Help (`NEED_LEVELS` in `lib/resource-finder.ts`). Food, shelter and showers widen from 10 to about 25 miles when nothing is close, and are labelled as farther away.
 3. **The person chooses a goal; Angel listens.** Angel AI follows the same order when several needs are mentioned. For a goal, it offers two or three small next steps and asks which one the person wants. The Guardian planner can hold tomorrow's task.
 4. **Move up at your own pace.** The same tools help with work, learning and connection as today's needs are handled.
 
