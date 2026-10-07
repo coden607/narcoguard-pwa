@@ -455,6 +455,45 @@ test.describe("PWA production flow", () => {
     await expect(ble).toContainText("does not use these readings to detect overdoses")
   })
 
+  test("the introduction explains the Maslow levels, what works today and the founding Constitution", async ({ page }) => {
+    await page.goto("/")
+    const maslow = page.getByTestId("intro-maslow")
+    await expect(maslow.getByRole("heading", { name: "Your needs first, then your goals" })).toBeVisible()
+    await expect(maslow.getByRole("listitem")).toHaveCount(5)
+    await expect(maslow).toContainText("not a ranking of people")
+    await expect(page.getByRole("heading", { name: "What works today" })).toBeVisible()
+    await expect(page.getByText("It does not monitor, detect or treat overdose")).toBeVisible()
+    const constitution = page.getByTestId("intro-constitution")
+    await expect(constitution).toContainText("not yet ratified")
+    await expect(constitution).toContainText("not yet enforceable")
+    await expect(constitution.getByRole("link", { name: "Read the Constitution" })).toHaveAttribute("href", "/constitution")
+  })
+
+  test("setup reaches its final step only after the legal boxes are accepted", async ({ page }) => {
+    await page.goto("/")
+    for (let i = 0; i < 10; i++) {
+      const nameInput = page.getByPlaceholder("Enter your name")
+      if (await nameInput.isVisible()) await nameInput.fill("Sam")
+      await page.getByRole("button", { name: "Continue" }).click()
+    }
+    await page.getByRole("combobox").click()
+    await page.getByRole("option", { name: "New York" }).click()
+    await page.getByRole("checkbox").first().click()
+    await page.getByRole("button", { name: "Continue" }).click()
+    await expect(page.getByText("Step 12 of 13")).toBeVisible()
+    await expect(page.getByRole("button", { name: /Launch Dashboard/ })).toHaveCount(0)
+    const proceed = page.getByRole("button", { name: "Continue" })
+    await expect(proceed).toBeDisabled()
+    for (const id of ["acceptedTerms", "acceptedPrivacy", "acceptedHIPAA"]) await page.locator(`button#${id}`).click()
+    await expect(proceed).toBeEnabled()
+    await proceed.click()
+    await expect(page.getByText("Step 13 of 13")).toBeVisible()
+    await expect(page.getByRole("heading", { name: /You're All Set, Sam!/ })).toBeVisible()
+    await expect(page.getByRole("button", { name: /Launch Dashboard/ })).toHaveCount(1)
+    await page.getByRole("button", { name: /Launch Dashboard/ }).click()
+    await expect(page.getByRole("button", { name: "Skip Setup (Demo Mode)" })).toHaveCount(0)
+  })
+
   test("Good Samaritan step shows the selected state's statute and limits, not a blanket promise", async ({ page }) => {
     await page.goto("/")
     await expect(page.getByText("You Are Protected")).toHaveCount(0)

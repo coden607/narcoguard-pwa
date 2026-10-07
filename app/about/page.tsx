@@ -1,43 +1,11 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { MASLOW_LEVELS as LEVELS } from "@/lib/maslow-resources"
 
 export const metadata: Metadata = {
   title: "About | NarcoGuard",
   description: "How NarcoGuard uses Maslow's hierarchy of needs to put basic needs first and help each person work toward their own goals.",
 }
-
-const LEVELS = [
-  {
-    id: "physiological",
-    title: "1. Body and basic needs",
-    covers: "Food, water, a place to sleep, toilets, showers and laundry.",
-    links: [{ href: "/help", label: "Find Help: search your needs nearby" }, { href: "/stability", label: "Guardian planner: daily needs check-in" }],
-  },
-  {
-    id: "safety",
-    title: "2. Safety and health",
-    covers: "Overdose response, naloxone, clinics, pharmacies and emergency rooms.",
-    links: [{ href: "/", label: "Dashboard: emergency steps and 911" }, { href: "/ar", label: "Training: overdose and CPR guides" }, { href: "/help", label: "Find Help: clinics, pharmacies, emergency rooms" }],
-  },
-  {
-    id: "belonging",
-    title: "3. Recovery and connection",
-    covers: "Treatment, someone to talk to, peer support, community spaces and people you trust.",
-    links: [{ href: "/help", label: "Find Help: treatment and community" }, { href: "/angel", label: "Angel AI: talk it through" }, { href: "/contacts", label: "Emergency contacts you choose" }, { href: "/hero-signup", label: "Hero Network: train to help others" }],
-  },
-  {
-    id: "esteem",
-    title: "4. Stability and independence",
-    covers: "Work, income, internet and phone charging, and skills you can be proud of.",
-    links: [{ href: "/help", label: "Find Help: job help and libraries" }, { href: "/hero-signup", label: "Hero certification" }],
-  },
-  {
-    id: "growth",
-    title: "5. Growth and your own goals",
-    covers: "The goals you choose, broken into small steps you can take tomorrow.",
-    links: [{ href: "/stability", label: "Guardian planner: goals and tomorrow's task" }, { href: "/angel", label: "Angel AI: turn a goal into steps" }, { href: "/constitution", label: "Help shape NarcoGuard" }],
-  },
-] as const
 
 export default function AboutPage() {
   return (
@@ -68,9 +36,9 @@ export default function AboutPage() {
           <section className="space-y-4" aria-labelledby="levels">
             <h2 id="levels" className="text-2xl font-semibold text-foreground">Where each level lives in the app</h2>
             <ol className="space-y-4" data-testid="maslow-levels">
-              {LEVELS.map((level) => (
+              {LEVELS.map((level, index) => (
                 <li key={level.id} className="rounded-lg border border-border p-4 space-y-2">
-                  <h3 className="text-lg font-semibold text-foreground">{level.title}</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{index + 1}. {level.title}</h3>
                   <p>{level.covers}</p>
                   <ul className="flex flex-wrap gap-x-4 gap-y-1">
                     {level.links.map((link) => (
