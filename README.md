@@ -20,6 +20,8 @@ Site traffic is measured with Vercel Analytics. Guardian check-in answers, sleep
 
 ## How NarcoGuard uses Maslow's hierarchy of needs
 
+**Why it matters in addiction.** Addiction can hijack the hierarchy: drugs over-activate the brain's reward circuit, and with repeated use it becomes hard to feel pleasure from anything besides the drug ([NIDA](https://nida.nih.gov/publications/drugs-brains-behavior-science-addiction/drugs-brain)). Using can come to feel as urgent as food or sleep, and basic needs, safety, relationships and goals slip away, which makes recovery harder to start. NarcoGuard helps rebuild from the bottom, alongside treatment rather than instead of it. It is not a cure and cannot promise recovery. Treatment referrals: SAMHSA National Helpline, 1-800-662-4357 (free, confidential, 24/7).
+
 NarcoGuard is organized around [Maslow's hierarchy of needs](https://www.narcoguard.app/about): basic needs first, then safety, connection, stability and the person's own goals. It is a planning aid, not a ranking of people. Every kind of help stays available at every level, and nothing is withheld because a need was or wasn't stated.
 
 | Level | What it covers | Where it lives |

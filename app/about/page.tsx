@@ -33,6 +33,32 @@ export default function AboutPage() {
             </p>
           </section>
 
+          <section className="space-y-3" aria-labelledby="hijack" data-testid="addiction-hijack">
+            <h2 id="hijack" className="text-2xl font-semibold text-foreground">How addiction can hijack the hierarchy</h2>
+            <p>
+              Addiction is a treatable medical condition, not a character flaw. The National Institute on Drug Abuse explains that drugs
+              over-activate the brain&apos;s reward circuit, and that with repeated use the circuit adapts, making it hard to feel
+              pleasure from anything besides the drug. Over time, seeking the drug can feel as urgent as food, sleep or safety.
+            </p>
+            <p>
+              That is how the ladder gets turned upside down. Money for meals goes to using, sleep and hygiene slip, housing and safety
+              are put at risk, relationships and work fall away, and goals stop feeling possible. Each lost step makes the others
+              harder, and losing the basics makes it harder to start and stay in recovery.
+            </p>
+            <p>
+              NarcoGuard is built to help rebuild the ladder from the bottom, alongside treatment and recovery support rather than
+              instead of them: finding food, a safe place to sleep, a shower and health care today; overdose response and naloxone
+              when risk is highest; treatment, peer support and people you trust; then work, skills and the goals you choose. Meeting
+              basic needs does not cure addiction, and no app can promise recovery, but it can remove some of the obstacles that
+              stand in the way.
+            </p>
+            <p>
+              Ready to talk to someone about treatment? SAMHSA&apos;s National Helpline is free, confidential and open 24/7:{" "}
+              <a className="text-primary underline underline-offset-4" href="tel:18006624357">1-800-662-4357</a>. Source:{" "}
+              <a className="text-primary underline underline-offset-4" href="https://nida.nih.gov/publications/drugs-brains-behavior-science-addiction/drugs-brain" target="_blank" rel="noreferrer">NIDA, Drugs and the Brain</a>.
+            </p>
+          </section>
+
           <section className="space-y-4" aria-labelledby="levels">
             <h2 id="levels" className="text-2xl font-semibold text-foreground">Where each level lives in the app</h2>
             <ol className="space-y-4" data-testid="maslow-levels">

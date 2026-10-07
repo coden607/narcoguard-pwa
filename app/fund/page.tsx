@@ -66,16 +66,35 @@ export default function FundPage() {
         <div className="absolute inset-0 bg-linear-to-b from-primary/20 to-background" />
         <div className="relative z-10 max-w-6xl mx-auto">
           {/* Campaign Hero Image */}
-          <div className="rounded-2xl overflow-hidden mb-8 border border-primary/30">
-            <Image
-              src="/images/gofundme-hero.jpg"
-              alt="NarcoGuard wearable concept and community-support campaign"
-              width={1200}
-              height={600}
-              priority
-              className="w-full h-64 md:h-96 object-cover"
-            />
-          </div>
+          <figure className="mb-8" data-testid="watch-showcase">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="rounded-2xl overflow-hidden border border-primary/30">
+                <Image
+                  src="/images/ng-watch-hero.jpg"
+                  alt="Concept render of the NarcoGuard NG watch on a wrist, showing heart rate and oxygen on its face"
+                  width={1024}
+                  height={1024}
+                  priority
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="w-full h-80 md:h-[32rem] object-cover"
+                />
+              </div>
+              <div className="rounded-2xl overflow-hidden border border-primary/30">
+                <Image
+                  src="/images/watch-on-wrist-lifestyle.jpg"
+                  alt="Concept render of the NarcoGuard NG watch worn at a café table"
+                  width={1024}
+                  height={1024}
+                  priority
+                  sizes="(min-width: 768px) 50vw, 100vw"
+                  className="w-full h-80 md:h-[32rem] object-cover"
+                />
+              </div>
+            </div>
+            <figcaption className="mt-2 text-center text-sm text-muted-foreground">
+              Concept renders of the NarcoGuard NG watch. It is not a finished product and none has shipped.
+            </figcaption>
+          </figure>
 
           <div className="text-center">
             <motion.div
@@ -129,6 +148,42 @@ export default function FundPage() {
               </motion.div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Auto-injection research: what the funding is for */}
+      <section className="py-16 px-4" aria-labelledby="auto-injection" data-testid="auto-injection-funding">
+        <div className="max-w-4xl mx-auto space-y-6">
+          <h2 id="auto-injection" className="text-3xl font-bold text-center">Why we are raising money for auto-injection research</h2>
+          <p className="text-lg text-muted-foreground">
+            Naloxone can reverse an opioid overdose, but only if someone is there to give it. Many people use alone, and an
+            overdose can leave them unable to help themselves. The idea behind the NG watch is to research whether a wearable could
+            one day recognize signs consistent with an opioid overdose, warn the wearer, and, if they do not respond, deliver a
+            dose of naloxone automatically while help is called.
+          </p>
+          <p className="text-muted-foreground">
+            None of that exists yet. The NG watch is a concept: it does not detect overdoses, it does not deliver naloxone, and it
+            must not be relied on. Turning the idea into something safe takes work that costs money:
+          </p>
+          <ol className="grid gap-4 md:grid-cols-2">
+            {[
+              { title: "1. Sensing research", body: "Bench prototypes to test which signals, such as breathing, heart rate and blood oxygen, can be measured reliably on a wrist, and where they fail." },
+              { title: "2. Delivery engineering", body: "Designing the auto-injection mechanism and naloxone cartridge, with safeguards against accidental triggers, a way for the wearer to cancel, and checks that the dose was delivered." },
+              { title: "3. Independent review", body: "Safety, clinical and human-factors review by experts, and testing with people who use drugs and recovery communities before anyone wears it." },
+              { title: "4. FDA pathway", body: "A device that delivers a drug is regulated by the FDA as a combination product. It needs FDA review and clearance before it can be offered to anyone." },
+            ].map((step) => (
+              <li key={step.title} className="rounded-xl border border-primary/20 bg-card/50 p-5">
+                <h3 className="font-semibold mb-2">{step.title}</h3>
+                <p className="text-sm text-muted-foreground">{step.body}</p>
+              </li>
+            ))}
+          </ol>
+          <p className="text-muted-foreground">
+            Meanwhile the NarcoGuard app is free and works today: it finds food, shelter, treatment and other help near you, guides
+            overdose response, and helps you plan your own goals. See the{" "}
+            <Link className="text-primary underline underline-offset-4" href="/watch">watch parts list and drawings</Link> and{" "}
+            <a className="text-primary underline underline-offset-4" href="https://www.fda.gov/combination-products/about-combination-products" target="_blank" rel="noreferrer">how the FDA regulates combination products</a>.
+          </p>
         </div>
       </section>
 
