@@ -7,6 +7,7 @@ import { NEED_LEVELS, RESOURCE_KINDS, type ResourceKind } from "@/lib/resource-f
 
 const PATTERNS: Record<ResourceKind, RegExp> = {
   food: /\b(hungry|starving|food|eat(ing)?|meals?|groceries|grocery|pantry|soup kitchen|food bank|snap|ebt)\b/,
+  "quick-meal": /\b(quick meal|fast food|coffee|cafe|breakfast|snack|convenience store|supermarket|mcdonalds|mcdonald's)\b/,
   shelter: /\b(shelter|homeless|nowhere to (sleep|stay|go)|place to (sleep|stay)|sleep(ing)? (outside|rough|in my car)|evicted|bed for (the )?night|housing|roof)\b/,
   water: /\b(water|thirsty|dehydrated|drink(ing)? fountain)\b/,
   toilets: /\b(toilets?|bathroom|restroom|washroom|pee|poop)\b/,
@@ -39,6 +40,7 @@ export function matchNeeds(text: string): ResourceKind[] {
 /** Quick-pick buttons: plain words people use, each mapping to one or more kinds. */
 export const QUICK_NEEDS: { label: string; kinds: ResourceKind[] }[] = [
   { label: "Food", kinds: ["food"] },
+  { label: "Quick meal or coffee", kinds: ["quick-meal"] },
   { label: "A place to sleep", kinds: ["shelter"] },
   { label: "Water", kinds: ["water"] },
   { label: "Bathroom or shower", kinds: ["toilets", "showers"] },
