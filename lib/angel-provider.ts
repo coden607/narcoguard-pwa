@@ -1,11 +1,12 @@
 import { ANGEL_DEFAULT_MODEL } from "@/lib/angel-ai"
 
-// Which AI endpoint Angel uses. A Groq key, when set, is used directly. Otherwise, on Vercel, Angel
+// Which AI endpoint Angel uses. A Groq key, when set, is used directly; then an OpenRouter key (asked
+// to use only providers that do not keep or train on prompts). Otherwise, on Vercel, Angel
 // uses Vercel AI Gateway, which authenticates with the deployment's own OIDC token (no key to
 // manage) and is asked to route the same open model to Groq first.
 
 export interface AngelProvider {
-  name: "Groq" | "Vercel AI Gateway"
+  name: "Groq" | "OpenRouter" | "Vercel AI Gateway"
   url: string
   token: string
   model: string
@@ -28,6 +29,18 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
       fastModel: env.GROQ_FAST_MODEL,
       reasoningModel: env.GROQ_REASONING_MODEL,
       extraBody: model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {},
+    }
+  }
+  if (env.OPENROUTER_API_KEY) {
+    return {
+      name: "OpenRouter",
+      url: "https://openrouter.ai/api/v1/chat/completions",
+      token: env.OPENROUTER_API_KEY,
+      model: env.OPENROUTER_MODEL || ANGEL_DEFAULT_MODEL,
+      fastModel: env.OPENROUTER_FAST_MODEL,
+      reasoningModel: env.OPENROUTER_REASONING_MODEL,
+      // Route only to providers that do not store prompts or use them for training.
+      extraBody: { provider: { data_collection: "deny" } },
     }
   }
   const gatewayToken = env.AI_GATEWAY_API_KEY || oidcHeader || env.VERCEL_OIDC_TOKEN

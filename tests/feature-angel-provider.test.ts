@@ -27,3 +27,14 @@ test("an explicit gateway key wins over OIDC, and the env OIDC token is a fallba
 test("no credentials means Angel is reported unavailable", () => {
   assert.equal(resolveAngelProvider({}, null), null)
 })
+
+test("an OpenRouter key is used when there is no Groq key, and asks for no-retention providers", () => {
+  const provider = resolveAngelProvider({ OPENROUTER_API_KEY: "or", VERCEL_OIDC_TOKEN: "o" }, "h")
+  assert.equal(provider?.name, "OpenRouter")
+  assert.equal(provider?.url, "https://openrouter.ai/api/v1/chat/completions")
+  assert.equal(provider?.token, "or")
+  assert.equal(provider?.model, "openai/gpt-oss-120b")
+  assert.deepEqual(provider?.extraBody, { provider: { data_collection: "deny" } })
+  assert.equal(resolveAngelProvider({ OPENROUTER_API_KEY: "or", OPENROUTER_MODEL: "x/y" }, null)?.model, "x/y")
+  assert.equal(resolveAngelProvider({ GROQ_API_KEY: "k", OPENROUTER_API_KEY: "or" }, null)?.name, "Groq", "a Groq key still wins")
+})

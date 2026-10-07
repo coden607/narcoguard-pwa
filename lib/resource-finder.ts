@@ -136,9 +136,13 @@ export const OSM_QUERY_GROUPS: readonly (readonly OsmKind[])[] = [
   ["food", "shelter", "showers", "emergency", "jobs"],
 ]
 
-export function overpassNeedsQuery(lat: number, lon: number, kinds: readonly OsmKind[] = OSM_KIND_ORDER): string {
-  return `[out:json][timeout:20][maxsize:67108864];(${kinds.map((kind) => osmSelectors(kind, lat, lon)).join("")});out center tags;`
+export function overpassNeedsQuery(lat: number, lon: number, kinds: readonly OsmKind[] = OSM_KIND_ORDER, radius?: number): string {
+  return `[out:json][timeout:20][maxsize:67108864];(${kinds.map((kind) => osmSelectors(kind, lat, lon, radius)).join("")});out center tags;`
 }
+
+/** Sparse services searched again, wider, when nothing is found within the normal radius. */
+export const WIDEN_KINDS: readonly OsmKind[] = ["food", "shelter", "showers"]
+export const WIDE_RADIUS_METERS = 40_000 // about 25 miles
 
 /** The kind a place belongs to, checked in display order; undefined when nothing matches. */
 export function osmKindOf(tags: Record<string, string>): OsmKind | undefined {
@@ -214,12 +218,12 @@ export function parseOverpass(kind: OsmKind, body: unknown, origin: { lat: numbe
 }
 
 /** Sorts a combined query's places into kinds by their tags, nearest first. */
-export function parseOverpassNeeds(body: unknown, origin: { lat: number; lon: number }, limit = MAX_RESULTS_PER_KIND): Record<OsmKind, NearbyResource[]> {
+export function parseOverpassNeeds(body: unknown, origin: { lat: number; lon: number }, limit = MAX_RESULTS_PER_KIND, radius?: number): Record<OsmKind, NearbyResource[]> {
   const grouped = Object.fromEntries(OSM_KIND_ORDER.map((kind) => [kind, [] as NearbyResource[]])) as Record<OsmKind, NearbyResource[]>
   for (const element of elementsOf(body)) {
     const kind = osmKindOf(element.tags ?? {})
     const resource = kind && toResource(kind, element, origin)
-    if (kind && resource && (resource.distanceMiles ?? 0) <= OSM_KINDS[kind].radius / 1609.344) grouped[kind].push(resource)
+    if (kind && resource && (resource.distanceMiles ?? 0) <= (radius ?? OSM_KINDS[kind].radius) / 1609.344) grouped[kind].push(resource)
   }
   for (const kind of OSM_KIND_ORDER) grouped[kind] = nearestUnique(grouped[kind], limit)
   return grouped
