@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
 import { Lock, ShieldAlert, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -117,7 +118,8 @@ export function CertificationTest({ onCertified }: { onCertified?: (certificate:
     const question = data.questions[index]
     const last = index === data.questions.length - 1
     const chosen = answers[question.id]
-    return (
+    // Portalled to <body> so the page's stacking contexts and the sticky header cannot cover it.
+    return createPortal(
       <section className="fixed inset-0 z-[100] overflow-y-auto bg-background p-4 sm:p-8 select-none" aria-labelledby="test-question" data-testid="hero-test-running">
         <div className="mx-auto max-w-2xl space-y-6">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -144,7 +146,8 @@ export function CertificationTest({ onCertified }: { onCertified?: (certificate:
             )}
           </div>
         </div>
-      </section>
+      </section>,
+      document.body,
     )
   }
 

@@ -1,302 +1,202 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import type { LucideIcon } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
+import { createPortal } from "react-dom"
+import { Camera, CameraOff, Heart, Phone, Syringe, Timer, X } from "lucide-react"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
-import { Camera, Hand, Heart, Syringe, CheckCircle, ArrowRight } from "lucide-react"
-import { ParticleField } from "@/components/effects/particle-field"
+import { Button } from "@/components/ui/button"
+import { GUIDES, METRONOME_BPM, SECOND_DOSE_SECONDS, beatIntervalMs, formatClock, type GuideMode } from "@/lib/response-guides"
 
-interface ARStep {
-  id: number
-  title: string
-  description: string
-  icon: LucideIcon
-  duration: number
+// Guided response steps. The person moves between steps; nothing advances on its own. The camera
+// view is optional, shown only on this screen and never recorded or sent anywhere.
+
+function SecondDoseTimer() {
+  const [left, setLeft] = useState<number | null>(null)
+  useEffect(() => {
+    if (left === null || left <= 0) return
+    const timer = setTimeout(() => setLeft((value) => (value === null ? null : value - 1)), 1000)
+    return () => clearTimeout(timer)
+  }, [left])
+  return (
+    <div className="rounded-xl border p-3 space-y-2" data-testid="second-dose-timer">
+      <p className="flex items-center gap-2 font-semibold"><Timer className="h-4 w-4" aria-hidden="true" />Second-dose timer</p>
+      {left === null ? (
+        <Button type="button" variant="outline" onClick={() => setLeft(SECOND_DOSE_SECONDS)}>Start 3-minute timer after the first dose</Button>
+      ) : left > 0 ? (
+        <p className="text-2xl font-bold tabular-nums" role="timer" aria-live="off">{formatClock(left)}</p>
+      ) : (
+        <p className="font-semibold text-amber-300" role="alert">3 minutes passed. No response? Give a second dose in the other nostril.</p>
+      )}
+    </div>
+  )
 }
 
-const naloxoneSteps: ARStep[] = [
-    {
-      id: 1,
-      title: "Check Responsiveness",
-      description: "Tap shoulders firmly and shout their name. Check for breathing.",
-      icon: Hand,
-      duration: 5,
-    },
-    {
-      id: 2,
-      title: "Call for Help",
-      description: "Call 911 or activate emergency response. Get naloxone ready.",
-      icon: Camera,
-      duration: 3,
-    },
-    {
-      id: 3,
-      title: "Prepare Naloxone",
-      description: "Remove naloxone from packaging. Hold firmly in dominant hand.",
-      icon: Syringe,
-      duration: 5,
-    },
-    {
-      id: 4,
-      title: "Administer Naloxone",
-      description: "Place tip in nostril. Press plunger firmly. Alternate nostril for second dose.",
-      icon: Syringe,
-      duration: 10,
-    },
-    {
-      id: 5,
-      title: "Monitor & Support",
-      description: "Place in recovery position. Monitor breathing. Be ready for second dose.",
-      icon: Heart,
-      duration: 120,
-    },
-]
-
-const cprSteps: ARStep[] = [
-    {
-      id: 1,
-      title: "Position Hands",
-      description: "Place heel of hand on center of chest. Interlock fingers.",
-      icon: Hand,
-      duration: 5,
-    },
-    {
-      id: 2,
-      title: "Begin Compressions",
-      description: "Push hard and fast. 2 inches deep. 100-120 per minute.",
-      icon: Heart,
-      duration: 30,
-    },
-    {
-      id: 3,
-      title: "Continue CPR",
-      description: "Keep going until help arrives or person responds.",
-      icon: Heart,
-      duration: 120,
-    },
-]
-
-const noSteps: ARStep[] = []
-
-export function ARGuidance() {
-  const [isActive, setIsActive] = useState(false)
-  const [currentStep, setCurrentStep] = useState(0)
-  const [mode, setMode] = useState<"naloxone" | "cpr" | null>(null)
-
-  const steps = mode === "naloxone" ? naloxoneSteps : mode === "cpr" ? cprSteps : noSteps
+function Metronome() {
+  const [running, setRunning] = useState(false)
+  const [count, setCount] = useState(0)
+  const audioRef = useRef<AudioContext | null>(null)
 
   useEffect(() => {
-    if (!isActive || currentStep >= steps.length) return
+    if (!running) return
+    const interval = setInterval(() => {
+      setCount((value) => value + 1)
+      const context = audioRef.current
+      if (!context) return
+      const oscillator = context.createOscillator()
+      const gain = context.createGain()
+      oscillator.frequency.value = 880
+      gain.gain.setValueAtTime(0.25, context.currentTime)
+      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.08)
+      oscillator.connect(gain).connect(context.destination)
+      oscillator.start()
+      oscillator.stop(context.currentTime + 0.08)
+    }, beatIntervalMs(METRONOME_BPM))
+    return () => clearInterval(interval)
+  }, [running])
 
-    const timer = setTimeout(() => {
-      if (currentStep < steps.length - 1) {
-        setCurrentStep(currentStep + 1)
+  useEffect(() => () => { audioRef.current?.close().catch(() => undefined) }, [])
+
+  const toggle = () => {
+    if (!running) {
+      // Created on the tap so browsers allow sound.
+      try {
+        audioRef.current ??= new AudioContext()
+        void audioRef.current.resume()
+      } catch {
+        audioRef.current = null
       }
-    }, steps[currentStep].duration * 1000)
-
-    return () => clearTimeout(timer)
-  }, [isActive, currentStep, steps])
-
-  const startGuidance = (selectedMode: "naloxone" | "cpr") => {
-    setMode(selectedMode)
-    setIsActive(true)
-    setCurrentStep(0)
+      setCount(0)
+    }
+    setRunning(!running)
   }
 
-  const stopGuidance = () => {
-    setIsActive(false)
-    setMode(null)
-    setCurrentStep(0)
+  return (
+    <div className="rounded-xl border p-3 space-y-2" data-testid="cpr-metronome">
+      <p className="flex items-center gap-2 font-semibold"><Heart className="h-4 w-4 text-red-400" aria-hidden="true" />Compression beat: {METRONOME_BPM} per minute</p>
+      <div className="flex items-center gap-4">
+        <Button type="button" variant={running ? "default" : "outline"} aria-pressed={running} onClick={toggle}>{running ? "Stop beat" : "Start beat"}</Button>
+        <span className={`inline-block h-6 w-6 rounded-full bg-red-500 ${running && count % 2 === 0 ? "scale-125" : "scale-90 opacity-60"} motion-safe:transition-transform`} aria-hidden="true" />
+        <span className="tabular-nums" aria-live="off">{count} compressions{count >= 30 ? ` · ${Math.floor(count / 30)} set${count >= 60 ? "s" : ""} of 30` : ""}</span>
+      </div>
+      <p className="text-xs text-muted-foreground">The beat is a pace guide only. It cannot tell how deep or fast you are pushing.</p>
+    </div>
+  )
+}
+
+function GuideScreen({ mode, onExit }: { mode: GuideMode; onExit: () => void }) {
+  const guide = GUIDES[mode]
+  const [index, setIndex] = useState(0)
+  const [cameraOn, setCameraOn] = useState(false)
+  const [cameraNote, setCameraNote] = useState<string>()
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const streamRef = useRef<MediaStream | null>(null)
+  const step = guide.steps[index]
+  const last = index === guide.steps.length - 1
+
+  const stopCamera = () => {
+    streamRef.current?.getTracks().forEach((track) => track.stop())
+    streamRef.current = null
+    setCameraOn(false)
   }
 
-  if (!isActive) {
-    return (
-      <div className="space-y-4" id="ar-guidance">
-        <HolographicCard className="p-8 text-center" glowIntensity="high">
-          <div className="space-y-6">
-            <div className="relative inline-block">
-              <Camera className="w-24 h-24 text-primary pulse-glow float-animation" />
-              <div className="absolute inset-0 blur-2xl bg-primary/50 animate-pulse" />
+  useEffect(() => () => streamRef.current?.getTracks().forEach((track) => track.stop()), [])
+
+  const startCamera = async () => {
+    setCameraNote(undefined)
+    if (!navigator.mediaDevices?.getUserMedia) return setCameraNote("This browser cannot show the camera. The steps work without it.")
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false })
+      streamRef.current = stream
+      if (videoRef.current) videoRef.current.srcObject = stream
+      setCameraOn(true)
+    } catch {
+      setCameraNote("Camera permission was not given. The steps work without it.")
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] bg-black text-white" role="dialog" aria-modal="true" aria-labelledby="guide-title" data-testid="guide-screen">
+      <video ref={videoRef} autoPlay playsInline muted className={`absolute inset-0 h-full w-full object-cover ${cameraOn ? "opacity-40" : "hidden"}`} aria-hidden="true" />
+      <div className="relative flex h-full flex-col gap-4 overflow-y-auto p-4 sm:p-6">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="guide-title" className="text-xl font-bold font-orbitron">{guide.title}</h2>
+          <div className="flex gap-2">
+            <Button asChild className="bg-none bg-red-600 text-white hover:bg-red-700"><a href="tel:911"><Phone className="mr-2 h-4 w-4" aria-hidden="true" />Call 911</a></Button>
+            <Button type="button" variant="outline" onClick={() => { stopCamera(); onExit() }}><X className="mr-2 h-4 w-4" aria-hidden="true" />Exit</Button>
+          </div>
+        </div>
+
+        <p className="text-sm text-white/80" aria-live="polite">Step {index + 1} of {guide.steps.length}</p>
+        <div className="h-2 overflow-hidden rounded-full bg-white/20" aria-hidden="true">
+          <div className="h-full bg-primary transition-all" style={{ width: `${((index + 1) / guide.steps.length) * 100}%` }} />
+        </div>
+
+        <section className="mx-auto w-full max-w-2xl flex-1 space-y-4 rounded-2xl bg-black/70 p-5 backdrop-blur-xs" aria-live="polite">
+          <h3 className="text-3xl font-bold">{step.title}</h3>
+          <p className="text-lg leading-relaxed">{step.body}</p>
+          {step.tool === "second-dose-timer" && <SecondDoseTimer />}
+          {step.tool === "metronome" && <Metronome />}
+        </section>
+
+        <div className="mx-auto flex w-full max-w-2xl flex-wrap items-center justify-between gap-2">
+          <Button type="button" variant="outline" disabled={index === 0} onClick={() => setIndex(index - 1)}>Back</Button>
+          <Button type="button" variant="ghost" onClick={cameraOn ? stopCamera : startCamera}>
+            {cameraOn ? <CameraOff className="mr-2 h-4 w-4" aria-hidden="true" /> : <Camera className="mr-2 h-4 w-4" aria-hidden="true" />}
+            {cameraOn ? "Hide camera" : "Show camera behind steps"}
+          </Button>
+          {last ? (
+            <Button type="button" onClick={() => { stopCamera(); onExit() }}>Done</Button>
+          ) : (
+            <Button type="button" onClick={() => setIndex(index + 1)}>Next step</Button>
+          )}
+        </div>
+        {cameraNote && <p className="text-center text-sm" role="status">{cameraNote}</p>}
+        <p className="text-center text-xs text-white/70">General guidance, not medical advice. Follow the 911 dispatcher&apos;s instructions.</p>
+      </div>
+    </div>
+  )
+}
+
+export function ARGuidance() {
+  const [mode, setMode] = useState<GuideMode | null>(null)
+
+  return (
+    <div className="space-y-4" id="ar-guidance">
+      <HolographicCard className="p-6 sm:p-8 text-center" glowIntensity="high">
+        <h2 className="text-2xl font-bold glow-text font-orbitron">STEP-BY-STEP GUIDES</h2>
+        <p className="text-muted-foreground mt-2">
+          Large, one-step-at-a-time instructions with a Call 911 button on every screen. You move on when you are ready.
+          You can show your camera behind the steps; it is never recorded.
+        </p>
+      </HolographicCard>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <HolographicCard className="p-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-primary/20"><Syringe className="w-8 h-8 text-primary" aria-hidden="true" /></div>
+              <h3 className="text-xl font-bold font-orbitron">NALOXONE</h3>
             </div>
-            <div>
-              <h2 className="text-2xl font-bold glow-text font-orbitron">AR GUIDANCE</h2>
-              <p className="text-muted-foreground mt-2">
-                Step-by-step augmented reality instructions for emergency response
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground">Recognize an overdose, give nasal naloxone, support breathing, with a second-dose timer.</p>
+            <GlowButton onClick={() => setMode("naloxone")} className="w-full">Start Naloxone Guide</GlowButton>
           </div>
         </HolographicCard>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <HolographicCard className="p-6 cursor-pointer hover:scale-105 transition-transform">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-primary/20 pulse-glow">
-                  <Syringe className="w-8 h-8 text-primary" />
-                </div>
-                <h3 className="text-xl font-bold font-orbitron">NALOXONE</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Learn proper naloxone administration with AR overlay guidance
-              </p>
-              <GlowButton onClick={() => startGuidance("naloxone")} className="w-full">
-                Start Naloxone Guide
-              </GlowButton>
+        <HolographicCard className="p-6">
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 rounded-full bg-red-500/20"><Heart className="w-8 h-8 text-red-500" aria-hidden="true" /></div>
+              <h3 className="text-xl font-bold font-orbitron">CPR</h3>
             </div>
-          </HolographicCard>
-
-          <HolographicCard className="p-6 cursor-pointer hover:scale-105 transition-transform">
-            <div className="space-y-4">
-              <div className="flex items-center gap-3">
-                <div className="p-3 rounded-full bg-red-500/20 pulse-glow">
-                  <Heart className="w-8 h-8 text-red-500 heartbeat" />
-                </div>
-                <h3 className="text-xl font-bold font-orbitron">CPR</h3>
-              </div>
-              <p className="text-sm text-muted-foreground">Follow AR-guided CPR instructions with real-time feedback</p>
-              <GlowButton onClick={() => startGuidance("cpr")} className="w-full" variant="emergency">
-                Start CPR Guide
-              </GlowButton>
-            </div>
-          </HolographicCard>
-        </div>
+            <p className="text-sm text-muted-foreground">Hand position, depth and a {METRONOME_BPM}-per-minute compression beat with a counter.</p>
+            <GlowButton onClick={() => setMode("cpr")} className="w-full" variant="emergency">Start CPR Guide</GlowButton>
+          </div>
+        </HolographicCard>
       </div>
-    )
-  }
 
-  const currentStepData = steps[currentStep]
-  const StepIcon = currentStepData.icon
-  const progress = ((currentStep + 1) / steps.length) * 100
-
-  return (
-    <div className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xs">
-      <ParticleField count={50} color="var(--glow-primary)" />
-
-      <div className="relative h-full flex flex-col p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <Camera className="w-8 h-8 text-primary pulse-glow" />
-            <div>
-              <h2 className="text-2xl font-bold glow-text font-orbitron">
-                AR GUIDANCE ACTIVE
-              </h2>
-              <p className="text-sm text-muted-foreground">
-                {mode === "naloxone" ? "Naloxone Administration" : "CPR Instructions"}
-              </p>
-            </div>
-          </div>
-          <GlowButton onClick={stopGuidance} variant="emergency">
-            Exit AR Mode
-          </GlowButton>
-        </div>
-
-        {/* Progress bar */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm text-muted-foreground">
-              Step {currentStep + 1} of {steps.length}
-            </span>
-            <span className="text-sm text-primary font-bold">{Math.round(progress)}%</span>
-          </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-linear-to-r from-primary to-secondary pulse-glow transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-        </div>
-
-        {/* AR Camera View Simulation */}
-        <div className="flex-1 relative rounded-2xl overflow-hidden glass neon-border mb-6">
-          {/* Simulated camera feed */}
-          <div className="absolute inset-0 bg-linear-to-br from-muted/20 to-background/40">
-            {/* Scan lines effect */}
-            <div className="absolute inset-0 opacity-20">
-              {Array.from({ length: 20 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="h-px bg-primary"
-                  style={{
-                    position: "absolute",
-                    top: `${i * 5}%`,
-                    left: 0,
-                    right: 0,
-                    animation: "scan-line 2s linear infinite",
-                    animationDelay: `${i * 0.1}s`,
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* AR Overlay */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center space-y-6 max-w-2xl p-8">
-                {/* Step icon */}
-                <div className="relative inline-block">
-                  <div className="w-32 h-32 rounded-full bg-primary/20 flex items-center justify-center pulse-glow">
-                    <StepIcon className="w-16 h-16 text-primary" />
-                  </div>
-                  <div className="absolute inset-0 blur-3xl bg-primary/50 animate-pulse" />
-                </div>
-
-                {/* Step info */}
-                <div className="glass neon-border p-8 rounded-2xl">
-                  <h3 className="text-4xl font-bold glow-text mb-4 font-orbitron">
-                    {currentStepData.title}
-                  </h3>
-                  <p className="text-xl text-foreground leading-relaxed">{currentStepData.description}</p>
-                </div>
-
-                {/* Timer */}
-                <div className="flex items-center justify-center gap-4">
-                  <div className="glass px-6 py-3 rounded-full neon-border">
-                    <span className="text-2xl font-bold glow-text">{currentStepData.duration}s</span>
-                  </div>
-                </div>
-
-                {/* Navigation */}
-                {currentStep < steps.length - 1 && (
-                  <GlowButton onClick={() => setCurrentStep(currentStep + 1)} size="lg" className="mt-6">
-                    Next Step
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </GlowButton>
-                )}
-
-                {currentStep === steps.length - 1 && (
-                  <GlowButton onClick={stopGuidance} variant="success" size="lg" className="mt-6">
-                    <CheckCircle className="w-5 h-5 mr-2" />
-                    Complete Guidance
-                  </GlowButton>
-                )}
-              </div>
-            </div>
-
-            {/* Corner markers */}
-            <div className="absolute top-4 left-4 w-12 h-12 border-l-4 border-t-4 border-primary pulse-glow" />
-            <div className="absolute top-4 right-4 w-12 h-12 border-r-4 border-t-4 border-primary pulse-glow" />
-            <div className="absolute bottom-4 left-4 w-12 h-12 border-l-4 border-b-4 border-primary pulse-glow" />
-            <div className="absolute bottom-4 right-4 w-12 h-12 border-r-4 border-b-4 border-primary pulse-glow" />
-          </div>
-        </div>
-
-        {/* Step indicators */}
-        <div className="flex justify-center gap-2">
-          {steps.map((step, index) => (
-            <div
-              key={step.id}
-              className={`h-2 rounded-full transition-all duration-300 ${
-                index === currentStep
-                  ? "w-12 bg-primary pulse-glow"
-                  : index < currentStep
-                    ? "w-8 bg-green-500"
-                    : "w-8 bg-muted"
-              }`}
-            />
-          ))}
-        </div>
-      </div>
+      {/* Portalled to <body> so no page stacking context (or the sticky header) can cover it. */}
+      {mode && createPortal(<GuideScreen key={mode} mode={mode} onExit={() => setMode(null)} />, document.body)}
     </div>
   )
 }
