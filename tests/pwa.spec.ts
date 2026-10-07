@@ -463,6 +463,9 @@ test.describe("PWA production flow", () => {
     await expect(maslow).toContainText("not a ranking of people")
     await expect(page.getByRole("heading", { name: "What works today" })).toBeVisible()
     await expect(page.getByText("It does not monitor, detect or treat overdose")).toBeVisible()
+    for (const feature of ["Find Help", "Angel AI", "Emergency steps and training", "Guardian planner", "Hero certification", "Daily Life", "Emergency contacts", "Bluetooth readings", "Optional account", "Install and offline", "In development: NG watch"]) {
+      await expect(page.getByRole("heading", { level: 3, name: feature, exact: true }), feature).toBeVisible()
+    }
     const constitution = page.getByTestId("intro-constitution")
     await expect(constitution).toContainText("not yet ratified")
     await expect(constitution).toContainText("not yet enforceable")
