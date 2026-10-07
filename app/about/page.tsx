@@ -1,6 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
-import { MASLOW_LEVELS as LEVELS } from "@/lib/maslow-levels"
+import { MASLOW_LEVELS as LEVELS } from "@/lib/maslow-resources"
 
 export const metadata: Metadata = {
   title: "About | NarcoGuard",
@@ -36,9 +36,9 @@ export default function AboutPage() {
           <section className="space-y-4" aria-labelledby="levels">
             <h2 id="levels" className="text-2xl font-semibold text-foreground">Where each level lives in the app</h2>
             <ol className="space-y-4" data-testid="maslow-levels">
-              {LEVELS.map((level) => (
+              {LEVELS.map((level, index) => (
                 <li key={level.id} className="rounded-lg border border-border p-4 space-y-2">
-                  <h3 className="text-lg font-semibold text-foreground">{level.title}</h3>
+                  <h3 className="text-lg font-semibold text-foreground">{index + 1}. {level.title}</h3>
                   <p>{level.covers}</p>
                   <ul className="flex flex-wrap gap-x-4 gap-y-1">
                     {level.links.map((link) => (

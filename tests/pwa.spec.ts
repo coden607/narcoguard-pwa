@@ -476,7 +476,8 @@ test.describe("PWA production flow", () => {
     await proceed.click()
     await expect(page.getByText("Step 13 of 13")).toBeVisible()
     await expect(page.getByRole("heading", { name: /You're All Set, Sam!/ })).toBeVisible()
-    await page.getByRole("button", { name: /Launch Dashboard/ }).last().click()
+    await expect(page.getByRole("button", { name: /Launch Dashboard/ })).toHaveCount(1)
+    await page.getByRole("button", { name: /Launch Dashboard/ }).click()
     await expect(page.getByRole("button", { name: "Skip Setup (Demo Mode)" })).toHaveCount(0)
   })
 

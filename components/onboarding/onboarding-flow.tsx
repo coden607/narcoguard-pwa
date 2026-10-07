@@ -36,7 +36,7 @@ import {
   type EmergencyContact,
   type NaloxoneLocation,
 } from "@/lib/user-preferences"
-import { MASLOW_LEVELS } from "@/lib/maslow-levels"
+import { MASLOW_LEVELS } from "@/lib/maslow-resources"
 import { usePWAInstall } from "@/lib/hooks/use-pwa-install"
 import { InstallButton } from "@/components/pwa/install-button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -144,9 +144,9 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           every level, and you can start anywhere.
         </p>
         <ol className="grid grid-cols-1 sm:grid-cols-5 gap-2">
-          {MASLOW_LEVELS.map((level) => (
+          {MASLOW_LEVELS.map((level, index) => (
             <li key={level.id} className="rounded-lg border border-border bg-background/60 p-3 text-sm">
-              <p className="font-semibold">{level.title}</p>
+              <p className="font-semibold">{index + 1}. {level.title}</p>
               <p className="text-xs text-muted-foreground">{level.covers}</p>
             </li>
           ))}
@@ -174,7 +174,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <HolographicCard className="p-5">
             <Heart className="w-8 h-8 mb-3 text-pink-500" aria-hidden="true" />
             <h3 className="font-bold mb-1">Guardian planner</h3>
-            <p className="text-sm text-muted-foreground">Optional and kept on your phone: daily needs, sleep, goals and tomorrow&apos;s task. Pause or erase it any time.</p>
+            <p className="text-sm text-muted-foreground">Optional and stored only in this browser: daily needs, sleep, goals and tomorrow&apos;s task. Anyone using this browser may see it. Pause or erase it any time.</p>
           </HolographicCard>
           <HolographicCard className="p-5">
             <Award className="w-8 h-8 mb-3 text-yellow-400" aria-hidden="true" />
@@ -1218,35 +1218,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </GlowButton>
           ) : null}
 
-          {step === totalSteps - 1 && (
-            <div className="ml-auto flex flex-col gap-3 flex-1">
-              {isInstallable && (
-                <GlowButton
-                  onClick={async () => {
-                    const success = await installPWA()
-                    if (success) {
-                      setTimeout(completeOnboarding, 500)
-                    }
-                  }}
-                  className="w-full"
-                  size="lg"
-                >
-                  Install & Launch Dashboard
-                </GlowButton>
-              )}
-
-              <GlowButton
-                onClick={() => {
-                  completeOnboarding()
-                }}
-                className="w-full bg-green-500 hover:bg-green-600"
-                size="lg"
-              >
-                {isInstallable ? "Skip Install & " : ""}Launch Dashboard
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </GlowButton>
-            </div>
-          )}
         </div>
       </div>
     </div>
