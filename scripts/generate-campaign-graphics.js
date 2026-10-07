@@ -11,7 +11,7 @@ async function generateGraphics() {
 
   // Read current stats
   const statsPath = path.join(__dirname, "../marketing/stats/current-stats.json")
-  let stats = { amountRaised: 0, goal: 50000, donors: 0, percentComplete: 0 }
+  let stats = { amountRaised: 0, goal: 36032, donors: 0, percentComplete: 0 }
 
   if (fs.existsSync(statsPath)) {
     stats = JSON.parse(fs.readFileSync(statsPath, "utf8"))
