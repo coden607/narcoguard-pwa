@@ -46,7 +46,7 @@ export default function FundPage() {
     { amount: 25, description: "Sensor evaluation", impact: "Supports benchtop testing of candidate sensors" },
     { amount: 50, description: "Prototype materials", impact: "Contributes to non-clinical prototype fabrication" },
     { amount: 100, description: "Engineering support", impact: "Helps fund design review and test fixtures" },
-    { amount: 307, description: "Prototype milestone", impact: "Supports one estimated hardware build allocation", highlight: true },
+    { amount: 450, description: "Prototype milestone", impact: "About one prototype build under the current estimate", highlight: true },
     { amount: 500, description: "Validation support", impact: "Contributes to documented testing and expert review" },
   ]
 
