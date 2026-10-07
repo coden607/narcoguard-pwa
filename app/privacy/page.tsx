@@ -85,6 +85,11 @@ export default function PrivacyPolicy() {
               can unlock only for you. It does not use or store your location. Hero certification stores only that you passed, the test
               version and the dates; your answers are graded and discarded, never stored or logged.
             </p>
+            <p>
+              Nearby Hero requests are not live. They are switched off until a separate safety and privacy review approves them. If they
+              are ever switched on, a request would keep only an area about 5 km across for 30 minutes, never your exact location, name or
+              health details, and NarcoGuard would send no texts or calls.
+            </p>
           </section>
 
           <section className="space-y-3">

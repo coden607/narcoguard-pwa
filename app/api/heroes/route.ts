@@ -1,4 +1,5 @@
 import { isSameOrigin, json, readJson } from "@/lib/api-helpers"
+import { alertsStatus } from "@/lib/hero-alerts"
 import { acceptsHeroNaloxoneAttestation, heroSecret, verifyCertificate } from "@/lib/hero-certification"
 import { getAuthContext, isAuthConfigured, serviceRest } from "@/lib/supabase-auth"
 
@@ -10,7 +11,7 @@ export const dynamic = "force-dynamic"
 const enrollmentAvailable = () => isAuthConfigured() && Boolean(process.env.SUPABASE_SERVICE_ROLE_KEY) && Boolean(heroSecret())
 
 export async function GET() {
-  return json({ enrollment: enrollmentAvailable(), certification: Boolean(heroSecret()), nearbyRequests: false })
+  return json({ enrollment: enrollmentAvailable(), certification: Boolean(heroSecret()), nearbyRequests: alertsStatus(process.env).live })
 }
 
 export async function POST(request: Request) {

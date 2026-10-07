@@ -57,3 +57,16 @@ export function verifyStripeSignature(payload: string, header: string | null, se
     return timingSafeEqual(Buffer.from(signature, "hex"), Buffer.from(expected, "hex"))
   })
 }
+
+/** A Checkout Session id as Stripe issues it; anything else is never sent to Stripe. */
+export const isCheckoutSessionId = (value: unknown): value is string => typeof value === "string" && /^cs_(test|live)_[A-Za-z0-9]{10,200}$/.test(value)
+
+export type DonationReceipt = { paid: boolean; amountDollars?: number; test: boolean }
+
+/** Reduces a retrieved Checkout Session to what the thank-you page may show: no name, email or card. */
+export function receiptFromSession(body: unknown): DonationReceipt | null {
+  const session = body as { object?: string; payment_status?: string; amount_total?: number; currency?: string; livemode?: boolean } | null
+  if (!session || session.object !== "checkout.session") return null
+  const amount = typeof session.amount_total === "number" && session.currency === "usd" ? session.amount_total / 100 : undefined
+  return { paid: session.payment_status === "paid", amountDollars: amount, test: session.livemode === false }
+}
