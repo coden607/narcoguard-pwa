@@ -184,17 +184,17 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <HolographicCard className="p-5">
             <Sparkles className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
             <h3 className="font-bold mb-1">Daily Life</h3>
-            <p className="text-sm text-muted-foreground">Optional routines, schedule, journals and a morning and evening check-in that you set up. Stored only in this browser.</p>
+            <p className="text-sm text-muted-foreground">Optional routines, schedule, journals and a morning and evening check-in that you set up. Stored only in this browser, not encrypted: anyone using this browser may see it. You can erase it any time.</p>
           </HolographicCard>
           <HolographicCard className="p-5">
             <Phone className="w-8 h-8 mb-3 text-green-500" aria-hidden="true" />
             <h3 className="font-bold mb-1">Emergency contacts</h3>
-            <p className="text-sm text-muted-foreground">Choose people to call. Texting works only where it has been set up, each person agrees first, and nothing is sent unless you press send.</p>
+            <p className="text-sm text-muted-foreground">Choose people who agree to get a text from you when you ask for help. Texting works only where it has been set up, and nothing is sent unless you press send.</p>
           </HolographicCard>
           <HolographicCard className="p-5">
             <Eye className="w-8 h-8 mb-3 text-secondary" aria-hidden="true" />
             <h3 className="font-bold mb-1">Bluetooth readings</h3>
-            <p className="text-sm text-muted-foreground">Show heart rate or oxygen from a standard Bluetooth monitor. Readings stay on screen and are never used to detect overdoses.</p>
+            <p className="text-sm text-muted-foreground">Show heart rate or oxygen from a standard Bluetooth monitor in Chrome or Edge on Android, Windows, macOS or ChromeOS; iPhone browsers can&apos;t connect. Readings stay on screen and are never used to detect overdoses.</p>
           </HolographicCard>
           <HolographicCard className="p-5">
             <Shield className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
@@ -204,7 +204,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <HolographicCard className="p-5">
             <ArrowDown className="w-8 h-8 mb-3 text-green-500" aria-hidden="true" />
             <h3 className="font-bold mb-1">Install and offline</h3>
-            <p className="text-sm text-muted-foreground">Add NarcoGuard to your home screen. Pages you have opened stay available without a connection.</p>
+            <p className="text-sm text-muted-foreground">Add NarcoGuard to your home screen for one-tap access. Without a connection, search and Angel won&apos;t work and an offline page reminds you to call 911.</p>
           </HolographicCard>
           <HolographicCard className="p-5">
             <Syringe className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
