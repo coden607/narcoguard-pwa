@@ -48,6 +48,10 @@ The watch is **not a medical device** and does not detect or treat overdose toda
 
 The app also has features that are **built but switched off** until they pass a separate safety and privacy review. One is a way for certified Heroes nearby to see that someone asked for help after 911 was called. We will not turn anything like that on until it is reviewed.
 
+### The goal: $36,032
+
+That is the current estimate for 80 prototype builds, at about $450 each including assembly, testing, packaging and a naloxone refill. Progress and spending are reported in updates.
+
 ### Where your money goes
 
 Donations fund:
@@ -111,7 +115,7 @@ narcoguard607@gmail.com
 
 Stephen must check these; nothing above should be posted until they are true.
 
-1. **Goal amount.** The live campaign and the app's home page say **$24,584 for 80 watches** ($307.30 each). The current parts model on https://www.narcoguard.app/watch gives **$450.40 per unit ($36,032 for 80)**. Choose one goal and tell Claude so the site can be made to match. The copy above avoids promising 80 free watches, because no watch can be given to people until it is tested and allowed.
+1. **Goal amount.** Set the GoFundMe goal to **$36,032**: 80 prototype builds at the current estimate of $450.40 each, published at https://www.narcoguard.app/watch. The app's home page, support page and stats API now use the same figure (`lib/funding-goal.ts`). The copy avoids promising 80 free watches, because no watch can be given to people until it is tested and allowed.
 2. **Use of funds.** If you want percentages, such as how much goes to prototypes or to app hosting, add your real numbers. Don't keep the old "100% to watches, no salary, no admin costs" line unless it is true and you can show it.
 3. **Your story.** The "Why I started" paragraph keeps your own words from the old campaign. Edit it so every detail is yours and accurate.
 4. **Statistics.** The old copy said "every 5 minutes" and "over 150 deaths in Broome County". Those lines were removed because they had no source. Add a number only with a current source link, such as CDC's provisional overdose data or New York State's county opioid dashboard.

@@ -65,6 +65,19 @@ test.describe("PWA production flow", () => {
     expect(new Set(samples).size, `transform changed over time: ${samples.join(" | ")}`).toBe(1)
   })
 
+  test("the fundraising goal on the dashboard matches the watch parts estimate", async ({ page }) => {
+    await page.goto("/watch")
+    const estimate = page.getByText("Total planning goal:", { exact: false })
+    const watchGoal = Number((await estimate.innerText()).match(/Total planning goal: \$([\d,.]+)/)![1].replace(/,/g, ""))
+    await page.goto("/")
+    await page.getByRole("button", { name: "Skip Setup (Demo Mode)" }).click()
+    await page.getByRole("button", { name: "Continue to Demo Mode" }).click()
+    const goal = page.getByText(/^Goal: \$/)
+    await expect(goal).toContainText("prototype builds")
+    const dashboardGoal = Number((await goal.innerText()).match(/\$([\d,]+)/)![1].replace(/,/g, ""))
+    expect(Math.round(watchGoal)).toBe(dashboardGoal)
+  })
+
   test("skipping and resuming setup follows saved preferences across reloads", async ({ page }) => {
     await page.goto("/")
     await page.getByRole("button", { name: "Skip Setup (Demo Mode)" }).click()

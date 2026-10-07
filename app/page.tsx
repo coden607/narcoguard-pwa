@@ -1,5 +1,6 @@
 "use client"
 
+import { FUNDING_GOAL, PROTOTYPE_UNITS, formatUsd } from "@/lib/funding-goal"
 import { useState } from "react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
@@ -347,7 +348,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <p className="text-muted-foreground mb-4">
-                Goal: <span className="text-green-400 font-bold">$24,584</span> for 80 watches
+                Goal: <span className="text-green-400 font-bold">{formatUsd(FUNDING_GOAL)}</span> for {PROTOTYPE_UNITS} prototype builds and testing
               </p>
               <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer" className="block">
                 <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold text-lg py-6">

@@ -16,7 +16,7 @@ async function fetchGoFundMeStats() {
     // Mock data for now
     const stats = {
       amountRaised: 0,
-      goal: 50000,
+      goal: 36032,
       donors: 0,
       percentComplete: 0,
       lastUpdated: new Date().toISOString(),

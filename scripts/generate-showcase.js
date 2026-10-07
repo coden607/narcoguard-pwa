@@ -74,8 +74,8 @@ Every 11 minutes, someone dies from an opioid overdose in America. NarcoGuard ex
 - Perfect testbed for nationwide scale-up
 
 ## Current Funding Status
-- **GoFundMe Campaign**: $60,000 goal to deploy first 80 watches
-- **Link**: https://gofund.me/ac8905cc
+- **GoFundMe Campaign**: $36,032 goal for 80 prototype builds and testing (about $450 each)
+- **Link**: https://gofund.me/9acf270ea
 - **Progress**: [Live tracking via GitHub Actions]
 
 ## Grant Applications in Progress
@@ -97,7 +97,7 @@ Broome Estates LLC (DOS ID: 4789234)
 📍 112 South Washington St, Binghamton, NY 13903
 
 ## How to Support
-1. **Donate**: https://gofund.me/ac8905cc
+1. **Donate**: https://gofund.me/9acf270ea
 2. **Share**: Tell your network about NarcoGuard
 3. **Partner**: Contact us for pilot deployment opportunities
 4. **Hero Network**: Sign up to save lives in your community
