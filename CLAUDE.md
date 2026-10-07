@@ -7,3 +7,7 @@
 - `/validate` (`.claude/commands/validate.md`): comprehensive validation and repair of confirmed regressions.
 - `release` skill (`.claude/skills/release/SKILL.md`): branch, gate, preview, PR, merge, production deploy and live verification, with the required human approval before production.
 - `.mcp.json`: `next-devtools` (Next.js 16 docs and diagnostics) and `playwright` (browser checks), both pinned. Vercel and GitHub access come from the session's connectors; locally, add your own with `claude mcp add`.
+
+## Shared agent skills
+
+Read and follow `AGENTS.md` before planning, editing, testing or committing. Use the complete canonical https://github.com/coden607/skills library under its shared-skills policy.
