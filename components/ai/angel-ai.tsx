@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { Mic, MicOff, Send, Sparkles, Volume2, VolumeX } from "lucide-react"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,12 @@ import { Input } from "@/components/ui/input"
 import type { NearbyResource } from "@/lib/resource-finder"
 import { useVoice } from "@/lib/hooks/use-voice"
 import { isFatalRecognitionError, speakableText } from "@/lib/voice"
+import { parseAngelLocalCommand } from "@/lib/angel-voice-commands"
+import { useUserPreferences } from "@/lib/hooks/use-user-preferences"
+import { readDailyLifeState } from "@/lib/daily-life"
+import { readLifeSupportState } from "@/lib/life-support"
+import { readResourcePreferences } from "@/lib/resource-personalization"
+import { angelContextHasContent, buildAngelLocalContext } from "@/lib/angel-context"
 
 interface ChatMessage {
   id: string
@@ -21,6 +28,9 @@ interface ChatMessage {
 const SUGGESTIONS = ["Help me set a goal for this week", "Find food help near me", "How do I get naloxone?"]
 
 export function AngelAI({ compact = false }: { compact?: boolean }) {
+  const router = useRouter()
+  const preferences = useUserPreferences()
+  const voiceEnabled = preferences?.features.voiceActivation ?? true
   // Conversations live only in this component's memory; nothing is saved to the device or server.
   const [available, setAvailable] = useState<boolean | null>(null)
   const [provider, setProvider] = useState<string | null>(null)
@@ -37,6 +47,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const [handsFree, setHandsFree] = useState(false)
   const handsFreeRef = useRef(false)
   const [voiceNote, setVoiceNote] = useState<string>()
+  const [usePlanningContext, setUsePlanningContext] = useState(false)
 
   useEffect(() => { messagesRef.current = messages }, [messages])
 
@@ -59,6 +70,22 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const send = async (text: string): Promise<string | null> => {
     const content = text.trim()
     if (!content || busy) return null
+    const local = parseAngelLocalCommand(content)
+    if (local?.type === "navigate") {
+      router.push(local.href)
+      return `Opening ${local.href === "/stability" ? "your needs planner" : local.href === "/daily-life" ? "Daily Life" : local.href === "/ar" ? "training" : "help"}.`
+    }
+    if (local?.type === "clear") {
+      messagesRef.current = []
+      setMessages([])
+      return "Conversation cleared."
+    }
+    if (local?.type === "read_aloud" && voiceEnabled) {
+      if (local.enabled) voice.primeSpeech()
+      else voice.cancelSpeech()
+      setReadAloud(local.enabled)
+      return local.enabled ? "Read aloud is on." : "Read aloud is off."
+    }
     const next: ChatMessage[] = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content }]
     messagesRef.current = next
     setMessages(next)
@@ -66,10 +93,26 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     setBusy(true)
     setError(undefined)
     try {
+      let localContext
+      if (usePlanningContext) {
+        const now = new Date()
+        const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+        const context = buildAngelLocalContext(
+          readDailyLifeState(window.localStorage),
+          readLifeSupportState(window.localStorage),
+          readResourcePreferences(window.localStorage),
+          date,
+        )
+        if (angelContextHasContent(context)) localContext = context
+      }
       const response = await fetch("/api/angel", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: next.slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })), ...(/^\d{5}$/.test(zip) ? { zip } : {}) }),
+        body: JSON.stringify({
+          messages: next.slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })),
+          ...(/^\d{5}$/.test(zip) ? { zip } : {}),
+          ...(localContext ? { localContext } : {}),
+        }),
       })
       const body = (await response.json()) as { available?: boolean; reply?: string; error?: string; notices?: string[]; resources?: ChatMessage["resources"] }
       if (body.available === false) {
@@ -171,6 +214,8 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
           <p className="text-sm">
             {provider === "Vercel AI Gateway"
               ? "Your messages are sent through Vercel AI Gateway to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."
+              : provider === "OpenRouter"
+              ? "Your messages are sent through OpenRouter to an AI provider to write Angel's replies. NarcoGuard asks OpenRouter to use only providers that do not store or train on them."
               : "Your messages are sent to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."}{" "}
             If you use voice, your browser turns speech into text (Apple or Google may process the audio), and replies are read aloud on this device.{" "}
             NarcoGuard does not save your chat, and it disappears when you leave this page. Don&apos;t include names, addresses or other details that identify you.
@@ -214,7 +259,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
               <Button key={suggestion} type="button" size="sm" variant="outline" disabled={busy} onClick={() => void send(suggestion).then((answer) => { if (answer && readAloud) void voice.speak(answer) })}>{suggestion}</Button>
             ))}
           </div>
-          {(voice.sttSupported || voice.ttsSupported) && (
+          {voiceEnabled && (voice.sttSupported || voice.ttsSupported) && (
             <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Voice">
               {voice.sttSupported && (
                 <Button type="button" variant={voice.listening && !handsFree ? "default" : "outline"} disabled={busy || handsFree} onClick={voice.listening ? voice.stopListening : startTalking}>
@@ -238,6 +283,11 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
               </p>
             </div>
           )}
+          {!voiceEnabled && <p className="text-xs text-muted-foreground">Voice controls are off in setup preferences. Text chat still works.</p>}
+          <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+            <input type="checkbox" checked={usePlanningContext} onChange={(event) => setUsePlanningContext(event.target.checked)} />
+            <span><strong>Use my local planning context for this chat.</strong> Angel may receive my top goal, constraints, upcoming schedule, enabled routines, transport choices, and resource preferences. Journal text and my personal crisis-plan text are never included. Nothing is sent unless I turn this on.</span>
+          </label>
           <form className="flex flex-col sm:flex-row gap-2" onSubmit={(event) => { event.preventDefault(); void send(input).then((answer) => { if (answer && readAloud) void voice.speak(answer) }) }}>
             <Input aria-label="Message Angel" maxLength={2000} value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type a message" className="flex-1" />
             <Input aria-label="ZIP code for searches (optional)" inputMode="numeric" maxLength={5} value={zip} onChange={(event) => setZip(event.target.value.replace(/\D/g, ""))} placeholder="ZIP (optional)" className="sm:w-32" />

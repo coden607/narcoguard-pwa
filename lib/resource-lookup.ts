@@ -1,4 +1,4 @@
-import { coarsen, fallbackLinks, findTreatmentUrl, MAX_RESULTS_PER_KIND, OSM_QUERY_GROUPS, overpassNeedsQuery, overpassQuery, parseFindTreatment, parseOverpass, parseOverpassNeeds, RESOURCE_KINDS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
+import { coarsen, fallbackLinks, findTreatmentUrl, MAX_RESULTS_PER_KIND, OSM_QUERY_GROUPS, overpassNeedsQuery, overpassQuery, parseFindTreatment, parseOverpass, parseOverpassNeeds, RESOURCE_KINDS, WIDE_RADIUS_METERS, WIDEN_KINDS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 
 const USER_AGENT = "NarcoGuard/2.0 (+https://www.narcoguard.app)"
 
@@ -118,6 +118,8 @@ export interface KindLookup {
   status: "ok" | "unavailable"
   results: NearbyResource[]
   fallback: { title: string; url: string }[]
+  /** Set when nothing was found nearby and the listings come from a wider search (miles). */
+  widenedMiles?: number
 }
 
 export interface NeedsLookup {
@@ -160,6 +162,19 @@ export async function lookupNeeds(origin: ResourceOrigin): Promise<NeedsLookup> 
     }
     for (const kind of group) kinds[kind] = { status: "ok", results: result.value[kind], fallback: fallbackLinks(kind) }
   })
+
+  // Food banks, shelters and showers are sparse: search wider once for any that came back empty.
+  const empty = WIDEN_KINDS.filter((kind) => kinds[kind].status === "ok" && kinds[kind].results.length === 0)
+  if (empty.length > 0) {
+    try {
+      const wider = parseOverpassNeeds(await fetchOverpass(overpassNeedsQuery(here.lat, here.lon, empty, WIDE_RADIUS_METERS)), here, MAX_RESULTS_PER_KIND, WIDE_RADIUS_METERS)
+      for (const kind of empty) {
+        if (wider[kind].length > 0) kinds[kind] = { ...kinds[kind], results: wider[kind], widenedMiles: Math.round(WIDE_RADIUS_METERS / 1609.344) }
+      }
+    } catch (error) {
+      console.warn(`[resources] wider search unavailable: ${failureReason(error)}`)
+    }
+  }
 
   const sources = [treatment, ...osm]
   const failures = sources.filter((result) => result.status === "rejected").length

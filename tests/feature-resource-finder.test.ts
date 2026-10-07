@@ -109,7 +109,7 @@ test("combined results are sorted into kinds by tags, unnamed public amenities g
   assert.equal(osmKindOf({ social_facility: "food_bank", amenity: "social_facility" }), "food")
   const many = parseOverpassNeeds({ elements: Array.from({ length: 9 }, (_, i) => ({ lat: 40.75 + i / 100, lon: -73.99, tags: { amenity: "library", name: `L${8 - i}` } })) }, origin)
   assert.deepEqual(many.library.map((r) => r.name), ["L8", "L7", "L6", "L5", "L4"])
-  assert.equal(Object.keys(parseOverpassNeeds(null, origin)).length, 12)
+  assert.equal(Object.keys(parseOverpassNeeds(null, origin)).length, 13)
 })
 
 test("every kind has directory fallbacks ending with 211", async () => {
@@ -147,6 +147,34 @@ test("Overpass requests are hedged across instances: a slow one is backed up, a 
 
     respond({ a: "429", b: "slow" })
     await assert.rejects(fetchOverpass("q", ["https://a/api", "https://b/api"], 10, 50), /a responded 429; b TimeoutError/)
+  } finally {
+    globalThis.fetch = realFetch
+  }
+})
+
+test("sparse needs with no nearby listing are searched once more, wider, and labelled as farther away", async () => {
+  const { lookupNeeds } = await import("../lib/resource-lookup")
+  const realFetch = globalThis.fetch
+  const queries: string[] = []
+  globalThis.fetch = (async (input: string | URL, init?: RequestInit) => {
+    const url = String(input)
+    if (url.includes("findtreatment")) return new Response(JSON.stringify({ rows: [] }), { status: 200 })
+    const query = decodeURIComponent(String(init?.body).replace(/^data=/, "").replace(/\+/g, " "))
+    queries.push(query)
+    const wide = query.includes("food_bank") && !query.includes("hospital")
+    // Normal searches find nothing; the wider one finds a food bank about 15 miles north.
+    const elements = wide ? [{ lat: 40.97, lon: -73.99, tags: { amenity: "food_bank", name: "County Food Bank" } }] : []
+    return new Response(JSON.stringify({ elements }), { status: 200 })
+  }) as typeof fetch
+  try {
+    const result = await lookupNeeds({ lat: 40.75, lon: -73.99 })
+    assert.equal(result.kinds.food.results[0]?.name, "County Food Bank")
+    assert.equal(result.kinds.food.widenedMiles, 25)
+    assert.equal(result.kinds.shelter.results.length, 0, "a kind still empty after widening stays empty")
+    assert.equal(result.kinds.shelter.widenedMiles, undefined)
+    assert.equal(result.kinds.library.widenedMiles, undefined, "dense kinds are never widened")
+    const wideQuery = queries.find((query) => query.includes("food_bank") && !query.includes("hospital"))
+    assert.ok(wideQuery && !wideQuery.includes("library"), "the wider search asks only for the empty sparse kinds")
   } finally {
     globalThis.fetch = realFetch
   }
