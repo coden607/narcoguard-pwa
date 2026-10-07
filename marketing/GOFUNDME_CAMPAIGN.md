@@ -27,8 +27,8 @@ My name is Stephen Blanford. I'm in recovery, and I have lost too many friends t
 Open https://www.narcoguard.app on any phone. No account is needed, and nothing here replaces 911.
 
 - **Emergency steps.** Clear, step-by-step overdose and CPR guidance, with a beat to keep compressions on pace and a reminder about when to consider a second naloxone dose.
-- **Find Help, basic needs first.** Type what you need in your own words, like "I'm hungry and have nowhere to sleep". NarcoGuard lists food, water, shelter, showers and laundry first, then clinics, pharmacies and treatment, then community, libraries and job help. Listings come from SAMHSA's FindTreatment.gov and OpenStreetMap, and every one says "call first", with 211 as a backup.
-- **Angel AI.** A private chat that listens to what you want and helps break it into small next steps. It reminds you to call 911 or 988 when you need to, it keeps conversations only on screen and doesn't store them, and you decide every step.
+- **Find Help, basic needs first.** Type what you need in your own words, like "I'm hungry and have nowhere to sleep". NarcoGuard shows the needs you name first, with basic needs such as food, water and shelter leading, then health, recovery and connection, and growth. Listings come from SAMHSA's FindTreatment.gov and OpenStreetMap, and every one says "call first", with 211 as a backup.
+- **Angel AI.** A private chat that listens to what you want and helps break it into small next steps. It reminds you to call 911 or 988 when you need to. Your messages go to an AI provider to get a reply, but NarcoGuard doesn't store or log your conversations, and you decide every step.
 - **Guardian planner.** An optional planner that stays on your phone: daily needs, sleep, goals and tomorrow's task. You can pause or erase it any time.
 - **Training and Hero certification.** Short lessons on overdose response, and a 12-question test you must pass with 100% to become a certified NarcoGuard Hero.
 - **Overdose Good Samaritan law summaries** for every state, with citations.
