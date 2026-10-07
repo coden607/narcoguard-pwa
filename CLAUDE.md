@@ -11,3 +11,8 @@
 ## Shared agent skills
 
 Read and follow `AGENTS.md` before planning, editing, testing or committing. Use the complete canonical https://github.com/coden607/skills library under its shared-skills policy.
+
+## Links for the owner
+
+- Every link given to the owner must be a full, clickable `https://` URL that opens the exact page or setting meant (for example the project's Vercel environment-variables page, not the Vercel homepage).
+- Never hand over placeholder links such as `https://<project-ref>.supabase.co`. When the exact URL depends on something you cannot see, give the closest real clickable link (Supabase's `https://supabase.com/dashboard/project/_/...` routes ask which project to open) and say what is missing.
