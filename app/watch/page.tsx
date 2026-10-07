@@ -8,7 +8,6 @@ import { HolographicCard } from "@/components/effects/holographic-card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
-  ArrowLeft,
   Syringe,
   Battery,
   Wifi,
@@ -24,7 +23,6 @@ import {
   Satellite,
   Lock,
 } from "lucide-react"
-import Link from "next/link"
 import { watchDesignCalculations, watchDesignModel } from "@/lib/watch-design"
 import { WATCH_COMPONENTS } from "@/lib/watch-components"
 import { EngineeringDrawing } from "@/components/watch/engineering-drawing"
@@ -435,12 +433,6 @@ export default function NGWatchPage() {
       <div className="relative z-10 container mx-auto px-4 py-6">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
-          <Link href="/">
-            <Button variant="outline" className="glass neon-border bg-transparent">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
-            </Button>
-          </Link>
           <h1 className="text-2xl md:text-3xl font-bold glow-text text-center">NG | NarcoGuard System Blueprint</h1>
           <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
             <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
