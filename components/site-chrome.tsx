@@ -66,6 +66,6 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       {pathname !== "/" && <BackButton />}
       {children}
     </main>
-    <footer className="site-footer"><div><span className="brand-dot" />A public concept for stronger community response.</div><div className="footer-links"><Link href="/constitution">Constitution</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div></footer>
+    <footer className="site-footer"><div><span className="brand-dot" />A public concept for stronger community response.</div><div className="footer-links"><Link href="/about">About</Link><Link href="/constitution">Constitution</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div></footer>
   </div>
 }

@@ -37,6 +37,9 @@ test("the safety system prompt always comes first and the ZIP is shared only whe
   assert.match(ANGEL_SYSTEM_PROMPT, /call 911/)
   assert.match(ANGEL_SYSTEM_PROMPT, /988/)
   assert.match(ANGEL_SYSTEM_PROMPT, /Do not claim NarcoGuard monitors anyone/)
+  assert.match(ANGEL_SYSTEM_PROMPT, /Maslow's hierarchy as a planning aid/)
+  assert.match(ANGEL_SYSTEM_PROMPT, /Never rank the person, withhold help/)
+  assert.match(ANGEL_SYSTEM_PROMPT, /ask which one they want/)
 })
 
 test("tool arguments from the model are validated before any lookup", () => {

@@ -18,6 +18,27 @@ The optional Guardian Stability page lets a person record daily needs, estimated
 
 Site traffic is measured with Vercel Analytics. Guardian check-in answers, sleep, goals, ZIP code and contact number are not sent as custom analytics events. See the [privacy page](https://narcoguard-pwa.vercel.app/privacy) for browser-sharing and third-party-link details.
 
+## How NarcoGuard uses Maslow's hierarchy of needs
+
+NarcoGuard is organized around [Maslow's hierarchy of needs](https://www.narcoguard.app/about): basic needs first, then safety, connection, stability and the person's own goals. It is a planning aid, not a ranking of people. Every kind of help stays available at every level, and nothing is withheld because a need was or wasn't stated.
+
+| Level | What it covers | Where it lives |
+| --- | --- | --- |
+| 1. Body and basic needs | Food, water, a place to sleep, toilets, showers, laundry | Find Help needs search (`/help`), Guardian planner check-in (`/stability`) |
+| 2. Safety and health | Overdose response, naloxone, clinics, pharmacies, emergency rooms, treatment | Dashboard emergency steps, Training (`/ar`), Find Help |
+| 3. Connection and belonging | Someone to talk to, peer support, community spaces, trusted contacts | Angel AI (`/angel`), emergency contacts, Hero Network |
+| 4. Stability and independence | Work, internet and phone charging, skills | Find Help job help and libraries, Hero certification |
+| 5. Growth and goals | The person's own goals, broken into steps | Guardian planner goals and tomorrow's task, Angel AI |
+
+How it works:
+
+1. **Say it in your own words.** "I'm hungry and need somewhere to sleep" is matched on the device (`lib/need-intent.ts`). The words go to the AI provider only if the person taps "Let AI read my words".
+2. **Basic needs are listed first.** Nearby results are ordered by level. Food, shelter and showers widen from 10 to about 25 miles when nothing is close, and are labelled as farther away.
+3. **The person chooses a goal; Angel listens.** Angel AI follows the same order when several needs are mentioned. For a goal, it offers two or three small next steps and asks which one the person wants. The Guardian planner can hold tomorrow's task.
+4. **Move up at your own pace.** The same tools help with work, learning and connection as today's needs are handled.
+
+The AI listens and suggests; it never decides. NarcoGuard cannot guarantee that a need will be met. Listings come from public directories and may be out of date, so call first or dial 211.
+
 ## Planned Guardian work
 
 The long-term direction is a person-led planner for food, water, rest, hygiene, laundry, safety, connection, treatment, and meaningful goals. The next resource phase needs verified local service hours, eligibility, accessibility, freshness, and an honest unknown or unavailable state. Only after separate evaluation could the product offer opt-in proactive guidance based on personal patterns. It must never invent a percentage chance of relapse or treat a correlation as a clinical prediction. Any outbound alert to a loved one requires separate, specific, revocable permission, delivery handling, and review. These capabilities are **not live**. Engineering rules are in [AGENTS.md](AGENTS.md).

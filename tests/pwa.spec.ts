@@ -460,12 +460,26 @@ test.describe("PWA production flow", () => {
   })
 
   test("the NarcoGuard logo appears in the header of every public page", async ({ page }) => {
-    for (const path of ["/", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/privacy", "/terms"]) {
+    for (const path of ["/", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/about", "/privacy", "/terms"]) {
       await page.goto(path)
       const logo = page.locator(".site-header .brand-mark img")
       await expect(logo, path).toBeVisible()
       expect(await logo.evaluate((img) => (img as HTMLImageElement).naturalWidth), path).toBeGreaterThan(0)
     }
+  })
+
+  test("the About page explains the Maslow levels, links each to the app and states its limits", async ({ page }) => {
+    await page.goto("/privacy")
+    await page.locator(".site-footer").getByRole("link", { name: "About" }).click()
+    await expect(page).toHaveURL(/\/about$/)
+    await expect(page.getByRole("heading", { level: 1, name: "About NarcoGuard" })).toBeVisible()
+    const levels = page.getByTestId("maslow-levels")
+    await expect(levels.getByRole("heading", { level: 3 })).toHaveCount(5)
+    await expect(levels.getByRole("heading", { level: 3 }).first()).toContainText("Body and basic needs")
+    await expect(page.getByText("not a ranking of people", { exact: false })).toBeVisible()
+    await expect(page.getByText("cannot guarantee that a need will be met", { exact: false })).toBeVisible()
+    await levels.getByRole("link", { name: "Find Help: search your needs nearby" }).click()
+    await expect(page).toHaveURL(/\/help$/)
   })
 
   test("the Constitution is linked from the footer of every page", async ({ page }) => {
@@ -839,7 +853,7 @@ test.describe("Training", () => {
 
 test.describe("Navigation", () => {
   test("every page except the dashboard has one Back button that returns to the previous page or the dashboard", async ({ page }) => {
-    for (const path of ["/help", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/privacy", "/terms", "/account", "/contacts", "/auth", "/consent"]) {
+    for (const path of ["/help", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/about", "/privacy", "/terms", "/account", "/contacts", "/auth", "/consent"]) {
       await page.goto(path)
       await expect(page.getByTestId("back-button"), path).toHaveCount(1)
     }
