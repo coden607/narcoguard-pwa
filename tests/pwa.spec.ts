@@ -557,7 +557,9 @@ test.describe("PWA production flow", () => {
     await form.getByRole("button", { name: "Donate $50" }).click()
     await expect(page).toHaveURL(/\/fund\/thanks/)
     expect(requested).toEqual({ amount: 50 })
-    await expect(page.getByRole("heading", { name: "Thank you for your donation" })).toBeVisible()
+    // The page confirms payment only after Stripe verifies the session; an unverifiable one never claims it was paid.
+    await expect(page.getByRole("heading", { name: "Thank you for supporting NarcoGuard" })).toBeVisible()
+    await expect(page.getByTestId("donation-thanks")).not.toContainText("Thank you for your donation")
   })
 
   test("Chromium installs in one tap from the header once the browser offers it", async ({ page }) => {
