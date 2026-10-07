@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { RESOURCE_KINDS } from "@/lib/resource-finder"
+import { orderByMaslow } from "@/lib/need-intent"
 
 // Angel AI: a conversational guide for finding help and working toward personal goals. It is not an
 // emergency service, a clinician or a monitor. Emergency guidance is deterministic (below), so it
@@ -8,6 +9,7 @@ import { RESOURCE_KINDS } from "@/lib/resource-finder"
 export const ANGEL_DEFAULT_MODEL = "openai/gpt-oss-120b"
 export const MAX_MESSAGES = 20
 export const MAX_MESSAGE_CHARS = 2000
+export const MAX_KINDS_PER_SEARCH = 6
 
 const compactList = z.array(z.string().trim().min(1).max(240)).max(12)
 const angelLocalContextSchema = z.object({
@@ -22,6 +24,8 @@ const angelLocalContextSchema = z.object({
 export const angelRequestSchema = z.object({
   messages: z.array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().trim().min(1).max(MAX_MESSAGE_CHARS) })).min(1).max(MAX_MESSAGES),
   zip: z.string().regex(/^\d{5}$/).optional(),
+  // Approximate location for searches only. It is rounded again on the server and never sent to the AI provider.
+  location: z.object({ lat: z.number().min(-90).max(90), lon: z.number().min(-180).max(180) }).strict().optional(),
   localContext: angelLocalContextSchema.optional(),
 })
 export type AngelRequest = z.infer<typeof angelRequestSchema>
@@ -36,7 +40,7 @@ export const ANGEL_SYSTEM_PROMPT = [
   "- Never promise that a service has openings, a bed, a meal or an appointment. Say listings come from public directories and to call first.",
   "- Do not ask for full names, exact addresses or other identifying details. Do not repeat back sensitive details unnecessarily.",
   "- When optional personal planning context is provided, use it to tailor options to the person's stated goals, constraints, schedule, routines, transportation, and resource preferences. Do not treat it as diagnosis or certainty, and explain why a suggestion fits when useful.",
-  "- To find places near the person, call the find_resources tool. It needs a 5-digit ZIP code; if you do not have one, ask for it or suggest the 'Find everything near me' search on this page, which can use their location.",
+  "- To find places near the person, call find_resources once with every need they mentioned in kinds. If the person shared their approximate location, leave zip out. Otherwise it needs a 5-digit ZIP code; if you do not have one, ask for it or suggest tapping 'Use my location'. The places found are shown on screen and the nearest one for each need is read out separately, so do not list them; give one or two short sentences of guidance and remind the person to call first.",
   "- Follow Maslow's hierarchy as a planning aid: when someone lists several needs, help with food, water, shelter, hygiene and immediate safety first, then health, connection, stability and their own goals. Never rank the person, withhold help, or refuse a higher goal because a basic need is unmet; they may start anywhere.",
   "- When a person shares a goal, listen first, then offer two or three small, concrete next steps they could take today or tomorrow, and ask which one they want. Mention the Guardian planner (/stability) for holding tomorrow's task.",
   "- Overdose Good Samaritan laws differ by state and are limited; suggest the app's state summary and checking the statute rather than giving legal advice.",
@@ -46,20 +50,28 @@ export const FIND_RESOURCES_TOOL = {
   type: "function",
   function: {
     name: "find_resources",
-    description: "Find nearby places for one need (treatment, food, shelter, pharmacy, drinking water, toilets, showers, laundry, emergency room, clinic, community center, library or job help) from public directories (SAMHSA FindTreatment.gov and OpenStreetMap).",
+    description: "Find nearby places for one or more needs at once (treatment, food, quick meals, shelter, pharmacy, drinking water, toilets, showers, laundry, emergency room, clinic, community center, library or job help) from public directories (SAMHSA FindTreatment.gov and OpenStreetMap).",
     parameters: {
       type: "object",
       properties: {
-        kind: { type: "string", enum: [...RESOURCE_KINDS] },
-        zip: { type: "string", description: "5-digit US ZIP code" },
+        kinds: { type: "array", items: { type: "string", enum: [...RESOURCE_KINDS] }, minItems: 1, maxItems: MAX_KINDS_PER_SEARCH },
+        zip: { type: "string", description: "5-digit US ZIP code. Leave out when the person shared their approximate location." },
       },
-      required: ["kind", "zip"],
+      required: ["kinds"],
       additionalProperties: false,
     },
   },
 } as const
 
-export const findResourcesArgsSchema = z.object({ kind: z.enum(RESOURCE_KINDS), zip: z.string().regex(/^\d{5}$/) })
+/** Validates the model's tool arguments. Accepts the older single `kind` form too; kinds come back in Maslow order. */
+export const findResourcesArgsSchema = z.object({
+  kinds: z.array(z.enum(RESOURCE_KINDS)).min(1).max(MAX_KINDS_PER_SEARCH).optional(),
+  kind: z.enum(RESOURCE_KINDS).optional(),
+  zip: z.string().regex(/^\d{5}$/).optional(),
+}).refine((args) => args.kinds || args.kind, "kinds is required").transform((args) => ({
+  kinds: orderByMaslow([...(args.kinds ?? []), ...(args.kind ? [args.kind] : [])]),
+  zip: args.zip,
+}))
 
 const EMERGENCY_PATTERN = /\b(overdos\w*|od'?(ing|ed)?|not breathing|stopped breathing|can'?t breathe|unresponsive|won'?t wake|passed out|blue lips|turning blue|dying)\b/i
 const CRISIS_PATTERN = /\b(suicid\w*|kill (myself|me)|end (it all|my life)|want to die|self[- ]harm|hurt myself)\b/i
@@ -79,6 +91,8 @@ export function safetyNotices(text: string): string[] {
 export function buildChatMessages(request: AngelRequest) {
   const context: { role: "system"; content: string }[] = []
   if (request.zip) context.push({ role: "system", content: `The person shared ZIP code ${request.zip} for resource searches.` })
+  // The coordinates themselves stay on the server; the model only learns that searches can run.
+  else if (request.location) context.push({ role: "system", content: "The person shared their approximate location for resource searches. Call find_resources without a zip; do not ask for a ZIP code or an address." })
   if (request.localContext) {
     context.push({
       role: "system",

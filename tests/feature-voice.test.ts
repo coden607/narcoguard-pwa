@@ -40,3 +40,9 @@ test("permission and hardware errors stop listening; silence does not", () => {
   assert.equal(isFatalRecognitionError("audio-capture"), true)
   assert.equal(isFatalRecognitionError("no-speech"), false)
 })
+
+test("decimal distances are not split into separate sentences", () => {
+  assert.deepEqual(speechChunks("For free food: Pantry A, 0.4 miles away. Call first to confirm.", 80), ["For free food: Pantry A, 0.4 miles away. Call first to confirm."])
+  assert.deepEqual(speechChunks("For free food: Pantry A, 0.4 miles away. Call first to confirm.", 45), ["For free food: Pantry A, 0.4 miles away.", "Call first to confirm."])
+  assert.ok(speechChunks("It is 2.5 miles. Next one is 10.25 miles.", 18).every((chunk) => !/\d\.$/.test(chunk)), "no chunk ends on a decimal point")
+})

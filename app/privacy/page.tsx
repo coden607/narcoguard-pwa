@@ -42,9 +42,11 @@ export default function PrivacyPolicy() {
               training. NarcoGuard does not save the conversation; it is cleared when you leave the page.
             </p>
             <p>
-              &quot;Find help near me&quot; uses your location only when you tap &quot;Use my location&quot;, or the ZIP code you
-              type. Our server rounds coordinates to about one kilometer and sends them to SAMHSA&apos;s FindTreatment.gov
-              or OpenStreetMap services to get listings. We do not store or log the location.
+              &quot;Find help near me&quot; and Angel use your location only when you tap &quot;Use my location&quot; or say
+              &quot;use my location&quot;, or the ZIP code you give. The location is rounded to about one kilometer and sent to
+              SAMHSA&apos;s FindTreatment.gov or OpenStreetMap services to get listings. Angel&apos;s AI provider never receives
+              your location, only the names, distances and phone numbers of the places found. We do not store or log the
+              location, and Angel forgets it when you leave the page or tap &quot;Stop using my location&quot;.
             </p>
             <p>
               Bluetooth heart-rate and blood-oxygen readings are shown only on your screen while connected. They are not
