@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { safetyNotices } from "@/lib/angel-ai"
 import { QUICK_NEEDS, matchNeeds, orderByMaslow } from "@/lib/need-intent"
 import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
+import { cardSummary } from "@/lib/resource-display"
+import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
 
 interface KindLookup {
   status: "ok" | "unavailable"
@@ -25,12 +27,27 @@ type Origin = { lat: number; lon: number } | { zip: string }
 
 const DIRECTORY_211 = { title: "Find local help through 211", url: "https://www.211.org/get-help" }
 
+const CHIP_TONE_CLASS: Record<string, string> = {
+  open: "text-green-400",
+  closed: "text-red-400",
+  unknown: "text-muted-foreground",
+}
+
 function ResourceCard({ resource }: { resource: NearbyResource }) {
+  const summary = cardSummary(resource, new Date())
+  const details = [summary.freshness, summary.wheelchair, summary.services].filter((line): line is string => line !== null)
   return (
     <li className="border rounded-lg p-3 space-y-1">
       <p className="font-semibold">{resource.name}{resource.distanceMiles !== undefined && <span className="font-normal text-muted-foreground"> · {resource.distanceMiles} mi</span>}</p>
+      <p className="text-sm"><span className={`font-semibold ${CHIP_TONE_CLASS[summary.chip.tone]}`}>{summary.chip.label}</span></p>
       {resource.address && <p className="text-sm text-muted-foreground">{resource.address}</p>}
-      {resource.hours && <p className="text-sm text-muted-foreground">Listed hours: {resource.hours} (may be out of date)</p>}
+      {summary.hours
+        ? <p className="text-sm text-muted-foreground">{summary.hours}</p>
+        : summary.chip.label !== "Hours unknown — call first"
+          ? <p className="text-sm text-muted-foreground">Hours unknown — call first</p>
+          : null}
+      {details.map((line) => <p key={line} className="text-sm text-muted-foreground">{line}</p>)}
+      {summary.unknowns.map((line) => <p key={line} className="text-xs text-muted-foreground">{line}</p>)}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
         {resource.phone && <a className="underline text-primary inline-flex min-h-6 items-center" href={`tel:${resource.phone.replace(/[^\d+]/g, "")}`}>Call {resource.phone}</a>}
         {resource.website && <a className="underline text-primary inline-flex min-h-6 items-center" href={resource.website} target="_blank" rel="noopener noreferrer">Website</a>}
@@ -43,8 +60,9 @@ function ResourceCard({ resource }: { resource: NearbyResource }) {
   )
 }
 
-function KindResults({ kind, lookup, open = false }: { kind: ResourceKind; lookup: KindLookup | undefined; open?: boolean }) {
-  const results = lookup?.results ?? []
+function KindResults({ kind, lookup, open = false, feedback = [] }: { kind: ResourceKind; lookup: KindLookup | undefined; open?: boolean; feedback?: ResourceFeedback[] }) {
+  const hidden = new Set(feedback.filter((row) => row.value === "closed" || row.value === "not-for-me").map((row) => row.key))
+  const results = (lookup?.results ?? []).filter((resource) => !hidden.has(resourceKey(resource)))
   const fallback = lookup?.fallback.length ? lookup.fallback : [DIRECTORY_211]
   const where = lookup?.widenedMiles ? `within ${lookup.widenedMiles} mi` : "nearby"
   const summary = lookup?.status !== "ok" ? "directory links" : results.length === 0 ? "none listed nearby" : `${results.length} ${where} · closest ${results[0].distanceMiles ?? "?"} mi`
@@ -86,6 +104,12 @@ export function NeedsFinder() {
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string>()
   const [data, setData] = useState<NeedsResponse>()
+  const [feedback, setFeedback] = useState<ResourceFeedback[]>([])
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setFeedback(readResourceFeedback(window.localStorage)), 0)
+    return () => window.clearTimeout(timer)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -209,7 +233,7 @@ export function NeedsFinder() {
             <section className="space-y-2 rounded-lg border-2 border-primary/60 p-3" aria-labelledby="level-yours" data-testid="your-needs">
               <h3 id="level-yours" className="font-semibold">Your needs first</h3>
               <div className="space-y-2">
-                {stated.map((kind) => <KindResults key={kind} kind={kind} lookup={data.kinds[kind]} open />)}
+                {stated.map((kind) => <KindResults key={kind} kind={kind} lookup={data.kinds[kind]} open feedback={feedback} />)}
               </div>
             </section>
           )}
@@ -220,7 +244,7 @@ export function NeedsFinder() {
               <section key={level.id} className="space-y-2" aria-labelledby={`level-${level.id}`}>
                 <h3 id={`level-${level.id}`} className="font-semibold">{level.title}</h3>
                 <div className="space-y-2">
-                  {rest.map((kind) => <KindResults key={kind} kind={kind} lookup={data.kinds[kind]} />)}
+                  {rest.map((kind) => <KindResults key={kind} kind={kind} lookup={data.kinds[kind]} feedback={feedback} />)}
                 </div>
               </section>
             )

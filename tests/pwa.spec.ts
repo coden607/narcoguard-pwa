@@ -329,7 +329,7 @@ test.describe("PWA production flow", () => {
     await expect(food).toContainText("1 nearby · closest 0.8 mi")
     await food.locator("summary").click()
     await expect(food.getByText("Test Food Pantry")).toBeVisible()
-    await expect(food.getByText("Listed hours: Mo-Fr 09:00-17:00 (may be out of date)")).toBeVisible()
+    await expect(food.getByText("Mon–Fri 9 AM–5 PM")).toBeVisible()
     await expect(food.getByRole("link", { name: "Call 518-555-0100" })).toHaveAttribute("href", "tel:5185550100")
     await expect(food.getByText(/Source: OpenStreetMap contributors\. .*call first/)).toBeVisible()
     await expect(search.getByTestId("need-water")).toContainText("none listed nearby")

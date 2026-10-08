@@ -5,6 +5,7 @@ import type { Need } from "@/lib/guardian-stability"
 import { normalizePostalCode } from "@/lib/guardian-resources"
 import { MASLOW_LEVELS, resourceKindsForNeeds } from "@/lib/maslow-resources"
 import { RESOURCE_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
+import { cardSummary } from "@/lib/resource-display"
 import {
   defaultResourcePreferences,
   explainResource,
@@ -18,6 +19,12 @@ import {
   type ResourceFeedbackValue,
   type ResourcePreferences,
 } from "@/lib/resource-personalization"
+
+const CHIP_TONE_CLASS: Record<string, string> = {
+  open: "text-green-400",
+  closed: "text-red-400",
+  unknown: "text-muted-foreground",
+}
 
 type KindLookup = {
   status: "ok" | "unavailable"
@@ -151,12 +158,15 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
                   <h4 className="font-medium">{RESOURCE_LABELS[kind]}</h4>
                   {lookup.results.length > 0 ? (
                     <ul className="space-y-2">
-                      {lookup.results.slice(0, 3).map((resource, optionIndex) => (
+                      {lookup.results.slice(0, 3).map((resource, optionIndex) => {
+                        const summary = cardSummary(resource, new Date())
+                        const detail = [summary.hours, summary.freshness, summary.wheelchair, summary.services].filter((line): line is string => line !== null).join(" · ")
+                        return (
                         <li key={resourceKey(resource)} className="rounded border p-3">
                           <strong>{["Option A", "Option B", "Option C"][optionIndex] ?? "Option"}: {resource.name}</strong>
                           {resource.distanceMiles !== undefined && <span className="text-sm"> · {resource.distanceMiles} mi</span>}
                           {resource.address && <span className="block text-sm">{resource.address}</span>}
-                          {resource.hours && <span className="block text-sm">Listed hours: {resource.hours}</span>}
+                          <span className="block text-sm"><span className={`font-semibold ${CHIP_TONE_CLASS[summary.chip.tone]}`}>{summary.chip.label}</span>{detail && <span className="text-muted-foreground"> · {detail}</span>}</span>
                           {explainResource(resource, preferences, feedback).map((reason) => <span key={reason} className="block text-xs">{reason}</span>)}
                           <span className="block text-xs text-muted-foreground">Source: {resource.source}. Call first to confirm current availability, eligibility, price, and hours. Distance is nearby straight-line context, not a promised route or detour time.</span>
                           <span className="block text-sm space-x-3 mt-1">
@@ -168,7 +178,8 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
                             {([["worked","Worked"],["closed","Closed"],["too-far","Too far"],["not-for-me","Not for me"]] as const).map(([value,label])=><button key={value} type="button" className="border rounded px-2 py-1" onClick={()=>recordFeedback(resource,value)}>{label}</button>)}
                           </div>
                         </li>
-                      ))}
+                        )
+                      })}
                     </ul>
                   ) : (
                     <p className="text-sm text-muted-foreground">No nearby listing matched your current filters. This does not mean no service exists.</p>
