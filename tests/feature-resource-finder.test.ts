@@ -179,3 +179,47 @@ test("sparse needs with no nearby listing are searched once more, wider, and lab
     globalThis.fetch = realFetch
   }
 })
+
+test("basic needs cover community fridges, homeless services and showers tagged on truck stops", async () => {
+  const { osmKindsOf, parseOverpassNeeds } = await import("../lib/resource-finder")
+  assert.deepEqual(osmKindsOf({ amenity: "food_sharing" }), ["food"])
+  assert.deepEqual(osmKindsOf({ amenity: "social_facility", social_facility: "outreach", "social_facility:for": "homeless" }), ["shelter", "community"])
+  assert.deepEqual(osmKindsOf({ amenity: "fuel", shop: "convenience", shower: "yes" }), ["quick-meal", "showers"])
+  assert.deepEqual(osmKindsOf({ amenity: "shower", access: "customers" }), [])
+  const origin = { lat: 42.1, lon: -75.9 }
+  const grouped = parseOverpassNeeds({ elements: [{ type: "node", id: 1, lat: 42.11, lon: -75.9, tags: { name: "Truck Stop", shop: "convenience", shower: "yes" } }] }, origin)
+  assert.equal(grouped.showers[0]?.name, "Truck Stop")
+  assert.equal(grouped["quick-meal"][0]?.name, "Truck Stop")
+})
+
+test("when one directory request fails, places the other request found for that need are kept", async () => {
+  const { lookupNeeds } = await import("../lib/resource-lookup")
+  const realFetch = globalThis.fetch
+  globalThis.fetch = (async (input: string | URL, init?: RequestInit) => {
+    if (String(input).includes("findtreatment")) return new Response(JSON.stringify({ rows: [] }), { status: 200 })
+    const query = decodeURIComponent(String(init?.body).replace(/^data=/, "").replace(/\+/g, " "))
+    // The sparse-services request (food, shelter, showers...) fails; the everyday request answers.
+    if (query.includes("hospital")) return new Response("busy", { status: 504 })
+    const elements = [
+      { lat: 40.76, lon: -73.99, tags: { name: "Truck Stop", shop: "convenience", shower: "yes" } },
+      { lat: 40.755, lon: -73.99, tags: { amenity: "food_sharing" } },
+    ]
+    return new Response(JSON.stringify({ elements }), { status: 200 })
+  }) as typeof fetch
+  try {
+    const result = await lookupNeeds({ lat: 40.75, lon: -73.99 })
+    assert.equal(result.status, "partial")
+    assert.equal(result.kinds.showers.status, "ok")
+    assert.equal(result.kinds.showers.results[0]?.name, "Truck Stop")
+    assert.equal(result.kinds["quick-meal"].results[0]?.name, "Truck Stop")
+    assert.equal(result.kinds.shelter.status, "unavailable", "a need with no answer and no incidental match stays unavailable")
+  } finally {
+    globalThis.fetch = realFetch
+  }
+})
+
+test("unnamed community fridges are kept with a generic name", async () => {
+  const { parseOverpassNeeds } = await import("../lib/resource-finder")
+  const grouped = parseOverpassNeeds({ elements: [{ type: "node", id: 2, lat: 42.101, lon: -75.9, tags: { amenity: "food_sharing" } }] }, { lat: 42.1, lon: -75.9 })
+  assert.equal(grouped.food[0]?.name, "Food pantry or community fridge")
+})

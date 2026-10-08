@@ -63,3 +63,11 @@ tokens/
 
 # Lighthouse CI local output
 .lighthouseci/
+
+# Shared skills installed from coden607/skills by scripts/bootstrap-agent-skills.sh (generated each
+# session). The repo's own skills stay tracked.
+/.agent-skills/vendor/
+/.claude/skills/*
+!/.claude/skills/release/
+/.codex/skills/*
+!/.codex/skills/context-handoff/

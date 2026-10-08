@@ -333,6 +333,7 @@ test.describe("PWA production flow", () => {
     await expect(food.getByRole("link", { name: "Call 518-555-0100" })).toHaveAttribute("href", "tel:5185550100")
     await expect(food.getByText(/Source: OpenStreetMap contributors\. .*call first/)).toBeVisible()
     await expect(search.getByTestId("need-water")).toContainText("none listed nearby")
+    await expect(search.getByTestId("call-211-water")).toHaveAttribute("href", "tel:211")
     const treatment = search.getByTestId("need-treatment")
     await treatment.locator("summary").click()
     await expect(treatment.getByText("Live listings are unavailable right now.")).toBeVisible()
@@ -843,8 +844,11 @@ test.describe("Watch blueprint", () => {
   test("the 40 mm women's fit has its own drawing, parts and costs with the same safety functions", async ({ page }) => {
     await page.goto("/watch")
     const sizes = page.getByRole("group", { name: "Watch size" })
-    await sizes.getByRole("button", { name: /NG 40 mm/ }).click()
-    await expect(sizes.getByRole("button", { name: /NG 40 mm/ })).toHaveAttribute("aria-pressed", "true")
+    // A tap before hydration is lost, so retry until the page has hydrated and the size is selected.
+    await expect(async () => {
+      await sizes.getByRole("button", { name: /NG 40 mm/ }).click()
+      await expect(sizes.getByRole("button", { name: /NG 40 mm/ })).toHaveAttribute("aria-pressed", "true", { timeout: 1_000 })
+    }).toPass({ timeout: 15_000 })
     const summary = page.getByTestId("watch-size")
     await expect(summary).toContainText("40 × 12.2 mm")
     await expect(summary).toContainText("300 mAh")

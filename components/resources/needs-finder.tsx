@@ -59,6 +59,11 @@ function KindResults({ kind, lookup, open = false }: { kind: ResourceKind; looku
         {lookup?.status !== "ok" && <p className="text-sm">Live listings are unavailable right now.</p>}
         {lookup?.status === "ok" && results.length === 0 && <p className="text-sm">No listings found nearby in public data. That does not mean there are none; try the directories below.</p>}
         {lookup?.widenedMiles && results.length > 0 && <p className="text-sm">Nothing was listed within 10 miles, so this searched up to {lookup.widenedMiles} miles. Call first; a closer service may not be in public data.</p>}
+        {(lookup?.status !== "ok" || results.length === 0) && (
+          <a href="tel:211" className="inline-flex min-h-11 items-center rounded-lg border border-primary/50 px-4 font-semibold text-primary hover:bg-primary/10" data-testid={`call-211-${kind}`}>
+            Call 211 for {SHORT_LABELS[kind].toLowerCase()} near you
+          </a>
+        )}
         {results.length > 0 && <ul className="space-y-2">{results.map((resource) => <ResourceCard key={`${resource.name}-${resource.lat}-${resource.lon}`} resource={resource} />)}</ul>}
         <ul className="text-sm list-disc pl-5 space-y-1" aria-label={`Other directories for ${SHORT_LABELS[kind]}`}>
           {fallback.map((link) => <li key={link.url}><a className="inline-flex min-h-6 items-center underline text-primary" href={link.url} target="_blank" rel="noopener noreferrer">{link.title}</a></li>)}

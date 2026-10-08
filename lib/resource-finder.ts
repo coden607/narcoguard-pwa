@@ -80,20 +80,23 @@ interface OsmKindSpec {
   exclude?: Record<string, string[]>
   /** Dense kinds use a smaller radius so the nearest places are not crowded out. */
   radius: number
-  /** Name shown for places that usually have none, such as a public drinking fountain. */
-  unnamed?: string
+  /** Name shown for places that usually have none, such as a public drinking fountain; a function names only matching tags. */
+  unnamed?: string | ((tags: Record<string, string>) => string | undefined)
 }
 
 const NOT_PUBLIC = { access: ["private", "no", "customers"] }
 
 export const OSM_KINDS: Record<OsmKind, OsmKindSpec> = {
-  food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }], radius: SEARCH_RADIUS_METERS },
+  // Community fridges and pantries are mapped as food_sharing.
+  food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }, { amenity: "food_sharing" }], radius: SEARCH_RADIUS_METERS, unnamed: (tags) => (tags.amenity === "food_sharing" ? "Food pantry or community fridge" : undefined) },
   "quick-meal": { filters: [{ amenity: "fast_food" }, { amenity: "cafe" }, { shop: "convenience" }, { shop: "supermarket" }], radius: 5_000 },
   // Hotels contracted as temporary shelters are often mapped this way and go stale when contracts end.
-  shelter: { filters: [{ social_facility: "shelter" }], exclude: { tourism: ["hotel"] }, radius: SEARCH_RADIUS_METERS },
+  // Services for people experiencing homelessness are listed too; every listing says to call first, so none promises a bed.
+  shelter: { filters: [{ social_facility: "shelter" }, { amenity: "social_facility", "social_facility:for": "homeless" }], exclude: { tourism: ["hotel"] }, radius: SEARCH_RADIUS_METERS },
   water: { filters: [{ amenity: "drinking_water" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Drinking water" },
   toilets: { filters: [{ amenity: "toilets" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Public toilet" },
-  showers: { filters: [{ amenity: "shower" }], exclude: NOT_PUBLIC, radius: SEARCH_RADIUS_METERS, unnamed: "Public shower" },
+  // Truck stops, campgrounds and pools tag showers on the main feature; some charge a fee.
+  showers: { filters: [{ amenity: "shower" }, { shower: "yes" }, { shower: "hot" }], exclude: NOT_PUBLIC, radius: SEARCH_RADIUS_METERS, unnamed: "Public shower" },
   laundry: { filters: [{ shop: "laundry" }], radius: 5_000 },
   emergency: { filters: [{ amenity: "hospital", emergency: "yes" }], radius: SEARCH_RADIUS_METERS },
   clinic: { filters: [{ amenity: "clinic" }, { healthcare: "clinic" }, { healthcare: "centre" }], radius: 5_000 },
@@ -146,13 +149,18 @@ export function overpassNeedsQuery(lat: number, lon: number, kinds: readonly Osm
 export const WIDEN_KINDS: readonly OsmKind[] = ["food", "shelter", "showers"]
 export const WIDE_RADIUS_METERS = 40_000 // about 25 miles
 
-/** The kind a place belongs to, checked in display order; undefined when nothing matches. */
-export function osmKindOf(tags: Record<string, string>): OsmKind | undefined {
-  return OSM_KIND_ORDER.find((kind) => {
+/** Every kind a place matches, in display order: a truck stop can be a quick meal and a shower. */
+export function osmKindsOf(tags: Record<string, string>): OsmKind[] {
+  return OSM_KIND_ORDER.filter((kind) => {
     const { filters, exclude } = OSM_KINDS[kind]
     if (Object.entries(exclude ?? {}).some(([key, values]) => values.includes(tags[key]))) return false
     return filters.some((filter) => Object.entries(filter).every(([key, value]) => tags[key] === value))
   })
+}
+
+/** The first kind a place belongs to, checked in display order; undefined when nothing matches. */
+export function osmKindOf(tags: Record<string, string>): OsmKind | undefined {
+  return osmKindsOf(tags)[0]
 }
 
 const str = (value: unknown, max = 160) => (typeof value === "string" && value.trim() ? value.trim().slice(0, max) : undefined)
@@ -176,7 +184,8 @@ interface OverpassElement { lat?: number; lon?: number; center?: { lat: number; 
 
 function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: number; lon: number }): NearbyResource | undefined {
   const tags = element.tags ?? {}
-  const name = str(tags.name) ?? OSM_KINDS[kind].unnamed
+  const unnamed = OSM_KINDS[kind].unnamed
+  const name = str(tags.name) ?? (typeof unnamed === "function" ? unnamed(tags) : unnamed)
   const lat = element.lat ?? element.center?.lat
   const lon = element.lon ?? element.center?.lon
   if (!name || lat === undefined || lon === undefined) return undefined
@@ -196,7 +205,7 @@ function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: numb
   }
 }
 
-function nearestUnique(resources: NearbyResource[], limit: number): NearbyResource[] {
+export function nearestUnique(resources: NearbyResource[], limit: number): NearbyResource[] {
   const seen = new Set<string>()
   return resources
     .sort((a, b) => (a.distanceMiles ?? 0) - (b.distanceMiles ?? 0))
@@ -223,9 +232,10 @@ export function parseOverpass(kind: OsmKind, body: unknown, origin: { lat: numbe
 export function parseOverpassNeeds(body: unknown, origin: { lat: number; lon: number }, limit = MAX_RESULTS_PER_KIND, radius?: number): Record<OsmKind, NearbyResource[]> {
   const grouped = Object.fromEntries(OSM_KIND_ORDER.map((kind) => [kind, [] as NearbyResource[]])) as Record<OsmKind, NearbyResource[]>
   for (const element of elementsOf(body)) {
-    const kind = osmKindOf(element.tags ?? {})
-    const resource = kind && toResource(kind, element, origin)
-    if (kind && resource && (resource.distanceMiles ?? 0) <= (radius ?? OSM_KINDS[kind].radius) / 1609.344) grouped[kind].push(resource)
+    for (const kind of osmKindsOf(element.tags ?? {})) {
+      const resource = toResource(kind, element, origin)
+      if (resource && (resource.distanceMiles ?? 0) <= (radius ?? OSM_KINDS[kind].radius) / 1609.344) grouped[kind].push(resource)
+    }
   }
   for (const kind of OSM_KIND_ORDER) grouped[kind] = nearestUnique(grouped[kind], limit)
   return grouped
