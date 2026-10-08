@@ -15,6 +15,23 @@ The candidate BOM on `/watch` was reviewed against current, buyable parts:
 
 Known limitation: published overdose-detection research mainly uses chest-worn respiration sensing ([PneumoWave protocol](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11422748/), [closed-loop injector](https://pmc.ncbi.nlm.nih.gov/articles/PMC11920833/)). Wrist-only detection of opioid-induced respiratory depression is unproven and is the largest technical risk of the watch-only design.
 
+## NG 40 mm (women's fit)
+
+`/watch` now has a size switch. The NG 40 mm is the women's fit: a smaller case for smaller wrists that anyone can wear. It keeps the same processor, safety MCU, sensors, radios, owner lock and safety functions (SOS, emergency call, overdose steps, alarm) as the 46 mm. Only the parts that a smaller case forces have changed:
+
+| Item | NG 46 mm | NG 40 mm | Why |
+| --- | --- | --- | --- |
+| Case | 46 × 13.8 mm Ti-6Al-4V | 40 × 12.2 mm Ti-6Al-4V | Smaller wrists; the size class of 40–41 mm smartwatches |
+| Display | 1.4–1.5 in LTPO AMOLED (Ø36.8 panel) | 1.2 in round AMOLED, about 396×396 (Ø30.5 panel) | Fits inside a Ø34.2 mm board area |
+| Battery | 500 mAh, 28×22×5 mm | 300 mAh, about 24×19×4.2 mm | Volume available; expect shorter runtime (idealized model 90 h vs 149 h, not measured) |
+| Connectivity stack | 16×14 mm budget | 12×12 mm compact RF module target | The 46 mm footprint does not fit beside the SoC; needs vendor confirmation or a double-sided board |
+| Qi coil | Wurth 760308103 | About 15–25 mm receive coil (TBD) | Smaller case back |
+| Crystal / case back | 46 mm sapphire, zirconia back | About 36 mm, 0.8 mm sapphire; smaller zirconia back | Smaller case; drop testing required |
+| Strap | 22 mm LSR | 20 mm LSR with S/M and M/L bands | Fits smaller wrists |
+| Medication pod | 18×12×10 mm research module | Unchanged | Dose volume does not shrink; needle length would be set for body size by clinicians, not by sex |
+
+Candidate component subtotal: $307.90 (46 mm: $325.40); complete build estimate $432.90 (46 mm: $450.40). The public goal stays sized on the 46 mm estimate, so a mix of sizes builds about the same number of prototypes. The drawing (NG-CON-040), 3D model and the side-by-side render `public/images/ng-sizes-render.jpg` are generated from `lib/watch-geometry.ts` (`GEOMETRY_40`); open issues are listed on the drawing.
+
 ## Modular bill of materials
 
 | Module | Function | Replaceable boundary | Pre-prototype validation required |

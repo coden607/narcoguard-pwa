@@ -68,15 +68,15 @@ export default function FundPage() {
           {/* Campaign Hero Image */}
           <figure className="mb-8" data-testid="watch-showcase">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-2xl overflow-hidden border border-primary/30">
+              <div className="md:col-span-2 rounded-2xl overflow-hidden border border-primary/30">
                 <Image
-                  src="/images/ng-watch-hero.jpg"
-                  alt="Concept render of the NarcoGuard NG watch on a wrist, showing heart rate and oxygen on its face"
-                  width={1024}
-                  height={1024}
+                  src="/images/ng-sizes-render.jpg"
+                  alt="To-scale renders of the NarcoGuard NG 46 mm watch and the smaller NG 40 mm women's fit, side by side"
+                  width={1600}
+                  height={900}
                   priority
-                  sizes="(min-width: 768px) 50vw, 100vw"
-                  className="w-full h-80 md:h-[32rem] object-cover"
+                  sizes="(min-width: 1280px) 1200px, 100vw"
+                  className="w-full h-auto"
                 />
               </div>
               <div className="rounded-2xl overflow-hidden border border-primary/30">
@@ -92,7 +92,8 @@ export default function FundPage() {
               </div>
             </div>
             <figcaption className="mt-2 text-center text-sm text-muted-foreground">
-              Concept renders of the NarcoGuard NG watch. It is not a finished product and none has shipped.
+              Concept renders of the NarcoGuard NG in two sizes: 46 mm and the 40 mm women&apos;s fit, rendered to scale from the design specs on{" "}
+              <Link href="/watch" className="text-primary underline underline-offset-4">the NG watch blueprint page</Link>. It is not a finished product and none has shipped.
             </figcaption>
           </figure>
 
