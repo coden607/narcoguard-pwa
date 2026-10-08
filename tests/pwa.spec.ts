@@ -466,6 +466,8 @@ test.describe("PWA production flow", () => {
     for (const feature of ["Find Help", "Angel AI", "Emergency steps and training", "Guardian planner", "Hero certification", "Daily Life", "Emergency contacts", "Bluetooth readings", "Optional account", "Install and offline", "In development: NG watch"]) {
       await expect(page.getByRole("heading", { level: 3, name: feature, exact: true }), feature).toBeVisible()
     }
+    await expect(page.getByTestId("intro-hijack")).toContainText("Addiction can hijack this ladder")
+    await expect(page.getByTestId("intro-hijack").getByRole("link", { name: "How addiction can hijack the hierarchy" })).toHaveAttribute("href", "/about#hijack")
     const constitution = page.getByTestId("intro-constitution")
     await expect(constitution).toContainText("not yet ratified")
     await expect(constitution).toContainText("not yet enforceable")
@@ -533,6 +535,11 @@ test.describe("PWA production flow", () => {
     await expect(levels.getByRole("heading", { level: 3 }).first()).toContainText("Body and basic needs")
     await expect(page.getByText("not a ranking of people", { exact: false })).toBeVisible()
     await expect(page.getByText("cannot guarantee that a need will be met", { exact: false })).toBeVisible()
+    const hijack = page.getByTestId("addiction-hijack")
+    await expect(hijack.getByRole("heading", { name: "How addiction can hijack the hierarchy" })).toBeVisible()
+    await expect(hijack).toContainText("alongside treatment and recovery support rather than")
+    await expect(hijack).toContainText("no app can promise recovery")
+    await expect(hijack.getByRole("link", { name: "1-800-662-4357" })).toHaveAttribute("href", "tel:18006624357")
     await levels.getByRole("link", { name: "Find Help: search your needs nearby" }).click()
     await expect(page).toHaveURL(/\/help$/)
   })
@@ -675,6 +682,19 @@ test.describe("PWA production flow", () => {
     await expect(page.getByTestId("donate-fallback")).toBeVisible()
     await expect(page.getByRole("link", { name: "Donate on GoFundMe" })).toHaveAttribute("href", /gofund\.me/)
     await expect(page.locator("#donation-policy")).toContainText("not tax-deductible")
+  })
+
+  test("the support page shows the watch renders large and explains what auto-injection funding pays for", async ({ page }) => {
+    await page.goto("/fund")
+    const showcase = page.getByTestId("watch-showcase")
+    await expect(showcase.getByRole("img")).toHaveCount(2)
+    for (const img of await showcase.getByRole("img").all()) expect((await img.boundingBox())?.height ?? 0).toBeGreaterThan(300)
+    await expect(showcase).toContainText("none has shipped")
+    const funding = page.getByTestId("auto-injection-funding")
+    await expect(funding.getByRole("heading", { name: "Why we are raising money for auto-injection research" })).toBeVisible()
+    await expect(funding).toContainText("None of that exists yet")
+    await expect(funding).toContainText("it does not deliver naloxone")
+    for (const step of ["1. Sensing research", "2. Delivery engineering", "3. Independent review", "4. FDA pathway"]) await expect(funding.getByRole("heading", { name: step })).toBeVisible()
   })
 
   test("in test mode a chosen amount opens Stripe checkout", async ({ page }) => {

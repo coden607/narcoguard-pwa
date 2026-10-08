@@ -22,6 +22,12 @@ NarcoGuard is a free app from Binghamton, NY that helps people find food, shelte
 
 My name is Stephen Blanford. I'm in recovery, and I have lost too many friends to overdose here in Binghamton. I remember the fear of using alone. NarcoGuard is my answer: help that is there when someone needs it, without judgment, and that starts with whatever the person needs today.
 
+### How addiction hijacks the ladder
+
+Psychologist Abraham Maslow described human needs as a ladder: food, sleep and shelter first, then safety, connection, self-respect and the goals that matter to you. Addiction can turn that ladder upside down. The National Institute on Drug Abuse explains that drugs over-activate the brain's reward circuit, and with repeated use it becomes hard to feel pleasure from anything besides the drug (https://nida.nih.gov/publications/drugs-brains-behavior-science-addiction/drugs-brain). Money for meals goes to using, sleep and safety slip, housing, family and work fall away, and every lost step makes recovery harder to start.
+
+NarcoGuard is built to help rebuild that ladder from the bottom, alongside treatment, not instead of it. It can't cure addiction or promise recovery, but meeting basic needs removes obstacles that stand in the way. For treatment referrals, SAMHSA's National Helpline is free, confidential and open 24/7: 1-800-662-4357.
+
 ### What already works, free, today
 
 Open https://www.narcoguard.app on any phone. No account is needed, and nothing here replaces 911.
@@ -39,12 +45,14 @@ The app is built around Maslow's hierarchy of needs. It is hard to work on recov
 
 **The NarcoGuard NG watch** is a wearable concept, and no watch has shipped. Its full parts list and engineering drawings are public at https://www.narcoguard.app/watch. The current parts estimate is **$325.40 in components**, or about **$450 per finished prototype** once assembly, quality and compliance testing, packaging and a naloxone refill are added.
 
-The watch is **not a medical device** and does not detect or treat overdose today. Getting there honestly takes:
+**Why auto-injection.** Naloxone can reverse an opioid overdose, but only if someone is there to give it, and many people use alone. We want to research whether a wearable could one day recognize signs consistent with an opioid overdose, warn the wearer, and, if they don't respond, deliver a dose of naloxone automatically while help is called.
 
-1. **Prototype builds and bench testing** of sensors, battery and the enclosure.
-2. **Independent expert review** of the design and safety.
-3. **A documented validation plan** before any person wears one in real life.
-4. **The regulatory path** a device like this requires before it could be offered to anyone.
+The watch is **not a medical device**. It does not detect overdoses or deliver naloxone today, and it must not be relied on. Getting there honestly takes:
+
+1. **Sensing research:** bench prototypes to test which signals (breathing, heart rate, blood oxygen) can be measured reliably on a wrist, and where they fail.
+2. **Delivery engineering:** the auto-injection mechanism and naloxone cartridge, with safeguards against accidental triggers, a way for the wearer to cancel, and checks that the dose was delivered.
+3. **Independent review:** safety, clinical and human-factors review, and testing with people who use drugs and recovery communities before anyone wears it.
+4. **The FDA pathway:** a device that delivers a drug is regulated as a combination product and needs FDA review and marketing authorization before it can be offered to anyone; the exact pathway (for example NDA, PMA, De Novo or 510(k)) is still to be determined (https://www.fda.gov/combination-products/about-combination-products).
 
 The app also has features that are **built but switched off** until they pass a separate safety and privacy review. One is a way for certified Heroes nearby to see that someone asked for help after 911 was called. We will not turn anything like that on until it is reviewed.
 
