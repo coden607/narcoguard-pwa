@@ -464,7 +464,7 @@ test.describe("PWA production flow", () => {
     await expect(page.getByRole("heading", { name: "What works today" })).toBeVisible()
     await expect(page.getByText("It does not monitor, detect or treat overdose")).toBeVisible()
     await expect(page.getByTestId("intro-hijack")).toContainText("Addiction can hijack this ladder")
-    await expect(page.getByTestId("intro-hijack").getByRole("link", { name: "Read more" })).toHaveAttribute("href", "/about#hijack")
+    await expect(page.getByTestId("intro-hijack").getByRole("link", { name: "How addiction can hijack the hierarchy" })).toHaveAttribute("href", "/about#hijack")
     const constitution = page.getByTestId("intro-constitution")
     await expect(constitution).toContainText("not yet ratified")
     await expect(constitution).toContainText("not yet enforceable")

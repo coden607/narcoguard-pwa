@@ -52,7 +52,7 @@ The watch is **not a medical device**. It does not detect overdoses or deliver n
 1. **Sensing research:** bench prototypes to test which signals (breathing, heart rate, blood oxygen) can be measured reliably on a wrist, and where they fail.
 2. **Delivery engineering:** the auto-injection mechanism and naloxone cartridge, with safeguards against accidental triggers, a way for the wearer to cancel, and checks that the dose was delivered.
 3. **Independent review:** safety, clinical and human-factors review, and testing with people who use drugs and recovery communities before anyone wears it.
-4. **The FDA pathway:** a device that delivers a drug is regulated as a combination product and needs FDA review before it can be offered to anyone (https://www.fda.gov/combination-products/about-combination-products).
+4. **The FDA pathway:** a device that delivers a drug is regulated as a combination product and needs FDA review and marketing authorization before it can be offered to anyone; the exact pathway (for example NDA, PMA, De Novo or 510(k)) is still to be determined (https://www.fda.gov/combination-products/about-combination-products).
 
 The app also has features that are **built but switched off** until they pass a separate safety and privacy review. One is a way for certified Heroes nearby to see that someone asked for help after 911 was called. We will not turn anything like that on until it is reviewed.
 

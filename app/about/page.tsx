@@ -34,7 +34,7 @@ export default function AboutPage() {
           </section>
 
           <section className="space-y-3" aria-labelledby="hijack" data-testid="addiction-hijack">
-            <h2 id="hijack" className="text-2xl font-semibold text-foreground">How addiction can hijack the hierarchy</h2>
+            <h2 id="hijack" className="scroll-mt-24 text-2xl font-semibold text-foreground">How addiction can hijack the hierarchy</h2>
             <p>
               Addiction is a treatable medical condition, not a character flaw. The National Institute on Drug Abuse explains that drugs
               over-activate the brain&apos;s reward circuit, and that with repeated use the circuit adapts, making it hard to feel

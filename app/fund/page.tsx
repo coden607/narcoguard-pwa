@@ -170,7 +170,7 @@ export default function FundPage() {
               { title: "1. Sensing research", body: "Bench prototypes to test which signals, such as breathing, heart rate and blood oxygen, can be measured reliably on a wrist, and where they fail." },
               { title: "2. Delivery engineering", body: "Designing the auto-injection mechanism and naloxone cartridge, with safeguards against accidental triggers, a way for the wearer to cancel, and checks that the dose was delivered." },
               { title: "3. Independent review", body: "Safety, clinical and human-factors review by experts, and testing with people who use drugs and recovery communities before anyone wears it." },
-              { title: "4. FDA pathway", body: "A device that delivers a drug is regulated by the FDA as a combination product. It needs FDA review and clearance before it can be offered to anyone." },
+              { title: "4. FDA pathway", body: "A device that delivers a drug is regulated by the FDA as a combination product. It needs FDA review and marketing authorization before it can be offered to anyone; the exact pathway (for example NDA, PMA, De Novo or 510(k)) is still to be determined." },
             ].map((step) => (
               <li key={step.title} className="rounded-xl border border-primary/20 bg-card/50 p-5">
                 <h3 className="font-semibold mb-2">{step.title}</h3>

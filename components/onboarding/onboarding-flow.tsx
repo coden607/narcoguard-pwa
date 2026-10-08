@@ -147,7 +147,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           Addiction can hijack this ladder: the brain&apos;s reward system can make using feel as urgent as food or sleep, and basic
           needs, safety and relationships slip away. NarcoGuard helps rebuild from the bottom, alongside treatment, so recovery has a
           foundation to stand on. It is not a cure and cannot promise recovery.{" "}
-          <Link href="/about#hijack" className="text-primary underline underline-offset-4">Read more</Link>
+          <Link href="/about#hijack" className="text-primary underline underline-offset-4">How addiction can hijack the hierarchy</Link>
         </p>
         <ol className="grid grid-cols-1 sm:grid-cols-5 gap-2">
           {MASLOW_LEVELS.map((level, index) => (
