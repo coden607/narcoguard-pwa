@@ -49,6 +49,12 @@ export interface NearbyResource {
   website?: string
   /** Opening hours as listed by the source; may be out of date. */
   hours?: string
+  /** When the map listing was last edited (ISO date), when the source provides it. */
+  lastUpdated?: string
+  /** Wheelchair access as tagged on the map listing, when present. */
+  wheelchair?: "yes" | "limited" | "no"
+  /** Compact summary of the services a provider lists (treatment types and payment help). */
+  services?: string
   distanceMiles?: number
   lat?: number
   lon?: number
@@ -128,7 +134,7 @@ function osmSelectors(kind: OsmKind, lat: number, lon: number, radius = OSM_KIND
 }
 
 export function overpassQuery(kind: OsmKind, lat: number, lon: number, radius?: number): string {
-  return `[out:json][timeout:20];(${osmSelectors(kind, lat, lon, radius)});out center tags;`
+  return `[out:json][timeout:20];(${osmSelectors(kind, lat, lon, radius)});out center meta;`
 }
 
 /**
@@ -142,7 +148,7 @@ export const OSM_QUERY_GROUPS: readonly (readonly OsmKind[])[] = [
 ]
 
 export function overpassNeedsQuery(lat: number, lon: number, kinds: readonly OsmKind[] = OSM_KIND_ORDER, radius?: number): string {
-  return `[out:json][timeout:20][maxsize:67108864];(${kinds.map((kind) => osmSelectors(kind, lat, lon, radius)).join("")});out center tags;`
+  return `[out:json][timeout:20][maxsize:67108864];(${kinds.map((kind) => osmSelectors(kind, lat, lon, radius)).join("")});out center meta;`
 }
 
 /** Sparse services searched again, wider, when nothing is found within the normal radius. */
@@ -180,7 +186,14 @@ const httpUrl = (value: unknown) => {
   }
 }
 
-interface OverpassElement { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }
+interface OverpassElement {
+  lat?: number
+  lon?: number
+  center?: { lat: number; lon: number }
+  tags?: Record<string, string>
+  /** Overpass "out meta" edit timestamp, an ISO datetime such as 2024-05-17T08:30:00Z. */
+  timestamp?: string
+}
 
 function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: number; lon: number }): NearbyResource | undefined {
   const tags = element.tags ?? {}
@@ -198,6 +211,9 @@ function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: numb
     phone: str(tags.phone ?? tags["contact:phone"], 40),
     website: httpUrl(tags.website ?? tags["contact:website"]),
     hours: str(tags.opening_hours, 80),
+    // Keep the raw hours string for backward compatibility; any display formatting happens downstream.
+    ...(element.timestamp ? { lastUpdated: element.timestamp.slice(0, 10) } : {}),
+    ...(tags.wheelchair === "yes" || tags.wheelchair === "limited" || tags.wheelchair === "no" ? { wheelchair: tags.wheelchair } : {}),
     lat,
     lon,
     distanceMiles: haversineMiles(origin.lat, origin.lon, lat, lon),
@@ -247,6 +263,31 @@ export function findTreatmentUrl(lat: number, lon: number, radius = SEARCH_RADIU
   return `https://findtreatment.gov/locator/exportsAsJson/v2?${params}`
 }
 
+/**
+ * Compact services line from a FindTreatment row's services array. Entries pair a category (f1)
+ * with a semicolon-delimited value list (f3); only "Type of Care" and payment-related categories
+ * are used, joined in that order. The payload has no hours field, so none is invented here.
+ */
+const SERVICES_CAP = 160
+function findTreatmentServices(row: Record<string, unknown>): string | undefined {
+  const listed = row.services
+  if (!Array.isArray(listed) || listed.length === 0) return undefined
+  const valuesFor = (wanted: (category: string) => boolean) => listed.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return []
+    const { f1, f3 } = entry as { f1?: unknown; f3?: unknown }
+    if (typeof f1 !== "string" || typeof f3 !== "string" || !wanted(f1)) return []
+    return f3.split(";").map((value) => value.trim()).filter(Boolean)
+  })
+  const parts = [...new Set([...valuesFor((category) => category === "Type of Care"), ...valuesFor((category) => category.includes("Payment"))])]
+  let summary = ""
+  for (const part of parts) {
+    const next = summary ? `${summary}; ${part}` : part
+    if (next.length > SERVICES_CAP) break
+    summary = next
+  }
+  return summary || undefined
+}
+
 export function parseFindTreatment(body: unknown): NearbyResource[] {
   const rows = (body as { rows?: Record<string, unknown>[] } | null)?.rows
   if (!Array.isArray(rows)) return []
@@ -256,12 +297,14 @@ export function parseFindTreatment(body: unknown): NearbyResource[] {
     if (!name) return []
     const street = [str(row.street1), str(row.street2)].filter(Boolean).join(", ")
     const address = [street, str(row.city), str(row.state), str(row.zip)].filter(Boolean).join(", ") || undefined
+    const services = findTreatmentServices(row)
     const resource: NearbyResource = {
       name,
       kind: "treatment",
       address,
       phone: str(row.phone, 40),
       website: httpUrl(row.website),
+      ...(services ? { services } : {}),
       lat: num(row.latitude),
       lon: num(row.longitude),
       distanceMiles: num(row.miles) !== undefined ? Math.round((num(row.miles) as number) * 10) / 10 : undefined,

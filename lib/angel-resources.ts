@@ -53,6 +53,15 @@ export function resourcesForModel(resources: AngelResources) {
 
 const miles = (value: number | undefined) => value === undefined ? "" : `, ${value < 0.1 ? "under a tenth of a mile" : `${value} mile${value === 1 ? "" : "s"}`} away`
 
+const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"] as const
+
+/** "2024-05-17" -> "May 2024", parsed from the string itself so the wording never depends on the server timezone. */
+function mapMonthYear(isoDate: string): string {
+  const [year, month] = isoDate.split("-")
+  const index = Number(month) - 1
+  return /^\d{4}$/.test(year ?? "") && index >= 0 && index < MONTHS.length ? `${MONTHS[index]} ${year}` : isoDate
+}
+
 /** A short spoken line per need: the nearest listing, or that none was found. Read after Angel's reply. */
 export function spokenResourceSummary(resources: AngelResources | undefined): string {
   if (!resources) return ""
@@ -60,7 +69,11 @@ export function spokenResourceSummary(resources: AngelResources | undefined): st
     const first = group.results[0]
     const need = group.shortLabel.toLowerCase()
     if (!first) return group.status === "ok" ? `No listing for ${need} was found nearby; directory links are on screen.` : `The ${need} search is not available right now; directory links are on screen.`
-    return `For ${need}: ${first.name}${miles(first.distanceMiles)}${group.widenedMiles ? ", farther away than usual" : ""}.`
+    const extras = [
+      first.wheelchair === "yes" ? "wheelchair accessible per map data" : undefined,
+      first.lastUpdated ? `map data from ${mapMonthYear(first.lastUpdated)}` : undefined,
+    ].filter((part): part is string => part !== undefined)
+    return `For ${need}: ${first.name}${miles(first.distanceMiles)}${group.widenedMiles ? ", farther away than usual" : ""}${extras.length ? `, ${extras.join(", ")}` : ""}.`
   })
   return lines.length ? `${lines.join(" ")} Call first to confirm.` : ""
 }
