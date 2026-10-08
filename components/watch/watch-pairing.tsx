@@ -1,75 +1,75 @@
 "use client"
 
-import { useState } from "react"
-import { HolographicCard } from "@/components/effects/holographic-card"
-import { GlowButton } from "@/components/effects/glow-button"
-import { Watch, Bluetooth, CheckCircle, Loader2 } from "lucide-react"
+import { useEffect, useState, useSyncExternalStore } from "react"
+import Link from "next/link"
+import { Bluetooth } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { postJson } from "@/lib/hooks/use-contact-alert"
+import { type PairStep, connectWatch, hasWebBluetooth, pairAndUnlock } from "@/lib/watch-ble"
 
+const STEP_LABELS: Record<PairStep, string> = {
+  reading: "Reading the watch…",
+  registering: "Registering the watch to your account…",
+  unlocking: "Unlocking for you…",
+  done: "Done.",
+}
+
+const noSubscription = () => () => undefined
+
+// Real pairing over Web Bluetooth with the NG owner-lock service. No NG watch has shipped yet, so
+// the chooser will not find one today; nothing here pretends a watch is connected.
 export function WatchPairing() {
-  const [isPairing, setIsPairing] = useState(false)
-  const [isPaired, setIsPaired] = useState(false)
+  const supported = useSyncExternalStore(noSubscription, hasWebBluetooth, () => false)
+  const [available, setAvailable] = useState<boolean | null>(null)
+  const [busy, setBusy] = useState(false)
+  const [step, setStep] = useState<PairStep>()
+  const [message, setMessage] = useState<string>()
 
-  const startPairing = () => {
-    setIsPairing(true)
-    setTimeout(() => {
-      setIsPairing(false)
-      setIsPaired(true)
-    }, 3000)
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/watch", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((body: { available?: boolean }) => { if (!cancelled) setAvailable(Boolean(body.available)) })
+      .catch(() => { if (!cancelled) setAvailable(false) })
+    return () => { cancelled = true }
+  }, [])
+
+  const pair = async () => {
+    setBusy(true)
+    setMessage(undefined)
+    setStep(undefined)
+    let link: Awaited<ReturnType<typeof connectWatch>> | undefined
+    try {
+      link = await connectWatch()
+      const result = await pairAndUnlock(link, { post: postJson }, setStep)
+      setMessage(result.ok
+        ? `${result.watch.serial} is ${result.registered ? "registered to you and " : ""}unlocked.`
+        : `${result.error}${result.watch ? ` (${result.watch.serial})` : ""} The watch's SOS and overdose steps still work.`)
+    } catch (error) {
+      const name = error instanceof Error ? error.name : ""
+      setMessage(name === "NotFoundError" ? "No NarcoGuard watch was chosen." : error instanceof Error ? error.message : "Pairing failed.")
+    } finally {
+      link?.disconnect()
+      setBusy(false)
+    }
   }
 
   return (
-    <HolographicCard className="p-8 text-center" glowIntensity="high">
-      <div className="space-y-6">
-        {!isPaired && !isPairing && (
-          <>
-            <div className="relative inline-block">
-              <Watch className="w-24 h-24 text-primary pulse-glow float-animation" />
-              <div className="absolute inset-0 blur-2xl bg-primary/50 animate-pulse" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold glow-text font-orbitron">PAIR NG WATCH</h2>
-              <p className="text-muted-foreground mt-2">
-                Connect your NG smartwatch to enable vital monitoring and emergency features
-              </p>
-            </div>
-            <GlowButton onClick={startPairing} className="w-full" size="lg">
-              <Bluetooth className="w-5 h-5 mr-2" />
-              Start Pairing
-            </GlowButton>
-          </>
-        )}
-
-        {isPairing && (
-          <>
-            <div className="relative inline-block">
-              <Loader2 className="w-24 h-24 text-primary pulse-glow animate-spin" />
-              <div className="absolute inset-0 blur-2xl bg-primary/50 animate-pulse" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold glow-text font-orbitron">SEARCHING...</h2>
-              <p className="text-muted-foreground mt-2">Looking for nearby NG devices</p>
-            </div>
-          </>
-        )}
-
-        {isPaired && (
-          <>
-            <div className="relative inline-block">
-              <CheckCircle className="w-24 h-24 text-green-500 pulse-glow" />
-              <div className="absolute inset-0 blur-2xl bg-green-500/50 animate-pulse" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold text-green-500 glow-text font-orbitron">
-                PAIRED SUCCESSFULLY
-              </h2>
-              <p className="text-muted-foreground mt-2">Your NG watch is now connected and monitoring your vitals</p>
-            </div>
-            <GlowButton variant="success" className="w-full" size="lg">
-              Continue to Dashboard
-            </GlowButton>
-          </>
-        )}
-      </div>
-    </HolographicCard>
+    <section className="rounded-xl border p-4 space-y-3" aria-labelledby="pair-heading" data-testid="watch-pairing">
+      <h3 id="pair-heading" className="flex items-center gap-2 font-semibold"><Bluetooth className="h-4 w-4" aria-hidden="true" />Pair and unlock your watch</h3>
+      <p className="text-sm text-muted-foreground">
+        Connects over Bluetooth, registers a new watch to your account, then sends it a 5-minute unlock proof. No NG watch has shipped yet,
+        so the device chooser will not find one today.
+      </p>
+      {!supported ? (
+        <p className="text-sm" role="status">This browser cannot use Bluetooth. Use Chrome or Edge on Android, Windows, macOS or ChromeOS.</p>
+      ) : available === false ? (
+        <p className="text-sm" role="status">Watch registration is not switched on yet. <Link href="/account" className="underline text-primary">Your account</Link> will hold the registration once it is.</p>
+      ) : (
+        <Button type="button" onClick={pair} disabled={busy || available === null}>{busy ? "Pairing…" : "Find my watch"}</Button>
+      )}
+      {busy && step && <p className="text-sm" role="status">{STEP_LABELS[step]}</p>}
+      {message && <p className="text-sm" role="status">{message}</p>}
+    </section>
   )
 }

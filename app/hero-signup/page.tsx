@@ -1,211 +1,129 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import { useEffect, useState, useSyncExternalStore } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
-import { Shield, Heart, Award, BookOpen, CheckCircle } from "lucide-react"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
-import { useRouter } from "next/navigation"
+import { Award, BookOpen, Heart, Shield } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { CertificationTest, HERO_CERTIFICATE_KEY } from "@/components/hero/certification-test"
+
+type Status = { enrollment: boolean; certification: boolean; nearbyRequests: boolean }
+
+const noSubscription = () => () => undefined
+const storedCertificate = () => {
+  try {
+    return localStorage.getItem(HERO_CERTIFICATE_KEY)
+  } catch {
+    return null
+  }
+}
 
 export default function HeroSignup() {
   const router = useRouter()
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    experience: "",
-    certifiedCPR: false,
-    certifiedNaloxone: false,
-    agreedToTerms: false,
-  })
-  const [submitted, setSubmitted] = useState(false)
+  const saved = useSyncExternalStore(noSubscription, storedCertificate, () => null)
+  const [fresh, setFresh] = useState<string | null>(null)
+  const certificate = fresh ?? saved
+  const [status, setStatus] = useState<Status | null>(null)
+  const [note, setNote] = useState<string>()
+  const [busy, setBusy] = useState(false)
+  const [naloxoneOnCall, setNaloxoneOnCall] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Save hero signup data
-    const heroes = JSON.parse(localStorage.getItem("narcoguard_heroes") || "[]")
-    heroes.push({
-      ...formData,
-      id: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-    })
-    localStorage.setItem("narcoguard_heroes", JSON.stringify(heroes))
-    setSubmitted(true)
-  }
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/heroes", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((body: Status) => { if (!cancelled) setStatus(body) })
+      .catch(() => { if (!cancelled) setStatus({ enrollment: false, certification: false, nearbyRequests: false }) })
+    return () => { cancelled = true }
+  }, [])
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-background px-4 py-10 sm:p-6 flex items-center justify-center">
-        <HolographicCard className="p-8 max-w-2xl text-center space-y-6">
-          <CheckCircle className="w-24 h-24 mx-auto text-green-500 animate-pulse" />
-          <h1 className="text-4xl font-bold glow-text">Welcome to the Hero Network!</h1>
-          <p className="text-lg text-muted-foreground">
-            Thank you for joining our movement to save lives. Complete your training to start responding to emergencies.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <GlowButton onClick={() => router.push("/ar")} variant="default">
-              Start Training
-            </GlowButton>
-            <GlowButton onClick={() => router.push("/")} variant="outline">
-              Go to Dashboard
-            </GlowButton>
-          </div>
-        </HolographicCard>
-      </div>
-    )
+  const enroll = async () => {
+    setBusy(true)
+    setNote(undefined)
+    try {
+      const response = await fetch("/api/heroes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ certificate, naloxoneOnCall }) })
+      const body = (await response.json()) as { enrolled?: boolean; error?: string }
+      if (response.status === 401) setNote("Sign in first, then come back to enroll.")
+      else setNote(body.enrolled ? "You are enrolled in the Hero Network." : (body.error ?? "Enrollment failed."))
+    } catch {
+      setNote("Could not reach NarcoGuard. Check your connection.")
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-4">
-          <Shield className="w-20 h-20 mx-auto text-primary pulse-glow" />
+          <Shield className="w-20 h-20 mx-auto text-primary pulse-glow" aria-hidden="true" />
           <h1 className="text-4xl font-bold glow-text">Become a Hero</h1>
-          <p className="text-lg text-muted-foreground">Join the network of trained responders saving lives</p>
+          <p className="text-lg text-muted-foreground">Volunteers who know what to do in an overdose. Every Hero passes the test below with a perfect score.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
           <HolographicCard className="p-6 text-center">
-            <Heart className="w-12 h-12 mx-auto mb-4 text-red-500" />
-            <h3 className="font-bold mb-2">Save Lives</h3>
-            <p className="text-sm text-muted-foreground">Be the difference between life and death</p>
+            <Heart className="w-12 h-12 mx-auto mb-4 text-red-500" aria-hidden="true" />
+            <h2 className="font-bold mb-2">1. Learn the steps</h2>
+            <p className="text-sm text-muted-foreground">Recognize an overdose, give naloxone, support breathing, stay safe.</p>
           </HolographicCard>
           <HolographicCard className="p-6 text-center">
-            <Award className="w-12 h-12 mx-auto mb-4 text-yellow-500" />
-            <h3 className="font-bold mb-2">Get Certified</h3>
-            <p className="text-sm text-muted-foreground">Free CPR and naloxone training</p>
+            <Award className="w-12 h-12 mx-auto mb-4 text-yellow-500" aria-hidden="true" />
+            <h2 className="font-bold mb-2">2. Pass at 100%</h2>
+            <p className="text-sm text-muted-foreground">A random 12-question test in lockdown mode. Every answer must be right.</p>
           </HolographicCard>
           <HolographicCard className="p-6 text-center">
-            <Shield className="w-12 h-12 mx-auto mb-4 text-blue-500" />
-            <h3 className="font-bold mb-2">Protected</h3>
-            <p className="text-sm text-muted-foreground">Good Samaritan law coverage</p>
+            <Shield className="w-12 h-12 mx-auto mb-4 text-blue-500" aria-hidden="true" />
+            <h2 className="font-bold mb-2">3. Enroll</h2>
+            <p className="text-sm text-muted-foreground">Link your certificate to your account. Valid for one year.</p>
           </HolographicCard>
         </div>
 
-        <HolographicCard className="p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="name">Full Name *</Label>
-                <Input
-                  id="name"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  required
-                  className="glass neon-border mt-2"
-                />
-              </div>
+        <HolographicCard className="p-6 sm:p-8">
+          <CertificationTest onCertified={setFresh} />
+        </HolographicCard>
 
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    required
-                    className="glass neon-border mt-2"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone Number *</Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    required
-                    className="glass neon-border mt-2"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label htmlFor="experience">Experience (optional)</Label>
-                <Textarea
-                  id="experience"
-                  value={formData.experience}
-                  onChange={(e) => setFormData({ ...formData, experience: e.target.value })}
-                  placeholder="Any medical, first aid, or emergency response experience?"
-                  className="glass neon-border mt-2"
-                  rows={4}
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h3 className="text-xl font-bold">Current Certifications</h3>
-              <div className="space-y-3">
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="certifiedCPR"
-                    checked={formData.certifiedCPR}
-                    onCheckedChange={(checked) => setFormData({ ...formData, certifiedCPR: checked as boolean })}
-                  />
-                  <Label htmlFor="certifiedCPR" className="cursor-pointer">
-                    I am certified in CPR
-                  </Label>
-                </div>
-                <div className="flex items-center space-x-3">
-                  <Checkbox
-                    id="certifiedNaloxone"
-                    checked={formData.certifiedNaloxone}
-                    onCheckedChange={(checked) => setFormData({ ...formData, certifiedNaloxone: checked as boolean })}
-                  />
-                  <Label htmlFor="certifiedNaloxone" className="cursor-pointer">
-                    I am trained in naloxone administration
-                  </Label>
-                </div>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Don't have certifications yet? No problem! We'll provide free training.
-              </p>
-            </div>
-
-            <div className="p-4 bg-primary/10 rounded-lg border border-primary/20">
-              <div className="flex items-start space-x-3">
-                <Checkbox
-                  id="agreedToTerms"
-                  checked={formData.agreedToTerms}
-                  onCheckedChange={(checked) => setFormData({ ...formData, agreedToTerms: checked as boolean })}
-                  required
-                />
-                <Label htmlFor="agreedToTerms" className="cursor-pointer text-sm">
-                  I agree to respond to emergencies in my area, follow proper protocols, and act within Good Samaritan
-                  law protections. I understand I will receive training before being activated in the Hero Network.
-                </Label>
-              </div>
-            </div>
-
-            <GlowButton type="submit" className="w-full" size="lg" disabled={!formData.agreedToTerms}>
-              Join the Hero Network
-            </GlowButton>
-          </form>
+        <HolographicCard className="p-6 sm:p-8">
+          <section className="space-y-3" data-testid="hero-enroll">
+            <h2 className="text-xl font-bold">Enroll as a Hero</h2>
+            {!certificate ? (
+              <p className="text-sm text-muted-foreground">Pass the test first. Enrollment needs a certificate from a perfect score.</p>
+            ) : status && !status.enrollment ? (
+              <p className="text-sm text-muted-foreground">You have a certificate on this device. Enrollment is not switched on yet; it will use your certificate once it is.</p>
+            ) : (
+              <>
+                <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+                  <input type="checkbox" checked={naloxoneOnCall} onChange={(event) => setNaloxoneOnCall(event.target.checked)} />
+                  <span>I confirm that whenever I choose to be available/on call as a Hero, I will carry naloxone that I know how to use and will pause availability if I do not have it. This is a self-attestation, not NarcoGuard verification.</span>
+                </label>
+                <Button type="button" onClick={enroll} disabled={busy || !status || !naloxoneOnCall}>{busy ? "Enrolling…" : "Enroll with my certificate"}</Button>
+              </>
+            )}
+            {note && <p className="text-sm" role="status">{note} {note.startsWith("Sign in") && <Link href="/auth" className="underline text-primary">Sign in</Link>}</p>}
+            <p className="text-sm text-muted-foreground">
+              Nearby help requests are not live. Before they can be, they need a separate safety and privacy review, your explicit opt-in, a per-session naloxone-readiness check, and a way to pause or leave at any time.
+              Heroes never replace 911.
+            </p>
+          </section>
         </HolographicCard>
 
         <HolographicCard className="p-6">
-          <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-            <BookOpen className="w-6 h-6" />
-            Required Training
-          </h3>
-          <div className="space-y-3 text-sm">
-            <p>All Heroes must complete:</p>
-            <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-              <li>CPR Certification (hands-only and full CPR)</li>
-              <li>Naloxone Administration Training</li>
-              <li>Overdose Recognition Training</li>
-              <li>VR Simulation Scenarios (optional but recommended)</li>
-            </ul>
-            <GlowButton onClick={() => router.push("/ar")} variant="outline" className="w-full mt-4">
-              Preview Training Modules
-            </GlowButton>
-          </div>
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <BookOpen className="w-6 h-6" aria-hidden="true" />
+            Study before the test
+          </h2>
+          <ul className="list-disc pl-6 space-y-2 text-sm text-muted-foreground">
+            <li>Signs of an opioid overdose and how to check breathing</li>
+            <li>Giving nasal naloxone, and when to give a second dose</li>
+            <li>Rescue breaths, CPR and the recovery position</li>
+            <li>Your safety, the person&apos;s privacy, and what happens after naloxone</li>
+          </ul>
+          <p className="mt-3 text-sm text-muted-foreground">Hands-on CPR and naloxone classes from a local health department or the Red Cross are strongly recommended.</p>
+          <GlowButton onClick={() => router.push("/ar")} variant="outline" className="w-full mt-4">
+            Preview Training Modules
+          </GlowButton>
         </HolographicCard>
       </div>
     </div>

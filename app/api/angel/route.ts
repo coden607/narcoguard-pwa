@@ -4,12 +4,17 @@ import {
   buildChatMessages,
   FIND_RESOURCES_TOOL,
   findResourcesArgsSchema,
+  MAX_KINDS_PER_SEARCH,
   safetyNotices,
 } from "@/lib/angel-ai"
-import { resolveAngelProvider, type AngelProvider } from "@/lib/angel-provider"
-import { lookupResources, type ResourceLookup } from "@/lib/resource-lookup"
+import { resourcesForModel, toAngelResources, type AngelResources } from "@/lib/angel-resources"
+import { orderByMaslow } from "@/lib/need-intent"
+import { modelAttempts, resolveAngelProvider, shouldTryFallback, type AngelModelChoice, type AngelProvider } from "@/lib/angel-provider"
+import { routeAngelTurn } from "@/lib/angel-routing"
+import { lookupKinds } from "@/lib/resource-lookup"
 
 // Conversations are relayed to the AI provider to generate a reply and are not stored or logged by NarcoGuard.
+// A shared location is used only to search public directories; it is never sent to the AI provider or logged.
 // Upstream directories and the AI provider can be slow; allow time for one fallback attempt.
 export const maxDuration = 60
 
@@ -34,16 +39,16 @@ class ProviderError extends Error {
   constructor(readonly status: number, readonly detail = "") { super(`provider ${status}`) }
 }
 
-async function complete(provider: AngelProvider, messages: ChatMessage[], withTools: boolean, maxTokens = 1024) {
+async function complete(provider: AngelProvider, choice: AngelModelChoice, messages: ChatMessage[], withTools: boolean, maxTokens = 1024, temperature = 0.4) {
   const response = await fetch(provider.url, {
     method: "POST",
     headers: { Authorization: `Bearer ${provider.token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
-      model: provider.model,
+      model: choice.model,
       messages,
-      temperature: 0.4,
+      temperature,
       max_completion_tokens: maxTokens,
-      ...provider.extraBody,
+      ...choice.extraBody,
       ...(withTools ? { tools: [FIND_RESOURCES_TOOL], tool_choice: "auto" } : {}),
     }),
     signal: AbortSignal.timeout(25_000),
@@ -56,6 +61,20 @@ async function complete(provider: AngelProvider, messages: ChatMessage[], withTo
   return message
 }
 
+/** Tries each model choice in order; a refusal of the first (no access, unsupported) falls back to the next. */
+async function completeWithFallback(provider: AngelProvider, choices: AngelModelChoice[], messages: ChatMessage[], withTools: boolean, maxTokens?: number, temperature?: number) {
+  for (const [index, choice] of choices.entries()) {
+    try {
+      return { message: await complete(provider, choice, messages, withTools, maxTokens, temperature), choice }
+    } catch (error) {
+      const last = index === choices.length - 1
+      if (last || !(error instanceof ProviderError && shouldTryFallback(error.status))) throw error
+      console.warn(`[angel] ${provider.name} refused ${choice.model} (${error.status}); using the fallback model`)
+    }
+  }
+  throw new ProviderError(0)
+}
+
 const providerFor = (request: Request) => resolveAngelProvider(process.env, request.headers.get("x-vercel-oidc-token"))
 
 export async function GET(request: Request) {
@@ -64,8 +83,8 @@ export async function GET(request: Request) {
   if (new URL(request.url).searchParams.has("probe") && process.env.VERCEL_ENV !== "production") {
     if (!provider) return NextResponse.json({ ok: false, provider: null }, { headers: noStore })
     try {
-      const reply = await complete(provider, [{ role: "system", content: "Reply with the single word OK." }, { role: "user", content: "ping" }], false, 64)
-      return NextResponse.json({ ok: true, provider: provider.name, model: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
+      const { message: reply, choice } = await completeWithFallback(provider, modelAttempts(provider, "quick"), [{ role: "system", content: "Reply with the single word OK." }, { role: "user", content: "ping" }], false, 64)
+      return NextResponse.json({ ok: true, provider: provider.name, model: choice.model, configuredModel: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
     } catch (error) {
       return NextResponse.json({ ok: false, provider: provider.name, status: error instanceof ProviderError ? error.status : "network", detail: error instanceof ProviderError ? error.detail : undefined }, { headers: noStore })
     }
@@ -74,6 +93,7 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const startedAt = Date.now()
   const provider = providerFor(request)
   if (!provider) return NextResponse.json({ available: false, message: "Angel AI is not configured yet." }, { status: 503, headers: noStore })
 
@@ -86,26 +106,39 @@ export async function POST(request: Request) {
   const latest = parsed.data.messages.at(-1)
   const notices = latest?.role === "user" ? safetyNotices(latest.content) : []
   const messages: ChatMessage[] = buildChatMessages(parsed.data)
+  const route = routeAngelTurn(latest?.content ?? "")
 
   try {
-    let reply = await complete(provider, messages, true)
-    let resources: (ResourceLookup & { kind: string }) | undefined
-    const call = reply.tool_calls?.find((c) => c.function?.name === "find_resources")
-    if (call) {
-      let args: unknown = null
-      try { args = JSON.parse(call.function.arguments) } catch { /* invalid arguments are reported to the model below */ }
-      const valid = findResourcesArgsSchema.safeParse(args)
-      const result = valid.success ? { kind: valid.data.kind, ...(await lookupResources(valid.data.kind, { zip: valid.data.zip })) } : undefined
-      resources = result
-      messages.push({ role: "assistant", content: reply.content ?? null, tool_calls: [call] })
-      messages.push({
-        role: "tool",
-        tool_call_id: call.id,
-        content: JSON.stringify(result
-          ? { status: result.status, results: result.results.map(({ name, address, phone, distanceMiles, source }) => ({ name, address, phone, distanceMiles, source })), fallback: result.fallback }
-          : { error: "A valid kind and 5-digit ZIP code are required." }),
+    // Overdose or crisis messages get the fastest possible reply: no directory searches before the 911/988 notice.
+    const first = await completeWithFallback(provider, modelAttempts(provider, route.task), messages, route.useTools && notices.length === 0, route.maxTokens, route.temperature)
+    let reply = first.message
+    // The follow-up after a search uses whichever model answered, so a refused model is not tried twice.
+    const used = [first.choice]
+    let resources: AngelResources | undefined
+    // Every find_resources call in the reply is answered; their needs are searched together in one lookup.
+    const calls = (reply.tool_calls ?? []).filter((c) => c.function?.name === "find_resources").slice(0, 3)
+    if (calls.length > 0) {
+      const parsedCalls = calls.map((c) => {
+        let args: unknown = null
+        try { args = JSON.parse(c.function.arguments) } catch { /* invalid arguments are reported to the model below */ }
+        return findResourcesArgsSchema.safeParse(args)
       })
-      reply = await complete(provider, messages, false)
+      const valid = parsedCalls.flatMap((result) => (result.success ? [result.data] : []))
+      const kinds = orderByMaslow(valid.flatMap((args) => args.kinds)).slice(0, MAX_KINDS_PER_SEARCH)
+      const zip = valid.find((args) => args.zip)?.zip ?? parsed.data.zip
+      const origin = zip ? { zip } : parsed.data.location
+      let toolResult: unknown
+      if (kinds.length === 0) toolResult = { error: "Give at least one known kind of place." }
+      else if (!origin) toolResult = { error: "No location yet. Ask for a 5-digit ZIP code, or suggest tapping 'Use my location'." }
+      else {
+        // Leave time for the second completion (25 s timeout) within the 60 s route limit.
+        resources = toAngelResources(await lookupKinds(kinds, origin, startedAt + (maxDuration - 30) * 1000))
+        toolResult = resourcesForModel(resources)
+      }
+      messages.push({ role: "assistant", content: reply.content ?? null, tool_calls: calls })
+      // Every call gets an answer; the combined result is attached to the first so the model sees it once.
+      calls.forEach((c, index) => messages.push({ role: "tool", tool_call_id: c.id, content: JSON.stringify(index === 0 ? toolResult : { note: "Combined with the first search." }) }))
+      reply = (await completeWithFallback(provider, used, messages, false, route.maxTokens, route.temperature)).message
     }
     const text = reply.content?.trim() || "I couldn't put together a reply. Please try asking another way."
     return NextResponse.json({ available: true, notices, reply: text, resources }, { headers: noStore })

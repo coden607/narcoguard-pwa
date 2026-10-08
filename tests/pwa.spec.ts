@@ -65,6 +65,19 @@ test.describe("PWA production flow", () => {
     expect(new Set(samples).size, `transform changed over time: ${samples.join(" | ")}`).toBe(1)
   })
 
+  test("the fundraising goal on the dashboard matches the watch parts estimate", async ({ page }) => {
+    await page.goto("/watch")
+    const estimate = page.getByText("Total planning goal:", { exact: false })
+    const watchGoal = Number((await estimate.innerText()).match(/Total planning goal: \$([\d,.]+)/)![1].replace(/,/g, ""))
+    await page.goto("/")
+    await page.getByRole("button", { name: "Skip Setup (Demo Mode)" }).click()
+    await page.getByRole("button", { name: "Continue to Demo Mode" }).click()
+    const goal = page.getByText(/^Goal: \$/)
+    await expect(goal).toContainText("prototype builds")
+    const dashboardGoal = Number((await goal.innerText()).match(/\$([\d,]+)/)![1].replace(/,/g, ""))
+    expect(Math.round(watchGoal)).toBe(dashboardGoal)
+  })
+
   test("skipping and resuming setup follows saved preferences across reloads", async ({ page }) => {
     await page.goto("/")
     await page.getByRole("button", { name: "Skip Setup (Demo Mode)" }).click()
@@ -78,22 +91,36 @@ test.describe("PWA production flow", () => {
     await expect(page.getByRole("button", { name: "Skip Setup (Demo Mode)" })).toBeVisible()
   })
 
-  test("each opening of the emergency demo starts fresh", async ({ page }) => {
-    // This checks state, not animation: reduced motion makes the dialog close immediately.
+  test("the emergency button offers real actions and texts confirmed contacts only after a preview", async ({ page }) => {
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.addInitScript(() => localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true })))
     await page.goto("/")
     const trigger = page.getByRole("button", { name: /emergency options/i })
-
     await trigger.click()
-    await page.getByRole("button", { name: "Run Emergency Demo" }).click()
-    await expect(page.getByText("Starting the demonstration...")).toBeVisible()
+    const modal = page.getByTestId("emergency-modal")
+    await expect(modal.getByRole("link", { name: "Call 911" })).toHaveAttribute("href", "tel:911")
+    await expect(modal).toContainText("Give naloxone (Narcan): one spray in one nostril.")
+    await expect(modal.getByRole("link", { name: "Set them up" })).toHaveAttribute("href", "/contacts")
+    await expect(modal).not.toContainText(/demo/i)
     await page.keyboard.press("Escape")
-    await expect(page.getByRole("dialog")).toHaveCount(0)
 
+    const sent: unknown[] = []
+    await page.route("**/api/contacts", (route) => route.fulfill({ json: { available: true } }))
+    await page.route("**/api/alerts", async (route) => {
+      sent.push(route.request().postDataJSON())
+      await route.fulfill({ json: { results: [{ name: "Mary", masked: "(•••) •••-1234", state: "pending", label: "Sending…", statusToken: "t1" }] } })
+    })
+    await page.route("**/api/alerts/status", (route) => route.fulfill({ json: { statuses: [{ token: "t1", state: "delivered", label: "Delivered" }] } }))
+    await page.evaluate(() => localStorage.setItem("narcoguard_emergency_contacts_v1", JSON.stringify({ senderName: "Steve", contacts: [{ id: "1", name: "Mary", masked: "(•••) •••-1234", status: "confirmed", proof: "proof-1", addedAt: 1 }] })))
+    await page.reload()
     await trigger.click()
-    await expect(page.getByRole("button", { name: "Run Emergency Demo" })).toBeVisible()
-    await expect(page.getByText("Starting the demonstration...")).toHaveCount(0)
+    await page.getByRole("button", { name: "Text Mary" }).click()
+    await expect(page.getByTestId("emergency-alert-preview")).toContainText("NarcoGuard alert: Steve pressed their help button")
+    await page.getByLabel("Include my current location").uncheck()
+    expect(sent).toHaveLength(0)
+    await page.getByRole("button", { name: "Send now" }).click()
+    await expect(page.getByTestId("emergency-deliveries")).toContainText("Delivered", { timeout: 10_000 })
+    expect(sent).toEqual([{ proofs: ["proof-1"], test: false }])
   })
 
   test("mobile navigation closes after navigating", async ({ page }) => {
@@ -302,10 +329,11 @@ test.describe("PWA production flow", () => {
     await expect(food).toContainText("1 nearby · closest 0.8 mi")
     await food.locator("summary").click()
     await expect(food.getByText("Test Food Pantry")).toBeVisible()
-    await expect(food.getByText("Listed hours: Mo-Fr 09:00-17:00 (may be out of date)")).toBeVisible()
+    await expect(food.getByText("Mon–Fri 9 AM–5 PM")).toBeVisible()
     await expect(food.getByRole("link", { name: "Call 518-555-0100" })).toHaveAttribute("href", "tel:5185550100")
     await expect(food.getByText(/Source: OpenStreetMap contributors\. .*call first/)).toBeVisible()
     await expect(search.getByTestId("need-water")).toContainText("none listed nearby")
+    await expect(search.getByTestId("call-211-water")).toHaveAttribute("href", "tel:211")
     const treatment = search.getByTestId("need-treatment")
     await treatment.locator("summary").click()
     await expect(treatment.getByText("Live listings are unavailable right now.")).toBeVisible()
@@ -315,6 +343,56 @@ test.describe("PWA production flow", () => {
     await jobs.locator("summary").click()
     await expect(jobs.getByRole("link", { name: "Find local help through 211" })).toBeVisible()
     expect(requested).toEqual(["?zip=12207"])
+  })
+
+  test("stated needs are matched on the device and listed first in Maslow order, with everything else still shown", async ({ page }) => {
+    let aiBody: unknown
+    await page.route("**/api/resources/understand", async (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { available: true, provider: "OpenRouter" } })
+      aiBody = route.request().postDataJSON()
+      return route.fulfill({ json: { kinds: ["laundry"], provider: "OpenRouter", notices: [] } })
+    })
+    const fallback = [{ title: "Find local help through 211", url: "https://www.211.org/get-help" }]
+    await page.route("**/api/resources/needs**", (route) => route.fulfill({ json: {
+      status: "ok",
+      fetchedAt: new Date().toISOString(),
+      kinds: {
+        food: { status: "ok", fallback, widenedMiles: 25, results: [{ name: "County Food Bank", kind: "food", distanceMiles: 14.8, lat: 42.9, lon: -73.75, source: "OpenStreetMap contributors" }] },
+        jobs: { status: "ok", fallback, results: [] },
+      },
+    } }))
+    await page.goto("/help")
+    const search = page.getByTestId("needs-finder")
+    const input = search.getByTestId("need-input")
+    await input.getByLabel(/What do you need right now/).fill("I need a job and I'm hungry")
+    await expect(input.getByTestId("stated-needs")).toHaveText("Shown first, basic needs at the top: Free food · Job help")
+    await input.getByRole("button", { name: "Treatment or detox" }).click()
+    await expect(input.getByTestId("stated-needs")).toHaveText("Shown first, basic needs at the top: Free food · Treatment · Job help")
+    expect(aiBody, "words are not sent anywhere unless the person taps the AI button").toBeUndefined()
+    await input.getByRole("button", { name: "Let AI read my words" }).click()
+    await expect(input.getByTestId("stated-needs")).toContainText("Laundry")
+    expect(aiBody).toEqual({ text: "I need a job and I'm hungry" })
+
+    await search.getByLabel("ZIP code").fill("12207")
+    await search.getByRole("button", { name: "Search" }).click()
+    const yours = search.getByTestId("your-needs")
+    await expect(yours.getByRole("heading", { name: "Your needs first" })).toBeVisible()
+    await expect(yours.getByTestId("need-food")).toContainText("1 within 25 mi · closest 14.8 mi")
+    await expect(yours.getByText("County Food Bank")).toBeVisible()
+    await expect(yours.getByText(/searched up to 25 miles/)).toBeVisible()
+    const order = await yours.locator("[data-testid^=need-]").evaluateAll((nodes) => nodes.map((node) => node.getAttribute("data-testid")))
+    expect(order).toEqual(["need-food", "need-laundry", "need-treatment", "need-jobs"])
+    await expect(search.getByRole("heading", { name: "Health and safety" })).toBeVisible()
+    await expect(search.getByTestId("need-food")).toHaveCount(1)
+  })
+
+  test("a crisis in the stated needs shows the 911 and 988 notices right away, and AI is hidden when not configured", async ({ page }) => {
+    await page.route("**/api/resources/understand", (route) => route.fulfill({ json: { available: false, provider: null } }))
+    await page.goto("/help")
+    const input = page.getByTestId("need-input")
+    await input.getByLabel(/What do you need right now/).fill("my friend overdosed and is not breathing")
+    await expect(input.getByRole("alert").filter({ hasText: "call 911 now" })).toBeVisible()
+    await expect(input.getByRole("button", { name: "Let AI read my words" })).toHaveCount(0)
   })
 
   test("Find everything near me uses one location reading and says when permission is denied", async ({ page, context }) => {
@@ -378,6 +456,50 @@ test.describe("PWA production flow", () => {
     await expect(ble).toContainText("does not use these readings to detect overdoses")
   })
 
+  test("the introduction explains the Maslow levels, what works today and the founding Constitution", async ({ page }) => {
+    await page.goto("/")
+    const maslow = page.getByTestId("intro-maslow")
+    await expect(maslow.getByRole("heading", { name: "Your needs first, then your goals" })).toBeVisible()
+    await expect(maslow.getByRole("listitem")).toHaveCount(5)
+    await expect(maslow).toContainText("not a ranking of people")
+    await expect(page.getByRole("heading", { name: "What works today" })).toBeVisible()
+    await expect(page.getByText("It does not monitor, detect or treat overdose")).toBeVisible()
+    for (const feature of ["Find Help", "Angel AI", "Emergency steps and training", "Guardian planner", "Hero certification", "Daily Life", "Emergency contacts", "Bluetooth readings", "Optional account", "Install and offline", "In development: NG watch"]) {
+      await expect(page.getByRole("heading", { level: 3, name: feature, exact: true }), feature).toBeVisible()
+    }
+    await expect(page.getByTestId("intro-hijack")).toContainText("Addiction can hijack this ladder")
+    await expect(page.getByTestId("intro-hijack").getByRole("link", { name: "How addiction can hijack the hierarchy" })).toHaveAttribute("href", "/about#hijack")
+    const constitution = page.getByTestId("intro-constitution")
+    await expect(constitution).toContainText("not yet ratified")
+    await expect(constitution).toContainText("not yet enforceable")
+    await expect(constitution.getByRole("link", { name: "Read the Constitution" })).toHaveAttribute("href", "/constitution")
+  })
+
+  test("setup reaches its final step only after the legal boxes are accepted", async ({ page }) => {
+    await page.goto("/")
+    for (let i = 0; i < 10; i++) {
+      const nameInput = page.getByPlaceholder("Enter your name")
+      if (await nameInput.isVisible()) await nameInput.fill("Sam")
+      await page.getByRole("button", { name: "Continue" }).click()
+    }
+    await page.getByRole("combobox").click()
+    await page.getByRole("option", { name: "New York" }).click()
+    await page.getByRole("checkbox").first().click()
+    await page.getByRole("button", { name: "Continue" }).click()
+    await expect(page.getByText("Step 12 of 13")).toBeVisible()
+    await expect(page.getByRole("button", { name: /Launch Dashboard/ })).toHaveCount(0)
+    const proceed = page.getByRole("button", { name: "Continue" })
+    await expect(proceed).toBeDisabled()
+    for (const id of ["acceptedTerms", "acceptedPrivacy", "acceptedHIPAA"]) await page.locator(`button#${id}`).click()
+    await expect(proceed).toBeEnabled()
+    await proceed.click()
+    await expect(page.getByText("Step 13 of 13")).toBeVisible()
+    await expect(page.getByRole("heading", { name: /You're All Set, Sam!/ })).toBeVisible()
+    await expect(page.getByRole("button", { name: /Launch Dashboard/ })).toHaveCount(1)
+    await page.getByRole("button", { name: /Launch Dashboard/ }).click()
+    await expect(page.getByRole("button", { name: "Skip Setup (Demo Mode)" })).toHaveCount(0)
+  })
+
   test("Good Samaritan step shows the selected state's statute and limits, not a blanket promise", async ({ page }) => {
     await page.goto("/")
     await expect(page.getByText("You Are Protected")).toHaveCount(0)
@@ -396,12 +518,31 @@ test.describe("PWA production flow", () => {
   })
 
   test("the NarcoGuard logo appears in the header of every public page", async ({ page }) => {
-    for (const path of ["/", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/privacy", "/terms"]) {
+    for (const path of ["/", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/about", "/privacy", "/terms"]) {
       await page.goto(path)
       const logo = page.locator(".site-header .brand-mark img")
       await expect(logo, path).toBeVisible()
       expect(await logo.evaluate((img) => (img as HTMLImageElement).naturalWidth), path).toBeGreaterThan(0)
     }
+  })
+
+  test("the About page explains the Maslow levels, links each to the app and states its limits", async ({ page }) => {
+    await page.goto("/privacy")
+    await page.locator(".site-footer").getByRole("link", { name: "About" }).click()
+    await expect(page).toHaveURL(/\/about$/)
+    await expect(page.getByRole("heading", { level: 1, name: "About NarcoGuard" })).toBeVisible()
+    const levels = page.getByTestId("maslow-levels")
+    await expect(levels.getByRole("heading", { level: 3 })).toHaveCount(5)
+    await expect(levels.getByRole("heading", { level: 3 }).first()).toContainText("Body and basic needs")
+    await expect(page.getByText("not a ranking of people", { exact: false })).toBeVisible()
+    await expect(page.getByText("cannot guarantee that a need will be met", { exact: false })).toBeVisible()
+    const hijack = page.getByTestId("addiction-hijack")
+    await expect(hijack.getByRole("heading", { name: "How addiction can hijack the hierarchy" })).toBeVisible()
+    await expect(hijack).toContainText("alongside treatment and recovery support rather than")
+    await expect(hijack).toContainText("no app can promise recovery")
+    await expect(hijack.getByRole("link", { name: "1-800-662-4357" })).toHaveAttribute("href", "tel:18006624357")
+    await levels.getByRole("link", { name: "Find Help: search your needs nearby" }).click()
+    await expect(page).toHaveURL(/\/help$/)
   })
 
   test("the Constitution is linked from the footer of every page", async ({ page }) => {
@@ -410,6 +551,71 @@ test.describe("PWA production flow", () => {
     await expect(link).toHaveAttribute("href", "/constitution")
     await link.click()
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Constitution")
+  })
+
+  test("by voice, Angel searches several needs near the person's shared location and reads the nearest places aloud", async ({ page, context }) => {
+    await context.grantPermissions(["geolocation"])
+    await context.setGeolocation({ latitude: 42.0987, longitude: -75.9123 })
+    await page.addInitScript(() => {
+      const spoken: string[] = []
+      ;(window as unknown as { __spoken: string[] }).__spoken = spoken
+      const said = ["I need food and somewhere to sleep", "use my location"]
+      class FakeRecognition {
+        lang = ""; continuous = false; interimResults = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        static turns = 0
+        start() {
+          const turn = FakeRecognition.turns++
+          setTimeout(() => {
+            if (turn < said.length) this.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: said[turn] }], { isFinal: true })] })
+            else this.onerror?.({ error: "not-allowed" })
+            this.onend?.()
+          }, 50)
+        }
+        stop() { this.onend?.() }
+        abort() { this.onend?.() }
+      }
+      for (const name of ["SpeechRecognition", "webkitSpeechRecognition"]) Object.defineProperty(window, name, { value: FakeRecognition, configurable: true, writable: true })
+      const synth = {
+        speak(u: { text: string; onend?: () => void }) { if (u.text.trim()) spoken.push(u.text); setTimeout(() => u.onend?.(), 10) },
+        cancel() {},
+      }
+      Object.defineProperty(window, "speechSynthesis", { value: synth, configurable: true })
+      ;(window as unknown as { SpeechSynthesisUtterance: unknown }).SpeechSynthesisUtterance = class { text: string; lang = ""; rate = 1; volume = 1; onend?: () => void; onerror?: () => void; constructor(t: string) { this.text = t } }
+    })
+    const bodies: { messages: { content: string }[]; location?: { lat: number; lon: number }; zip?: string }[] = []
+    const listing = (name: string, distanceMiles: number) => ({ name, kind: "food", lat: 42.1, lon: -75.91, distanceMiles, source: "OpenStreetMap contributors", phone: "607-555-0100" })
+    await page.route("**/api/angel", async (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { available: true, provider: "Vercel AI Gateway" } })
+      const body = route.request().postDataJSON()
+      bodies.push(body)
+      if (!body.location) return route.fulfill({ json: { available: true, notices: [], reply: "What's your ZIP code, or tap Use my location?" } })
+      await route.fulfill({ json: { available: true, notices: [], reply: "Here is what is close. Call first.", resources: { status: "ok", groups: [
+        { kind: "food", label: "Free/community food", shortLabel: "Free food", status: "ok", results: [listing("Pantry A", 0.4)], fallback: [] },
+        { kind: "shelter", label: "Shelter", shortLabel: "Shelter", status: "ok", results: [listing("Rescue Mission", 18)], widenedMiles: 25, fallback: [] },
+      ] } } })
+    })
+    await page.goto("/angel")
+    await page.getByRole("button", { name: "I understand, talk to Angel" }).click()
+    await expect(page.getByTestId("angel-consent")).toHaveCount(0)
+    await page.getByRole("button", { name: "Hands-free conversation" }).click()
+    await expect(page.getByTestId("angel-location-on")).toBeVisible()
+    await expect.poll(() => bodies.length).toBe(2)
+    expect(bodies[0].location, "nothing is shared before the person asks").toBeUndefined()
+    expect(bodies[1].location).toEqual({ lat: 42.1, lon: -75.91 })
+    expect(bodies[1].messages.at(-1)?.content, "the pending search runs again once the location is shared").toBe("I need food and somewhere to sleep")
+    const results = page.getByTestId("angel-resources")
+    await expect(results.getByRole("heading", { name: "Shelter" })).toBeVisible()
+    await expect(results).toContainText("searched up to 25 miles")
+    await expect(results.getByRole("link", { name: "Call 607-555-0100" }).first()).toHaveAttribute("href", "tel:6075550100")
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.join(" "))).toContain("For free food: Pantry A, 0.4 miles away.")
+    const spoken = await page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.join(" "))
+    expect(spoken).toContain("Got it. I'll search near you.")
+    expect(spoken).toContain("For shelter: Rescue Mission, 18 miles away, farther away than usual.")
+    await page.getByRole("button", { name: "Stop using my location" }).click()
+    await expect(page.getByRole("button", { name: "Use my location" })).toBeVisible()
   })
 
   test("hands-free voice sends what was heard and speaks the 911 notice first", async ({ page }) => {
@@ -453,7 +659,7 @@ test.describe("PWA production flow", () => {
     await page.getByRole("button", { name: "Hands-free conversation" }).click()
     await expect(page.getByLabel("Conversation with Angel").getByRole("alert")).toContainText("Call 911 now.")
     expect(body?.messages?.at(-1)?.content).toBe("my friend is overdosing")
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.join(" "))).toBe("Call 911 now. Stay with them.")
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.join(" "))).toBe("Call 9 1 1 now. Stay with them.")
     // The second turn's permission error ends hands-free with an explanation.
     await expect(page.getByText("Microphone access was not allowed. You can still type.")).toBeVisible()
     await expect(page.getByRole("button", { name: "Hands-free conversation" })).toHaveAttribute("aria-pressed", "false")
@@ -479,6 +685,19 @@ test.describe("PWA production flow", () => {
     await expect(page.locator("#donation-policy")).toContainText("not tax-deductible")
   })
 
+  test("the support page shows the watch renders large and explains what auto-injection funding pays for", async ({ page }) => {
+    await page.goto("/fund")
+    const showcase = page.getByTestId("watch-showcase")
+    await expect(showcase.getByRole("img")).toHaveCount(2)
+    for (const img of await showcase.getByRole("img").all()) expect((await img.boundingBox())?.height ?? 0).toBeGreaterThan(300)
+    await expect(showcase).toContainText("none has shipped")
+    const funding = page.getByTestId("auto-injection-funding")
+    await expect(funding.getByRole("heading", { name: "Why we are raising money for auto-injection research" })).toBeVisible()
+    await expect(funding).toContainText("None of that exists yet")
+    await expect(funding).toContainText("it does not deliver naloxone")
+    for (const step of ["1. Sensing research", "2. Delivery engineering", "3. Independent review", "4. FDA pathway"]) await expect(funding.getByRole("heading", { name: step })).toBeVisible()
+  })
+
   test("in test mode a chosen amount opens Stripe checkout", async ({ page }) => {
     let requested: unknown
     await page.route("**/api/donate", async (route) => {
@@ -493,7 +712,9 @@ test.describe("PWA production flow", () => {
     await form.getByRole("button", { name: "Donate $50" }).click()
     await expect(page).toHaveURL(/\/fund\/thanks/)
     expect(requested).toEqual({ amount: 50 })
-    await expect(page.getByRole("heading", { name: "Thank you for your donation" })).toBeVisible()
+    // The page confirms payment only after Stripe verifies the session; an unverifiable one never claims it was paid.
+    await expect(page.getByRole("heading", { name: "Thank you for supporting NarcoGuard" })).toBeVisible()
+    await expect(page.getByTestId("donation-thanks")).not.toContainText("Thank you for your donation")
   })
 
   test("Chromium installs in one tap from the header once the browser offers it", async ({ page }) => {
@@ -515,6 +736,96 @@ test.describe("PWA production flow", () => {
   })
 })
 
+test.describe("Emergency contact texts", () => {
+  test("stay off and send nothing until the texting service is configured", async ({ page, request }) => {
+    const send = await request.post("/api/alerts", { data: { proofs: ["x"] } })
+    expect(send.status()).toBe(503)
+    expect(await send.json()).toMatchObject({ available: false })
+    expect((await request.post("/api/contacts/invite", { data: { phone: "6077721234", contactName: "Mary", senderName: "Steve" } })).status()).toBe(503)
+    await page.goto("/contacts")
+    await expect(page.getByTestId("alerts-unavailable")).toBeVisible()
+    await expect(page.getByRole("button", { name: "Create invite" })).toBeDisabled()
+    await expect(page.getByRole("link", { name: "Call 911" })).toHaveAttribute("href", "tel:911")
+  })
+
+  test("invite, pair, preview and send only after confirmation, then show delivery", async ({ page }) => {
+    const sent: unknown[] = []
+    await page.route("**/api/contacts", (route) => route.fulfill({ json: { available: true } }))
+    await page.route("**/api/contacts/invite", (route) => route.fulfill({ json: { token: "invite-1", link: "https://www.narcoguard.app/consent#invite-1", masked: "(•••) •••-1234" } }))
+    await page.route("**/api/contacts/pair", async (route) => {
+      const body = route.request().postDataJSON()
+      if (body.code !== "1234 5678") return route.fulfill({ status: 400, json: { error: "That code doesn't match." } })
+      await route.fulfill({ json: { proof: "proof-1", contact: { name: "Mary", masked: "(•••) •••-1234" } } })
+    })
+    await page.route("**/api/alerts", async (route) => {
+      sent.push(route.request().postDataJSON())
+      await route.fulfill({ json: { results: [{ name: "Mary", masked: "(•••) •••-1234", state: "pending", label: "Sending…", statusToken: "sid-1" }] } })
+    })
+    await page.route("**/api/alerts/status", (route) => route.fulfill({ json: { statuses: [{ token: "sid-1", state: "delivered", label: "Delivered" }] } }))
+
+    await page.goto("/contacts")
+    const contacts = page.getByTestId("emergency-contacts")
+    await contacts.getByLabel("Contact's name").fill("Mary")
+    await contacts.getByLabel("Their US mobile number").fill("(607) 772-1234")
+    await contacts.getByRole("button", { name: "Create invite" }).click()
+    await expect(contacts.getByRole("alert")).toContainText("Add your name first")
+    await contacts.getByLabel("Your name, as your contacts know you").fill("Steve")
+    await contacts.getByRole("button", { name: "Create invite" }).click()
+    const contact = contacts.getByTestId("contact")
+    await expect(contact).toContainText("Waiting for them to agree")
+    await expect(contact.getByRole("link", { name: "Text it from my phone" })).toHaveAttribute("href", /^sms:\?&body=Steve%20would%20like%20you/)
+
+    await contact.getByLabel("8-digit code from Mary").fill("1111 2222")
+    await contact.getByRole("button", { name: "Confirm contact" }).click()
+    await expect(contact.getByRole("alert")).toContainText("doesn't match")
+    await contact.getByLabel("8-digit code from Mary").fill("1234 5678")
+    await contact.getByRole("button", { name: "Confirm contact" }).click()
+    await expect(contact).toContainText("Agreed to alerts")
+
+    await page.reload()
+    await expect(page.getByTestId("contact")).toContainText("Agreed to alerts")
+    await expect(page.getByTestId("alert-preview")).toContainText("NarcoGuard alert: Steve pressed their help button")
+    await page.getByRole("button", { name: "Send alert to 1 contact" }).click()
+    const dialog = page.getByRole("alertdialog")
+    await expect(dialog).toContainText("Mary will get the text shown above")
+    await dialog.getByRole("button", { name: "Cancel" }).click()
+    expect(sent).toHaveLength(0)
+
+    await page.getByRole("button", { name: "Send alert to 1 contact" }).click()
+    await page.getByRole("alertdialog").getByRole("button", { name: "Send alert" }).click()
+    await expect(page.getByTestId("deliveries")).toContainText("Mary (•••) •••-1234: Sending…")
+    await expect(page.getByTestId("deliveries")).toContainText("Delivered", { timeout: 10_000 })
+    expect(sent).toEqual([{ proofs: ["proof-1"], test: false }])
+  })
+
+  test("a contact reads the invite, verifies their number and gets a pairing code, or declines", async ({ page }) => {
+    const payload = Buffer.from(JSON.stringify({ k: "invite", v: 1, p: "+16077721234", n: "Mary", s: "Steve", iat: Date.now() })).toString("base64url")
+    const token = `${payload}.signature`
+    const calls: unknown[] = []
+    await page.route("**/api/contacts/verify", async (route) => {
+      const body = route.request().postDataJSON()
+      calls.push(body)
+      await route.fulfill({ json: body.code ? { verified: true, pairingCode: "1234 5678" } : { sent: true, masked: "(•••) •••-1234" } })
+    })
+    await page.goto(`/consent#${token}`)
+    const flow = page.getByTestId("consent-flow")
+    await expect(flow.getByRole("heading", { name: "Be Steve's emergency contact?" })).toBeVisible()
+    await expect(flow).toContainText("NarcoGuard alert: Steve pressed their help button")
+    await expect(flow).toContainText("Reply STOP")
+    await flow.getByRole("button", { name: "I agree, text me a code" }).click()
+    await expect(flow).toContainText("We texted a code to (•••) •••-1234")
+    await flow.getByLabel("Code from the text").fill("654321")
+    await flow.getByRole("button", { name: "Confirm" }).click()
+    await expect(flow.getByTestId("pairing-code")).toHaveText("1234 5678")
+    expect(calls).toEqual([{ token }, { token, code: "654321" }])
+
+    await page.goto(`/consent#${token}x`)
+    await page.reload()
+    await page.getByRole("button", { name: "No thanks" }).click()
+    await expect(page.getByRole("status")).toContainText("Nothing was saved")
+  })
+})
+
 test.describe("Watch blueprint", () => {
   test("the engineering drawing lists every part and callouts open part details", async ({ page }) => {
     await page.goto("/watch")
@@ -527,7 +838,33 @@ test.describe("Watch blueprint", () => {
     await expect(page.getByText(/Future research only/).first()).toBeVisible()
     const download = page.waitForEvent("download")
     await drawing.getByRole("button", { name: "Download SVG" }).click()
-    expect((await download).suggestedFilename()).toBe("narcoguard-ng-rev4.2-concept-drawing.svg")
+    expect((await download).suggestedFilename()).toBe("narcoguard-ng-46mm-rev4.2-concept-drawing.svg")
+  })
+
+  test("the 40 mm women's fit has its own drawing, parts and costs with the same safety functions", async ({ page }) => {
+    await page.goto("/watch")
+    const sizes = page.getByRole("group", { name: "Watch size" })
+    // A tap before hydration is lost, so retry until the page has hydrated and the size is selected.
+    await expect(async () => {
+      await sizes.getByRole("button", { name: /NG 40 mm/ }).click()
+      await expect(sizes.getByRole("button", { name: /NG 40 mm/ })).toHaveAttribute("aria-pressed", "true", { timeout: 1_000 })
+    }).toPass({ timeout: 15_000 })
+    const summary = page.getByTestId("watch-size")
+    await expect(summary).toContainText("40 × 12.2 mm")
+    await expect(summary).toContainText("300 mAh")
+    await expect(summary).toContainText("$432.90")
+    await expect(summary).toContainText("same safety functions")
+    const drawing = page.getByTestId("engineering-drawing")
+    await expect(drawing).toHaveAttribute("data-case-mm", "40")
+    await expect(drawing.getByText("NARCOGUARD NG 40 MM", { exact: true })).toBeVisible()
+    await expect(drawing.getByText("300mAh Li-ion + Qi Charging")).toBeVisible()
+    await expect(page.getByText("modeled stack margin: 2.8 mm")).toBeVisible()
+    await page.getByRole("tab", { name: "Bill of Materials" }).click()
+    await expect(page.getByText("300 mAh Li-ion polymer cell (certified)")).toBeVisible()
+    await expect(page.getByText("NG-STRAP-LSR-20MM")).toBeVisible()
+    await expect(page.getByText("Prototype Cost Summary - NG 40 mm")).toBeVisible()
+    await sizes.getByRole("button", { name: /NG 46 mm/ }).click()
+    await expect(page.getByText("500 mAh Li-ion polymer cell (certified)")).toBeVisible()
   })
 
   test("the 3D tab loads a model or explains why it cannot", async ({ page }) => {
@@ -544,6 +881,163 @@ test.describe("Watch blueprint", () => {
     } else {
       await expect(viewer.getByText(/3D needs WebGL/)).toBeVisible()
     }
+  })
+
+  test("the owner lock keeps safety functions on a locked watch and never allows sale as a transfer", async ({ page }) => {
+    await page.goto("/watch")
+    await page.getByRole("tab", { name: "Owner Lock" }).click()
+    const lock = page.getByTestId("owner-lock")
+    await expect(lock.getByRole("img", { name: /Owner lock flow/ })).toBeVisible()
+    const locked = lock.locator("div").filter({ has: page.getByRole("heading", { name: "Locked", exact: true }) }).last()
+    await expect(locked.getByText("Works: SOS button")).toBeAttached()
+    await expect(locked.getByText("Off: Vitals monitoring")).toBeAttached()
+    await expect(lock.getByText("A sale or trade is never a reason.", { exact: false })).toBeVisible()
+  })
+})
+
+test.describe("Hero certification", () => {
+  test("the test runs in lockdown mode and leaving the screen voids the attempt", async ({ page }) => {
+    await page.goto("/hero-signup")
+    await page.getByRole("button", { name: "Start the test in lockdown mode" }).click()
+    const running = page.getByTestId("hero-test-running")
+    await expect(running.getByText("Question 1 of 12")).toBeVisible()
+    await running.getByRole("radio").first().check()
+    await running.getByRole("button", { name: "Next" }).click()
+    await expect(running.getByText("Question 2 of 12")).toBeVisible()
+    await page.evaluate(() => window.dispatchEvent(new Event("blur")))
+    await expect(page.getByTestId("hero-test-voided")).toContainText("Attempt voided")
+    await expect(page.getByRole("button", { name: "Take a new test" })).toBeVisible()
+  })
+
+  test("a perfect score earns a certificate; anything less shows what to review", async ({ page }) => {
+    const questions = Array.from({ length: 12 }, (_, i) => ({ id: `q${i}`, topic: "Topic", prompt: `Question ${i}`, options: [{ id: "a", text: "Right" }, { id: "b", text: "Wrong" }] }))
+    let graded = 0
+    await page.route("**/api/heroes/test", (route) => route.request().method() === "GET"
+      ? route.fulfill({ json: { version: 1, questions, attempt: "attempt-token", expiresAt: Date.now() + 1_200_000, certifying: true } })
+      : route.fulfill({ json: graded++ === 0
+        ? { passed: false, correct: 11, total: 12, missed: [{ id: "q0", topic: "Topic", prompt: "Question 0", why: "Because of the reason." }], certificate: null, recorded: false }
+        : { passed: true, correct: 12, total: 12, missed: [], certificate: "cert-token", recorded: false } }))
+    await page.route("**/api/heroes", (route) => route.fulfill({ json: { enrollment: false, certification: true, nearbyRequests: false } }))
+    await page.goto("/hero-signup")
+    for (const attempt of [0, 1]) {
+      await page.getByRole("button", { name: attempt === 0 ? "Start the test in lockdown mode" : "Take a new test" }).click()
+      const running = page.getByTestId("hero-test-running")
+      for (let i = 0; i < 12; i++) {
+        await running.getByRole("radio", { name: "Right" }).check()
+        await running.getByRole("button", { name: i === 11 ? "Submit for grading" : "Next" }).click()
+      }
+      const result = page.getByTestId("hero-test-result")
+      if (attempt === 0) {
+        await expect(result).toContainText("Not passed: 11 of 12")
+        await expect(result).toContainText("Because of the reason.")
+      } else {
+        await expect(result).toContainText("Passed: 12 of 12")
+      }
+    }
+    await expect(page.getByTestId("hero-enroll")).toContainText("You have a certificate on this device")
+    expect(await page.evaluate(() => localStorage.getItem("narcoguard_hero_certificate_v1"))).toBe("cert-token")
+  })
+})
+
+test.describe("Account", () => {
+  test("the account page says plainly when accounts are off and never blocks help", async ({ page }) => {
+    await page.route("**/api/auth", (route) => route.fulfill({ json: { available: false, authenticated: false, user: null } }))
+    await page.goto("/account")
+    await expect(page.getByTestId("account-unavailable")).toContainText("Everything works on this device without an account")
+  })
+
+  test("a signed-in person can back up and restore contacts with a passphrase", async ({ page }) => {
+    let stored: unknown = null
+    await page.route("**/api/auth", (route) => route.fulfill({ json: { available: true, authenticated: true, user: { email: "sam@example.com" } } }))
+    await page.route("**/api/account/vault", async (route) => {
+      if (route.request().method() === "PUT") {
+        stored = (route.request().postDataJSON() as { sealed: unknown }).sealed
+        return route.fulfill({ json: { saved: true } })
+      }
+      return route.fulfill({ json: { vault: stored ? { sealed: stored, version: 1, updatedAt: new Date().toISOString() } : null } })
+    })
+    await page.addInitScript(() => {
+      if (!sessionStorage.getItem("seeded")) {
+        localStorage.setItem("narcoguard_emergency_contacts_v1", JSON.stringify({ senderName: "Sam", contacts: [{ id: "c1", name: "Alex", masked: "•••• 1234", status: "confirmed", proof: "p", addedAt: 1 }] }))
+        sessionStorage.setItem("seeded", "1")
+      }
+    })
+    await page.goto("/account")
+    const panel = page.getByTestId("account-signed-in")
+    await expect(panel).toContainText("sam@example.com")
+    await panel.getByLabel("Passphrase", { exact: true }).fill("correct horse battery")
+    await panel.getByLabel(/Repeat passphrase/).fill("correct horse battery")
+    await panel.getByRole("button", { name: "Back up now" }).click()
+    await expect(page.getByText(/Backed up\. Only your passphrase/)).toBeVisible({ timeout: 20_000 })
+    expect(JSON.stringify(stored)).not.toContain("Alex")
+
+    await page.evaluate(() => localStorage.removeItem("narcoguard_emergency_contacts_v1"))
+    await panel.getByLabel("Passphrase", { exact: true }).fill("wrong passphrase!!")
+    await panel.getByRole("button", { name: "Restore to this device" }).click()
+    await expect(page.getByText("That passphrase does not open this backup.")).toBeVisible({ timeout: 20_000 })
+    await panel.getByLabel("Passphrase", { exact: true }).fill("correct horse battery")
+    await panel.getByRole("button", { name: "Restore to this device" }).click()
+    await expect(page.getByText(/Restored 1 contact/)).toBeVisible({ timeout: 20_000 })
+    expect(await page.evaluate(() => localStorage.getItem("narcoguard_emergency_contacts_v1"))).toContain("Alex")
+  })
+})
+
+test.describe("Training", () => {
+  test("guides advance only when the person taps Next and the CPR beat counts compressions", async ({ page }) => {
+    await page.clock.install()
+    await page.goto("/ar")
+    await page.getByRole("button", { name: "Start CPR Guide" }).click()
+    const guide = page.getByTestId("guide-screen")
+    await expect(guide.getByText("Step 1 of 5")).toBeVisible()
+    await expect(guide.getByRole("link", { name: "Call 911" })).toHaveAttribute("href", "tel:911")
+    await page.clock.runFor(60_000)
+    await expect(guide.getByText("Step 1 of 5"), "steps never advance on their own").toBeVisible()
+    await guide.getByRole("button", { name: "Next step" }).click()
+    await guide.getByRole("button", { name: "Next step" }).click()
+    const beat = guide.getByTestId("cpr-metronome")
+    await beat.getByRole("button", { name: "Start beat" }).click()
+    await page.clock.runFor(5_500)
+    await expect(beat).toContainText("10 compressions")
+    await beat.getByRole("button", { name: "Stop beat" }).click()
+    await guide.getByRole("button", { name: "Exit" }).click()
+    await expect(guide).toBeHidden()
+  })
+
+  test("a lesson is completed only after a correct practice answer and progress survives reload", async ({ page }) => {
+    await page.goto("/ar")
+    const lessons = page.getByTestId("lessons")
+    await expect(lessons.getByTestId("lessons-done")).toHaveText("0/5")
+    const first = lessons.getByRole("listitem").filter({ hasText: "Recognize an opioid overdose" })
+    await first.getByRole("button", { name: "Start" }).click()
+    await first.getByRole("radio", { name: "Agitated with very large pupils" }).check()
+    await expect(first.getByText(/Not quite/)).toBeVisible()
+    await expect(first.getByRole("button", { name: "Mark lesson complete" })).toHaveCount(0)
+    await first.getByRole("radio", { name: /Won't wake up/ }).check()
+    await first.getByRole("button", { name: "Mark lesson complete" }).click()
+    await expect(lessons.getByTestId("lessons-done")).toHaveText("1/5")
+    await page.reload()
+    await expect(page.getByTestId("lessons-done")).toHaveText("1/5")
+  })
+})
+
+test.describe("Navigation", () => {
+  test("every page except the dashboard has one Back button that returns to the previous page or the dashboard", async ({ page }) => {
+    for (const path of ["/help", "/angel", "/watch", "/stability", "/constitution", "/fund", "/hero-signup", "/ar", "/about", "/privacy", "/terms", "/account", "/contacts", "/auth", "/consent"]) {
+      await page.goto(path)
+      await expect(page.getByTestId("back-button"), path).toHaveCount(1)
+    }
+    await page.goto("/")
+    await expect(page.getByTestId("back-button")).toHaveCount(0)
+
+    await page.goto("/privacy")
+    await page.getByTestId("back-button").click()
+    await expect(page).toHaveURL(/\/$/)
+
+    await page.goto("/")
+    await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Find Help" }).click()
+    await expect(page).toHaveURL(/\/help$/)
+    await page.getByTestId("back-button").click()
+    await expect(page).toHaveURL(/\/$/)
   })
 })
 

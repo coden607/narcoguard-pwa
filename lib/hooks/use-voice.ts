@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
-import { isFatalRecognitionError, readTranscript, speechChunks, speechRecognitionCtor, type SpeechRecognitionLike } from "@/lib/voice"
+import { isFatalRecognitionError, pickVoice, readTranscript, speechChunks, speechRecognitionCtor, type SpeechRecognitionLike } from "@/lib/voice"
 
 const noSubscription = () => () => undefined
 
@@ -15,6 +15,16 @@ export function useVoice() {
   const [speaking, setSpeaking] = useState(false)
   const [interim, setInterim] = useState("")
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
+  const voiceRef = useRef<SpeechSynthesisVoice | undefined>(undefined)
+
+  // Voices load asynchronously on most browsers; keep the most natural one for the person's language.
+  useEffect(() => {
+    if (!("speechSynthesis" in window)) return
+    const choose = () => { voiceRef.current = pickVoice(window.speechSynthesis.getVoices?.() ?? [], navigator.language || "en-US") }
+    choose()
+    window.speechSynthesis.addEventListener?.("voiceschanged", choose)
+    return () => window.speechSynthesis.removeEventListener?.("voiceschanged", choose)
+  }, [])
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.abort()
@@ -82,8 +92,12 @@ export function useVoice() {
       const next = () => {
         if (index >= chunks.length) { setSpeaking(false); resolve(); return }
         const utterance = new SpeechSynthesisUtterance(chunks[index++])
-        utterance.lang = navigator.language || "en-US"
-        utterance.rate = 1
+        const voice = voiceRef.current ?? pickVoice(synth.getVoices?.() ?? [], navigator.language || "en-US")
+        if (voice) utterance.voice = voice
+        utterance.lang = voice?.lang ?? (navigator.language || "en-US")
+        // Slightly slower than default reads as calmer and is easier to follow on a phone speaker.
+        utterance.rate = 0.95
+        utterance.pitch = 1
         utterance.onend = next
         utterance.onerror = () => { setSpeaking(false); resolve() }
         synth.speak(utterance)

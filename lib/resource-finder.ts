@@ -4,13 +4,14 @@
 // hours, openings or eligibility, so every result is labelled with its source and "call first".
 // Location is rounded to about 1 km before it leaves the server and is never stored or logged.
 
-export const RESOURCE_KINDS = ["treatment", "food", "shelter", "pharmacy", "water", "toilets", "showers", "laundry", "emergency", "clinic", "community", "library", "jobs"] as const
+export const RESOURCE_KINDS = ["treatment", "food", "quick-meal", "shelter", "pharmacy", "water", "toilets", "showers", "laundry", "emergency", "clinic", "community", "library", "jobs"] as const
 export type ResourceKind = typeof RESOURCE_KINDS[number]
 export type OsmKind = Exclude<ResourceKind, "treatment">
 
 export const RESOURCE_LABELS: Record<ResourceKind, string> = {
   treatment: "Treatment",
-  food: "Food",
+  food: "Free/community food",
+  "quick-meal": "Quick meal / coffee options (price not verified)",
   shelter: "Shelter",
   pharmacy: "Pharmacy (naloxone is sold without a prescription; call to check stock)",
   water: "Drinking water",
@@ -25,7 +26,7 @@ export const RESOURCE_LABELS: Record<ResourceKind, string> = {
 }
 
 export const SHORT_LABELS: Record<ResourceKind, string> = {
-  treatment: "Treatment", food: "Food", shelter: "Shelter", pharmacy: "Pharmacy", water: "Water", toilets: "Toilets", showers: "Showers",
+  treatment: "Treatment", food: "Free food", "quick-meal": "Quick meal", shelter: "Shelter", pharmacy: "Pharmacy", water: "Water", toilets: "Toilets", showers: "Showers",
   laundry: "Laundry", emergency: "Emergency room", clinic: "Clinics", community: "Community centers", library: "Libraries", jobs: "Job help",
 }
 
@@ -34,7 +35,7 @@ export const SHORT_LABELS: Record<ResourceKind, string> = {
  * follow: every level is searched at once and any need can come first.
  */
 export const NEED_LEVELS = [
-  { id: "basic", title: "Basic needs", kinds: ["food", "shelter", "water", "toilets", "showers", "laundry"] },
+  { id: "basic", title: "Basic needs", kinds: ["food", "quick-meal", "shelter", "water", "toilets", "showers", "laundry"] },
   { id: "safety", title: "Health and safety", kinds: ["emergency", "clinic", "pharmacy"] },
   { id: "connection", title: "Recovery and connection", kinds: ["treatment", "community"] },
   { id: "growth", title: "Growth and goals", kinds: ["library", "jobs"] },
@@ -48,6 +49,12 @@ export interface NearbyResource {
   website?: string
   /** Opening hours as listed by the source; may be out of date. */
   hours?: string
+  /** When the map listing was last edited (ISO date), when the source provides it. */
+  lastUpdated?: string
+  /** Wheelchair access as tagged on the map listing, when present. */
+  wheelchair?: "yes" | "limited" | "no"
+  /** Compact summary of the services a provider lists (treatment types and payment help). */
+  services?: string
   distanceMiles?: number
   lat?: number
   lon?: number
@@ -79,19 +86,23 @@ interface OsmKindSpec {
   exclude?: Record<string, string[]>
   /** Dense kinds use a smaller radius so the nearest places are not crowded out. */
   radius: number
-  /** Name shown for places that usually have none, such as a public drinking fountain. */
-  unnamed?: string
+  /** Name shown for places that usually have none, such as a public drinking fountain; a function names only matching tags. */
+  unnamed?: string | ((tags: Record<string, string>) => string | undefined)
 }
 
 const NOT_PUBLIC = { access: ["private", "no", "customers"] }
 
 export const OSM_KINDS: Record<OsmKind, OsmKindSpec> = {
-  food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }], radius: SEARCH_RADIUS_METERS },
+  // Community fridges and pantries are mapped as food_sharing.
+  food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }, { amenity: "food_sharing" }], radius: SEARCH_RADIUS_METERS, unnamed: (tags) => (tags.amenity === "food_sharing" ? "Food pantry or community fridge" : undefined) },
+  "quick-meal": { filters: [{ amenity: "fast_food" }, { amenity: "cafe" }, { shop: "convenience" }, { shop: "supermarket" }], radius: 5_000 },
   // Hotels contracted as temporary shelters are often mapped this way and go stale when contracts end.
-  shelter: { filters: [{ social_facility: "shelter" }], exclude: { tourism: ["hotel"] }, radius: SEARCH_RADIUS_METERS },
+  // Services for people experiencing homelessness are listed too; every listing says to call first, so none promises a bed.
+  shelter: { filters: [{ social_facility: "shelter" }, { amenity: "social_facility", "social_facility:for": "homeless" }], exclude: { tourism: ["hotel"] }, radius: SEARCH_RADIUS_METERS },
   water: { filters: [{ amenity: "drinking_water" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Drinking water" },
   toilets: { filters: [{ amenity: "toilets" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Public toilet" },
-  showers: { filters: [{ amenity: "shower" }], exclude: NOT_PUBLIC, radius: SEARCH_RADIUS_METERS, unnamed: "Public shower" },
+  // Truck stops, campgrounds and pools tag showers on the main feature; some charge a fee.
+  showers: { filters: [{ amenity: "shower" }, { shower: "yes" }, { shower: "hot" }], exclude: NOT_PUBLIC, radius: SEARCH_RADIUS_METERS, unnamed: "Public shower" },
   laundry: { filters: [{ shop: "laundry" }], radius: 5_000 },
   emergency: { filters: [{ amenity: "hospital", emergency: "yes" }], radius: SEARCH_RADIUS_METERS },
   clinic: { filters: [{ amenity: "clinic" }, { healthcare: "clinic" }, { healthcare: "centre" }], radius: 5_000 },
@@ -123,7 +134,7 @@ function osmSelectors(kind: OsmKind, lat: number, lon: number, radius = OSM_KIND
 }
 
 export function overpassQuery(kind: OsmKind, lat: number, lon: number, radius?: number): string {
-  return `[out:json][timeout:20];(${osmSelectors(kind, lat, lon, radius)});out center tags;`
+  return `[out:json][timeout:20];(${osmSelectors(kind, lat, lon, radius)});out center meta;`
 }
 
 /**
@@ -132,21 +143,30 @@ export function overpassQuery(kind: OsmKind, lat: number, lon: number, radius?: 
  * splitting means one half can still answer if the other fails.
  */
 export const OSM_QUERY_GROUPS: readonly (readonly OsmKind[])[] = [
-  ["water", "toilets", "pharmacy", "clinic", "laundry", "community", "library"],
+  ["quick-meal", "water", "toilets", "pharmacy", "clinic", "laundry", "community", "library"],
   ["food", "shelter", "showers", "emergency", "jobs"],
 ]
 
-export function overpassNeedsQuery(lat: number, lon: number, kinds: readonly OsmKind[] = OSM_KIND_ORDER): string {
-  return `[out:json][timeout:20][maxsize:67108864];(${kinds.map((kind) => osmSelectors(kind, lat, lon)).join("")});out center tags;`
+export function overpassNeedsQuery(lat: number, lon: number, kinds: readonly OsmKind[] = OSM_KIND_ORDER, radius?: number): string {
+  return `[out:json][timeout:20][maxsize:67108864];(${kinds.map((kind) => osmSelectors(kind, lat, lon, radius)).join("")});out center meta;`
 }
 
-/** The kind a place belongs to, checked in display order; undefined when nothing matches. */
-export function osmKindOf(tags: Record<string, string>): OsmKind | undefined {
-  return OSM_KIND_ORDER.find((kind) => {
+/** Sparse services searched again, wider, when nothing is found within the normal radius. */
+export const WIDEN_KINDS: readonly OsmKind[] = ["food", "shelter", "showers"]
+export const WIDE_RADIUS_METERS = 40_000 // about 25 miles
+
+/** Every kind a place matches, in display order: a truck stop can be a quick meal and a shower. */
+export function osmKindsOf(tags: Record<string, string>): OsmKind[] {
+  return OSM_KIND_ORDER.filter((kind) => {
     const { filters, exclude } = OSM_KINDS[kind]
     if (Object.entries(exclude ?? {}).some(([key, values]) => values.includes(tags[key]))) return false
     return filters.some((filter) => Object.entries(filter).every(([key, value]) => tags[key] === value))
   })
+}
+
+/** The first kind a place belongs to, checked in display order; undefined when nothing matches. */
+export function osmKindOf(tags: Record<string, string>): OsmKind | undefined {
+  return osmKindsOf(tags)[0]
 }
 
 const str = (value: unknown, max = 160) => (typeof value === "string" && value.trim() ? value.trim().slice(0, max) : undefined)
@@ -166,11 +186,19 @@ const httpUrl = (value: unknown) => {
   }
 }
 
-interface OverpassElement { lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: Record<string, string> }
+interface OverpassElement {
+  lat?: number
+  lon?: number
+  center?: { lat: number; lon: number }
+  tags?: Record<string, string>
+  /** Overpass "out meta" edit timestamp, an ISO datetime such as 2024-05-17T08:30:00Z. */
+  timestamp?: string
+}
 
 function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: number; lon: number }): NearbyResource | undefined {
   const tags = element.tags ?? {}
-  const name = str(tags.name) ?? OSM_KINDS[kind].unnamed
+  const unnamed = OSM_KINDS[kind].unnamed
+  const name = str(tags.name) ?? (typeof unnamed === "function" ? unnamed(tags) : unnamed)
   const lat = element.lat ?? element.center?.lat
   const lon = element.lon ?? element.center?.lon
   if (!name || lat === undefined || lon === undefined) return undefined
@@ -183,6 +211,9 @@ function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: numb
     phone: str(tags.phone ?? tags["contact:phone"], 40),
     website: httpUrl(tags.website ?? tags["contact:website"]),
     hours: str(tags.opening_hours, 80),
+    // Keep the raw hours string for backward compatibility; any display formatting happens downstream.
+    ...(element.timestamp ? { lastUpdated: element.timestamp.slice(0, 10) } : {}),
+    ...(tags.wheelchair === "yes" || tags.wheelchair === "limited" || tags.wheelchair === "no" ? { wheelchair: tags.wheelchair } : {}),
     lat,
     lon,
     distanceMiles: haversineMiles(origin.lat, origin.lon, lat, lon),
@@ -190,7 +221,7 @@ function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: numb
   }
 }
 
-function nearestUnique(resources: NearbyResource[], limit: number): NearbyResource[] {
+export function nearestUnique(resources: NearbyResource[], limit: number): NearbyResource[] {
   const seen = new Set<string>()
   return resources
     .sort((a, b) => (a.distanceMiles ?? 0) - (b.distanceMiles ?? 0))
@@ -214,12 +245,13 @@ export function parseOverpass(kind: OsmKind, body: unknown, origin: { lat: numbe
 }
 
 /** Sorts a combined query's places into kinds by their tags, nearest first. */
-export function parseOverpassNeeds(body: unknown, origin: { lat: number; lon: number }, limit = MAX_RESULTS_PER_KIND): Record<OsmKind, NearbyResource[]> {
+export function parseOverpassNeeds(body: unknown, origin: { lat: number; lon: number }, limit = MAX_RESULTS_PER_KIND, radius?: number): Record<OsmKind, NearbyResource[]> {
   const grouped = Object.fromEntries(OSM_KIND_ORDER.map((kind) => [kind, [] as NearbyResource[]])) as Record<OsmKind, NearbyResource[]>
   for (const element of elementsOf(body)) {
-    const kind = osmKindOf(element.tags ?? {})
-    const resource = kind && toResource(kind, element, origin)
-    if (kind && resource && (resource.distanceMiles ?? 0) <= OSM_KINDS[kind].radius / 1609.344) grouped[kind].push(resource)
+    for (const kind of osmKindsOf(element.tags ?? {})) {
+      const resource = toResource(kind, element, origin)
+      if (resource && (resource.distanceMiles ?? 0) <= (radius ?? OSM_KINDS[kind].radius) / 1609.344) grouped[kind].push(resource)
+    }
   }
   for (const kind of OSM_KIND_ORDER) grouped[kind] = nearestUnique(grouped[kind], limit)
   return grouped
@@ -231,6 +263,31 @@ export function findTreatmentUrl(lat: number, lon: number, radius = SEARCH_RADIU
   return `https://findtreatment.gov/locator/exportsAsJson/v2?${params}`
 }
 
+/**
+ * Compact services line from a FindTreatment row's services array. Entries pair a category (f1)
+ * with a semicolon-delimited value list (f3); only "Type of Care" and payment-related categories
+ * are used, joined in that order. The payload has no hours field, so none is invented here.
+ */
+const SERVICES_CAP = 160
+function findTreatmentServices(row: Record<string, unknown>): string | undefined {
+  const listed = row.services
+  if (!Array.isArray(listed) || listed.length === 0) return undefined
+  const valuesFor = (wanted: (category: string) => boolean) => listed.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return []
+    const { f1, f3 } = entry as { f1?: unknown; f3?: unknown }
+    if (typeof f1 !== "string" || typeof f3 !== "string" || !wanted(f1)) return []
+    return f3.split(";").map((value) => value.trim()).filter(Boolean)
+  })
+  const parts = [...new Set([...valuesFor((category) => category === "Type of Care"), ...valuesFor((category) => category.includes("Payment"))])]
+  let summary = ""
+  for (const part of parts) {
+    const next = summary ? `${summary}; ${part}` : part
+    if (next.length > SERVICES_CAP) break
+    summary = next
+  }
+  return summary || undefined
+}
+
 export function parseFindTreatment(body: unknown): NearbyResource[] {
   const rows = (body as { rows?: Record<string, unknown>[] } | null)?.rows
   if (!Array.isArray(rows)) return []
@@ -240,12 +297,14 @@ export function parseFindTreatment(body: unknown): NearbyResource[] {
     if (!name) return []
     const street = [str(row.street1), str(row.street2)].filter(Boolean).join(", ")
     const address = [street, str(row.city), str(row.state), str(row.zip)].filter(Boolean).join(", ") || undefined
+    const services = findTreatmentServices(row)
     const resource: NearbyResource = {
       name,
       kind: "treatment",
       address,
       phone: str(row.phone, 40),
       website: httpUrl(row.website),
+      ...(services ? { services } : {}),
       lat: num(row.latitude),
       lon: num(row.longitude),
       distanceMiles: num(row.miles) !== undefined ? Math.round((num(row.miles) as number) * 10) / 10 : undefined,
@@ -263,6 +322,7 @@ export function fallbackLinks(kind: ResourceKind) {
   const directories: Partial<Record<ResourceKind, { title: string; url: string }[]>> = {
     treatment: [{ title: "Search FindTreatment.gov", url: "https://findtreatment.gov/" }],
     food: [{ title: "Feeding America food bank locator", url: "https://www.feedingamerica.org/find-your-local-foodbank" }],
+    "quick-meal": [{ title: "Search nearby food in your maps app", url: "https://www.google.com/maps/search/food/" }],
     shelter: [{ title: "HUD Find Shelter", url: "https://www.hud.gov/FindShelter" }],
     showers: [{ title: "HUD Find Shelter (shelters often offer showers)", url: "https://www.hud.gov/FindShelter" }],
     clinic: [{ title: "HRSA Find a Health Center (sliding-scale fees)", url: "https://findahealthcenter.hrsa.gov/" }],

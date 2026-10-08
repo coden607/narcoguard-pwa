@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { watchDesignCalculations, watchDesignModel } from "../lib/watch-design"
+import { watchDesignCalculations, watchDesignCalculations40, watchDesignModel, watchDesignModel40 } from "../lib/watch-design"
 
 // This is a deterministic engineering-model regression check, not a substitute
 // for CAD, enclosure testing, battery qualification, or sensor validation.
@@ -18,6 +18,15 @@ assert.equal(watchDesignModel.waterResistance.sealedInterfaces.length, 6)
 assert.ok(watchDesignModel.waterResistance.sealedInterfaces.every((item) => item.length > 0))
 assert.ok(watchDesignModel.caseDiameterMm > 0)
 assert.ok(watchDesignModel.caseThicknessMm > 0)
+
+// NG 40 mm (women's fit): smaller case and cell, same pod and water-resistance rules.
+assert.deepEqual(watchDesignCalculations40.coreLayerFootprintsMm2, [841, 468, 456])
+assert.ok(watchDesignCalculations40.coreLayerMarginsMm2.every((margin) => margin > 0))
+assert.equal(watchDesignCalculations40.coreStackHeightMm, 9.4)
+assert.equal(watchDesignCalculations40.coreThicknessMarginMm, 2.8)
+assert.equal(watchDesignCalculations40.idealizedRuntimeHours, 90)
+assert.equal(watchDesignModel40.medicationPod.underwaterDeployment, false)
+assert.equal(watchDesignModel40.waterResistance.status, "unverified")
 
 console.log(
   JSON.stringify(

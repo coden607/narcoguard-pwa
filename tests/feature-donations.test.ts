@@ -40,3 +40,13 @@ test("webhook signatures are verified, including timestamp tolerance", () => {
   assert.equal(verifyStripeSignature(payload, null, secret, now), false)
   assert.equal(verifyStripeSignature(payload, "t=abc,v1=00", secret, now), false)
 })
+
+test("the thank-you page only trusts a real, paid Checkout Session and shows no personal data", async () => {
+  const { isCheckoutSessionId, receiptFromSession } = await import("../lib/donations")
+  assert.ok(isCheckoutSessionId("cs_test_a1B2c3D4e5F6g7H8"))
+  for (const bad of ["", "cs_test_", "pi_123", "cs_test_abc/../../v1/customers", "{CHECKOUT_SESSION_ID}", null]) assert.equal(isCheckoutSessionId(bad), false, String(bad))
+  assert.deepEqual(receiptFromSession({ object: "checkout.session", payment_status: "paid", amount_total: 2500, currency: "usd", livemode: false, customer_details: { email: "a@b.c" } }), { paid: true, amountDollars: 25, test: true })
+  assert.deepEqual(receiptFromSession({ object: "checkout.session", payment_status: "unpaid", amount_total: 2500, currency: "usd", livemode: true }), { paid: false, amountDollars: 25, test: false })
+  assert.equal(receiptFromSession({ object: "customer" }), null)
+  assert.equal(receiptFromSession(null), null)
+})

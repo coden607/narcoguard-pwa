@@ -1,203 +1,124 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
+import Link from "next/link"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { GlowButton } from "@/components/effects/glow-button"
-import { AlertTriangle, X, Phone, Users, MapPin, Siren } from "lucide-react"
-import { ParticleField } from "@/components/effects/particle-field"
-import { useLocation } from "@/lib/hooks/use-location"
+import { Button } from "@/components/ui/button"
+import { AlertTriangle, MapPin, MessageSquare, Phone, Pill, Share2 } from "lucide-react"
+import { alertMessage } from "@/lib/contact-alerts-shared"
+import { useEmergencyContacts } from "@/lib/emergency-contacts-store"
+import { useContactAlert } from "@/lib/hooks/use-contact-alert"
 
 interface EmergencyModalProps {
   open: boolean
   onClose: () => void
-  onActivate: () => void
 }
 
-export function EmergencyModal({ open, onClose, onActivate }: EmergencyModalProps) {
-  const [countdown, setCountdown] = useState<number | null>(null)
-  const [isActivated, setIsActivated] = useState(false)
-  const { location, error: locationError } = useLocation(true)
+// Real actions only: the phone dialer, the person's own consented contacts, the share sheet and
+// the resource finder. Nothing here claims that help was dispatched.
 
-  useEffect(() => {
-    if (!open || countdown === null || countdown <= 0) return
+const OVERDOSE_STEPS = [
+  "Call 911. Say the person is not breathing or won't wake up.",
+  "Give naloxone (Narcan): one spray in one nostril.",
+  "If you are trained, give rescue breaths: one every 5 seconds.",
+  "No response after 2–3 minutes? Give a second dose in the other nostril.",
+  "If they are breathing, roll them onto their side (recovery position).",
+  "Stay with them. Naloxone can wear off before the opioid does.",
+]
 
-    const timer = setTimeout(() => {
-      if (countdown === 1) {
-        onActivate()
-        setIsActivated(true)
-      }
-      setCountdown(countdown - 1)
-    }, 1000)
-
-    return () => clearTimeout(timer)
-  }, [countdown, onActivate, open])
-
-  const startEmergency = () => {
-    setCountdown(3)
+async function shareLocation(): Promise<string> {
+  if (!("geolocation" in navigator)) return "Location is not available in this browser."
+  const position = await new Promise<GeolocationPosition | null>((resolve) =>
+    navigator.geolocation.getCurrentPosition(resolve, () => resolve(null), { enableHighAccuracy: true, timeout: 10_000, maximumAge: 30_000 }),
+  )
+  if (!position) return "Location permission was not given."
+  const link = `https://maps.google.com/?q=${position.coords.latitude.toFixed(5)},${position.coords.longitude.toFixed(5)}`
+  const text = `I need help. My location: ${link}`
+  try {
+    if (typeof navigator.share === "function") {
+      await navigator.share({ title: "My location", text })
+      return "Location shared."
+    }
+    await navigator.clipboard.writeText(text)
+    return "Location link copied. Paste it into a message."
+  } catch {
+    return "Sharing was cancelled."
   }
+}
 
-  const cancelEmergency = () => {
-    setCountdown(null)
-    setIsActivated(false)
-    onClose()
-  }
-
-  const handleOpenChange = (nextOpen: boolean) => {
-    if (!nextOpen) cancelEmergency()
-  }
+export function EmergencyModal({ open, onClose }: EmergencyModalProps) {
+  const { state } = useEmergencyContacts()
+  const { available, sending, deliveries, note, send } = useContactAlert()
+  const [stage, setStage] = useState<"idle" | "preview">("idle")
+  const [includeLocation, setIncludeLocation] = useState(true)
+  const [shareNote, setShareNote] = useState<string>()
+  const confirmed = state.contacts.filter((contact) => contact.status === "confirmed" && contact.proof)
+  const senderName = state.senderName.trim() || confirmed[0]?.name || "Your name"
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md glass neon-border motion-safe:emergency-pulse">
-        <ParticleField count={30} color="var(--glow-emergency)" />
-
+    <Dialog open={open} onOpenChange={(next) => { if (!next) { setStage("idle"); onClose() } }}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto" data-testid="emergency-modal">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-2xl font-orbitron">
-            <AlertTriangle className="w-6 h-6 text-destructive motion-safe:animate-bounce" />
-            Emergency Response
+          <DialogTitle className="flex items-center gap-2 text-2xl">
+            <AlertTriangle className="h-6 w-6 text-destructive" aria-hidden="true" />Get help now
           </DialogTitle>
-          <DialogDescription>
-            Demonstration only. This flow does not contact 911 or confirm that an alert was received.
-          </DialogDescription>
+          <DialogDescription>Call 911 first. The other buttons reach people you chose; NarcoGuard does not contact 911 for you.</DialogDescription>
         </DialogHeader>
 
-        {!isActivated && countdown === null && (
-          <div className="space-y-6 py-4">
-            <p className="text-center text-muted-foreground">This is a demonstration flow. It does not contact 911 or guarantee that anyone received an alert. Call 911 for an actual emergency. The demo will attempt to:</p>
+        <Button asChild size="lg" className="w-full bg-none bg-red-600 py-6 text-lg text-white hover:bg-red-700">
+          <a href="tel:911"><Phone className="mr-2 h-5 w-5" aria-hidden="true" />Call 911</a>
+        </Button>
 
-            <div className="space-y-3">
-              <div className="flex items-center gap-3 p-3 rounded-lg glass">
-                <div className="p-2 rounded-full bg-destructive/20">
-                  <Siren className="w-5 h-5 text-destructive" />
-                </div>
-                <p className="text-sm">Simulate a nearby-Hero alert request</p>
-              </div>
+        <section aria-labelledby="overdose-steps" className="rounded-lg border border-red-500/40 bg-red-500/10 p-3">
+          <h3 id="overdose-steps" className="font-semibold">If someone may be overdosing</h3>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm">
+            {OVERDOSE_STEPS.map((step) => <li key={step}>{step}</li>)}
+          </ol>
+          <p className="mt-2 text-xs text-muted-foreground">General guidance, not medical advice. Follow the 911 dispatcher&apos;s instructions.</p>
+        </section>
 
-              <div className="flex items-center gap-3 p-3 rounded-lg glass">
-                <div className="p-2 rounded-full bg-destructive/20">
-                  <Phone className="w-5 h-5 text-destructive" />
-                </div>
-                <p className="text-sm">Simulate emergency-contact notification</p>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-lg glass">
-                <div className="p-2 rounded-full bg-destructive/20">
-                  <MapPin className="w-5 h-5 text-destructive" />
-                </div>
-                <div className="text-sm flex-1">
-                  <p>Include location if permission is available</p>
-                  {location && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                      <span className="ml-2">±{location.accuracy.toFixed(0)}m</span>
-                    </p>
-                  )}
-                  {locationError && <p className="text-xs text-destructive mt-1">{locationError}</p>}
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3 p-3 rounded-lg glass">
-                <div className="p-2 rounded-full bg-destructive/20">
-                  <Users className="w-5 h-5 text-destructive" />
-                </div>
-                <p className="text-sm">Display naloxone location</p>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <GlowButton variant="emergency" className="flex-1" onClick={startEmergency}>
-                Run Emergency Demo
-              </GlowButton>
-              <GlowButton variant="default" onClick={cancelEmergency} aria-label="Close emergency demo">
-                <X className="w-4 h-4" />
-              </GlowButton>
-            </div>
-          </div>
-        )}
-
-        {countdown !== null && countdown > 0 && (
-          <div className="space-y-6 py-8" role="status" aria-live="polite">
-            <div className="relative">
-              <div className="text-center">
-                <div className="text-8xl font-bold text-destructive glow-text emergency-pulse font-orbitron">
-                  {countdown}
-                </div>
-                <p className="text-muted-foreground mt-4">Starting the demonstration...</p>
-              </div>
-
-              {/* Circular progress */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <svg className="w-64 h-64 -rotate-90">
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r="120"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    className="text-muted opacity-20"
-                  />
-                  <circle
-                    cx="128"
-                    cy="128"
-                    r="120"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    strokeDasharray={`${2 * Math.PI * 120}`}
-                    strokeDashoffset={`${2 * Math.PI * 120 * (countdown / 3)}`}
-                    className="text-destructive emergency-pulse"
-                    style={{ transition: "stroke-dashoffset 1s linear" }}
-                  />
-                </svg>
-              </div>
-            </div>
-
-            <GlowButton variant="default" className="w-full" onClick={cancelEmergency}>
-              Cancel
-            </GlowButton>
-          </div>
-        )}
-
-        {isActivated && (
-          <div className="space-y-6 py-8 text-center" role="status" aria-live="polite">
-            <div className="relative">
-              <Siren className="w-24 h-24 mx-auto text-destructive emergency-pulse" />
-              <div className="absolute inset-0 blur-2xl bg-destructive/50 animate-pulse" />
-            </div>
-
-            <div>
-              <h3 className="text-2xl font-bold text-destructive glow-text font-orbitron">
-                DEMO REQUEST COMPLETE
-              </h3>
-              <p className="text-muted-foreground mt-2">No emergency response is confirmed. Call 911 if help is needed.</p>
-              {location && (
-                <p className="text-xs text-muted-foreground mt-2 font-mono">
-                  Location: {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
-                </p>
-              )}
-            </div>
-
+        <section aria-labelledby="contacts-alert" className="space-y-2 rounded-lg border p-3">
+          <h3 id="contacts-alert" className="flex items-center gap-2 font-semibold"><MessageSquare className="h-4 w-4" aria-hidden="true" />Text my emergency contacts</h3>
+          {confirmed.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No confirmed contacts on this device. <Link href="/contacts" className="underline text-primary">Set them up</Link> for next time.
+            </p>
+          ) : available === false ? (
+            <p className="text-sm text-muted-foreground">Texting is not switched on yet, so no text can be sent. Call 911 or call your contacts directly.</p>
+          ) : stage === "idle" ? (
+            <Button type="button" className="w-full" disabled={sending || available === null} onClick={() => setStage("preview")}>
+              Text {confirmed.map((contact) => contact.name).join(", ")}
+            </Button>
+          ) : (
             <div className="space-y-2">
-              <div className="flex items-center justify-between p-3 rounded-lg glass">
-                <span className="text-sm">Hero alert: demo only</span>
-                <div className="w-2 h-2 rounded-full bg-muted-foreground" aria-hidden="true" />
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg glass">
-                <span className="text-sm">Location: not confirmed</span>
-                <div className="w-2 h-2 rounded-full bg-muted-foreground" aria-hidden="true" />
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg glass">
-                <span className="text-sm">Contacts: not confirmed</span>
-                <div className="w-2 h-2 rounded-full bg-muted-foreground" aria-hidden="true" />
+              <blockquote className="rounded border-l-4 border-primary bg-background/60 p-2 text-sm" data-testid="emergency-alert-preview">
+                {alertMessage({ senderName, locationUrl: includeLocation ? "https://maps.google.com/?q=…" : undefined })}
+              </blockquote>
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={includeLocation} onChange={(event) => setIncludeLocation(event.target.checked)} />
+                Include my current location
+              </label>
+              <div className="flex gap-2">
+                <Button type="button" className="flex-1 bg-none bg-red-600 text-white hover:bg-red-700" disabled={sending} onClick={async () => { if (await send({ contacts: confirmed, includeLocation })) setStage("idle") }}>
+                  {sending ? "Sending…" : "Send now"}
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setStage("idle")}>Cancel</Button>
               </div>
             </div>
+          )}
+          {note && <p className="text-sm" role="status">{note}</p>}
+          {deliveries.length > 0 && (
+            <ul className="space-y-1 text-sm" aria-live="polite" data-testid="emergency-deliveries">
+              {deliveries.map((delivery) => <li key={delivery.masked}><span className="font-medium">{delivery.name}</span>: {delivery.label}</li>)}
+            </ul>
+          )}
+        </section>
 
-            <GlowButton variant="success" className="w-full" onClick={cancelEmergency}>
-              Close Demo
-            </GlowButton>
-          </div>
-        )}
+        <div className="grid gap-2 sm:grid-cols-2">
+          <Button type="button" variant="outline" onClick={async () => setShareNote(await shareLocation())}><Share2 className="mr-2 h-4 w-4" aria-hidden="true" />Share my location</Button>
+          <Button asChild variant="outline"><Link href="/help"><Pill className="mr-2 h-4 w-4" aria-hidden="true" />Find naloxone and help</Link></Button>
+        </div>
+        {shareNote && <p className="text-sm" role="status"><MapPin className="mr-1 inline h-4 w-4" aria-hidden="true" />{shareNote}</p>}
       </DialogContent>
     </Dialog>
   )

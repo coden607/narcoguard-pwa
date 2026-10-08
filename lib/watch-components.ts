@@ -20,7 +20,17 @@ export const WATCH_COMPONENTS: readonly WatchComponent[] = [
   { id: "gps", name: "GNSS + Satellite SOS", partNumber: "Platform GNSS + LDS antenna", color: "#01FF70", description: "Location from the platform/modem GNSS (no separate chip); satellite SOS via the W5+ Gen 2 platform. Field accuracy unverified." },
   { id: "crown", name: "Crown + SOS Button", partNumber: "Custom crown + seal + switch", color: "#AAAAAA", description: "Physical button to start a manual SOS or cancel a false alarm; sealing and press force require qualification." },
   { id: "sealed-charge", name: "Sealed Qi / Service Boundary", partNumber: "Qi receiver coil (TBD)", color: "#FFFFFF", description: "No external charging opening; Qi charging and gasketed internal service access are design targets." },
-  { id: "nfc", name: "NFC (Emergency ID)", partNumber: "ST54K", color: "#0074D9", description: "STMicro ST54K for an opt-in emergency medical-ID tap and pairing; payments would need Google Wallet certification (Apple Pay is not possible on non-Apple watches)." },
+  { id: "nfc", name: "NFC + secure element", partNumber: "ST54K", color: "#0074D9", description: "STMicro ST54K: NFC for an opt-in emergency medical-ID tap and pairing, plus the embedded secure element that holds the watch's private key and its owner record for the owner lock. Secure-element firmware is not written yet." },
 ]
+
+const overrides40: Record<string, Partial<WatchComponent>> = {
+  display: { name: '1.2" round AMOLED', partNumber: "~396×396 round (vendor TBD)", description: "Smaller 1.2 in round always-on-capable AMOLED with touch, the size class used on 40 mm watches. Resolution, brightness and vendor are unconfirmed." },
+  battery: { name: "300mAh Li-ion + Qi Charging", partNumber: "300 mAh cell (TBD)", description: "Smaller certified cell, the size class used in 40–41 mm watches, with sealed Qi charging. Expect shorter runtime than the 46 mm; it must be measured on a prototype." },
+  cellular: { description: "Same Snapdragon X35 RedCap modem and ST4SIM eSIM, budgeted as a compact 12×12 mm RF module. Module size, carrier certification and antenna performance in the smaller case are unverified." },
+  crown: { description: "Same manual SOS and cancel button on a slightly smaller crown; sealing and press force require qualification." },
+}
+
+/** NG 40 mm: the same safety functions and numbering, with the parts that change for the smaller case. */
+export const WATCH_COMPONENTS_40: readonly WatchComponent[] = WATCH_COMPONENTS.map((component) => ({ ...component, ...overrides40[component.id] }))
 
 export const calloutNumber = (id: string) => WATCH_COMPONENTS.findIndex((component) => component.id === id) + 1

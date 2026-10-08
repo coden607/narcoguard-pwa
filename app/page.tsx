@@ -1,5 +1,6 @@
 "use client"
 
+import { FUNDING_GOAL, PROTOTYPE_UNITS, formatUsd } from "@/lib/funding-goal"
 import { useState } from "react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
@@ -242,11 +243,18 @@ export default function DashboardPage() {
 
         <EmergencyButton />
 
-        <div className="rounded-xl border border-primary/30 p-5">
-          <h2 className="text-xl font-semibold">Guardian Stability</h2>
-          <p className="text-sm text-muted-foreground mb-3">Opt-in check-ins for food, sleep and everyday needs, with a next-day plan and resource starting points.</p>
-          <Link href="/stability"><Button variant="outline">Open my needs planner</Button></Link>
-          <Link href="/constitution" className="ml-3 underline text-sm">Read the founding Constitution</Link>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="rounded-xl border border-primary/30 p-5">
+            <h2 className="text-xl font-semibold">Guardian Stability</h2>
+            <p className="text-sm text-muted-foreground mb-3">Opt-in check-ins for food, sleep and everyday needs, with a next-day plan and resource starting points.</p>
+            <Link href="/stability"><Button variant="outline">Open my needs planner</Button></Link>
+            <Link href="/constitution" className="ml-3 underline text-sm">Read the founding Constitution</Link>
+          </div>
+          <div className="rounded-xl border border-primary/30 p-5">
+            <h2 className="text-xl font-semibold">Daily Life</h2>
+            <p className="text-sm text-muted-foreground mb-3">Optional wake-up prompts, morning briefing, routines, schedule, thought/mood/gratitude/wins journals, and evening reset.</p>
+            <Link href="/daily-life"><Button variant="outline">Open Daily Life</Button></Link>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -340,7 +348,7 @@ export default function DashboardPage() {
                 </div>
               </div>
               <p className="text-muted-foreground mb-4">
-                Goal: <span className="text-green-400 font-bold">$24,584</span> for 80 watches
+                Goal: <span className="text-green-400 font-bold">{formatUsd(FUNDING_GOAL)}</span> for up to {PROTOTYPE_UNITS} prototype builds and testing
               </p>
               <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer" className="block">
                 <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold text-lg py-6">

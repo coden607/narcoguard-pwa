@@ -16,8 +16,8 @@ export function HeroNetworkStatus() {
         <div className="flex items-center justify-between">
           <h3 className="text-lg font-semibold font-orbitron">HERO NETWORK</h3>
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 pulse-glow" />
-            <span className="text-xs text-muted-foreground">Active</span>
+            <div className="w-2 h-2 rounded-full bg-amber-500" />
+            <span className="text-xs text-muted-foreground">Not connected</span>
           </div>
         </div>
 
@@ -29,6 +29,7 @@ export function HeroNetworkStatus() {
               <span className="text-xs text-muted-foreground">Online</span>
             </div>
             <p className="text-3xl font-bold glow-text">{heroesOnline}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Verified live count unavailable</p>
           </div>
 
           <div className="glass p-4 rounded-lg neon-border">
@@ -37,6 +38,7 @@ export function HeroNetworkStatus() {
               <span className="text-xs text-muted-foreground">Nearby</span>
             </div>
             <p className="text-3xl font-bold glow-text">{nearbyHeroes}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Verified nearby count unavailable</p>
           </div>
         </div>
 
@@ -55,7 +57,7 @@ export function HeroNetworkStatus() {
           <DialogTrigger asChild>
             <GlowButton variant="default" className="w-full">
               <MapPin className="w-4 h-4 mr-2" />
-              View Hero Map
+              View concept map
             </GlowButton>
           </DialogTrigger>
           <DialogContent className="sm:max-w-4xl glass neon-border">

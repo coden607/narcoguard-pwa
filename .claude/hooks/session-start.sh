@@ -37,3 +37,12 @@ if [ -x /opt/pw-browsers/chromium ] && { [ -z "$expected_chromium" ] || [ ! -d "
   persist "export PLAYWRIGHT_CHROMIUM_EXECUTABLE=/opt/pw-browsers/chromium"
   echo "[session-start] Playwright will use /opt/pw-browsers/chromium"
 fi
+
+# Install the complete shared skill library (coden607/skills) at the commit pinned in
+# .agent-skills/manifest.json, so every session starts with every skill. A failure here must not
+# block or stall the session (bounded to 120 s); the gate does not depend on it.
+if timeout 120 bash scripts/bootstrap-agent-skills.sh >/dev/null 2>&1; then
+  echo "[session-start] shared skills installed: $(node -p 'require("./.agent-skills/manifest.json").skills.length') from coden607/skills"
+else
+  echo "[session-start] warning: shared skills could not be installed; run bash scripts/bootstrap-agent-skills.sh"
+fi

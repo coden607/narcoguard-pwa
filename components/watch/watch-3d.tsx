@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react"
 import { RotateCcw, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { BufferGeometry, Material, Mesh, MeshStandardMaterial, WebGLRenderer } from "three"
-import { ENVELOPE, LAYERS, PARTS } from "@/lib/watch-geometry"
+import { GEOMETRY_46, type WatchGeometry } from "@/lib/watch-geometry"
 
 // Realistic 3D model of the NG concept, built from the same millimetre geometry as the engineering
 // drawing. three.js loads only when this component mounts (the 3D tab), so other pages stay light.
@@ -19,8 +19,6 @@ interface SceneApi {
   resetView: () => void
 }
 
-const layer = (id: string) => LAYERS.find((entry) => entry.id === id)!
-const part = (id: string) => PARTS.find((entry) => entry.id === id)!
 
 function drawWatchFace(canvas: HTMLCanvasElement) {
   const size = canvas.width
@@ -56,13 +54,41 @@ function drawWatchFace(canvas: HTMLCanvasElement) {
   ctx.fillText("concept display", c, c + size * 0.19)
 }
 
-export function Watch3D({ selected, onSelect }: { selected: string | null; onSelect: (id: string | null) => void }) {
+/** Laser marking on the case back: serial (example) and the owner-lock notice, set around the rim. */
+function drawCaseBackMark(canvas: HTMLCanvasElement) {
+  const size = canvas.width
+  const ctx = canvas.getContext("2d")!
+  ctx.clearRect(0, 0, size, size)
+  const text = "NG-7K2P-Q9XD · REGISTERED TO ITS OWNER · NOT FOR RESALE · NARCOGUARD.APP · "
+  const radius = size * 0.43
+  ctx.fillStyle = "rgba(225,230,238,0.9)"
+  ctx.font = `600 ${size * 0.03}px ui-monospace, monospace`
+  ctx.textAlign = "center"
+  ctx.textBaseline = "middle"
+  const step = (Math.PI * 2) / text.length
+  for (let i = 0; i < text.length; i++) {
+    const angle = -Math.PI / 2 + i * step
+    ctx.save()
+    ctx.translate(size / 2 + Math.cos(angle) * radius, size / 2 + Math.sin(angle) * radius)
+    ctx.rotate(angle + Math.PI / 2)
+    ctx.fillText(text[i], 0, 0)
+    ctx.restore()
+  }
+}
+
+export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { selected: string | null; onSelect: (id: string | null) => void; geometry?: WatchGeometry }) {
   const mountRef = useRef<HTMLDivElement>(null)
   const apiRef = useRef<SceneApi | null>(null)
   const onSelectRef = useRef(onSelect)
   const [status, setStatus] = useState<Status>("loading")
   const [explode, setExplode] = useState(0)
   const [autoRotate, setAutoRotate] = useState(true)
+  /** Current control values, so a scene rebuilt for another size starts where the controls are. */
+  const controlsRef = useRef({ explode: 0, autoRotate: true, selected })
+
+  useEffect(() => {
+    controlsRef.current = { explode, autoRotate, selected }
+  }, [explode, autoRotate, selected])
 
   useEffect(() => {
     onSelectRef.current = onSelect
@@ -73,6 +99,9 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
     if (!mount) return
     let disposed = false
     let cleanup = () => {}
+
+    const layer = (id: string) => geometry.LAYERS.find((entry) => entry.id === id)!
+    const part = (id: string) => geometry.PARTS.find((entry) => entry.id === id)!
 
     void (async () => {
       const THREE = await import("three")
@@ -94,7 +123,7 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
       renderer.toneMappingExposure = 1.05
       renderer.outputColorSpace = THREE.SRGBColorSpace
       renderer.domElement.setAttribute("role", "img")
-      renderer.domElement.setAttribute("aria-label", "3D model of the NarcoGuard NG concept watch. Drag to rotate, pinch or scroll to zoom.")
+      renderer.domElement.setAttribute("aria-label", `3D model of the NarcoGuard NG ${geometry.model.caseDiameterMm} mm concept watch. Drag to rotate, pinch or scroll to zoom.`)
       renderer.domElement.style.touchAction = "none"
       mount.appendChild(renderer.domElement)
 
@@ -158,13 +187,13 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
       const box = (w: number, h: number, d: number, material: Material, id?: string, radius = 0.25) =>
         mesh(new RoundedBoxGeometry(w, h, d, 3, Math.min(radius, Math.min(w, h, d) / 2.01)), material, id)
 
-      const { caseRadius, internalRadius, displayDiameter, topLug, podLug, crown, opticalWindowDiameter, qiCoil, strapWidth } = ENVELOPE
+      const { caseRadius, internalRadius, displayDiameter, topLug, podLug, crown, opticalWindowDiameter, qiCoil, strapWidth, caseThickness: t } = geometry.ENVELOPE
       const caseBack = layer("case-back")
       const displayLayer = layer("display")
       const crystalLayer = layer("crystal")
 
       // Case middle: a lathe of the wall cross-section.
-      const wall = [[internalRadius, caseBack.z1], [caseRadius - 0.3, caseBack.z1], [caseRadius, 2.2], [caseRadius, 11.6], [caseRadius - 0.5, 12.7], [caseRadius - 1.7, 13.05], [internalRadius + 0.15, 13.05], [internalRadius, crystalLayer.z0], [internalRadius, caseBack.z1]]
+      const wall = [[internalRadius, caseBack.z1], [caseRadius - 0.3, caseBack.z1], [caseRadius, 2.2], [caseRadius, t - 2.2], [caseRadius - 0.5, t - 1.1], [caseRadius - 1.7, t - 0.75], [internalRadius + 0.15, t - 0.75], [internalRadius, crystalLayer.z0], [internalRadius, caseBack.z1]]
       const caseMid = mesh(new THREE.LatheGeometry(wall.map(([r, z]) => new THREE.Vector2(r, z)), 160), titanium, "sealed-charge")
       const lugs = new THREE.Group()
       for (const side of [-1, 1]) {
@@ -203,7 +232,15 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
         led.position.set(Math.cos(angle) * 3.4, -0.32, Math.sin(angle) * 3.4)
         leds.add(led)
       }
-      backGroup.add(back, opticalWindow, coil, flexMesh, leds)
+      const markCanvas = document.createElement("canvas")
+      markCanvas.width = markCanvas.height = 1024
+      drawCaseBackMark(markCanvas)
+      const markTexture = track(new THREE.CanvasTexture(markCanvas))
+      markTexture.colorSpace = THREE.SRGBColorSpace
+      const mark = mesh(new THREE.CircleGeometry(caseRadius - 2.4, 128), track(new THREE.MeshStandardMaterial({ map: markTexture, transparent: true, roughness: 0.6, metalness: 0.2, depthWrite: false })), "nfc")
+      mark.rotation.x = Math.PI / 2
+      mark.position.y = -0.03
+      backGroup.add(back, opticalWindow, coil, flexMesh, leds, mark)
 
       // Battery and main board.
       const battery = part("battery")
@@ -226,7 +263,7 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
         const arc = mesh(new THREE.TorusGeometry(internalRadius - 0.4, 0.35, 8, 64, ((to - from) * Math.PI) / 180), copper, id)
         arc.rotation.x = -Math.PI / 2
         arc.rotation.z = (from * Math.PI) / 180
-        arc.position.y = 9.8
+        arc.position.y = layer("compute").z1 + 0.2
         antennaGroup.add(arc)
       }
       boardGroup.add(antennaGroup)
@@ -240,7 +277,7 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
       face.rotation.x = -Math.PI / 2
       face.position.y = displayLayer.z1 + 0.02
       displayGroup.add(panel, face)
-      const crystalProfile = [[0, crystalLayer.z1], [10, crystalLayer.z1 - 0.05], [17, crystalLayer.z1 - 0.3], [internalRadius, crystalLayer.z0 + 0.9], [internalRadius, crystalLayer.z0], [0, crystalLayer.z0]]
+      const crystalProfile = [[0, crystalLayer.z1], [internalRadius * 0.5, crystalLayer.z1 - 0.05], [internalRadius * 0.85, crystalLayer.z1 - 0.3], [internalRadius, Math.min(crystalLayer.z0 + 0.9, crystalLayer.z1 - 0.4)], [internalRadius, crystalLayer.z0], [0, crystalLayer.z0]]
       const crystal = mesh(new THREE.LatheGeometry(crystalProfile.map(([r, z]) => new THREE.Vector2(r, z)), 128), crystalMaterial)
 
       // Medication pod (research) slides out of its lug.
@@ -260,8 +297,8 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
       strapShape.closePath()
       for (const [start, dir] of [[-topLug.y1 + 1, -1], [-podLug.y0 - 1, 1]] as const) {
         const path = new THREE.CatmullRomCurve3([
-          new THREE.Vector3(0, 7.5, start),
-          new THREE.Vector3(0, 6.5, start + dir * 14),
+          new THREE.Vector3(0, crown.z, start),
+          new THREE.Vector3(0, crown.z - 1, start + dir * 14),
           new THREE.Vector3(0, -4, start + dir * 26),
           new THREE.Vector3(0, -22, start + dir * 30),
         ])
@@ -365,6 +402,10 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
           controls.update()
         },
       }
+      const current = controlsRef.current
+      applyExplode(current.explode)
+      setSelected(current.selected)
+      controls.autoRotate = current.autoRotate && !reducedMotion
       setStatus("ready")
 
       cleanup = () => {
@@ -387,7 +428,7 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
       disposed = true
       cleanup()
     }
-  }, [])
+  }, [geometry])
 
   useEffect(() => {
     apiRef.current?.setExplode(explode)
@@ -402,7 +443,7 @@ export function Watch3D({ selected, onSelect }: { selected: string | null; onSel
   }, [autoRotate, status])
 
   return (
-    <div className="space-y-3" data-testid="watch-3d" data-status={status}>
+    <div className="space-y-3" data-testid="watch-3d" data-status={status} data-case-mm={geometry.model.caseDiameterMm}>
       <div ref={mountRef} className="relative aspect-square w-full overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_50%_35%,#1e293b,#05070b_70%)]">
         {status === "loading" && <p className="absolute inset-0 grid place-items-center text-sm text-muted-foreground" role="status">Loading 3D model…</p>}
         {status === "unsupported" && (

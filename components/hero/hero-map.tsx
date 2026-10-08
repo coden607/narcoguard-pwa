@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { MapPin, Navigation, Users } from "lucide-react"
-import { useLocation } from "@/lib/hooks/use-location"
+import { Button } from "@/components/ui/button"
 
 interface Hero {
   id: number
@@ -14,9 +14,24 @@ interface Hero {
 
 export function HeroMap() {
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const { location: userLocation } = useLocation(true)
-
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null)
+  const [locationNote, setLocationNote] = useState<string>()
   const [heroes] = useState<Hero[]>([])
+
+  const showMyLocation = () => {
+    if (!("geolocation" in navigator)) {
+      setLocationNote("Location is unavailable in this browser.")
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setUserLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy })
+        setLocationNote("Your location is shown only in this on-screen concept map and is not sent to the Hero Network.")
+      },
+      () => setLocationNote("Location permission was not given."),
+      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 120_000 },
+    )
+  }
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -133,11 +148,11 @@ export function HeroMap() {
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-green-500 pulse-glow" />
-            <span className="text-xs">Available Hero</span>
+            <span className="text-xs">Hero marker (when a verified network exists)</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-3 h-3 rounded-full bg-red-500 pulse-glow" />
-            <span className="text-xs">Responding</span>
+            <span className="text-xs">Responding marker (when verified)</span>
           </div>
         </div>
 
@@ -155,6 +170,13 @@ export function HeroMap() {
           </div>
         )}
       </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" variant="outline" onClick={showMyLocation}>Show my location on this concept map</Button>
+        {userLocation && <Button type="button" variant="ghost" onClick={() => { setUserLocation(null); setLocationNote("Location removed from the map.") }}>Hide my location</Button>}
+      </div>
+      {locationNote && <p className="text-xs text-muted-foreground" role="status">{locationNote}</p>}
+      <p className="text-xs text-amber-200">No live Hero responder network is connected. This view does not show responder availability or dispatch anyone.</p>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">

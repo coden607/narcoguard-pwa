@@ -2,7 +2,7 @@
 
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
-import { Phone, MapPin, Users, BookOpen, Calendar, Settings } from "lucide-react"
+import { Phone, MapPin, Users, BookOpen, Contact, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 export function QuickActions() {
@@ -25,9 +25,8 @@ export function QuickActions() {
     router.push("/ar")
   }
 
-  const openEvents = () => {
-    // Open recovery resources
-    window.open("https://www.samhsa.gov/find-help", "_blank")
+  const openContacts = () => {
+    router.push("/contacts")
   }
 
   const openSettings = () => {
@@ -67,9 +66,9 @@ export function QuickActions() {
           <span className="text-xs">Training</span>
         </GlowButton>
 
-        <GlowButton variant="default" className="flex flex-col items-center gap-2 h-auto py-4" onClick={openEvents}>
-          <Calendar className="w-6 h-6" />
-          <span className="text-xs">Events</span>
+        <GlowButton variant="default" className="flex flex-col items-center gap-2 h-auto py-4" onClick={openContacts}>
+          <Contact className="w-6 h-6" />
+          <span className="text-xs">Emergency Contacts</span>
         </GlowButton>
 
         <GlowButton variant="default" className="flex flex-col items-center gap-2 h-auto py-4" onClick={openSettings}>

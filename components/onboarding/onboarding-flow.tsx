@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -35,6 +36,7 @@ import {
   type EmergencyContact,
   type NaloxoneLocation,
 } from "@/lib/user-preferences"
+import { MASLOW_LEVELS } from "@/lib/maslow-resources"
 import { usePWAInstall } from "@/lib/hooks/use-pwa-install"
 import { InstallButton } from "@/components/pwa/install-button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -55,7 +57,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [preferences, setPreferences] = useState(getUserPreferences())
   const { isInstallable, isInstalled, installPWA, method } = usePWAInstall()
 
-  const totalSteps = 12
 
   const nextStep = () => {
     if (step < totalSteps - 1) {
@@ -123,7 +124,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="w-32 h-32 mx-auto float-animation">
           <Image src="/images/narcoguard-icon-256.jpeg" alt="Narcoguard" width={128} height={128} className="w-full h-full rounded-full pulse-glow" />
         </div>
-        <h1 className="text-5xl font-bold glow-text font-orbitron">WELCOME TO NARCOGUARD</h1>
+        <h1 className="text-3xl sm:text-5xl font-bold glow-text font-orbitron text-balance wrap-break-word">WELCOME TO NARCOGUARD</h1>
         <div className="flex items-center justify-center gap-2 text-xl text-primary">
           <Syringe className="w-6 h-6" />
           <span className="font-semibold">NarcoGuard NG Development Concept</span>
@@ -135,22 +136,105 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           naloxone according to its instructions during a suspected overdose.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <HolographicCard className="p-6 text-center">
-          <Syringe className="w-12 h-12 mx-auto mb-4 text-primary pulse-glow" />
-          <h2 className="font-bold mb-2">Delivery Research</h2>
-          <p className="text-sm text-muted-foreground">Proposed naloxone delivery is a research concept, not a current capability</p>
-        </HolographicCard>
-        <HolographicCard className="p-6 text-center">
-          <Users className="w-12 h-12 mx-auto mb-4 text-secondary pulse-glow" />
-          <h2 className="font-bold mb-2">Hero Network</h2>
-          <p className="text-sm text-muted-foreground">A simulated community-response experience for demonstration</p>
-        </HolographicCard>
-        <HolographicCard className="p-6 text-center">
-          <Heart className="w-12 h-12 mx-auto mb-4 text-pink-500 heartbeat" />
-          <h2 className="font-bold mb-2">Transform Lives</h2>
-          <p className="text-sm text-muted-foreground">Recovery resources and support</p>
-        </HolographicCard>
+      <section aria-labelledby="intro-maslow" className="space-y-3" data-testid="intro-maslow">
+        <h2 id="intro-maslow" className="text-2xl font-bold text-center">Your needs first, then your goals</h2>
+        <p className="text-sm text-muted-foreground max-w-2xl mx-auto text-center text-balance">
+          NarcoGuard is built around Maslow&apos;s hierarchy of needs: the body&apos;s basic needs, then safety, connection,
+          stability and the goals you choose. It is a planning aid, not a ranking of people. Every kind of help stays open at
+          every level, and you can start anywhere.
+        </p>
+        <p className="text-sm text-muted-foreground max-w-2xl mx-auto text-center text-balance" data-testid="intro-hijack">
+          Addiction can hijack this ladder: the brain&apos;s reward system can make using feel as urgent as food or sleep, and basic
+          needs, safety and relationships slip away. NarcoGuard helps rebuild from the bottom, alongside treatment, so recovery has a
+          foundation to stand on. It is not a cure and cannot promise recovery.{" "}
+          <Link href="/about#hijack" className="text-primary underline underline-offset-4">How addiction can hijack the hierarchy</Link>
+        </p>
+        <ol className="grid grid-cols-1 sm:grid-cols-5 gap-2">
+          {MASLOW_LEVELS.map((level, index) => (
+            <li key={level.id} className="rounded-lg border border-border bg-background/60 p-3 text-sm">
+              <p className="font-semibold">{index + 1}. {level.title}</p>
+              <p className="text-xs text-muted-foreground">{level.covers}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section aria-labelledby="intro-today" className="space-y-3">
+        <h2 id="intro-today" className="text-2xl font-bold text-center">What works today</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <HolographicCard className="p-5">
+            <MapPin className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Find Help</h3>
+            <p className="text-sm text-muted-foreground">Say what you need in your own words. Needs you name come first; every listing says &quot;call first&quot;, with 211 as a backup.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Sparkles className="w-8 h-8 mb-3 text-secondary" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Angel AI</h3>
+            <p className="text-sm text-muted-foreground">Listens to what you want and suggests small next steps. You decide every step; conversations are not stored.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <AlertTriangle className="w-8 h-8 mb-3 text-red-400" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Emergency steps and training</h3>
+            <p className="text-sm text-muted-foreground">Step-by-step overdose and CPR guidance, short lessons, and Good Samaritan law summaries for every state.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Heart className="w-8 h-8 mb-3 text-pink-500" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Guardian planner</h3>
+            <p className="text-sm text-muted-foreground">Optional and stored only in this browser: daily needs, sleep, goals and tomorrow&apos;s task. Anyone using this browser may see it. Pause or erase it any time.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Award className="w-8 h-8 mb-3 text-yellow-400" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Hero certification</h3>
+            <p className="text-sm text-muted-foreground">Learn overdose response and pass a 12-question test with 100% to become a certified Hero.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Sparkles className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Daily Life</h3>
+            <p className="text-sm text-muted-foreground">Optional routines, schedule, journals and a morning and evening check-in that you set up. Stored only in this browser, not encrypted: anyone using this browser may see it. You can erase it any time.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Phone className="w-8 h-8 mb-3 text-green-500" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Emergency contacts</h3>
+            <p className="text-sm text-muted-foreground">Choose people who agree to get a text from you when you ask for help. Texting works only where it has been set up, and nothing is sent unless you press send.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Eye className="w-8 h-8 mb-3 text-secondary" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Bluetooth readings</h3>
+            <p className="text-sm text-muted-foreground">Show heart rate or oxygen from a standard Bluetooth monitor in Chrome or Edge on Android, Windows, macOS or ChromeOS; iPhone browsers can&apos;t connect. Readings stay on screen and are never used to detect overdoses.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Shield className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Optional account</h3>
+            <p className="text-sm text-muted-foreground">Back up contacts and settings with encryption only you can unlock. Never needed for help or emergencies.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <ArrowDown className="w-8 h-8 mb-3 text-green-500" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Install and offline</h3>
+            <p className="text-sm text-muted-foreground">Add NarcoGuard to your home screen for one-tap access. Without a connection, search and Angel won&apos;t work and an offline page reminds you to call 911.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Syringe className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
+            <h3 className="font-bold mb-1">In development: NG watch</h3>
+            <p className="text-sm text-muted-foreground">A wearable research concept. It does not monitor, detect or treat overdose, and none has shipped.</p>
+          </HolographicCard>
+        </div>
+      </section>
+
+      <div data-testid="intro-constitution">
+      <HolographicCard className="p-5 space-y-2">
+        <h2 className="text-xl font-bold flex items-center gap-2"><FileText className="w-5 h-5 text-primary" aria-hidden="true" />Founding Constitution</h2>
+        <p className="text-sm text-muted-foreground">
+          NarcoGuard&apos;s founding Constitution is a public draft, not yet ratified. Its proposed rights floor: food, hygiene, housing
+          help and emergency guidance never depend on tracking, a risk score or sharing protected data; you can refuse or revoke
+          location and contact sharing; and no automated score may by itself deny you help. These are proposals, not yet
+          enforceable. Anyone can read the draft and give feedback.
+        </p>
+        <p className="text-sm">
+          <Link href="/constitution" className="text-primary underline underline-offset-4">Read the Constitution</Link>
+          <span className="text-muted-foreground"> · </span>
+          <Link href="/about" className="text-primary underline underline-offset-4">How NarcoGuard works</Link>
+        </p>
+      </HolographicCard>
       </div>
     </div>,
 
@@ -480,7 +564,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="flex items-start space-x-3">
             <Checkbox
               id="neverUseAlone"
-              checked={preferences.features.neverUseAlone}
+              disabled
+              checked={false}
               onCheckedChange={(checked) =>
                 setPreferences({
                   ...preferences,
@@ -495,7 +580,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
               <p className="text-sm text-muted-foreground">
                 Not active: NarcoGuard cannot monitor you or send help if you stop responding. Don't use alone; have
                 someone with you who has naloxone, and call 911 if someone may be overdosing.
-                to check-ins
               </p>
             </div>
           </div>
@@ -516,7 +600,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           <div className="flex items-start space-x-3">
             <Checkbox
               id="autoDetection"
-              checked={preferences.features.autoDetection}
+              disabled
+              checked={false}
               onCheckedChange={(checked) =>
                 setPreferences({
                   ...preferences,
@@ -547,10 +632,10 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             />
             <div className="space-y-1">
               <Label htmlFor="voiceActivation" className="text-base font-semibold cursor-pointer">
-                Voice Activation (planned)
+                Angel voice controls
               </Label>
               <p className="text-sm text-muted-foreground">
-                Not active: voice commands do not trigger any response.
+                Enables push-to-talk, hands-free conversation, and spoken replies inside Angel AI when your browser supports speech. This is not an always-listening wake word.
               </p>
             </div>
           </div>
@@ -588,7 +673,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         <div className="flex items-start space-x-3">
           <Checkbox
             id="shareWithHeroes"
-            checked={preferences.privacy.shareWithHeroes}
+            disabled
+            checked={false}
             onCheckedChange={(checked) =>
               setPreferences({
                 ...preferences,
@@ -1110,6 +1196,8 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     </div>,
   ]
 
+  const totalSteps = steps.length
+
   const isStep2Invalid = step === 2 && !name
   const isStep10Invalid = step === 10 && (!preferences.legal.state || !preferences.legal.acknowledgedGoodSamaritan)
   const isStep11Invalid =
@@ -1161,35 +1249,6 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             </GlowButton>
           ) : null}
 
-          {step === totalSteps - 1 && (
-            <div className="ml-auto flex flex-col gap-3 flex-1">
-              {isInstallable && (
-                <GlowButton
-                  onClick={async () => {
-                    const success = await installPWA()
-                    if (success) {
-                      setTimeout(completeOnboarding, 500)
-                    }
-                  }}
-                  className="w-full"
-                  size="lg"
-                >
-                  Install & Launch Dashboard
-                </GlowButton>
-              )}
-
-              <GlowButton
-                onClick={() => {
-                  completeOnboarding()
-                }}
-                className="w-full bg-green-500 hover:bg-green-600"
-                size="lg"
-              >
-                {isInstallable ? "Skip Install & " : ""}Launch Dashboard
-                <ChevronRight className="w-5 h-5 ml-2" />
-              </GlowButton>
-            </div>
-          )}
         </div>
       </div>
     </div>

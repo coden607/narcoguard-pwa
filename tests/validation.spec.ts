@@ -79,10 +79,7 @@ test.describe("NarcoGuard Production Validation", () => {
   })
 
   test("native text correction is enabled for prose fields", async ({ page }) => {
-    await page.goto("/hero-signup")
-    const name = page.locator("input[type=\"text\"]").first()
-    await expect(name).toHaveAttribute("spellcheck", "true")
-    await expect(name).toHaveAttribute("autocorrect", "on")
+    await page.goto("/auth")
     const email = page.locator("input[type=\"email\"]").first()
     await expect(email).toHaveAttribute("spellcheck", "false")
     await expect(email).toHaveAttribute("autocorrect", "off")

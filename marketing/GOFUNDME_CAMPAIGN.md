@@ -1,160 +1,130 @@
-# NarcoGuard GoFundMe Campaign - Complete Setup Guide
+# NarcoGuard GoFundMe campaign copy
 
-## Campaign Title
-**80 Life-Saving Watches for Broome County - NarcoGuard NG**
-
----
-
-## Campaign Story (Copy this to GoFundMe)
-
-### The Story
-
-**My name is Stephen Blanford, and I'm a recovering addict who has lost too many friends to overdose.**
-
-Every 5 minutes, someone in America dies from an opioid overdose. In my hometown of Binghamton, New York, I've watched this crisis destroy families, including my own. I've been to too many funerals. I've made too many "I'm sorry for your loss" calls.
-
-**But I refuse to just watch anymore. I built something that can actually save lives.**
-
-### What is NarcoGuard?
-
-NarcoGuard is a revolutionary smartwatch system I've spent years developing. It's not just another app - it's a complete life-saving system:
-
-**The NG Watch:**
-- Monitors vital signs 24/7 (heart rate, blood oxygen, breathing)
-- Uses AI to detect overdose within seconds
-- **PROPOSED DELIVERY CONCEPT** - requires engineering, clinical, regulatory, and human-factors validation
-- Alerts 911, family, and nearby trained responders
-- Works even if you're alone
-
-**The App (FREE - try it now at narcoguard.app):**
-- Emergency SOS button
-- Hero Network - connects trained responders in your area
-- Guardian AI - personalized support and resources
-- AR-guided CPR and naloxone training
-- 24/7 recovery resources and hotlines
-
-### Why Broome County?
-
-Broome County has one of the highest overdose rates in New York State. In recent years, over 150 people have died from overdoses here - mothers, fathers, sons, daughters, friends.
-
-**These are not statistics. These are people I knew. People you might have known too.**
-
-### The Goal: 80 Watches = 80 Lives Protected
-
-I'm raising $24,584 to build and distribute **80 NarcoGuard NG watches completely FREE** to at-risk individuals in Broome County.
-
-**Cost Breakdown:**
-- $262.30 - Watch hardware and sensors
-- $45.00 - Naloxone cartridge
-- **$307.30 per watch**
-- **$24,584 total for 80 watches**
-
-### Where Does Your Money Go?
-
-**100% goes to watch production and distribution.**
-- I'm not taking a salary
-- No administrative costs
-- No marketing fees
-- Every dollar = saving lives
-
-### Why I Built This
-
-I've been clean for years, but I remember the fear. Using alone, knowing that one bad batch could be my last. Wishing someone was there to save me if something went wrong.
-
-**The NG watch IS that someone.**
-
-It doesn't judge. It doesn't sleep. It doesn't give up on you. It just saves your life.
-
-### See It In Action
-
-**Try the app RIGHT NOW - no account needed:**
-https://narcoguard.app
-
-Click "Skip Setup (Demo Mode)" to explore:
-- The emergency SOS system
-- Real-time vitals monitoring
-- The Hero Network map
-- AR naloxone training
-- Full watch specifications and blueprint
-
-### How You Can Help
-
-**$10** - Contributes to one sensor component
-**$25** - Covers a naloxone cartridge
-**$50** - Funds the life-saving injection system
-**$100** - Covers half a watch
-**$307** - FULLY FUNDS ONE WATCH = ONE LIFE SAVED
-
-**Can't donate?** Share this campaign. Every share could save a life.
-
-### The Impact
-
-If we fund all 80 watches:
-- 80 people protected 24/7 from fatal overdose
-- Families who won't get that 3 AM phone call
-- A model program that can scale nationwide
-- **Proof that technology can end this crisis**
-
-### My Promise
-
-I promise every donor:
-- Transparent spending reports
-- Photo/video updates of watch production
-- Stories from people whose lives are saved (with permission)
-- A community of people who said "enough is enough"
-
-### Join the Movement
-
-This isn't just a fundraiser. It's a movement.
-
-We're saying NO to preventable deaths.
-We're saying YES to second chances.
-We're proving that ONE PERSON can make a difference.
-
-**Will you be part of saving 80 lives?**
+Paste-ready text for https://gofund.me/9acf270ea, rewritten in October 2026 to match what is live today and what comes next. Every claim below can be checked on https://www.narcoguard.app. Before posting, go through **Confirm before posting** at the end; those are facts and decisions only Stephen can supply.
 
 ---
 
-**Donate now:** https://gofund.me/9acf270ea
+## Title (GoFundMe allows 60 characters)
 
-**Try the app:** https://narcoguard.app
+**Help build NarcoGuard: free overdose & recovery help app**
 
-**Contact me:** narcoguard607@gmail.com
+Alternate: **NarcoGuard: free recovery help now, a safer watch next**
 
-**With hope and determination,**
-**Stephen Blanford**
-**Founder, NarcoGuard | Broome Estates LLC**
-**Binghamton, NY**
+## Short description (shown on shares)
 
----
-
-## Campaign Settings
-
-**Category:** Medical, Illness & Healing
-**Tags:** opioid crisis, overdose prevention, naloxone, harm reduction, smartwatch, technology, Binghamton, New York, life-saving
-
-**Goal:** $24,584
-
-**Beneficiary:** Broome Estates LLC (Stephen Blanford)
+NarcoGuard is a free app from Binghamton, NY that helps people find food, shelter, treatment and overdose-response steps, and is building toward a wearable. Your gift funds careful prototype engineering and testing.
 
 ---
 
-## GoFundMe Optimization Tips
+## Story
 
-1. **Update weekly** with progress photos and stories
-2. **Thank every donor** publicly in updates
-3. **Share milestones** ($5k, $10k, $15k, etc.)
-4. **Post video updates** showing the app and watch prototypes
-5. **Engage with comments** within 24 hours
-6. **Cross-post to social media** daily
+### Why I started
+
+My name is Stephen Blanford. I'm in recovery, and I have lost too many friends to overdose here in Binghamton. I remember the fear of using alone. NarcoGuard is my answer: help that is there when someone needs it, without judgment, and that starts with whatever the person needs today.
+
+### How addiction hijacks the ladder
+
+Psychologist Abraham Maslow described human needs as a ladder: food, sleep and shelter first, then safety, connection, self-respect and the goals that matter to you. Addiction can turn that ladder upside down. The National Institute on Drug Abuse explains that drugs over-activate the brain's reward circuit, and with repeated use it becomes hard to feel pleasure from anything besides the drug (https://nida.nih.gov/publications/drugs-brains-behavior-science-addiction/drugs-brain). Money for meals goes to using, sleep and safety slip, housing, family and work fall away, and every lost step makes recovery harder to start.
+
+NarcoGuard is built to help rebuild that ladder from the bottom, alongside treatment, not instead of it. It can't cure addiction or promise recovery, but meeting basic needs removes obstacles that stand in the way. For treatment referrals, SAMHSA's National Helpline is free, confidential and open 24/7: 1-800-662-4357.
+
+### What already works, free, today
+
+Open https://www.narcoguard.app on any phone. No account is needed, and nothing here replaces 911.
+
+- **Emergency steps.** Clear, step-by-step overdose and CPR guidance, with a beat to keep compressions on pace and a reminder about when to consider a second naloxone dose.
+- **Find Help, basic needs first.** Type what you need in your own words, like "I'm hungry and have nowhere to sleep". NarcoGuard shows the needs you name first, with basic needs such as food, water and shelter leading, then health, recovery and connection, and growth. Listings come from SAMHSA's FindTreatment.gov and OpenStreetMap, and every one says "call first", with 211 as a backup.
+- **Angel AI.** A private chat that listens to what you want and helps break it into small next steps. It reminds you to call 911 or 988 when you need to. Your messages go to an AI provider to get a reply, but NarcoGuard doesn't store or log your conversations, and you decide every step.
+- **Guardian planner.** An optional planner that stays on your phone: daily needs, sleep, goals and tomorrow's task. You can pause or erase it any time.
+- **Training and Hero certification.** Short lessons on overdose response, and a 12-question test you must pass with 100% to become a certified NarcoGuard Hero.
+- **Overdose Good Samaritan law summaries** for every state, with citations.
+
+The app is built around Maslow's hierarchy of needs. It is hard to work on recovery or a job while hungry or without a safe place to sleep, so NarcoGuard puts those needs first and then helps you work toward your own goals. You can read how it works at https://www.narcoguard.app/about.
+
+### What we are building next
+
+**The NarcoGuard NG watch** is a wearable concept, and no watch has shipped. Its full parts list and engineering drawings are public at https://www.narcoguard.app/watch. The current parts estimate is **$325.40 in components**, or about **$450 per finished prototype** once assembly, quality and compliance testing, packaging and a naloxone refill are added.
+
+**Why auto-injection.** Naloxone can reverse an opioid overdose, but only if someone is there to give it, and many people use alone. We want to research whether a wearable could one day recognize signs consistent with an opioid overdose, warn the wearer, and, if they don't respond, deliver a dose of naloxone automatically while help is called.
+
+The watch is **not a medical device**. It does not detect overdoses or deliver naloxone today, and it must not be relied on. Getting there honestly takes:
+
+1. **Sensing research:** bench prototypes to test which signals (breathing, heart rate, blood oxygen) can be measured reliably on a wrist, and where they fail.
+2. **Delivery engineering:** the auto-injection mechanism and naloxone cartridge, with safeguards against accidental triggers, a way for the wearer to cancel, and checks that the dose was delivered.
+3. **Independent review:** safety, clinical and human-factors review, and testing with people who use drugs and recovery communities before anyone wears it.
+4. **The FDA pathway:** a device that delivers a drug is regulated as a combination product and needs FDA review and marketing authorization before it can be offered to anyone; the exact pathway (for example NDA, PMA, De Novo or 510(k)) is still to be determined (https://www.fda.gov/combination-products/about-combination-products).
+
+The app also has features that are **built but switched off** until they pass a separate safety and privacy review. One is a way for certified Heroes nearby to see that someone asked for help after 911 was called. We will not turn anything like that on until it is reviewed.
+
+### The goal: $36,032
+
+The goal is sized at up to 80 prototype builds, at the current estimate of about $450 each including assembly, testing, packaging and a naloxone refill. Some of what is raised also goes to the other costs below, such as bench test equipment, expert review and keeping the free app running, so the actual number of builds will be lower. Updates will report how many were built and how the money was split.
+
+### Where your money goes
+
+Donations fund:
+
+- prototype parts and builds, at about $450 per prototype under the current estimate;
+- bench testing equipment and test fixtures;
+- expert design and safety review;
+- keeping the free app running (hosting, maps and directory lookups, AI chat).
+
+A donation does not buy a device, a service or early access. Donations are not tax-deductible. If you donated by mistake, email narcoguard607@gmail.com within 30 days for a refund.
+
+### My promise to you
+
+- **Spending reports.** I'll post what was spent and on what, with receipts available on request.
+- **Honest updates.** You'll see photos and video of prototype and test progress, including what didn't work.
+- **No hype.** I won't call anything finished, approved or life-saving before it has been tested and reviewed.
+- **Privacy first.** Personal data is never sold, and help in the app never depends on making an account. Some features need outside services: Angel sends your messages to an AI provider only after you agree to start a chat, and nearby searches send a location rounded to about 1 km to public directories. NarcoGuard does not store or log either.
+
+### How you can help
+
+- **Donate any amount.** Every gift goes to the work above.
+- **Share this page.** Tell people about the free app at https://www.narcoguard.app.
+- **Become a Hero.** Take the training and test at https://www.narcoguard.app/hero-signup.
+- **Have a say.** NarcoGuard's founding Constitution draft is open for public feedback at https://www.narcoguard.app/constitution.
+
+If someone may be overdosing, call 911 now and give naloxone if you have it. For a crisis, call or text 988.
+
+With gratitude,
+Stephen Blanford
+Founder, NarcoGuard · Binghamton, NY
+narcoguard607@gmail.com
 
 ---
 
-## Recommended Update Schedule
+## Suggested giving levels
 
-**Monday:** Progress update with photos
-**Wednesday:** Feature spotlight (one app feature explained)
-**Friday:** Personal story or testimonial
-**Sunday:** Thank you post to recent donors
+| Amount | What it supports |
+| --- | --- |
+| $10 | Hosting and directory lookups that keep the free app running |
+| $25 | Small parts and supplies for bench testing |
+| $50 | Prototype materials |
+| $100 | Test fixtures and design-review time |
+| $450 | About one prototype build under the current estimate |
+
+## Campaign settings
+
+- **Category:** Community or Medical. Pick the one GoFundMe's terms fit best for a prototype-development fundraiser. "Medical" is meant for an individual's treatment, so "Community" is usually the closer fit.
+- **Tags:** overdose prevention, naloxone, recovery, harm reduction, Binghamton, Broome County, community app
+- **Photos:** use the concept images labelled as concept renders, plus real screenshots of the app. Don't use any image that looks like a finished product in use.
+
+## Weekly update ideas
+
+- **Build log:** a photo of a prototype part or test and one sentence on what was learned.
+- **App feature:** a short screen recording of one live feature, such as Find Help, Angel or training.
+- **Spending:** a short spending summary with a running total.
+- **Thanks:** thank donors and Heroes by first name only, and only with their permission.
 
 ---
+
+## Confirm before posting
+
+Stephen must check these; nothing above should be posted until they are true.
+
+1. **Goal amount.** Set the GoFundMe goal to **$36,032**: 80 prototype builds at the current estimate of $450.40 each, published at https://www.narcoguard.app/watch. The app's home page, support page and stats API now use the same figure (`lib/funding-goal.ts`). The copy avoids promising 80 free watches, because no watch can be given to people until it is tested and allowed.
+2. **Use of funds.** If you want percentages, such as how much goes to prototypes or to app hosting, add your real numbers. Don't keep the old "100% to watches, no salary, no admin costs" line unless it is true and you can show it.
+3. **Your story.** The "Why I started" paragraph keeps your own words from the old campaign. Edit it so every detail is yours and accurate.
+4. **Statistics.** The old copy said "every 5 minutes" and "over 150 deaths in Broome County". Those lines were removed because they had no source. Add a number only with a current source link, such as CDC's provisional overdose data or New York State's county opioid dashboard.
+5. **Who receives the money.** The old settings listed Broome Estates LLC (Stephen Blanford). Make sure the GoFundMe beneficiary and payout account match who will actually spend the funds.
