@@ -40,8 +40,8 @@ fi
 
 # Install the complete shared skill library (coden607/skills) at the commit pinned in
 # .agent-skills/manifest.json, so every session starts with every skill. A failure here must not
-# block the session; the gate does not depend on it.
-if bash scripts/bootstrap-agent-skills.sh >/dev/null 2>&1; then
+# block or stall the session (bounded to 120 s); the gate does not depend on it.
+if timeout 120 bash scripts/bootstrap-agent-skills.sh >/dev/null 2>&1; then
   echo "[session-start] shared skills installed: $(node -p 'require("./.agent-skills/manifest.json").skills.length') from coden607/skills"
 else
   echo "[session-start] warning: shared skills could not be installed; run bash scripts/bootstrap-agent-skills.sh"

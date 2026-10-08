@@ -80,15 +80,15 @@ interface OsmKindSpec {
   exclude?: Record<string, string[]>
   /** Dense kinds use a smaller radius so the nearest places are not crowded out. */
   radius: number
-  /** Name shown for places that usually have none, such as a public drinking fountain. */
-  unnamed?: string
+  /** Name shown for places that usually have none, such as a public drinking fountain; a function names only matching tags. */
+  unnamed?: string | ((tags: Record<string, string>) => string | undefined)
 }
 
 const NOT_PUBLIC = { access: ["private", "no", "customers"] }
 
 export const OSM_KINDS: Record<OsmKind, OsmKindSpec> = {
   // Community fridges and pantries are mapped as food_sharing.
-  food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }, { amenity: "food_sharing" }], radius: SEARCH_RADIUS_METERS },
+  food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }, { amenity: "food_sharing" }], radius: SEARCH_RADIUS_METERS, unnamed: (tags) => (tags.amenity === "food_sharing" ? "Food pantry or community fridge" : undefined) },
   "quick-meal": { filters: [{ amenity: "fast_food" }, { amenity: "cafe" }, { shop: "convenience" }, { shop: "supermarket" }], radius: 5_000 },
   // Hotels contracted as temporary shelters are often mapped this way and go stale when contracts end.
   // Services for people experiencing homelessness are listed too; every listing says to call first, so none promises a bed.
@@ -184,7 +184,8 @@ interface OverpassElement { lat?: number; lon?: number; center?: { lat: number; 
 
 function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: number; lon: number }): NearbyResource | undefined {
   const tags = element.tags ?? {}
-  const name = str(tags.name) ?? OSM_KINDS[kind].unnamed
+  const unnamed = OSM_KINDS[kind].unnamed
+  const name = str(tags.name) ?? (typeof unnamed === "function" ? unnamed(tags) : unnamed)
   const lat = element.lat ?? element.center?.lat
   const lon = element.lon ?? element.center?.lon
   if (!name || lat === undefined || lon === undefined) return undefined
@@ -204,7 +205,7 @@ function toResource(kind: OsmKind, element: OverpassElement, origin: { lat: numb
   }
 }
 
-function nearestUnique(resources: NearbyResource[], limit: number): NearbyResource[] {
+export function nearestUnique(resources: NearbyResource[], limit: number): NearbyResource[] {
   const seen = new Set<string>()
   return resources
     .sort((a, b) => (a.distanceMiles ?? 0) - (b.distanceMiles ?? 0))

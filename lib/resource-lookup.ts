@@ -1,5 +1,5 @@
 import { orderByMaslow } from "@/lib/need-intent"
-import { coarsen, fallbackLinks, findTreatmentUrl, MAX_RESULTS_PER_KIND, OSM_QUERY_GROUPS, overpassNeedsQuery, overpassQuery, parseFindTreatment, parseOverpass, parseOverpassNeeds, RESOURCE_KINDS, WIDE_RADIUS_METERS, WIDEN_KINDS, type NearbyResource, type OsmKind, type ResourceKind } from "@/lib/resource-finder"
+import { coarsen, fallbackLinks, findTreatmentUrl, MAX_RESULTS_PER_KIND, nearestUnique, OSM_KIND_ORDER, OSM_QUERY_GROUPS, overpassNeedsQuery, overpassQuery, parseFindTreatment, parseOverpass, parseOverpassNeeds, RESOURCE_KINDS, WIDE_RADIUS_METERS, WIDEN_KINDS, type NearbyResource, type OsmKind, type ResourceKind } from "@/lib/resource-finder"
 
 const USER_AGENT = "NarcoGuard/2.0 (+https://www.narcoguard.app)"
 
@@ -155,14 +155,23 @@ export async function lookupNeeds(origin: ResourceOrigin): Promise<NeedsLookup> 
 
   const kinds = allUnavailable()
   if (treatment.status === "fulfilled") kinds.treatment = { status: "ok", results: treatment.value, fallback: fallbackLinks("treatment") }
+  // A place can match needs outside its request's group (a store tagged shower=yes), so every answer
+  // is merged; a need whose own request failed still shows any such places instead of nothing.
+  const merged = Object.fromEntries(OSM_KIND_ORDER.map((kind) => [kind, [] as NearbyResource[]])) as Record<OsmKind, NearbyResource[]>
+  const answered = new Set<OsmKind>()
   OSM_QUERY_GROUPS.forEach((group, index) => {
     const result = osm[index]
     if (result.status === "rejected") {
       console.warn(`[resources] OpenStreetMap group ${index + 1} unavailable: ${failureReason(result.reason)}`)
       return
     }
-    for (const kind of group) kinds[kind] = { status: "ok", results: result.value[kind], fallback: fallbackLinks(kind) }
+    for (const kind of group) answered.add(kind)
+    for (const kind of OSM_KIND_ORDER) merged[kind].push(...result.value[kind])
   })
+  for (const kind of OSM_KIND_ORDER) {
+    const results = nearestUnique(merged[kind], MAX_RESULTS_PER_KIND)
+    if (answered.has(kind) || results.length > 0) kinds[kind] = { status: "ok", results, fallback: fallbackLinks(kind) }
+  }
 
   // Food banks, shelters and showers are sparse: search wider once for any that came back empty.
   const empty = WIDEN_KINDS.filter((kind) => kinds[kind].status === "ok" && kinds[kind].results.length === 0)
