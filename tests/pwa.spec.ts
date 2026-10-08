@@ -659,7 +659,7 @@ test.describe("PWA production flow", () => {
     await page.getByRole("button", { name: "Hands-free conversation" }).click()
     await expect(page.getByLabel("Conversation with Angel").getByRole("alert")).toContainText("Call 911 now.")
     expect(body?.messages?.at(-1)?.content).toBe("my friend is overdosing")
-    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.join(" "))).toBe("Call 911 now. Stay with them.")
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.join(" "))).toBe("Call 9 1 1 now. Stay with them.")
     // The second turn's permission error ends hands-free with an explanation.
     await expect(page.getByText("Microphone access was not allowed. You can still type.")).toBeVisible()
     await expect(page.getByRole("button", { name: "Hands-free conversation" })).toHaveAttribute("aria-pressed", "false")

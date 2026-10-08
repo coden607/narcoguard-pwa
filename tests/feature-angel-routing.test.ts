@@ -2,8 +2,16 @@ import { strict as assert } from "node:assert"
 import { test } from "node:test"
 import { routeAngelTurn } from "../lib/angel-routing"
 
-test("short conversational turns use the smallest token budget", () => {
-  assert.deepEqual(routeAngelTurn("Thanks"), { task: "quick", maxTokens: 420, temperature: 0.2, useTools: false })
+test("pleasantries use the smallest budget and no search", () => {
+  assert.deepEqual(routeAngelTurn("Thanks"), { task: "quick", maxTokens: 300, temperature: 0.6, useTools: false })
+  assert.equal(routeAngelTurn("thank you so much!").useTools, false)
+  assert.equal(routeAngelTurn("hey").useTools, false)
+})
+
+test("other short messages may imply a need, so the model may search", () => {
+  const route = routeAngelTurn("I got kicked out tonight")
+  assert.equal(route.useTools, true)
+  assert.ok(route.temperature >= 0.5, "conversational replies are not robotic")
 })
 
 test("resource requests enable tools without a large completion budget", () => {

@@ -22,7 +22,7 @@ test("separates final and interim speech from the current result onward", () => 
 
 test("speech puts safety notices first and drops markdown and raw links", () => {
   const text = speakableText(["Call 911 now."], "**Here** is [FindTreatment](https://findtreatment.gov) and https://example.org too.")
-  assert.equal(text, "Call 911 now. Here is FindTreatment and the link on screen too.")
+  assert.equal(text, "Call 9 1 1 now. Here is FindTreatment and the link on screen too.")
   assert.equal(speakableText(undefined, ""), "")
 })
 
@@ -45,4 +45,29 @@ test("decimal distances are not split into separate sentences", () => {
   assert.deepEqual(speechChunks("For free food: Pantry A, 0.4 miles away. Call first to confirm.", 80), ["For free food: Pantry A, 0.4 miles away. Call first to confirm."])
   assert.deepEqual(speechChunks("For free food: Pantry A, 0.4 miles away. Call first to confirm.", 45), ["For free food: Pantry A, 0.4 miles away.", "Call first to confirm."])
   assert.ok(speechChunks("It is 2.5 miles. Next one is 10.25 miles.", 18).every((chunk) => !/\d\.$/.test(chunk)), "no chunk ends on a decimal point")
+})
+
+test("help lines are spoken digit by digit and distances as miles", async () => {
+  const { sayNumbersClearly } = await import("../lib/voice")
+  assert.equal(sayNumbersClearly("Call 911 or text 988, or dial 211."), "Call 9 1 1 or text 9 8 8, or dial 2 1 1.")
+  assert.equal(sayNumbersClearly("It is 4.1 mi away"), "It is 4.1 miles away")
+  assert.equal(sayNumbersClearly("Room 9110 and 1988"), "Room 9110 and 1988", "longer numbers are left alone")
+})
+
+test("the most natural on-device voice is chosen, never a novelty or remote voice", async () => {
+  const { pickVoice } = await import("../lib/voice")
+  const voices = [
+    { name: "Fred", lang: "en-US", default: true, localService: true },
+    { name: "Zarvox", lang: "en-US", localService: true },
+    { name: "Samantha (Enhanced)", lang: "en-US", localService: true },
+    { name: "Microsoft Aria Online (Natural) - English (United States)", lang: "en-US", localService: false },
+    { name: "Google US English", lang: "en-US", localService: false },
+    { name: "Thomas", lang: "fr-FR", localService: true },
+    { name: "Google français", lang: "fr-FR", localService: false },
+  ]
+  assert.equal(pickVoice(voices, "en-US")?.name, "Samantha (Enhanced)", "remote voices would send private replies off the device")
+  assert.equal(pickVoice(voices, "fr-FR")?.name, "Thomas")
+  assert.equal(pickVoice([{ name: "Google US English", lang: "en-US", localService: false }], "en-US"), undefined)
+  assert.equal(pickVoice([{ name: "Fred", lang: "en-US" }], "en-US"), undefined, "a novelty-only list falls back to the browser default")
+  assert.equal(pickVoice([{ name: "Daniel", lang: "en_GB" }], "en-US")?.name, "Daniel", "same language, other region, still beats nothing")
 })

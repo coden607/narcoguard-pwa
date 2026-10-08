@@ -3,7 +3,7 @@ export default function PrivacyPolicy() {
     <main className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-4xl font-bold text-center">NarcoGuard Privacy</h1>
-        <p className="text-sm text-muted-foreground text-center">Updated October 5, 2026</p>
+        <p className="text-sm text-muted-foreground text-center">Updated October 8, 2026</p>
 
         <div className="space-y-6 text-sm text-muted-foreground">
           <section className="space-y-3">
@@ -37,9 +37,13 @@ export default function PrivacyPolicy() {
           <section className="space-y-3">
             <h2 className="text-2xl font-semibold text-foreground">Angel AI, nearby search and Bluetooth readings</h2>
             <p>
-              Angel AI is off until you agree to start a chat. Your messages, and a ZIP code if you enter one, are sent
-              to Groq, an AI provider, to write replies, either directly or through Vercel AI Gateway. Groq states that it does not use API inputs or outputs for
-              training. NarcoGuard does not save the conversation; it is cleared when you leave the page.
+              Angel AI is off until you agree to start a chat. Your messages, and a ZIP code if you enter one, are sent to an AI
+              model to write replies. Which one depends on how this site is set up: through Vercel AI Gateway to Anthropic&apos;s
+              Claude, for which NarcoGuard requires zero data retention (the provider keeps no copy); or to an open model run by Groq,
+              directly, through Vercel AI Gateway, or through OpenRouter limited to providers that do not store or train on prompts.
+              Groq states that it does not use API inputs or outputs for training. NarcoGuard does not save the conversation; it is
+              cleared when you leave the page. To read replies aloud, NarcoGuard picks a voice that runs on your device and never
+              chooses an online voice; if your device has none, your browser&apos;s default voice is used.
             </p>
             <p>
               &quot;Find help near me&quot; and Angel use your location only when you tap &quot;Use my location&quot; or say

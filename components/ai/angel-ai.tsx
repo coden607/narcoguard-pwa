@@ -100,7 +100,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   /** The latest request for places that has not been answered with listings yet, e.g. one asked before a location was shared. */
   const pendingSearch = () => {
     const history = messagesRef.current
-    const lastAsk = history.findLastIndex((m) => m.role === "user" && routeAngelTurn(m.content).useTools)
+    const lastAsk = history.findLastIndex((m) => m.role === "user" && routeAngelTurn(m.content).task === "resource")
     if (lastAsk < 0) return undefined
     const answered = history.slice(lastAsk + 1).some((m) => m.role === "assistant" && m.resources)
     return answered ? undefined : history[lastAsk].content
@@ -262,7 +262,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         <div className="space-y-3 rounded-lg border p-4" data-testid="angel-consent">
           <p className="text-sm">
             {provider === "Vercel AI Gateway"
-              ? "Your messages are sent through Vercel AI Gateway to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."
+              ? "Your messages are sent through Vercel AI Gateway to an AI model to write Angel's replies: Anthropic's Claude, with zero data retention required, or an open model run by Groq when Claude isn't available. Neither provider trains on them."
               : provider === "OpenRouter"
               ? "Your messages are sent through OpenRouter to an AI provider to write Angel's replies. NarcoGuard asks OpenRouter to use only providers that do not store or train on them."
               : "Your messages are sent to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."}{" "}

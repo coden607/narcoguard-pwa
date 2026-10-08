@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { clientKey, isSameOrigin, readJson } from "@/lib/api-helpers"
-import { modelForAngelTask, resolveAngelProvider } from "@/lib/angel-provider"
+import { modelAttempts, resolveAngelProvider, shouldTryFallback } from "@/lib/angel-provider"
 import { safetyNotices } from "@/lib/angel-ai"
 import { parseKindList } from "@/lib/need-intent"
 import { RESOURCE_KINDS, RESOURCE_LABELS } from "@/lib/resource-finder"
@@ -46,20 +46,25 @@ export async function POST(request: Request) {
   const notices = safetyNotices(text)
 
   try {
-    const response = await fetch(provider.url, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${provider.token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...provider.extraBody,
-        model: modelForAngelTask(provider, "quick"),
-        temperature: 0,
-        max_tokens: 200,
-        response_format: { type: "json_object" },
-        messages: [{ role: "system", content: SYSTEM }, { role: "user", content: text }],
-      }),
-      signal: AbortSignal.timeout(20_000),
-    })
-    if (!response.ok) throw new Error(`provider ${response.status}`)
+    // The configured model first, then the open fallback if this account cannot use it.
+    let response: Response | undefined
+    for (const choice of modelAttempts(provider, "quick")) {
+      response = await fetch(provider.url, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${provider.token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...choice.extraBody,
+          model: choice.model,
+          temperature: 0,
+          max_tokens: 200,
+          response_format: { type: "json_object" },
+          messages: [{ role: "system", content: SYSTEM }, { role: "user", content: text }],
+        }),
+        signal: AbortSignal.timeout(20_000),
+      })
+      if (response.ok || !shouldTryFallback(response.status)) break
+    }
+    if (!response?.ok) throw new Error(`provider ${response?.status ?? 0}`)
     const data = (await response.json()) as { choices?: { message?: { content?: string } }[] }
     const content = data.choices?.[0]?.message?.content ?? ""
     let parsed: unknown = null
