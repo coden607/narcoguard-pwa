@@ -1,3 +1,5 @@
+import { matchNeeds } from "@/lib/need-intent"
+
 export type AngelTaskClass = "quick" | "resource" | "reasoning"
 
 export type AngelRoute = {
@@ -18,5 +20,7 @@ export function routeAngelTurn(text: string): AngelRoute {
   const trimmed = text.trim()
   if (RESOURCE_WORDS.test(trimmed)) return { task: "resource", maxTokens: 700, temperature: 0.25, useTools: true }
   if (trimmed.length > 500 || REASONING_WORDS.test(trimmed)) return { task: "reasoning", maxTokens: 900, temperature: 0.35, useTools: true }
+  // Needs said in plain words ("I'm starving and have nowhere to sleep") also search for places.
+  if (matchNeeds(trimmed).length > 0) return { task: "resource", maxTokens: 700, temperature: 0.25, useTools: true }
   return { task: "quick", maxTokens: 420, temperature: 0.2, useTools: false }
 }

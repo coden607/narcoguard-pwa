@@ -48,7 +48,8 @@ export function speakableText(notices: string[] | undefined, reply: string): str
 
 /** Splits text into sentence-sized chunks; long single utterances are cut off on some mobile browsers. */
 export function speechChunks(text: string, maxLength = 180): string[] {
-  const sentences = text.match(/[^.!?]+[.!?]*\s*/g) ?? []
+  // Split only where punctuation is followed by a space, so "0.4 miles" and "Dr.Smith" stay whole.
+  const sentences = text.split(/(?<=[.!?])\s+/)
   const chunks: string[] = []
   let current = ""
   for (const sentence of sentences.map((s) => s.trim()).filter(Boolean)) {

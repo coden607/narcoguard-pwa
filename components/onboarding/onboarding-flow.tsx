@@ -188,6 +188,31 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
             <p className="text-sm text-muted-foreground">Learn overdose response and pass a 12-question test with 100% to become a certified Hero.</p>
           </HolographicCard>
           <HolographicCard className="p-5">
+            <Sparkles className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Daily Life</h3>
+            <p className="text-sm text-muted-foreground">Optional routines, schedule, journals and a morning and evening check-in that you set up. Stored only in this browser, not encrypted: anyone using this browser may see it. You can erase it any time.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Phone className="w-8 h-8 mb-3 text-green-500" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Emergency contacts</h3>
+            <p className="text-sm text-muted-foreground">Choose people who agree to get a text from you when you ask for help. Texting works only where it has been set up, and nothing is sent unless you press send.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Eye className="w-8 h-8 mb-3 text-secondary" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Bluetooth readings</h3>
+            <p className="text-sm text-muted-foreground">Show heart rate or oxygen from a standard Bluetooth monitor in Chrome or Edge on Android, Windows, macOS or ChromeOS; iPhone browsers can&apos;t connect. Readings stay on screen and are never used to detect overdoses.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <Shield className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Optional account</h3>
+            <p className="text-sm text-muted-foreground">Back up contacts and settings with encryption only you can unlock. Never needed for help or emergencies.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
+            <ArrowDown className="w-8 h-8 mb-3 text-green-500" aria-hidden="true" />
+            <h3 className="font-bold mb-1">Install and offline</h3>
+            <p className="text-sm text-muted-foreground">Add NarcoGuard to your home screen for one-tap access. Without a connection, search and Angel won&apos;t work and an offline page reminds you to call 911.</p>
+          </HolographicCard>
+          <HolographicCard className="p-5">
             <Syringe className="w-8 h-8 mb-3 text-primary" aria-hidden="true" />
             <h3 className="font-bold mb-1">In development: NG watch</h3>
             <p className="text-sm text-muted-foreground">A wearable research concept. It does not monitor, detect or treat overdose, and none has shipped.</p>
