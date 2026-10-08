@@ -75,6 +75,8 @@ test("the bills of materials match the funding goal and differ only where the ca
   assert.equal(big.complete, PROTOTYPE_UNIT_COST)
   assert.equal(small.count, big.count)
   assert.ok(small.complete < big.complete)
+  const boards = (bom: typeof BOM_46) => bom.flatMap((c) => c.items).find((item) => item.name === "10-Layer HDI PCB Assembly")!.partNumber
+  assert.notEqual(boards(BOM_40), boards(BOM_46))
   const chips = (bom: typeof BOM_46, name: string) => bom.find((c) => c.category === name)!.items
   assert.deepEqual(chips(BOM_40, "Main Processing Unit"), chips(BOM_46, "Main Processing Unit"))
   assert.deepEqual(chips(BOM_40, "Health Sensors (Candidate)"), chips(BOM_46, "Health Sensors (Candidate)"))

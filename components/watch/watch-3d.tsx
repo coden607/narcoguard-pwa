@@ -83,6 +83,12 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
   const [status, setStatus] = useState<Status>("loading")
   const [explode, setExplode] = useState(0)
   const [autoRotate, setAutoRotate] = useState(true)
+  /** Current control values, so a scene rebuilt for another size starts where the controls are. */
+  const controlsRef = useRef({ explode: 0, autoRotate: true, selected })
+
+  useEffect(() => {
+    controlsRef.current = { explode, autoRotate, selected }
+  }, [explode, autoRotate, selected])
 
   useEffect(() => {
     onSelectRef.current = onSelect
@@ -396,6 +402,10 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
           controls.update()
         },
       }
+      const current = controlsRef.current
+      applyExplode(current.explode)
+      setSelected(current.selected)
+      controls.autoRotate = current.autoRotate && !reducedMotion
       setStatus("ready")
 
       cleanup = () => {

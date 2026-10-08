@@ -322,7 +322,7 @@ export default function NGWatchPage() {
               <div className="mt-6 grid gap-3 md:grid-cols-3">
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-xs uppercase tracking-[0.16em] text-primary">Core fit margin</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Layered core minimum: {coreMinimumLayerMarginMm2} mm² planar margin; modeled stack margin: {watchDesignCalculations.coreThicknessMarginMm} mm. CAD interference and tolerances remain required.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Layered core minimum: {coreMinimumLayerMarginMm2} mm² planar margin; modeled stack margin: {variant.calc.coreThicknessMarginMm} mm. CAD interference and tolerances remain required.</p>
                 </div>
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-xs uppercase tracking-[0.16em] text-primary">Power balance</p>

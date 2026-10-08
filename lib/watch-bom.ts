@@ -420,6 +420,10 @@ export const BOM_40: BomCategory[] = replace(BOM_46, {
     description: "Candidate LSR silicone strap with a 20 mm interface, supplied with small/medium and medium/large bands so it fits smaller wrists; biocompatibility and skin contact require qualification",
     partNumber: "NG-STRAP-LSR-20MM",
   },
+  "10-Layer HDI PCB Assembly": {
+    description: "Smaller Ø34.2 mm 10-layer HDI board laid out for the 40 mm case, with its own component placement and rigid-flex to the sensor board; a separate fabrication from the 46 mm board. Price is an estimate until quoted.",
+    partNumber: "NG-PCBA-R4-40-10L",
+  },
   "Ceramic Case Back w/ Sensor Windows": {
     description: "Zirconia ceramic case back sized for the 40 mm case, with optical windows for PPG/SpO2 sensors and the device ID and QR code",
     unitPrice: 10.0,

@@ -854,6 +854,7 @@ test.describe("Watch blueprint", () => {
     await expect(drawing).toHaveAttribute("data-case-mm", "40")
     await expect(drawing.getByText("NARCOGUARD NG 40 MM", { exact: true })).toBeVisible()
     await expect(drawing.getByText("300mAh Li-ion + Qi Charging")).toBeVisible()
+    await expect(page.getByText("modeled stack margin: 2.8 mm")).toBeVisible()
     await page.getByRole("tab", { name: "Bill of Materials" }).click()
     await expect(page.getByText("300 mAh Li-ion polymer cell (certified)")).toBeVisible()
     await expect(page.getByText("NG-STRAP-LSR-20MM")).toBeVisible()
