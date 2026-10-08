@@ -1,7 +1,10 @@
-const CACHE_NAME = "narcoguard-shell-v3";
+const CACHE_NAME = "narcoguard-shell-v4";
 const APP_SHELL = [
   "/",
   "/offline.html",
+  "/safer-use",
+  "/help",
+  "/ar",
   "/manifest.webmanifest",
   "/icon-192.png",
   "/icon-512.png",

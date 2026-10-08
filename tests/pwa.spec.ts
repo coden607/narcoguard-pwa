@@ -229,7 +229,28 @@ test.describe("PWA production flow", () => {
     await context.setOffline(true)
     await page.goto("/offline-check")
     await expect(page.getByRole("heading", { name: "You're Offline" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Someone won't wake up?" })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Call 911" })).toHaveAttribute("href", "tel:911")
+    await expect(page.getByRole("link", { name: /Never Use Alone/ })).toHaveAttribute("href", "tel:18004843731")
+    // Precached safety pages still load with no connection.
+    await page.goto("/safer-use")
+    await expect(page.getByRole("heading", { name: "Stay safer", level: 1 })).toBeVisible()
     await context.setOffline(false)
+  })
+
+  test("Stay safer lists Never Use Alone, naloxone, test strips, meetings and benefits with working links", async ({ page }) => {
+    await page.goto("/safer-use")
+    await expect(page.getByRole("heading", { name: "Stay safer", level: 1 })).toBeVisible()
+    await expect(page.getByTestId("never-use-alone").getByRole("link", { name: /Call Never Use Alone/ })).toHaveAttribute("href", "tel:18004843731")
+    for (const id of ["crisis-lines", "naloxone-sources", "test-strip-facts", "meeting-finders", "benefit-links"]) await expect(page.getByTestId(id)).toBeVisible()
+    await expect(page.getByTestId("test-strip-facts")).toContainText("does not mean the drug is safe")
+    for (const link of await page.locator("main a[target=_blank]").all()) {
+      expect(await link.getAttribute("href")).toMatch(/^https:\/\//)
+      expect(await link.getAttribute("rel")).toContain("noopener")
+    }
+    await page.addInitScript(() => localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true })))
+    await page.goto("/")
+    await expect(page.getByTestId("call-never-use-alone")).toBeVisible()
   })
 
   test("Guardian needs planner requires consent and can be paused and erased", async ({ page }) => {

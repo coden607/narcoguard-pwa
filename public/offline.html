@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NarcoGuard - Offline</title>
+  <meta name="theme-color" content="#0a0f1e">
   <style>
     body {
       margin: 0;
@@ -61,6 +62,13 @@
     button:hover {
       background: #00b8dd;
     }
+    .calls { display: grid; gap: .75rem; margin: 1.5rem 0; }
+    .call { display: block; padding: 1rem; border-radius: 12px; border: 2px solid #00d9ff; color: #fff; font-weight: bold; font-size: 1.1rem; text-decoration: none; }
+    .call-911 { background: #c81e1e; border-color: #ff3232; font-size: 1.4rem; }
+    .steps { text-align: left; background: rgba(255,255,255,.06); border-radius: 12px; padding: 1rem 1.25rem; }
+    .steps h2 { color: #00d9ff; margin-top: 0; }
+    .steps li { margin-bottom: .75rem; line-height: 1.5; }
+    .small { font-size: .85rem; opacity: .8; margin-bottom: 0; }
   </style>
 </head>
 <body>
@@ -68,15 +76,29 @@
     <img class="logo" src="/images/narcoguard-icon-256.jpeg" alt="NarcoGuard" width="128" height="128">
     <h1>You're Offline</h1>
     <p>
-      NarcoGuard needs an internet connection for nearby search, Angel and most pages.
-      Some features may be limited while offline.
+      Nearby search and Angel need a connection. Calls and the overdose steps below work without one.
     </p>
-    
-    <div class="emergency-note">
-      <strong>⚠️ EMERGENCY?</strong>
-      <p>If this is an emergency, please call <a href="tel:911" style="color: #00d9ff;">911</a> directly.</p>
-    </div>
-    
+
+    <nav class="calls" aria-label="Emergency calls">
+      <a class="call call-911" href="tel:911">Call 911</a>
+      <a class="call" href="tel:18004843731">Never Use Alone 1-800-484-3731</a>
+      <a class="call" href="tel:988">Call or text 988</a>
+      <a class="call" href="tel:211">Call 211</a>
+    </nav>
+
+    <section class="steps" aria-labelledby="od-steps">
+      <h2 id="od-steps">Someone won't wake up?</h2>
+      <ol>
+        <li><strong>Check if they respond.</strong> Shout their name and rub hard on the middle of their chest with your knuckles. Look for slow, stopped or gurgling breathing, blue or gray lips, and tiny pupils.</li>
+        <li><strong>Call 911.</strong> Say the person is not breathing or won't wake up. Put the phone on speaker and follow the dispatcher.</li>
+        <li><strong>Give naloxone.</strong> Lay them on their back. Put the nozzle fully into one nostril and press the plunger firmly once. The spray does not need priming.</li>
+        <li><strong>Support breathing.</strong> If you are trained, give one rescue breath every 5 seconds. If they are not breathing normally and you cannot tell, start CPR: push hard and fast in the center of the chest, 100–120 a minute.</li>
+        <li><strong>Second dose if needed.</strong> No response after 2–3 minutes? Give another dose with a new device in the other nostril.</li>
+        <li><strong>Recovery position and stay.</strong> If they breathe on their own, roll them onto their side with the top knee bent. Stay with them: naloxone can wear off in 30–90 minutes, before the opioid does.</li>
+      </ol>
+      <p class="small">General guidance following SAMHSA and the FDA naloxone label. It does not replace 911.</p>
+    </section>
+
     <button onclick="window.location.reload()">Try Again</button>
   </div>
 </body>

@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { ArrowLeft, HandHeart, HeartPulse, Home, LogIn, MapPin, Menu, ShieldCheck, Sparkles, Watch, X } from "lucide-react"
+import { ArrowLeft, LifeBuoy, HandHeart, HeartPulse, Home, LogIn, MapPin, Menu, ShieldCheck, Sparkles, Watch, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { InstallButton } from "@/components/pwa/install-button"
 import { cn } from "@/lib/utils"
@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 const links = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/help", label: "Find Help", icon: MapPin },
+  { href: "/safer-use", label: "Stay Safer", icon: LifeBuoy },
   { href: "/angel", label: "Angel AI", icon: HandHeart },
   { href: "/watch", label: "NG Watch", icon: Watch },
   { href: "/ar", label: "Training", icon: Sparkles },
