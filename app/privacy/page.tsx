@@ -38,8 +38,9 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-semibold text-foreground">Angel AI, nearby search and Bluetooth readings</h2>
             <p>
               Angel AI is off until you agree to start a chat. Your messages, and a ZIP code if you enter one, are sent
-              through Vercel AI Gateway to an AI model (currently Anthropic&apos;s Claude) to write replies. NarcoGuard requires zero data
-              retention for these requests, so the gateway only uses providers that do not keep the messages or train on them. NarcoGuard does not
+              through Vercel AI Gateway to an AI model to write replies: Anthropic&apos;s Claude, for which NarcoGuard requires zero data
+              retention (the provider keeps no copy), or, when Claude is not available, an open model run by Groq, which states that it
+              does not use API inputs or outputs for training. NarcoGuard does not
               save the conversation; it is cleared when you leave the page. Angel&apos;s spoken replies use a voice already on your device.
             </p>
             <p>

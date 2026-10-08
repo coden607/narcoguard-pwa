@@ -6,6 +6,11 @@ import { ANGEL_DEFAULT_MODEL, ANGEL_GATEWAY_DEFAULT_MODEL } from "@/lib/angel-ai
 // manage). There it runs a frontier model with zero data retention required; an open gpt-oss
 // model set through ANGEL_GATEWAY_MODEL is routed to Groq first, as before.
 
+export interface AngelModelChoice {
+  model: string
+  extraBody: Record<string, unknown>
+}
+
 export interface AngelProvider {
   name: "Groq" | "OpenRouter" | "Vercel AI Gateway"
   url: string
@@ -15,7 +20,14 @@ export interface AngelProvider {
   reasoningModel?: string
   /** Provider-specific request fields merged into every chat completion request. */
   extraBody: Record<string, unknown>
+  /** Tried when the account cannot use the configured model (for example a gateway free tier). */
+  fallback?: AngelModelChoice
 }
+
+const gatewayExtraBody = (model: string): Record<string, unknown> =>
+  model.startsWith("openai/gpt-oss")
+    ? { providerOptions: { gateway: { order: ["groq"] } } }
+    : { providerOptions: { gateway: { zeroDataRetention: true } } }
 
 type Env = Record<string, string | undefined>
 
@@ -54,9 +66,9 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
       model,
       fastModel: env.ANGEL_GATEWAY_FAST_MODEL,
       reasoningModel: env.ANGEL_GATEWAY_REASONING_MODEL,
-      extraBody: model.startsWith("openai/gpt-oss")
-        ? { providerOptions: { gateway: { order: ["groq"] } } }
-        : { providerOptions: { gateway: { zeroDataRetention: true } } },
+      extraBody: gatewayExtraBody(model),
+      // Frontier models need paid gateway credits; until then Angel keeps working on the open model.
+      fallback: model === ANGEL_DEFAULT_MODEL ? undefined : { model: ANGEL_DEFAULT_MODEL, extraBody: gatewayExtraBody(ANGEL_DEFAULT_MODEL) },
     }
   }
   return null
@@ -67,3 +79,12 @@ export function modelForAngelTask(provider: AngelProvider, task: "quick" | "reso
   if (task === "quick" || task === "resource") return provider.fastModel || provider.model
   return provider.model
 }
+
+/** Model choices for a task, in the order to try them. */
+export function modelAttempts(provider: AngelProvider, task: "quick" | "resource" | "reasoning"): AngelModelChoice[] {
+  const first = { model: modelForAngelTask(provider, task), extraBody: provider.extraBody }
+  return provider.fallback && provider.fallback.model !== first.model ? [first, provider.fallback] : [first]
+}
+
+/** Statuses that mean "this account or request cannot use this model", where the fallback may still work. */
+export const shouldTryFallback = (status: number) => [400, 401, 403, 404].includes(status)

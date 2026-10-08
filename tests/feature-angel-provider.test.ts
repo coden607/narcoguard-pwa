@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert"
 import { test } from "node:test"
-import { resolveAngelProvider } from "../lib/angel-provider"
+import { modelAttempts, resolveAngelProvider, shouldTryFallback } from "../lib/angel-provider"
 
 test("a Groq key is used directly, with its own model override", () => {
   const provider = resolveAngelProvider({ GROQ_API_KEY: "k", GROQ_MODEL: "m", VERCEL_OIDC_TOKEN: "o" }, "h")
@@ -43,4 +43,16 @@ test("an OpenRouter key is used when there is no Groq key, and asks for no-reten
   assert.deepEqual(provider?.extraBody, { provider: { data_collection: "deny" } })
   assert.equal(resolveAngelProvider({ OPENROUTER_API_KEY: "or", OPENROUTER_MODEL: "x/y" }, null)?.model, "x/y")
   assert.equal(resolveAngelProvider({ GROQ_API_KEY: "k", OPENROUTER_API_KEY: "or" }, null)?.name, "Groq", "a Groq key still wins")
+})
+
+test("the gateway falls back to the open model when the account cannot use Claude", () => {
+  const provider = resolveAngelProvider({}, "h")!
+  const attempts = modelAttempts(provider, "resource")
+  assert.deepEqual(attempts.map((a) => a.model), ["anthropic/claude-sonnet-5", "openai/gpt-oss-120b"])
+  assert.deepEqual(attempts[1].extraBody, { providerOptions: { gateway: { order: ["groq"] } } })
+  assert.equal(shouldTryFallback(403), true, "free tier: no access to the model")
+  assert.equal(shouldTryFallback(429), false, "rate limits are not a reason to switch models")
+  assert.equal(shouldTryFallback(500), false)
+  assert.equal(modelAttempts(resolveAngelProvider({ ANGEL_GATEWAY_MODEL: "openai/gpt-oss-120b" }, "h")!, "quick").length, 1, "no fallback to itself")
+  assert.equal(modelAttempts(resolveAngelProvider({ GROQ_API_KEY: "k" }, null)!, "quick").length, 1, "direct Groq has no fallback")
 })

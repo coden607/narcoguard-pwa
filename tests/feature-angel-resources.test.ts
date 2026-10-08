@@ -159,3 +159,28 @@ test("an overdose message is answered without directory searches so the 911 noti
     else process.env.GROQ_API_KEY = saved
   }
 })
+
+test("on a gateway free tier, Angel answers with the open model instead of switching off", async () => {
+  const { POST } = await import("../app/api/angel/route")
+  const realFetch = globalThis.fetch
+  const saved = process.env.GROQ_API_KEY
+  delete process.env.GROQ_API_KEY
+  const models: string[] = []
+  globalThis.fetch = (async (_input: string | URL, init?: RequestInit) => {
+    const body = JSON.parse(String(init?.body))
+    models.push(body.model)
+    if (body.model === "anthropic/claude-sonnet-5") return new Response(JSON.stringify({ error: { message: "Free tier users do not have access to this model." } }), { status: 403 })
+    return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: "Hey, I'm here. What do you need tonight?" } }] }), { status: 200 })
+  }) as typeof fetch
+  try {
+    const response = await POST(new Request("http://localhost/api/angel", { method: "POST", headers: { "content-type": "application/json", "x-forwarded-for": "free-tier", "x-vercel-oidc-token": "oidc" }, body: JSON.stringify({ messages: [{ role: "user", content: "hi there, rough night" }] }) }))
+    const body = await response.json()
+    assert.equal(response.status, 200)
+    assert.equal(body.available, true)
+    assert.match(body.reply, /What do you need tonight/)
+    assert.deepEqual(models, ["anthropic/claude-sonnet-5", "openai/gpt-oss-120b"])
+  } finally {
+    globalThis.fetch = realFetch
+    if (saved !== undefined) process.env.GROQ_API_KEY = saved
+  }
+})
