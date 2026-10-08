@@ -100,7 +100,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   /** The latest request for places that has not been answered with listings yet, e.g. one asked before a location was shared. */
   const pendingSearch = () => {
     const history = messagesRef.current
-    const lastAsk = history.findLastIndex((m) => m.role === "user" && routeAngelTurn(m.content).useTools)
+    const lastAsk = history.findLastIndex((m) => m.role === "user" && routeAngelTurn(m.content).task === "resource")
     if (lastAsk < 0) return undefined
     const answered = history.slice(lastAsk + 1).some((m) => m.role === "assistant" && m.resources)
     return answered ? undefined : history[lastAsk].content

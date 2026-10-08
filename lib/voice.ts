@@ -60,10 +60,10 @@ export interface VoiceLike {
   default?: boolean
 }
 
-const NATURAL_HINTS = /natural|neural|premium|enhanced|siri|online|google|samantha|\bava\b|allison|zoe|jenny|\baria\b|\bevan\b|nicky|karen|daniel|moira|tessa/i
+const NATURAL_HINTS = /natural|neural|premium|enhanced|siri|samantha|\bava\b|allison|zoe|jenny|\baria\b|\bevan\b|nicky|karen|daniel|moira|tessa/i
 const NOVELTY = /albert|bad news|good news|bahh|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|deranged|hysterical|fred|junior|ralph|kathy|eloquence|compact|espeak/i
 
-/** Picks the most natural-sounding installed voice for the language; undefined means the browser default. */
+/** Picks the most natural-sounding on-device voice for the language; undefined means the browser default. */
 export function pickVoice<T extends VoiceLike>(voices: readonly T[], lang: string): T | undefined {
   const want = lang.toLowerCase()
   const base = want.split("-")[0]
@@ -71,6 +71,8 @@ export function pickVoice<T extends VoiceLike>(voices: readonly T[], lang: strin
     const voiceLang = voice.lang.toLowerCase().replace("_", "-")
     if (!voiceLang.startsWith(base)) return -1
     if (NOVELTY.test(voice.name)) return -1
+    // Remote voices (Chrome's Google voices, Edge's "Online" voices) send the text to the vendor; replies may be private.
+    if (voice.localService === false) return -1
     let points = voiceLang === want ? 4 : 2
     if (NATURAL_HINTS.test(voice.name)) points += 5
     if (/premium|enhanced|natural|neural/i.test(voice.name)) points += 3

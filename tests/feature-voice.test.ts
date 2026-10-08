@@ -54,17 +54,20 @@ test("help lines are spoken digit by digit and distances as miles", async () => 
   assert.equal(sayNumbersClearly("Room 9110 and 1988"), "Room 9110 and 1988", "longer numbers are left alone")
 })
 
-test("the most natural installed voice is chosen, never a novelty voice", async () => {
+test("the most natural on-device voice is chosen, never a novelty or remote voice", async () => {
   const { pickVoice } = await import("../lib/voice")
   const voices = [
-    { name: "Fred", lang: "en-US", default: true },
-    { name: "Zarvox", lang: "en-US" },
-    { name: "Samantha (Enhanced)", lang: "en-US" },
-    { name: "Microsoft Aria Online (Natural) - English (United States)", lang: "en-US" },
-    { name: "Google français", lang: "fr-FR" },
+    { name: "Fred", lang: "en-US", default: true, localService: true },
+    { name: "Zarvox", lang: "en-US", localService: true },
+    { name: "Samantha (Enhanced)", lang: "en-US", localService: true },
+    { name: "Microsoft Aria Online (Natural) - English (United States)", lang: "en-US", localService: false },
+    { name: "Google US English", lang: "en-US", localService: false },
+    { name: "Thomas", lang: "fr-FR", localService: true },
+    { name: "Google français", lang: "fr-FR", localService: false },
   ]
-  assert.match(pickVoice(voices, "en-US")!.name, /Natural|Enhanced/)
-  assert.equal(pickVoice(voices, "fr-FR")?.name, "Google français")
+  assert.equal(pickVoice(voices, "en-US")?.name, "Samantha (Enhanced)", "remote voices would send private replies off the device")
+  assert.equal(pickVoice(voices, "fr-FR")?.name, "Thomas")
+  assert.equal(pickVoice([{ name: "Google US English", lang: "en-US", localService: false }], "en-US"), undefined)
   assert.equal(pickVoice([{ name: "Fred", lang: "en-US" }], "en-US"), undefined, "a novelty-only list falls back to the browser default")
   assert.equal(pickVoice([{ name: "Daniel", lang: "en_GB" }], "en-US")?.name, "Daniel", "same language, other region, still beats nothing")
 })
