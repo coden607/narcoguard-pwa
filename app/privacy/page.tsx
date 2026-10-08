@@ -3,7 +3,7 @@ export default function PrivacyPolicy() {
     <main className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-4xl font-bold text-center">NarcoGuard Privacy</h1>
-        <p className="text-sm text-muted-foreground text-center">Updated October 5, 2026</p>
+        <p className="text-sm text-muted-foreground text-center">Updated October 8, 2026</p>
 
         <div className="space-y-6 text-sm text-muted-foreground">
           <section className="space-y-3">
@@ -38,8 +38,9 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-semibold text-foreground">Angel AI, nearby search and Bluetooth readings</h2>
             <p>
               Angel AI is off until you agree to start a chat. Your messages, and a ZIP code if you enter one, are sent
-              to Groq, an AI provider, to write replies, either directly or through Vercel AI Gateway. Groq states that it does not use API inputs or outputs for
-              training. NarcoGuard does not save the conversation; it is cleared when you leave the page.
+              through Vercel AI Gateway to an AI model (currently Anthropic&apos;s Claude) to write replies. NarcoGuard requires zero data
+              retention for these requests, so the gateway only uses providers that do not keep the messages or train on them. NarcoGuard does not
+              save the conversation; it is cleared when you leave the page. Angel&apos;s spoken replies use a voice already on your device.
             </p>
             <p>
               &quot;Find help near me&quot; and Angel use your location only when you tap &quot;Use my location&quot; or say

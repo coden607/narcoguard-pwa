@@ -43,7 +43,47 @@ export function speakableText(notices: string[] | undefined, reply: string): str
     .replace(/[*_#>`|~]/g, "")
     .replace(/\s+/g, " ")
     .trim()
-  return [...(notices ?? []), cleaned].filter(Boolean).join(" ")
+  return sayNumbersClearly([...(notices ?? []), cleaned].filter(Boolean).join(" "))
+}
+
+/** Some voices read "911" as "nine hundred eleven"; help lines are spoken digit by digit, and "mi" as miles. */
+export function sayNumbersClearly(text: string): string {
+  return text
+    .replace(/\b(911|988|211)\b/g, (n) => n.split("").join(" "))
+    .replace(/(\d) ?mi\b\.?/g, "$1 miles")
+}
+
+export interface VoiceLike {
+  name: string
+  lang: string
+  localService?: boolean
+  default?: boolean
+}
+
+const NATURAL_HINTS = /natural|neural|premium|enhanced|siri|online|google|samantha|\bava\b|allison|zoe|jenny|\baria\b|\bevan\b|nicky|karen|daniel|moira|tessa/i
+const NOVELTY = /albert|bad news|good news|bahh|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|deranged|hysterical|fred|junior|ralph|kathy|eloquence|compact|espeak/i
+
+/** Picks the most natural-sounding installed voice for the language; undefined means the browser default. */
+export function pickVoice<T extends VoiceLike>(voices: readonly T[], lang: string): T | undefined {
+  const want = lang.toLowerCase()
+  const base = want.split("-")[0]
+  const score = (voice: T) => {
+    const voiceLang = voice.lang.toLowerCase().replace("_", "-")
+    if (!voiceLang.startsWith(base)) return -1
+    if (NOVELTY.test(voice.name)) return -1
+    let points = voiceLang === want ? 4 : 2
+    if (NATURAL_HINTS.test(voice.name)) points += 5
+    if (/premium|enhanced|natural|neural/i.test(voice.name)) points += 3
+    if (voice.default) points += 1
+    return points
+  }
+  let best: T | undefined
+  let bestScore = 0
+  for (const voice of voices) {
+    const points = score(voice)
+    if (points > bestScore) { best = voice; bestScore = points }
+  }
+  return best
 }
 
 /** Splits text into sentence-sized chunks; long single utterances are cut off on some mobile browsers. */

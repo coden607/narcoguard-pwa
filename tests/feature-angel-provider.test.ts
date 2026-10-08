@@ -10,11 +10,17 @@ test("a Groq key is used directly, with its own model override", () => {
   assert.deepEqual(provider?.extraBody, {})
 })
 
-test("without a Groq key, AI Gateway uses the request's OIDC token and prefers Groq routing", () => {
+test("without a Groq key, AI Gateway uses the request's OIDC token, Claude Sonnet 5 and zero data retention", () => {
   const provider = resolveAngelProvider({}, "oidc-from-header")
   assert.equal(provider?.name, "Vercel AI Gateway")
   assert.equal(provider?.url, "https://ai-gateway.vercel.sh/v1/chat/completions")
   assert.equal(provider?.token, "oidc-from-header")
+  assert.equal(provider?.model, "anthropic/claude-sonnet-5")
+  assert.deepEqual(provider?.extraBody, { providerOptions: { gateway: { zeroDataRetention: true } } })
+})
+
+test("an open gpt-oss model set for the gateway is still routed to Groq first", () => {
+  const provider = resolveAngelProvider({ ANGEL_GATEWAY_MODEL: "openai/gpt-oss-120b" }, "h")
   assert.equal(provider?.model, "openai/gpt-oss-120b")
   assert.deepEqual(provider?.extraBody, { providerOptions: { gateway: { order: ["groq"] } } })
 })
