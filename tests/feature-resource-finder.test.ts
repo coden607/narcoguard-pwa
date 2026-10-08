@@ -179,3 +179,15 @@ test("sparse needs with no nearby listing are searched once more, wider, and lab
     globalThis.fetch = realFetch
   }
 })
+
+test("basic needs cover community fridges, homeless services and showers tagged on truck stops", async () => {
+  const { osmKindsOf, parseOverpassNeeds } = await import("../lib/resource-finder")
+  assert.deepEqual(osmKindsOf({ amenity: "food_sharing" }), ["food"])
+  assert.deepEqual(osmKindsOf({ amenity: "social_facility", social_facility: "outreach", "social_facility:for": "homeless" }), ["shelter", "community"])
+  assert.deepEqual(osmKindsOf({ amenity: "fuel", shop: "convenience", shower: "yes" }), ["quick-meal", "showers"])
+  assert.deepEqual(osmKindsOf({ amenity: "shower", access: "customers" }), [])
+  const origin = { lat: 42.1, lon: -75.9 }
+  const grouped = parseOverpassNeeds({ elements: [{ type: "node", id: 1, lat: 42.11, lon: -75.9, tags: { name: "Truck Stop", shop: "convenience", shower: "yes" } }] }, origin)
+  assert.equal(grouped.showers[0]?.name, "Truck Stop")
+  assert.equal(grouped["quick-meal"][0]?.name, "Truck Stop")
+})

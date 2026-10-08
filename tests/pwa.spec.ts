@@ -333,6 +333,7 @@ test.describe("PWA production flow", () => {
     await expect(food.getByRole("link", { name: "Call 518-555-0100" })).toHaveAttribute("href", "tel:5185550100")
     await expect(food.getByText(/Source: OpenStreetMap contributors\. .*call first/)).toBeVisible()
     await expect(search.getByTestId("need-water")).toContainText("none listed nearby")
+    await expect(search.getByTestId("call-211-water")).toHaveAttribute("href", "tel:211")
     const treatment = search.getByTestId("need-treatment")
     await treatment.locator("summary").click()
     await expect(treatment.getByText("Live listings are unavailable right now.")).toBeVisible()
