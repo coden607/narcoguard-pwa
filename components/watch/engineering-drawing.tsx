@@ -3,15 +3,15 @@
 import { useRef } from "react"
 import { Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { WATCH_COMPONENTS, calloutNumber } from "@/lib/watch-components"
-import { ANTENNAS, ENVELOPE, LAYERS, OPEN_ISSUES, PARTS, type Box } from "@/lib/watch-geometry"
+import { WATCH_COMPONENTS, calloutNumber, type WatchComponent } from "@/lib/watch-components"
+import { GEOMETRY_46, type Box, type PlanPoint, type WatchGeometry } from "@/lib/watch-geometry"
 
-// A to-scale concept drawing generated from lib/watch-geometry.ts. Units are millimetres on an
+// A to-scale concept drawing generated from lib/watch-geometry.ts, for either case size. Units are millimetres on an
 // A4-landscape sheet (297 × 210), so the SVG prints and downloads at true drawing scale.
 
 const SHEET = { w: 297, h: 210 }
 const PLAN = { cx: 72, cy: 94, s: 1.5 }
-const SECTION = { x0: 135, z0: 96, s: 2.3, yMax: ENVELOPE.topLug.y1 }
+const SECTION = { x0: 135, z0: 96, s: 2.3 }
 
 const C = {
   paper: "#0b2a4a",
@@ -27,8 +27,12 @@ const C = {
 }
 
 const P = (x: number, y: number) => [PLAN.cx + x * PLAN.s, PLAN.cy - y * PLAN.s] as const
-const S = (y: number, z: number) => [SECTION.x0 + (SECTION.yMax - y) * SECTION.s, SECTION.z0 - z * SECTION.s] as const
-const part = (id: string) => PARTS.find((entry) => entry.id === id) as Box
+/** Section B–B projection; the 46 mm sheet keeps its original origin and smaller cases are centred under it. */
+const sectionProjection = (g: WatchGeometry) => {
+  const yMax = g.ENVELOPE.topLug.y1 + (GEOMETRY_46.ENVELOPE.topLug.y1 - g.ENVELOPE.topLug.y1) / 2
+  return (y: number, z: number) => [SECTION.x0 + (yMax - y) * SECTION.s, SECTION.z0 - z * SECTION.s] as const
+}
+const partOf = (g: WatchGeometry, id: string) => g.PARTS.find((entry) => entry.id === id) as Box
 const fmt = (value: number) => (Number.isInteger(value) ? String(value) : value.toFixed(1))
 
 function planRect(box: Box) {
@@ -37,7 +41,7 @@ function planRect(box: Box) {
 }
 
 /** Section rectangle spanning y0..y1 (mm, any order) and z0..z1. */
-function sectionRect(y0: number, y1: number, z0: number, z1: number) {
+function sectionRect(S: ReturnType<typeof sectionProjection>, y0: number, y1: number, z0: number, z1: number) {
   const [xa, za] = S(Math.max(y0, y1), Math.max(z0, z1))
   return { x: xa, y: za, width: Math.abs(y1 - y0) * SECTION.s, height: Math.abs(z1 - z0) * SECTION.s }
 }
@@ -71,29 +75,18 @@ interface CalloutSpec {
 }
 
 const polar = (deg: number, radius: number) => P(radius * Math.cos((deg * Math.PI) / 180), radius * Math.sin((deg * Math.PI) / 180))
+const planPoint = (point: PlanPoint) => ("deg" in point ? polar(point.deg, point.r) : P(point.x, point.y))
 
-const PLAN_CALLOUTS: CalloutSpec[] = [
-  { id: "snapdragon", anchor: P(-9, 3), bubble: polar(152, 36) },
-  { id: "nordic", anchor: P(-3, 13), bubble: polar(112, 36) },
-  { id: "gps", anchor: polar(70, 21.5), bubble: polar(62, 36) },
-  { id: "cellular", anchor: P(13, 4), bubble: polar(24, 36) },
-  { id: "crown", anchor: P(26, -1), bubble: polar(-12, 36) },
-  { id: "battery", anchor: P(12, -11), bubble: polar(-48, 36) },
-  { id: "naloxone", anchor: P(5, -30), bubble: polar(-42, 45) },
-  { id: "nfc", anchor: P(-6, -15), bubble: polar(-128, 36) },
-]
+function calloutsFor(g: WatchGeometry): CalloutSpec[] {
+  const S = sectionProjection(g)
+  return [
+    ...g.CALLOUTS.plan.map((spec) => ({ id: spec.id, anchor: planPoint(spec.anchor), bubble: planPoint(spec.bubble) })),
+    ...g.CALLOUTS.section.map((spec) => ({ id: spec.id, anchor: S(spec.anchor.y, spec.anchor.z), bubble: S(spec.bubble.y, spec.bubble.z) })),
+  ]
+}
 
-const SECTION_CALLOUTS: CalloutSpec[] = [
-  { id: "display", anchor: S(-12, 11.2), bubble: S(-12, 19) },
-  { id: "ppg-ecg", anchor: S(4, 1.15), bubble: S(4, -8) },
-  { id: "sealed-charge", anchor: S(-12, 0.75), bubble: S(-12, -8) },
-  { id: "snapdragon", anchor: S(-2, 9), bubble: S(2, 19) },
-  { id: "battery", anchor: S(8, 4.5), bubble: S(12, 19) },
-  { id: "naloxone", anchor: S(-28, 5.5), bubble: S(-28, 19) },
-]
-
-function Callout({ spec, selected, onSelect }: { spec: CalloutSpec; selected: string | null; onSelect: (id: string) => void }) {
-  const component = WATCH_COMPONENTS.find((entry) => entry.id === spec.id)!
+function Callout({ spec, components, selected, onSelect }: { spec: CalloutSpec; components: readonly WatchComponent[]; selected: string | null; onSelect: (id: string) => void }) {
+  const component = components.find((entry) => entry.id === spec.id)!
   const active = selected === spec.id
   return (
     <g
@@ -143,12 +136,13 @@ function VDim({ y1, y2, x, label, ext }: { y1: number; y2: number; x: number; la
   )
 }
 
-function PlanView() {
-  const { caseRadius, internalRadius, strapWidth, topLug, podLug, crown, opticalWindowDiameter, qiCoil } = ENVELOPE
+function PlanView({ g }: { g: WatchGeometry }) {
+  const { caseRadius, internalRadius, strapWidth, topLug, podLug, crown, opticalWindowDiameter, qiCoil } = g.ENVELOPE
   const [cx, cy] = P(0, 0)
-  const visible = PARTS.filter((entry) => !entry.hidden && entry.id !== "pcb" && entry.id !== "pod")
-  const hidden = PARTS.filter((entry) => entry.hidden)
-  const pod = part("pod")
+  const visible = g.PARTS.filter((entry) => !entry.hidden && entry.id !== "pcb" && entry.id !== "pod")
+  const hidden = g.PARTS.filter((entry) => entry.hidden)
+  const pod = partOf(g, "pod")
+  const antennaRadius = internalRadius + 1.55
   const lugTop = planRect({ id: "lug", label: "", x: 0, y: (topLug.y0 + topLug.y1) / 2, z: 0, w: strapWidth, d: topLug.y1 - topLug.y0, h: 0 })
   const lugPod = planRect({ id: "lug", label: "", x: 0, y: (podLug.y0 + podLug.y1) / 2, z: 0, w: strapWidth + 2, d: podLug.y1 - podLug.y0, h: 0 })
   return (
@@ -189,72 +183,74 @@ function PlanView() {
         )
       })}
 
-      {ANTENNAS.map((antenna) => (
-        <path key={antenna.id} d={arcPath(21.5, antenna.from, antenna.to)} fill="none" stroke={C.copper} strokeWidth={0.6} strokeLinecap="round" />
+      {g.ANTENNAS.map((antenna) => (
+        <path key={antenna.id} d={arcPath(antennaRadius, antenna.from, antenna.to)} fill="none" stroke={C.copper} strokeWidth={0.6} strokeLinecap="round" />
       ))}
 
       <g stroke={C.faint} strokeWidth={0.15} strokeDasharray="4 1 0.6 1">
-        <line x1={P(-31, 0)[0]} y1={cy} x2={P(31, 0)[0]} y2={cy} />
-        <line x1={cx} y1={P(0, 31)[1]} x2={cx} y2={P(0, -42)[1]} />
+        <line x1={P(-(caseRadius + 8), 0)[0]} y1={cy} x2={P(caseRadius + 8, 0)[0]} y2={cy} />
+        <line x1={cx} y1={P(0, caseRadius + 8)[1]} x2={cx} y2={P(0, -(caseRadius + 19))[1]} />
       </g>
       <g fill={C.line} fontSize={3} fontWeight={700}>
-        <path d={`M ${cx} ${P(0, 31.5)[1]} l 4 0`} stroke={C.line} strokeWidth={0.5} markerEnd="url(#arrow-solid)" />
-        <text x={cx - 3.5} y={P(0, 31.5)[1] + 1}>B</text>
-        <path d={`M ${cx} ${P(0, -43)[1]} l 4 0`} stroke={C.line} strokeWidth={0.5} markerEnd="url(#arrow-solid)" />
-        <text x={cx - 3.5} y={P(0, -43)[1] + 1}>B</text>
+        <path d={`M ${cx} ${P(0, caseRadius + 8.5)[1]} l 4 0`} stroke={C.line} strokeWidth={0.5} markerEnd="url(#arrow-solid)" />
+        <text x={cx - 3.5} y={P(0, caseRadius + 8.5)[1] + 1}>B</text>
+        <path d={`M ${cx} ${P(0, -(caseRadius + 20))[1]} l 4 0`} stroke={C.line} strokeWidth={0.5} markerEnd="url(#arrow-solid)" />
+        <text x={cx - 3.5} y={P(0, -(caseRadius + 20))[1] + 1}>B</text>
       </g>
 
       <HDim x1={P(-strapWidth / 2, 0)[0]} x2={P(strapWidth / 2, 0)[0]} y={P(0, topLug.y1 + 6)[1]} label={`${strapWidth} STRAP`} ext={[lugTop.y, lugTop.y]} />
-      <VDim y1={P(0, topLug.y1)[1]} y2={P(0, podLug.y0)[1]} x={P(-33, 0)[0]} label={`${fmt(topLug.y1 - podLug.y0)} LUG TO LUG`} ext={[lugTop.x, lugPod.x]} />
+      <VDim y1={P(0, topLug.y1)[1]} y2={P(0, podLug.y0)[1]} x={P(-(caseRadius + 10), 0)[0]} label={`${fmt(topLug.y1 - podLug.y0)} LUG TO LUG`} ext={[lugTop.x, lugPod.x]} />
       <HDim x1={P(-caseRadius, 0)[0]} x2={P(caseRadius, 0)[0]} y={P(0, -caseRadius - 16.5)[1]} label={`Ø${caseRadius * 2} CASE`} ext={[cy, cy]} />
-      <text x={P(-17, 17.5)[0]} y={P(-17, 17.5)[1]} fontSize={2.1} fill={C.accent} textAnchor="end">Ø{internalRadius * 2} BOARD</text>
+      <text x={P(-internalRadius * 0.85, internalRadius * 0.88)[0]} y={P(-internalRadius * 0.85, internalRadius * 0.88)[1]} fontSize={2.1} fill={C.accent} textAnchor="end">Ø{internalRadius * 2} BOARD</text>
     </g>
   )
 }
 
-function SectionView() {
-  const { caseRadius, internalRadius, topLug, podLug, opticalWindowDiameter, qiCoil, displayDiameter } = ENVELOPE
-  const caseBack = LAYERS[0]
-  const display = LAYERS.find((layer) => layer.id === "display")!
-  const crystal = LAYERS.find((layer) => layer.id === "crystal")!
-  const battery = part("battery")
-  const pcb = part("pcb")
-  const soc = part("soc")
-  const mcu = part("mcu")
-  const emmc = part("emmc")
-  const flex = part("sensor-flex")
-  const pod = part("pod")
+function SectionView({ g }: { g: WatchGeometry }) {
+  const { caseRadius, internalRadius, topLug, podLug, opticalWindowDiameter, qiCoil, displayDiameter } = g.ENVELOPE
+  const S = sectionProjection(g)
+  const rect = (y0: number, y1: number, z0: number, z1: number) => sectionRect(S, y0, y1, z0, z1)
+  const caseBack = g.LAYERS[0]
+  const display = g.LAYERS.find((layer) => layer.id === "display")!
+  const crystal = g.LAYERS.find((layer) => layer.id === "crystal")!
+  const battery = partOf(g, "battery")
+  const pcb = partOf(g, "pcb")
+  const soc = partOf(g, "soc")
+  const mcu = partOf(g, "mcu")
+  const emmc = partOf(g, "emmc")
+  const flex = partOf(g, "sensor-flex")
+  const pod = partOf(g, "pod")
   const bezelTop = crystal.z0 + 0.8
   const metal = { fill: "url(#hatch-metal)", stroke: C.line, strokeWidth: 0.3 }
   const [lx] = S(topLug.y1 + 4, 0)
-  const [, zTop] = S(0, ENVELOPE.caseThickness)
+  const [, zTop] = S(0, g.ENVELOPE.caseThickness)
   const [, zBottom] = S(0, 0)
   return (
     <g>
       <text x={S(-4, 0)[0]} y={36} textAnchor="middle" fontSize={3.2} fontWeight={700} fill={C.line}>SECTION B–B</text>
       <text x={S(-4, 0)[0]} y={40} textAnchor="middle" fontSize={2.3} fill={C.faint}>SCALE 2.3 : 1 · CUT THROUGH CENTRE, 12 → 6 O'CLOCK</text>
 
-      <rect {...sectionRect(topLug.y0, topLug.y1, topLug.z0, topLug.z1)} rx={0.8} {...metal} />
-      <circle cx={S((topLug.y0 + topLug.y1) / 2 + 1.5, 7.5)[0]} cy={S(0, 7.5)[1]} r={0.9 * SECTION.s} fill={C.paper} stroke={C.line} strokeWidth={0.25} />
-      <rect {...sectionRect(podLug.y0, podLug.y1, podLug.z0, podLug.z1)} rx={0.8} {...metal} />
-      <rect {...sectionRect(pod.y - pod.d / 2, pod.y + pod.d / 2, pod.z, pod.z + pod.h)} fill="url(#hatch-pod)" stroke={C.pod} strokeWidth={0.35} />
+      <rect {...rect(topLug.y0, topLug.y1, topLug.z0, topLug.z1)} rx={0.8} {...metal} />
+      <circle cx={S((topLug.y0 + topLug.y1) / 2 + 1.5, g.ENVELOPE.crown.z)[0]} cy={S(0, g.ENVELOPE.crown.z)[1]} r={0.9 * SECTION.s} fill={C.paper} stroke={C.line} strokeWidth={0.25} />
+      <rect {...rect(podLug.y0, podLug.y1, podLug.z0, podLug.z1)} rx={0.8} {...metal} />
+      <rect {...rect(pod.y - pod.d / 2, pod.y + pod.d / 2, pod.z, pod.z + pod.h)} fill="url(#hatch-pod)" stroke={C.pod} strokeWidth={0.35} />
 
-      <rect {...sectionRect(internalRadius, caseRadius, caseBack.z1, bezelTop)} {...metal} />
-      <rect {...sectionRect(-caseRadius, -internalRadius, caseBack.z1, bezelTop)} {...metal} />
-      <rect {...sectionRect(-caseRadius + 1.5, caseRadius - 1.5, 0, caseBack.z1)} {...metal} />
-      <rect {...sectionRect(-opticalWindowDiameter / 2, opticalWindowDiameter / 2, 0, caseBack.z1)} fill={C.glass} fillOpacity={0.35} stroke={C.line} strokeWidth={0.25} />
+      <rect {...rect(internalRadius, caseRadius, caseBack.z1, bezelTop)} {...metal} />
+      <rect {...rect(-caseRadius, -internalRadius, caseBack.z1, bezelTop)} {...metal} />
+      <rect {...rect(-caseRadius + 1.5, caseRadius - 1.5, 0, caseBack.z1)} {...metal} />
+      <rect {...rect(-opticalWindowDiameter / 2, opticalWindowDiameter / 2, 0, caseBack.z1)} fill={C.glass} fillOpacity={0.35} stroke={C.line} strokeWidth={0.25} />
       {[1, -1].map((side) => (
-        <rect key={side} {...sectionRect((side * qiCoil.inner) / 2, (side * qiCoil.outer) / 2, 0.45, 0.95)} fill={C.copper} stroke="none" />
+        <rect key={side} {...rect((side * qiCoil.inner) / 2, (side * qiCoil.outer) / 2, 0.45, 0.95)} fill={C.copper} stroke="none" />
       ))}
-      <rect {...sectionRect(flex.y - flex.d / 2, flex.y + flex.d / 2, flex.z, flex.z + flex.h)} fill="#ff69b4" fillOpacity={0.7} stroke="none" />
+      <rect {...rect(flex.y - flex.d / 2, flex.y + flex.d / 2, flex.z, flex.z + flex.h)} fill="#ff69b4" fillOpacity={0.7} stroke="none" />
 
-      <rect {...sectionRect(battery.y - battery.d / 2, battery.y + battery.d / 2, battery.z, battery.z + battery.h)} fill="url(#hatch-battery)" stroke={C.line} strokeWidth={0.3} rx={0.6} />
-      <rect {...sectionRect(emmc.y - emmc.d / 2, emmc.y + emmc.d / 2, emmc.z, emmc.z + emmc.h)} fill="#0f1a2b" stroke={C.line} strokeWidth={0.2} />
-      <rect {...sectionRect(-pcb.d / 2, pcb.d / 2, pcb.z, pcb.z + pcb.h)} fill={C.board} stroke={C.line} strokeWidth={0.25} />
-      <rect {...sectionRect(soc.y - soc.d / 2, soc.y + soc.d / 2, soc.z, soc.z + soc.h)} fill="#0f1a2b" stroke={C.line} strokeWidth={0.25} />
-      <rect {...sectionRect(mcu.y - mcu.d / 2, mcu.y + mcu.d / 2, mcu.z, mcu.z + mcu.h)} fill="#0f1a2b" stroke={C.line} strokeWidth={0.25} />
+      <rect {...rect(battery.y - battery.d / 2, battery.y + battery.d / 2, battery.z, battery.z + battery.h)} fill="url(#hatch-battery)" stroke={C.line} strokeWidth={0.3} rx={0.6} />
+      <rect {...rect(emmc.y - emmc.d / 2, emmc.y + emmc.d / 2, emmc.z, emmc.z + emmc.h)} fill="#0f1a2b" stroke={C.line} strokeWidth={0.2} />
+      <rect {...rect(-pcb.d / 2, pcb.d / 2, pcb.z, pcb.z + pcb.h)} fill={C.board} stroke={C.line} strokeWidth={0.25} />
+      <rect {...rect(soc.y - soc.d / 2, soc.y + soc.d / 2, soc.z, soc.z + soc.h)} fill="#0f1a2b" stroke={C.line} strokeWidth={0.25} />
+      <rect {...rect(mcu.y - mcu.d / 2, mcu.y + mcu.d / 2, mcu.z, mcu.z + mcu.h)} fill="#0f1a2b" stroke={C.line} strokeWidth={0.25} />
 
-      <rect {...sectionRect(-displayDiameter / 2, displayDiameter / 2, display.z0, display.z1)} fill="#d9c84a" fillOpacity={0.55} stroke={C.line} strokeWidth={0.25} />
+      <rect {...rect(-displayDiameter / 2, displayDiameter / 2, display.z0, display.z1)} fill="#d9c84a" fillOpacity={0.55} stroke={C.line} strokeWidth={0.25} />
       <path
         d={(() => {
           const [x0, z0] = S(internalRadius, crystal.z0)
@@ -275,19 +271,19 @@ function SectionView() {
       ))}
 
       <line x1={S(0, 0)[0]} y1={zTop - 6} x2={S(0, 0)[0]} y2={zBottom + 4} stroke={C.faint} strokeWidth={0.15} strokeDasharray="4 1 0.6 1" />
-      <VDim y1={zTop} y2={zBottom} x={lx - 2} label={`${ENVELOPE.caseThickness}`} ext={[S(topLug.y1, 0)[0], S(topLug.y1, 0)[0]]} />
+      <VDim y1={zTop} y2={zBottom} x={lx - 2} label={`${g.ENVELOPE.caseThickness}`} ext={[S(topLug.y1, 0)[0], S(topLug.y1, 0)[0]]} />
       <HDim x1={S(displayDiameter / 2, 0)[0]} x2={S(-displayDiameter / 2, 0)[0]} y={zBottom + 5} label={`Ø${displayDiameter} DISPLAY · Ø${internalRadius * 2} BOARD · Ø${caseRadius * 2} CASE`} ext={[S(0, display.z0)[1], S(0, display.z0)[1]]} />
     </g>
   )
 }
 
-function CaseBackDetail() {
+function CaseBackDetail({ g }: { g: WatchGeometry }) {
   const scale = 0.78
   const cx = 169
   const cy = 181
   const r = (mm: number) => mm * scale
-  const { caseRadius, opticalWindowDiameter, qiCoil } = ENVELOPE
-  const textRadius = r(18.3)
+  const { caseRadius, opticalWindowDiameter, qiCoil } = g.ENVELOPE
+  const textRadius = r(caseRadius - 4.7)
   const arc = `M ${cx - textRadius} ${cy} A ${textRadius} ${textRadius} 0 1 1 ${cx + textRadius} ${cy} A ${textRadius} ${textRadius} 0 1 1 ${cx - textRadius} ${cy}`
   return (
     <g>
@@ -333,11 +329,23 @@ function Table({ x, y, title, columns, rows, widths }: { x: number; y: number; t
   )
 }
 
-export function EngineeringDrawing({ selected, onSelect }: { selected: string | null; onSelect: (id: string | null) => void }) {
+interface DrawingProps {
+  selected: string | null
+  onSelect: (id: string | null) => void
+  geometry?: WatchGeometry
+  components?: readonly WatchComponent[]
+  /** Model name in the title block, for example "NG 40 MM". */
+  modelName?: string
+  drawingNumber?: string
+}
+
+export function EngineeringDrawing({ selected, onSelect, geometry = GEOMETRY_46, components = WATCH_COMPONENTS, modelName = "NARCOGUARD NG", drawingNumber = "NG-CON-001" }: DrawingProps) {
+  const g = geometry
   const svgRef = useRef<SVGSVGElement>(null)
   const select = (id: string) => onSelect(selected === id ? null : id)
-  const layerRows = [...LAYERS].reverse().map((layer) => [layer.label, `${layer.z0.toFixed(1)}–${layer.z1.toFixed(1)}`, (layer.z1 - layer.z0).toFixed(1)])
-  const partRows = WATCH_COMPONENTS.map((component, index) => [String(index + 1), component.name.slice(0, 30), component.partNumber.slice(0, 27)])
+  const caseMm = g.model.caseDiameterMm
+  const layerRows = [...g.LAYERS].reverse().map((layer) => [layer.label, `${layer.z0.toFixed(1)}–${layer.z1.toFixed(1)}`, (layer.z1 - layer.z0).toFixed(1)])
+  const partRows = components.map((component, index) => [String(index + 1), component.name.slice(0, 30), component.partNumber.slice(0, 27)])
 
   const download = () => {
     if (!svgRef.current) return
@@ -345,13 +353,13 @@ export function EngineeringDrawing({ selected, onSelect }: { selected: string | 
     const url = URL.createObjectURL(new Blob([`<?xml version="1.0" encoding="UTF-8"?>\n${source}`], { type: "image/svg+xml" }))
     const link = document.createElement("a")
     link.href = url
-    link.download = "narcoguard-ng-rev4.2-concept-drawing.svg"
+    link.download = `narcoguard-ng-${caseMm}mm-rev4.2-concept-drawing.svg`
     link.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
   }
 
   return (
-    <div className="space-y-3" data-testid="engineering-drawing">
+    <div className="space-y-3" data-testid="engineering-drawing" data-case-mm={caseMm}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm text-muted-foreground">To-scale concept drawing generated from the design model. Tap a numbered callout for part details; scroll sideways on small screens.</p>
         <Button type="button" variant="outline" size="sm" onClick={download}><Download className="mr-2 h-4 w-4" aria-hidden="true" />Download SVG</Button>
@@ -364,11 +372,11 @@ export function EngineeringDrawing({ selected, onSelect }: { selected: string | 
           width="100%"
           className="block min-w-[900px]"
           role="group"
-          aria-labelledby="drawing-title drawing-desc"
+          aria-labelledby={`drawing-title-${caseMm} drawing-desc-${caseMm}`}
           fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
         >
-          <title id="drawing-title">NarcoGuard NG Rev 4.2 concept engineering drawing</title>
-          <desc id="drawing-desc">Plan view and section B-B of the 46 mm watch case with numbered component callouts, a layer stack table, a parts list and open engineering issues. Dimensions in millimetres; concept only, not for manufacture.</desc>
+          <title id={`drawing-title-${caseMm}`}>NarcoGuard NG {caseMm} mm Rev 4.2 concept engineering drawing</title>
+          <desc id={`drawing-desc-${caseMm}`}>Plan view and section B-B of the {caseMm} mm watch case with numbered component callouts, a layer stack table, a parts list and open engineering issues. Dimensions in millimetres; concept only, not for manufacture.</desc>
           <defs>
             <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
               <path d="M 10 0 L 0 0 0 10" fill="none" stroke={C.grid} strokeWidth={0.2} />
@@ -399,21 +407,20 @@ export function EngineeringDrawing({ selected, onSelect }: { selected: string | 
           <rect x={5} y={5} width={SHEET.w - 10} height={SHEET.h - 10} fill="none" stroke={C.line} strokeWidth={0.6} />
           <rect x={7} y={7} width={SHEET.w - 14} height={SHEET.h - 14} fill="none" stroke={C.line} strokeWidth={0.2} />
 
-          <PlanView />
-          <SectionView />
+          <PlanView g={g} />
+          <SectionView g={g} />
 
-          {PLAN_CALLOUTS.map((spec) => <Callout key={`p-${spec.id}`} spec={spec} selected={selected} onSelect={select} />)}
-          {SECTION_CALLOUTS.map((spec) => <Callout key={`s-${spec.id}`} spec={spec} selected={selected} onSelect={select} />)}
+          {calloutsFor(g).map((spec, index) => <Callout key={`${index}-${spec.id}`} spec={spec} components={components} selected={selected} onSelect={select} />)}
 
           <Table x={135} y={124} title="LAYER STACK (z FROM CASE BACK, mm)" columns={["LAYER", "z", "THK"]} widths={[44, 15, 9]} rows={layerRows} />
-          <CaseBackDetail />
+          <CaseBackDetail g={g} />
           <Table x={207} y={124} title="PARTS LIST (CANDIDATE)" columns={["#", "ITEM", "PART NO."]} widths={[5, 40, 37]} rows={partRows} />
 
           <g fontSize={2.15} fill={C.line}>
             <text x={12} y={160} fontSize={2.6} fontWeight={700}>NOTES AND OPEN ISSUES</text>
             {(() => {
               let line = 0
-              return OPEN_ISSUES.flatMap((issue, index) =>
+              return g.OPEN_ISSUES.flatMap((issue, index) =>
                 wrap(`${index + 1}. ${issue}`, 92).map((text, part) => (
                   <text key={`${index}-${part}`} x={part ? 15.5 : 12} y={165 + line++ * 3.3}>{text}</text>
                 )),
@@ -427,10 +434,10 @@ export function EngineeringDrawing({ selected, onSelect }: { selected: string | 
             <line x1={207} y1={185} x2={289} y2={185} stroke={C.line} strokeWidth={0.2} />
             <line x1={207} y1={194} x2={289} y2={194} stroke={C.line} strokeWidth={0.2} />
             <line x1={248} y1={185} x2={248} y2={203} stroke={C.line} strokeWidth={0.2} />
-            <text x={209} y={180} fontSize={3.4} fontWeight={700}>NARCOGUARD NG</text>
+            <text x={209} y={180} fontSize={3.4} fontWeight={700}>{modelName}</text>
             <text x={209} y={183.6} fontSize={2}>WEARABLE CONCEPT · CASE + CORE LAYOUT</text>
             <text x={209} y={189} fill={C.faint}>DRAWING</text>
-            <text x={209} y={192.4}>NG-CON-001</text>
+            <text x={209} y={192.4}>{drawingNumber}</text>
             <text x={250} y={189} fill={C.faint}>REV</text>
             <text x={250} y={192.4}>4.2 CONCEPT</text>
             <text x={209} y={198} fill={C.faint}>UNITS / PROJECTION</text>
