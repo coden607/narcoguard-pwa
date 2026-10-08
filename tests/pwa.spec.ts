@@ -545,6 +545,71 @@ test.describe("PWA production flow", () => {
     await expect(page.getByRole("heading", { level: 1 })).toContainText("Constitution")
   })
 
+  test("by voice, Angel searches several needs near the person's shared location and reads the nearest places aloud", async ({ page, context }) => {
+    await context.grantPermissions(["geolocation"])
+    await context.setGeolocation({ latitude: 42.0987, longitude: -75.9123 })
+    await page.addInitScript(() => {
+      const spoken: string[] = []
+      ;(window as unknown as { __spoken: string[] }).__spoken = spoken
+      const said = ["I need food and somewhere to sleep", "use my location"]
+      class FakeRecognition {
+        lang = ""; continuous = false; interimResults = false
+        onresult: ((e: unknown) => void) | null = null
+        onerror: ((e: unknown) => void) | null = null
+        onend: (() => void) | null = null
+        static turns = 0
+        start() {
+          const turn = FakeRecognition.turns++
+          setTimeout(() => {
+            if (turn < said.length) this.onresult?.({ resultIndex: 0, results: [Object.assign([{ transcript: said[turn] }], { isFinal: true })] })
+            else this.onerror?.({ error: "not-allowed" })
+            this.onend?.()
+          }, 50)
+        }
+        stop() { this.onend?.() }
+        abort() { this.onend?.() }
+      }
+      for (const name of ["SpeechRecognition", "webkitSpeechRecognition"]) Object.defineProperty(window, name, { value: FakeRecognition, configurable: true, writable: true })
+      const synth = {
+        speak(u: { text: string; onend?: () => void }) { if (u.text.trim()) spoken.push(u.text); setTimeout(() => u.onend?.(), 10) },
+        cancel() {},
+      }
+      Object.defineProperty(window, "speechSynthesis", { value: synth, configurable: true })
+      ;(window as unknown as { SpeechSynthesisUtterance: unknown }).SpeechSynthesisUtterance = class { text: string; lang = ""; rate = 1; volume = 1; onend?: () => void; onerror?: () => void; constructor(t: string) { this.text = t } }
+    })
+    const bodies: { messages: { content: string }[]; location?: { lat: number; lon: number }; zip?: string }[] = []
+    const listing = (name: string, distanceMiles: number) => ({ name, kind: "food", lat: 42.1, lon: -75.91, distanceMiles, source: "OpenStreetMap contributors", phone: "607-555-0100" })
+    await page.route("**/api/angel", async (route) => {
+      if (route.request().method() === "GET") return route.fulfill({ json: { available: true, provider: "Vercel AI Gateway" } })
+      const body = route.request().postDataJSON()
+      bodies.push(body)
+      if (!body.location) return route.fulfill({ json: { available: true, notices: [], reply: "What's your ZIP code, or tap Use my location?" } })
+      await route.fulfill({ json: { available: true, notices: [], reply: "Here is what is close. Call first.", resources: { status: "ok", groups: [
+        { kind: "food", label: "Free/community food", shortLabel: "Free food", status: "ok", results: [listing("Pantry A", 0.4)], fallback: [] },
+        { kind: "shelter", label: "Shelter", shortLabel: "Shelter", status: "ok", results: [listing("Rescue Mission", 18)], widenedMiles: 25, fallback: [] },
+      ] } } })
+    })
+    await page.goto("/angel")
+    await page.getByRole("button", { name: "I understand, talk to Angel" }).click()
+    await expect(page.getByTestId("angel-consent")).toHaveCount(0)
+    await page.getByRole("button", { name: "Hands-free conversation" }).click()
+    await expect(page.getByTestId("angel-location-on")).toBeVisible()
+    await expect.poll(() => bodies.length).toBe(2)
+    expect(bodies[0].location, "nothing is shared before the person asks").toBeUndefined()
+    expect(bodies[1].location).toEqual({ lat: 42.1, lon: -75.91 })
+    expect(bodies[1].messages.at(-1)?.content, "the pending search runs again once the location is shared").toBe("I need food and somewhere to sleep")
+    const results = page.getByTestId("angel-resources")
+    await expect(results.getByRole("heading", { name: "Shelter" })).toBeVisible()
+    await expect(results).toContainText("searched up to 25 miles")
+    await expect(results.getByRole("link", { name: "Call 607-555-0100" }).first()).toHaveAttribute("href", "tel:6075550100")
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.join(" "))).toContain("For free food: Pantry A, 0.4 miles away.")
+    const spoken = await page.evaluate(() => (window as unknown as { __spoken: string[] }).__spoken.join(" "))
+    expect(spoken).toContain("Got it. I'll search near you.")
+    expect(spoken).toContain("For shelter: Rescue Mission, 18 miles away, farther away than usual.")
+    await page.getByRole("button", { name: "Stop using my location" }).click()
+    await expect(page.getByRole("button", { name: "Use my location" })).toBeVisible()
+  })
+
   test("hands-free voice sends what was heard and speaks the 911 notice first", async ({ page }) => {
     await page.addInitScript(() => {
       const spoken: string[] = []

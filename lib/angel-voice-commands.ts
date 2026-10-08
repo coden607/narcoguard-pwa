@@ -2,6 +2,7 @@ export type AngelLocalCommand =
   | { type: "navigate"; href: "/stability" | "/daily-life" | "/ar" | "/help" }
   | { type: "clear" }
   | { type: "read_aloud"; enabled: boolean }
+  | { type: "location"; enabled: boolean }
 
 const clean = (text: string) => text.trim().toLowerCase().replace(/[.,!?]+$/g, "")
 
@@ -14,5 +15,7 @@ export function parseAngelLocalCommand(text: string): AngelLocalCommand | null {
   if (/^(clear|erase) (the )?(chat|conversation)$/.test(value)) return { type: "clear" }
   if (/^(turn on|enable|start) (read aloud|reading aloud|voice replies)$/.test(value)) return { type: "read_aloud", enabled: true }
   if (/^(turn off|disable|stop) (read aloud|reading aloud|voice replies)$/.test(value)) return { type: "read_aloud", enabled: false }
+  if (/^(use|share) my (current )?location( for searches)?$/.test(value)) return { type: "location", enabled: true }
+  if (/^(stop using|stop sharing|turn off|forget|don't use|do not use) my (current )?location$/.test(value)) return { type: "location", enabled: false }
   return null
 }

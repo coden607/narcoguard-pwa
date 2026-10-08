@@ -3,14 +3,16 @@
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Mic, MicOff, Send, Sparkles, Volume2, VolumeX } from "lucide-react"
+import { LocateFixed, Mic, MicOff, Send, Sparkles, Volume2, VolumeX } from "lucide-react"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import type { NearbyResource } from "@/lib/resource-finder"
+import { coarsen } from "@/lib/resource-finder"
+import { spokenResourceSummary, type AngelResources } from "@/lib/angel-resources"
 import { useVoice } from "@/lib/hooks/use-voice"
 import { isFatalRecognitionError, speakableText } from "@/lib/voice"
 import { parseAngelLocalCommand } from "@/lib/angel-voice-commands"
+import { routeAngelTurn } from "@/lib/angel-routing"
 import { useUserPreferences } from "@/lib/hooks/use-user-preferences"
 import { readDailyLifeState } from "@/lib/daily-life"
 import { readLifeSupportState } from "@/lib/life-support"
@@ -22,10 +24,10 @@ interface ChatMessage {
   role: "user" | "assistant"
   content: string
   notices?: string[]
-  resources?: { status: string; results: NearbyResource[]; fallback: { title: string; url: string }[] }
+  resources?: AngelResources
 }
 
-const SUGGESTIONS = ["Help me set a goal for this week", "Find food help near me", "How do I get naloxone?"]
+const SUGGESTIONS = ["Help me set a goal for this week", "Find food and a place to sleep near me", "How do I get naloxone?"]
 
 export function AngelAI({ compact = false }: { compact?: boolean }) {
   const router = useRouter()
@@ -48,6 +50,11 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const handsFreeRef = useRef(false)
   const [voiceNote, setVoiceNote] = useState<string>()
   const [usePlanningContext, setUsePlanningContext] = useState(false)
+  // Approximate location for searches, kept in memory only and rounded to about 1 km before it leaves the device.
+  const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null)
+  const locationRef = useRef<{ lat: number; lon: number } | null>(null)
+  const [locating, setLocating] = useState(false)
+  const [locationNote, setLocationNote] = useState<string>()
 
   useEffect(() => { messagesRef.current = messages }, [messages])
 
@@ -65,6 +72,41 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   }, [])
 
   useEffect(() => { endRef.current?.scrollIntoView({ block: "nearest" }) }, [messages])
+
+  /** Asks the browser for the current position once; resolves with a spoken confirmation. */
+  const shareLocation = (): Promise<string> => new Promise((resolve) => {
+    if (!("geolocation" in navigator)) { setLocationNote("This browser can't share a location. Type a ZIP code instead."); resolve("This browser can't share a location. Say or type your ZIP code instead."); return }
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const rounded = { lat: coarsen(position.coords.latitude), lon: coarsen(position.coords.longitude) }
+        locationRef.current = rounded
+        setLocation(rounded)
+        // The location the person just chose replaces any ZIP typed earlier.
+        setZip("")
+        setLocating(false)
+        setLocationNote(undefined)
+        resolve("Got it. I'll search near you.")
+      },
+      () => {
+        setLocating(false)
+        setLocationNote("Location was not shared. You can type a ZIP code instead.")
+        resolve("Location was not shared. Say or type your ZIP code instead.")
+      },
+      { enableHighAccuracy: false, timeout: 15_000, maximumAge: 600_000 },
+    )
+  })
+
+  /** The latest request for places that has not been answered with listings yet, e.g. one asked before a location was shared. */
+  const pendingSearch = () => {
+    const history = messagesRef.current
+    const lastAsk = history.findLastIndex((m) => m.role === "user" && routeAngelTurn(m.content).useTools)
+    if (lastAsk < 0) return undefined
+    const answered = history.slice(lastAsk + 1).some((m) => m.role === "assistant" && m.resources)
+    return answered ? undefined : history[lastAsk].content
+  }
+
+  const forgetLocation = () => { locationRef.current = null; setLocation(null); setLocationNote(undefined) }
 
   /** Sends a message and returns what Angel should say back (safety notices first), or null on failure. */
   const send = async (text: string): Promise<string | null> => {
@@ -85,6 +127,13 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       else voice.cancelSpeech()
       setReadAloud(local.enabled)
       return local.enabled ? "Read aloud is on." : "Read aloud is off."
+    }
+    if (local?.type === "location") {
+      if (!local.enabled) { forgetLocation(); return "I stopped using your location." }
+      const said = await shareLocation()
+      const pending = pendingSearch()
+      if (!locationRef.current || !pending) return said
+      return `${said} ${(await send(pending)) ?? ""}`.trim()
     }
     const next: ChatMessage[] = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content }]
     messagesRef.current = next
@@ -110,7 +159,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: next.slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })),
-          ...(/^\d{5}$/.test(zip) ? { zip } : {}),
+          ...(/^\d{5}$/.test(zip) ? { zip } : locationRef.current ? { location: locationRef.current } : {}),
           ...(localContext ? { localContext } : {}),
         }),
       })
@@ -133,7 +182,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         setError(message)
         return speakableText(body.notices, message)
       }
-      return speakableText(body.notices, body.reply)
+      return speakableText(body.notices, [body.reply, spokenResourceSummary(body.resources)].filter(Boolean).join(" "))
     } catch {
       setError("Angel couldn't be reached. Check your connection.")
       return null
@@ -218,6 +267,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
               ? "Your messages are sent through OpenRouter to an AI provider to write Angel's replies. NarcoGuard asks OpenRouter to use only providers that do not store or train on them."
               : "Your messages are sent to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."}{" "}
             If you use voice, your browser turns speech into text (Apple or Google may process the audio), and replies are read aloud on this device.{" "}
+            If you tap Use my location, it is rounded to about 1 km and used only to search public directories. It is never sent to the AI provider and is not saved.{" "}
             NarcoGuard does not save your chat, and it disappears when you leave this page. Don&apos;t include names, addresses or other details that identify you.
           </p>
           <Button onClick={() => setConsented(true)}>I understand, talk to Angel</Button>
@@ -236,18 +286,35 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
                 {message.content && (
                   <p className={`max-w-[85%] whitespace-pre-wrap rounded-lg p-3 text-sm ${message.role === "user" ? "bg-primary text-primary-foreground" : "glass"}`}>{message.content}</p>
                 )}
-                {message.resources?.results.length ? (
-                  <ul className="space-y-2 text-sm">
-                    {message.resources.results.slice(0, 5).map((resource) => (
-                      <li key={`${resource.name}-${resource.lat}`} className="rounded-lg border p-2">
-                        <strong>{resource.name}</strong>{resource.distanceMiles !== undefined && ` · ${resource.distanceMiles} mi`}
-                        {resource.address && <span className="block text-muted-foreground">{resource.address}</span>}
-                        {resource.phone && <a className="underline text-primary" href={`tel:${resource.phone.replace(/[^\d+]/g, "")}`}>Call {resource.phone}</a>}
-                        <span className="block text-xs text-muted-foreground">Source: {resource.source}. Call first to confirm.</span>
-                      </li>
+                {message.resources && (
+                  <div className="space-y-3 text-sm" data-testid="angel-resources">
+                    {message.resources.message && <p className="text-muted-foreground">{message.resources.message}</p>}
+                    {message.resources.groups.map((group) => (
+                      <section key={group.kind} aria-label={group.shortLabel} className="space-y-2">
+                        <h4 className="font-semibold">{group.label}</h4>
+                        {group.widenedMiles && group.results.length > 0 && <p className="text-xs text-muted-foreground">Nothing within 10 miles, so this searched up to {group.widenedMiles} miles.</p>}
+                        {group.results.length > 0 ? (
+                          <ul className="space-y-2">
+                            {group.results.map((resource) => (
+                              <li key={`${resource.name}-${resource.lat}-${resource.lon}`} className="rounded-lg border p-2">
+                                <strong>{resource.name}</strong>{resource.distanceMiles !== undefined && ` · ${resource.distanceMiles} mi`}
+                                {resource.address && <span className="block text-muted-foreground">{resource.address}</span>}
+                                {resource.phone && <a className="underline text-primary" href={`tel:${resource.phone.replace(/[^\d+]/g, "")}`}>Call {resource.phone}</a>}
+                                <span className="block text-xs text-muted-foreground">Source: {resource.source}. Call first to confirm.</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <p className="text-muted-foreground">
+                            {group.status === "ok" ? "No listing found nearby." : "This search is not available right now."}{" "}
+                            {group.fallback.map((link) => <a key={link.url} className="underline text-primary mr-2" href={link.url} target="_blank" rel="noreferrer">{link.title}</a>)}
+                            <a className="underline text-primary" href="tel:211">Call 211</a>
+                          </p>
+                        )}
+                      </section>
                     ))}
-                  </ul>
-                ) : null}
+                  </div>
+                )}
               </div>
             ))}
             {busy && <p className="text-sm text-muted-foreground" role="status">Angel is thinking…</p>}
@@ -293,6 +360,22 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
             <Input aria-label="ZIP code for searches (optional)" inputMode="numeric" maxLength={5} value={zip} onChange={(event) => setZip(event.target.value.replace(/\D/g, ""))} placeholder="ZIP (optional)" className="sm:w-32" />
             <Button type="submit" disabled={busy || !input.trim()} aria-label="Send message"><Send className="w-4 h-4" aria-hidden="true" /></Button>
           </form>
+          <div className="flex flex-wrap items-center gap-2 text-sm" role="group" aria-label="Search location">
+            {location ? (
+              <>
+                <span data-testid="angel-location-on">Searching near you (location rounded to about 1 km).</span>
+                <Button type="button" variant="ghost" size="sm" onClick={forgetLocation}>Stop using my location</Button>
+              </>
+            ) : (
+              <Button type="button" variant="outline" size="sm" disabled={locating || busy} onClick={() => void shareLocation().then(() => {
+                const pending = locationRef.current ? pendingSearch() : undefined
+                if (pending) void send(pending).then((answer) => { if (answer && readAloud) void voice.speak(answer) })
+              })}>
+                <LocateFixed className="w-4 h-4 mr-2" aria-hidden="true" />{locating ? "Finding your location…" : "Use my location"}
+              </Button>
+            )}
+            {locationNote && <span className="text-muted-foreground" role="status">{locationNote}</span>}
+          </div>
           <Button type="button" variant="ghost" size="sm" className="self-start" onClick={() => setMessages([])}>Clear conversation</Button>
         </>
       )}
