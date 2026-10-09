@@ -39,6 +39,17 @@ class ProviderError extends Error {
   constructor(readonly status: number, readonly detail = "") { super(`provider ${status}`) }
 }
 
+/** The provider's machine-readable error type or code (for example "exceeded_current_quota_error"); never message text. */
+function errorKind(detail: string): string {
+  try {
+    const error = (JSON.parse(detail) as { error?: { type?: unknown; code?: unknown } }).error
+    const kind = typeof error?.type === "string" ? error.type : typeof error?.code === "string" ? error.code : ""
+    return /^[\w.-]{1,60}$/.test(kind) ? ` ${kind}` : ""
+  } catch {
+    return ""
+  }
+}
+
 async function complete(provider: AngelProvider, choice: AngelModelChoice, messages: ChatMessage[], withTools: boolean, maxTokens = 1024, temperature = 0.4, timeoutMs = 25_000) {
   const endpoint = endpointFor(provider, choice)
   // A network failure or timeout before any response counts as status 0, so another service can be tried.
@@ -76,7 +87,7 @@ async function completeWithFallback(provider: AngelProvider, choices: AngelModel
       const last = index === choices.length - 1
       const crossService = !last && endpointFor(provider, choices[index + 1]).url !== endpointFor(provider, choice).url
       if (last || !(error instanceof ProviderError && shouldTryFallback(error.status, crossService))) throw error
-      console.warn(`[angel] ${endpointFor(provider, choice).name} refused ${choice.model} (${error.status}); trying ${endpointFor(provider, choices[index + 1]).name} ${choices[index + 1].model}`)
+      console.warn(`[angel] ${endpointFor(provider, choice).name} refused ${choice.model} (${error.status}${errorKind(error.detail)}); trying ${endpointFor(provider, choices[index + 1]).name} ${choices[index + 1].model}`)
     }
   }
   throw new ProviderError(0)

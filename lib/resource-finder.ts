@@ -257,9 +257,12 @@ export function parseOverpassNeeds(body: unknown, origin: { lat: number; lon: nu
   return grouped
 }
 
+export const TREATMENT_PAGE_SIZE = 30
+
 /** FindTreatment needs "lat,lon" in sAddr; a bare ZIP is ignored and silently falls back to a default location. */
 export function findTreatmentUrl(lat: number, lon: number, radius = SEARCH_RADIUS_METERS): string {
-  const params = new URLSearchParams({ sAddr: `${lat},${lon}`, limitType: "2", limitValue: String(radius), pageSize: String(MAX_RESULTS), page: "1", sort: "0" })
+  // A wider page lets substance use programs be ranked ahead of mental-health-only ones before trimming.
+  const params = new URLSearchParams({ sAddr: `${lat},${lon}`, limitType: "2", limitValue: String(radius), pageSize: String(TREATMENT_PAGE_SIZE), page: "1", sort: "0" })
   return `https://findtreatment.gov/locator/exportsAsJson/v2?${params}`
 }
 
@@ -292,7 +295,7 @@ export function parseFindTreatment(body: unknown): NearbyResource[] {
   const rows = (body as { rows?: Record<string, unknown>[] } | null)?.rows
   if (!Array.isArray(rows)) return []
   const seen = new Set<string>()
-  return rows.flatMap((row) => {
+  const parsed = rows.flatMap((row): NearbyResource[] => {
     const name = [str(row.name1), str(row.name2)].filter(Boolean).join(" – ")
     if (!name) return []
     const street = [str(row.street1), str(row.street2)].filter(Boolean).join(", ")
@@ -314,7 +317,16 @@ export function parseFindTreatment(body: unknown): NearbyResource[] {
     if (seen.has(key)) return []
     seen.add(key)
     return [resource]
-  }).slice(0, MAX_RESULTS)
+  })
+  // NarcoGuard's "treatment" means substance use care: programs listing it come first (still nearest
+  // first within each group); mental-health-only programs stay listed below rather than hidden.
+  const offersSubstanceUse = (resource: NearbyResource) => (resource.services ? /substance use|opioid|medication.assisted|detox/i.test(resource.services) : undefined)
+  const rank = (resource: NearbyResource) => (offersSubstanceUse(resource) === true ? 0 : offersSubstanceUse(resource) === undefined ? 1 : 2)
+  return parsed
+    .map((resource, index) => ({ resource, index }))
+    .sort((a, b) => rank(a.resource) - rank(b.resource) || a.index - b.index)
+    .map(({ resource }) => resource)
+    .slice(0, MAX_RESULTS)
 }
 
 /** Directory pages a person can always use when live results are empty or unavailable. */

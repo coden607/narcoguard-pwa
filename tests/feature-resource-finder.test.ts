@@ -289,3 +289,15 @@ test("Angel's spoken summary adds wheelchair access and map-data age while never
   assert.match(spoken, /For shelter: Night Shelter, 1\.2 miles away, map data from November 2023\./)
   assert.doesNotMatch(spoken, /40\.7|-73\.9/, "precise coordinates are never spoken")
 })
+
+test("substance use treatment is listed before mental-health-only programs, nearest first within each", () => {
+  const row = (name: string, miles: number, care?: string) => ({ name1: name, latitude: 42, longitude: -75, miles, ...(care ? { services: [{ f1: "Type of Care", f2: null, f3: care }] } : {}) })
+  const results = parseFindTreatment({ rows: [
+    row("Crisis Residence", 1, "Mental health treatment"),
+    row("Unknown Services", 1.5),
+    row("Recovery Center", 2, "Substance use treatment; Mental health treatment"),
+    row("Opioid Program", 3, "Opioid treatment program"),
+  ] })
+  assert.deepEqual(results.map((r) => r.name), ["Recovery Center", "Opioid Program", "Unknown Services", "Crisis Residence"])
+  assert.match(findTreatmentUrl(42, -75), /pageSize=30/)
+})
