@@ -4,6 +4,7 @@ name: Factory Gate
 # and the full harness, then requires positive markers at or above the floors in .factory/locks.
 on:
   pull_request:
+    types: [opened, synchronize, reopened]
 
 permissions:
   contents: read
@@ -27,9 +28,25 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - name: Use the trusted guard, harness, locks and scenarios from main
+        # The PR's own copies are never executed: a branch must not supply the rules that judge it.
+        # The guard still diffs the PR's commits, so any change to these paths is reported.
+        run: git checkout origin/${{ github.base_ref }} -- factory harness .factory
       - name: Guard, harness and gate
         run: |
           set -o pipefail
           mkdir -p .factory/runs
           { python3 factory/guard.py --base origin/${{ github.base_ref }} --head HEAD; bash factory/validate.sh; } 2>&1 | tee .factory/runs/gate.log
           bash factory/gate.sh .factory/runs/gate.log
+
+  revoke-validation:
+    # A validator approved a specific head. Any new push revokes it, so the merge never takes code the
+    # validator did not see (FACTORY_RULES.md 9).
+    if: github.event.action == 'synchronize' && startsWith(github.head_ref, 'factory/')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr edit ${{ github.event.pull_request.number }} -R ${{ github.repository }} --remove-label factory:validated || true

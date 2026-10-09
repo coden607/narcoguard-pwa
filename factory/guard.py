@@ -57,7 +57,9 @@ PROTECTED += [
     # NarcoGuard (FACTORY_RULES.md 5). Governance and Constitution.
     "docs/governance/*", "app/constitution/*",
     # Factory machinery and agent config.
-    "harness/*", ".claude/*", ".codex/*", ".agent-skills/*",
+    "harness/*", ".claude/*", ".codex/*", ".agent-skills/*", ".mcp.json",
+    # Everything under .factory, including the owner's STOP file (runs/ is gitignored).
+    ".factory/*",
     # CI, build config, dependencies.
     ".github/*", "vercel.json", "next.config.mjs", "eslint.config.mjs", "playwright.config.ts",
     "tsconfig.json", "lighthouserc.js", "package.json", "package-lock.json", ".nvmrc", "scripts/*",
@@ -130,14 +132,22 @@ SKIP_MARK = re.compile(r"\b(?:test|it|describe)\.(?:skip|only|fixme)\b|\bxit\(|\
 TEST_CASE = re.compile(r"^\s*(?:test|it)\(")
 
 
+def test_file(path: str) -> bool:
+    """A file the test runners discover: tests/feature-*.test.ts, tests/*.spec.ts, harness specs."""
+    name = os.path.basename(path)
+    return name.endswith(".test.ts") or name.endswith(".spec.ts")
+
+
 def test_weakening(rng: str) -> list[str]:
     """A deleted test file, a removed test case, or a new skip/only is a weakened gate."""
     found: list[str] = []
-    rc, status = git("diff", "--name-status", rng)
+    rc, status = git("diff", "--name-status", "-M", rng)
     for row in status.splitlines() if rc == 0 else []:
         parts = row.split("\t")
         if parts and parts[0].startswith("D") and matches(parts[-1], TEST_GLOBS):
             found.append(f"{parts[-1]}: test file deleted")
+        if parts and parts[0].startswith("R") and len(parts) == 3 and test_file(parts[1]) and not test_file(parts[2]):
+            found.append(f"{parts[1]} -> {parts[2]}: test renamed out of discovery")
     rc, diff = git("diff", "-U0", rng, "--", "tests", "*.test.ts", "*.spec.ts")
     removed = added = 0
     for line in diff.splitlines() if rc == 0 else []:
@@ -172,11 +182,16 @@ def main() -> int:
     # `main...HEAD` compares against the MERGE BASE: what this branch actually changed.
     rng = f"{base}...{head}" if head else f"{base}...HEAD"
 
-    rc, out = git("diff", "--name-only", rng)
+    rc, out = git("diff", "--name-status", "-M", rng)
     if rc != 0:
         print(f"GUARD_ERROR: git diff {rng} failed. Failing closed.")
         return 2
-    changed = [f for f in out.splitlines() if f.strip()]
+    # Both sides of a rename or copy: moving a protected file away is changing it.
+    changed = []
+    for row in out.splitlines():
+        for path in row.split("\t")[1:]:
+            if path.strip() and path not in changed:
+                changed.append(path)
 
     # A three-dot diff only sees COMMITTED work. In the workflow the guard runs after the
     # commit step so that is the whole story, but anything run by hand on a dirty tree

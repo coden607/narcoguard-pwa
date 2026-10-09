@@ -32,11 +32,17 @@ jobs:
       - name: Wait for the new deployment to take traffic
         if: github.event_name == 'deployment_status'
         run: sleep 45
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci && npx playwright install --with-deps chromium
       - name: Live check
         id: live
         run: |
           set -o pipefail
-          bash factory/live-check.sh https://www.narcoguard.app | tee live.log
+          { bash factory/live-check.sh https://www.narcoguard.app && \
+            FACTORY_SUITE_DIR=./live FACTORY_BASE_URL=https://www.narcoguard.app FACTORY_REPORT=$PWD/live.json ./node_modules/.bin/playwright test -c harness/playwright.config.ts; } 2>&1 | tee live.log
       - name: Roll back, revert and escalate
         if: failure() && steps.live.outcome == 'failure'
         env:
@@ -67,5 +73,6 @@ jobs:
           printf '%s\n' "**Factory · live check** failed on https://www.narcoguard.app after ${SHA:0:7}." "" '```' "$(cat live.log)" '```' "" "- Rollback: $ROLLBACK" "- Revert: $REVERT" "" "@coden607 please check the live site." > body.md
           LABELS="priority:critical,factory:needs-human,factory-live-check"
           [[ "$ROLLBACK" == not\ attempted* ]] && LABELS="$LABELS,factory:rollback"
-          if [ "$(gh issue list --label factory-live-check --state open --json number --jq length)" != "0" ]; then gh issue comment "$(gh issue list --label factory-live-check --state open --json number --jq ".[0].number")" --body-file body.md; exit 0; fi
+          OPEN=$(gh issue list --label factory-live-check --state open --json number --jq ".[0].number // empty")
+          if [ -n "$OPEN" ]; then gh issue edit "$OPEN" --add-label "$LABELS"; gh issue comment "$OPEN" --body-file body.md; exit 0; fi
           gh issue create --title "Live check failed after ${SHA:0:7}" --label "$LABELS" --body-file body.md

@@ -26,6 +26,8 @@ PRIORITY = ["priority:critical", "priority:high", "priority:medium", "priority:l
 BLOCKING = {"factory:needs-human", "factory:rejected", "factory:stop"}
 REQUIRED_CHECKS = {"quality", "pwa-browser-smoke", "lighthouse", "gate"}
 MAX_FIX_ATTEMPTS = 2
+# Every finished check result that is not a pass. Treating any of these as "pending" would wait forever.
+TERMINAL_NOT_GREEN = {"failure", "timed_out", "cancelled", "action_required", "neutral", "skipped", "stale"}
 
 
 def get(path: str):
@@ -41,9 +43,20 @@ def main_file(path: str) -> str | None:
     return result.stdout if result.returncode == 0 else None
 
 
+def get_all(path: str) -> list:
+    """Every page, so an old stop or rollback issue never falls off the first 100."""
+    items, page = [], 1
+    while True:
+        batch = get(f"{path}{'&' if '?' in path else '?'}per_page=100&page={page}")
+        items += batch
+        if len(batch) < 100:
+            return items
+        page += 1
+
+
 def live_state() -> dict:
-    issues = get(f"/repos/{REPO}/issues?state=open&per_page=100")
-    pulls = get(f"/repos/{REPO}/pulls?state=open&per_page=100")
+    issues = get_all(f"/repos/{REPO}/issues?state=open")
+    pulls = get_all(f"/repos/{REPO}/pulls?state=open")
     prs = []
     for pr in pulls:
         if not pr["head"]["ref"].startswith("factory/issue-"):
@@ -83,7 +96,7 @@ def decide(state: dict) -> dict:
     live = [p for p in prs if not BLOCKING & set(p["labels"]) and "factory:merged" not in p["labels"]]
     for pr in live:
         checks = pr["checks"]
-        failed = [name for name in REQUIRED_CHECKS if checks.get(name) in ("failure", "timed_out", "cancelled", "action_required")]
+        failed = [name for name in REQUIRED_CHECKS if checks.get(name) in TERMINAL_NOT_GREEN]
         attempts = sum(1 for label in pr["labels"] if label.startswith("factory:fix-"))
         if failed or "factory:changes-requested" in pr["labels"]:
             if attempts >= MAX_FIX_ATTEMPTS:

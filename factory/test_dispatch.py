@@ -22,6 +22,8 @@ cases = [
     ("escalated PR does not block", s(prs=[pr(105, ["factory:needs-human"])], issues=[issue(7, "factory:accepted", "priority:low"), issue(9, "factory:accepted", "priority:critical")]), "implement"),
     ("untriaged -> triage", s(issues=[issue(3), issue(4, "automated-health-check")]), "triage"),
     ("nothing", s(), "idle"),
+    ("skipped required check -> fix, not wait forever", s(prs=[pr(105, checks={**green, "lighthouse": "skipped"})]), "fix-pr"),
+    ("neutral required check -> fix", s(prs=[pr(105, checks={**green, "gate": "neutral"})]), "fix-pr"),
     ("rollback beats stop and dial 0", s(stop_file=True, autonomy=0, issues=[issue(12, "factory:rollback", "factory:needs-human")]), "rollback"),
 ]
 bad = 0
