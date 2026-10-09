@@ -1,5 +1,6 @@
 "use client"
 
+import { forgetPlace, readRememberChoice, readSavedPlace, saveRememberChoice, savePlace, zipFromMessage } from "@/lib/saved-place"
 import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
@@ -55,8 +56,25 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const locationRef = useRef<{ lat: number; lon: number } | null>(null)
   const [locating, setLocating] = useState(false)
   const [locationNote, setLocationNote] = useState<string>()
+  // Where to search is remembered on this phone only (rounded), so it is entered once; one tap forgets it.
+  const [rememberPlace, setRememberPlace] = useState(true)
 
   useEffect(() => { messagesRef.current = messages }, [messages])
+
+  useEffect(() => {
+    // Read after mount so the server render and hydration agree.
+    const remember = readRememberChoice(window.localStorage)
+    const saved = remember ? readSavedPlace(window.localStorage) : null
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from device storage */
+    setRememberPlace(remember)
+    if (saved && "zip" in saved) setZip(saved.zip)
+    else if (saved) { locationRef.current = saved; setLocation(saved) }
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [])
+
+  useEffect(() => {
+    if (rememberPlace && /^\d{5}$/.test(zip)) savePlace(window.localStorage, { zip })
+  }, [zip, rememberPlace])
 
   useEffect(() => {
     let cancelled = false
@@ -82,6 +100,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         const rounded = { lat: coarsen(position.coords.latitude), lon: coarsen(position.coords.longitude) }
         locationRef.current = rounded
         setLocation(rounded)
+        if (readRememberChoice(window.localStorage)) savePlace(window.localStorage, rounded)
         // The location the person just chose replaces any ZIP typed earlier.
         setZip("")
         setLocating(false)
@@ -106,7 +125,8 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     return answered ? undefined : history[lastAsk].content
   }
 
-  const forgetLocation = () => { locationRef.current = null; setLocation(null); setLocationNote(undefined) }
+  const forgetLocation = () => { locationRef.current = null; setLocation(null); setLocationNote(undefined); setZip(""); forgetPlace(window.localStorage) }
+  const toggleRemember = (remember: boolean) => { setRememberPlace(remember); saveRememberChoice(window.localStorage, remember) }
 
   /** Sends a message and returns what Angel should say back (safety notices first), or null on failure. */
   const send = async (text: string): Promise<string | null> => {
@@ -135,6 +155,10 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       if (!locationRef.current || !pending) return said
       return `${said} ${(await send(pending)) ?? ""}`.trim()
     }
+    // A ZIP said or typed in the message becomes the search area for this and later chats.
+    const statedZip = zipFromMessage(content)
+    if (statedZip && statedZip !== zip) setZip(statedZip)
+    const searchZip = statedZip ?? zip
     const next: ChatMessage[] = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content }]
     messagesRef.current = next
     setMessages(next)
@@ -159,7 +183,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: next.slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })),
-          ...(/^\d{5}$/.test(zip) ? { zip } : locationRef.current ? { location: locationRef.current } : {}),
+          ...(/^\d{5}$/.test(searchZip) ? { zip: searchZip } : locationRef.current ? { location: locationRef.current } : {}),
           ...(localContext ? { localContext } : {}),
         }),
       })
@@ -269,7 +293,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
               ? "Your messages are sent through OpenRouter to an AI provider to write Angel's replies. NarcoGuard asks OpenRouter to use only providers that do not store or train on them."
               : "Your messages are sent to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."}{" "}
             If you use voice, your browser turns speech into text (Apple or Google may process the audio), and replies are read aloud on this device.{" "}
-            If you tap Use my location, it is rounded to about 1 km and used only to search public directories. It is never sent to the AI provider and is not saved.{" "}
+            If you tap Use my location, it is rounded to about 1 km and used only to search public directories. It is never sent to the AI provider or stored on our servers; this phone remembers it (or your ZIP) so you only enter it once, until you turn that off or tap Forget.{" "}
             NarcoGuard does not save your chat, and it disappears when you leave this page. Don&apos;t include names, addresses or other details that identify you.
           </p>
           <Button onClick={() => setConsented(true)}>I understand, talk to Angel</Button>
@@ -377,6 +401,15 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
               </Button>
             )}
             {locationNote && <span className="text-muted-foreground" role="status">{locationNote}</span>}
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" data-testid="angel-remember-place">
+            <label className="inline-flex min-h-11 items-center gap-2">
+              <input type="checkbox" checked={rememberPlace} onChange={(event) => toggleRemember(event.target.checked)} />
+              Remember my ZIP or approximate location on this phone, so I only enter it once
+            </label>
+            {(zip || location) && (
+              <Button type="button" variant="ghost" size="sm" onClick={forgetLocation} data-testid="angel-forget-place">Forget where I am</Button>
+            )}
           </div>
           <Button type="button" variant="ghost" size="sm" className="self-start" onClick={() => setMessages([])}>Clear conversation</Button>
         </>

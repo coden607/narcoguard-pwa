@@ -1,6 +1,11 @@
+import { clearDirectoryCache } from "../lib/resource-lookup"
 import { strict as assert } from "node:assert"
-import { test } from "node:test"
+import { test, beforeEach } from "node:test"
 import { coarsen, fallbackLinks, findTreatmentUrl, haversineMiles, osmKindsOf, overpassQuery, parseFindTreatment, parseOverpass } from "../lib/resource-finder"
+
+// Each test fakes its own directory answers, so nothing is reused from an earlier test.
+beforeEach(() => clearDirectoryCache())
+
 
 test("coordinates are coarsened to about 1 km before leaving the server", () => {
   assert.equal(coarsen(40.748817), 40.75)
@@ -76,7 +81,7 @@ test("needs are fetched in two lighter Overpass queries that together cover ever
   assert.equal(new Set(grouped).size, grouped.length)
   const near = overpassNeedsQuery(40.75, -73.99, OSM_QUERY_GROUPS[0])
   assert.match(near, /^\[out:json\]\[timeout:20\]\[maxsize:67108864\];\(/)
-  assert.match(near, /nwr\["amenity"="drinking_water"\]\["access"!~"\^\(private\|no\|customers\)\$"\]\(40.732,-74.0137,40.768,-73.9663\);/)
+  assert.match(near, /nwr\["amenity"="drinking_water"\]\["access"!~"\^\(private\|no\|customers\)\$"\]\["drinking_water"!~"\^\(no\)\$"\]\(40.732,-74.0137,40.768,-73.9663\);/)
   assert.doesNotMatch(near, /hospital|food_bank/)
   const wide = overpassNeedsQuery(40.75, -73.99, OSM_QUERY_GROUPS[1])
   assert.match(wide, /nwr\["amenity"="hospital"\]\["emergency"="yes"\]\(40.6063,-74.1797,40.8937,-73.8003\);/)
@@ -315,4 +320,30 @@ test("shelters, food, water and toilets are also found by well-known names and p
   assert.ok(osmKindsOf({ leisure: "park", drinking_water: "yes", toilets: "yes", name: "Recreation Park" }).includes("toilets"))
   assert.deepEqual(osmKindsOf({ amenity: "fast_food", toilets: "yes", name: "Burger Place" }).filter((k) => k === "toilets"), [], "restaurant toilets are for customers")
   assert.deepEqual(osmKindsOf({ amenity: "library", toilets: "yes", "toilets:access": "customers", name: "Branch" }).filter((k) => k === "toilets"), [])
+})
+
+test("water means potable water: taps and water points marked drinkable count, anything marked not drinkable never does", () => {
+  assert.ok(osmKindsOf({ man_made: "water_tap", drinking_water: "yes" }).includes("water"))
+  assert.ok(osmKindsOf({ amenity: "water_point", drinking_water: "yes" }).includes("water"))
+  assert.ok(!osmKindsOf({ man_made: "water_tap" }).includes("water"), "an unmarked tap may not be drinkable")
+  assert.ok(!osmKindsOf({ amenity: "drinking_water", drinking_water: "no" }).includes("water"))
+  assert.ok(!osmKindsOf({ amenity: "fountain" }).includes("water"), "decorative fountains are not drinking water")
+})
+
+test("a repeat search in the same area answers from memory, identical searches share one request, and failures are not kept", async () => {
+  const { TtlCache } = await import("../lib/ttl-cache")
+  const cache = new TtlCache<number>(1_000)
+  let loads = 0
+  const load = async () => { loads++; return 42 }
+  const [a, b] = await Promise.all([cache.get("k", load), cache.get("k", load)])
+  assert.equal(a + b, 84)
+  assert.equal(loads, 1, "concurrent identical searches share one directory request")
+  await cache.get("k", load)
+  assert.equal(loads, 1, "a fresh answer is reused")
+  await cache.get("k", load, Date.now() + 2_000)
+  assert.equal(loads, 2, "an expired answer is fetched again")
+  await assert.rejects(cache.get("bad", async () => { throw new Error("504") }))
+  let retried = false
+  await cache.get("bad", async () => { retried = true; return 1 })
+  assert.ok(retried, "a failure is never cached")
 })

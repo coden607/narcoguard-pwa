@@ -114,8 +114,9 @@ export const OSM_KINDS: Record<OsmKind, OsmKindSpec> = {
     excludeName: "animal|humane|spca|pet (shelter|rescue|adoption)|(cat|dog) (shelter|rescue)|thrift|store",
     radius: SEARCH_RADIUS_METERS,
   },
-  // Fountains, and parks or public buildings that are tagged as having drinking water.
-  water: { filters: [{ amenity: "drinking_water" }, { amenity: "fountain", drinking_water: "yes" }, { drinking_water: "yes", leisure: "~^(park|playground|sports_centre)$" }, { drinking_water: "yes", amenity: "~^(library|community_centre|toilets|townhall)$" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Drinking water" },
+  // Potable water only: drinking fountains, refill stations, taps and water points marked drinkable, and parks or
+  // public buildings tagged as having drinking water. Anything tagged drinking_water=no is left out.
+  water: { filters: [{ amenity: "drinking_water" }, { amenity: "water_point", drinking_water: "yes" }, { man_made: "water_tap", drinking_water: "yes" }, { amenity: "fountain", drinking_water: "yes" }, { drinking_water: "yes", leisure: "~^(park|playground|sports_centre)$" }, { drinking_water: "yes", amenity: "~^(library|community_centre|toilets|townhall)$" }], exclude: { ...NOT_PUBLIC, drinking_water: ["no"] }, radius: 2_000, unnamed: "Drinking water" },
   // Public toilets, and parks, libraries and stations tagged as having toilets (not shops or restaurants).
   toilets: { filters: [{ amenity: "toilets" }, { toilets: "yes", leisure: "~^(park|playground|sports_centre)$" }, { toilets: "yes", amenity: "~^(library|community_centre|townhall|bus_station|ferry_terminal)$" }], exclude: { ...NOT_PUBLIC, "toilets:access": ["private", "no", "customers"] }, radius: 2_000, unnamed: "Public toilet" },
   // Truck stops, campgrounds and pools tag showers on the main feature; some charge a fee.

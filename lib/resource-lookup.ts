@@ -1,3 +1,4 @@
+import { TtlCache } from "@/lib/ttl-cache"
 import { orderByMaslow } from "@/lib/need-intent"
 import { coarsen, fallbackLinks, findTreatmentUrl, MAX_RESULTS_PER_KIND, nearestUnique, OSM_KIND_ORDER, OSM_QUERY_GROUPS, overpassNeedsQuery, overpassQuery, parseFindTreatment, parseOverpass, parseOverpassNeeds, RESOURCE_KINDS, WIDE_RADIUS_METERS, WIDEN_KINDS, type NearbyResource, type OsmKind, type ResourceKind } from "@/lib/resource-finder"
 
@@ -23,6 +24,18 @@ const OVERPASS_ENDPOINTS = [
 ]
 const OVERPASS_HEDGE_MS = 6_000
 const OVERPASS_TIMEOUT_MS = 25_000
+
+// Repeat searches in the same ~1 km area answer from memory for a few minutes; ZIP centres change rarely.
+export const DIRECTORY_CACHE_MS = 15 * 60_000
+const directoryCache = new TtlCache<unknown>(DIRECTORY_CACHE_MS)
+const zipCache = new TtlCache<{ lat: number; lon: number } | undefined>(24 * 60 * 60_000, 2_000)
+const cachedOverpass = (query: string) => directoryCache.get(`overpass ${query}`, () => fetchOverpass(query))
+const cachedJson = (url: string) => directoryCache.get(`json ${url}`, () => fetchJson(url))
+/** For tests: forget every cached directory answer. */
+export function clearDirectoryCache() {
+  directoryCache.clear()
+  zipCache.clear()
+}
 
 async function fetchJson(url: string, init?: RequestInit, timeoutMs = 12_000, cancel?: AbortSignal): Promise<unknown> {
   const signal = cancel ? AbortSignal.any([AbortSignal.timeout(timeoutMs), cancel]) : AbortSignal.timeout(timeoutMs)
@@ -87,7 +100,7 @@ export function fetchOverpass(query: string, endpoints = OVERPASS_ENDPOINTS, hed
 }
 
 async function resolveOrigin(origin: ResourceOrigin) {
-  return "zip" in origin ? geocodeZip(origin.zip) : { lat: coarsen(origin.lat), lon: coarsen(origin.lon) }
+  return "zip" in origin ? zipCache.get(origin.zip, () => geocodeZip(origin.zip)) : { lat: coarsen(origin.lat), lon: coarsen(origin.lon) }
 }
 
 function failureReason(error: unknown) {
@@ -103,9 +116,9 @@ export async function lookupResources(kind: ResourceKind, origin: ResourceOrigin
     if (!point) return { status: "unavailable", message: "That ZIP code could not be located.", results: [], fallback }
     let results: NearbyResource[]
     if (kind === "treatment") {
-      results = parseFindTreatment(await fetchJson(findTreatmentUrl(point.lat, point.lon)))
+      results = parseFindTreatment(await cachedJson(findTreatmentUrl(point.lat, point.lon)))
     } else {
-      results = parseOverpass(kind, await fetchOverpass(overpassQuery(kind, point.lat, point.lon)), point)
+      results = parseOverpass(kind, await cachedOverpass(overpassQuery(kind, point.lat, point.lon)), point)
     }
     return { status: "ok", fetchedAt: new Date().toISOString(), results, fallback }
   } catch (error) {
@@ -148,8 +161,8 @@ export async function lookupNeeds(origin: ResourceOrigin): Promise<NeedsLookup> 
   const here = point
 
   const [treatment, ...osm] = await Promise.allSettled([
-    fetchJson(findTreatmentUrl(here.lat, here.lon)).then((body) => parseFindTreatment(body).slice(0, MAX_RESULTS_PER_KIND)),
-    ...OSM_QUERY_GROUPS.map((group) => fetchOverpass(overpassNeedsQuery(here.lat, here.lon, group)).then((body) => parseOverpassNeeds(body, here))),
+    cachedJson(findTreatmentUrl(here.lat, here.lon)).then((body) => parseFindTreatment(body).slice(0, MAX_RESULTS_PER_KIND)),
+    ...OSM_QUERY_GROUPS.map((group) => cachedOverpass(overpassNeedsQuery(here.lat, here.lon, group)).then((body) => parseOverpassNeeds(body, here))),
   ])
   if (treatment.status === "rejected") console.warn(`[resources] treatment lookup unavailable: ${failureReason(treatment.reason)}`)
 
@@ -177,7 +190,7 @@ export async function lookupNeeds(origin: ResourceOrigin): Promise<NeedsLookup> 
   const empty = WIDEN_KINDS.filter((kind) => kinds[kind].status === "ok" && kinds[kind].results.length === 0)
   if (empty.length > 0) {
     try {
-      const wider = parseOverpassNeeds(await fetchOverpass(overpassNeedsQuery(here.lat, here.lon, empty, WIDE_RADIUS_METERS)), here, MAX_RESULTS_PER_KIND, WIDE_RADIUS_METERS)
+      const wider = parseOverpassNeeds(await cachedOverpass(overpassNeedsQuery(here.lat, here.lon, empty, WIDE_RADIUS_METERS)), here, MAX_RESULTS_PER_KIND, WIDE_RADIUS_METERS)
       for (const kind of empty) {
         if (wider[kind].length > 0) kinds[kind] = { ...kinds[kind], results: wider[kind], widenedMiles: Math.round(WIDE_RADIUS_METERS / 1609.344) }
       }
@@ -229,8 +242,8 @@ export async function lookupKinds(kinds: readonly ResourceKind[], origin: Resour
   const osmKinds = wanted.filter((kind): kind is OsmKind => kind !== "treatment")
 
   const [treatment, osm] = await Promise.allSettled([
-    wanted.includes("treatment") ? beforeDeadline(fetchJson(findTreatmentUrl(here.lat, here.lon)).then((body) => parseFindTreatment(body).slice(0, MAX_RESULTS_PER_KIND)), deadline) : Promise.resolve([]),
-    osmKinds.length > 0 ? beforeDeadline(fetchOverpass(overpassNeedsQuery(here.lat, here.lon, osmKinds)).then((body) => parseOverpassNeeds(body, here)), deadline) : Promise.resolve(undefined),
+    wanted.includes("treatment") ? beforeDeadline(cachedJson(findTreatmentUrl(here.lat, here.lon)).then((body) => parseFindTreatment(body).slice(0, MAX_RESULTS_PER_KIND)), deadline) : Promise.resolve([]),
+    osmKinds.length > 0 ? beforeDeadline(cachedOverpass(overpassNeedsQuery(here.lat, here.lon, osmKinds)).then((body) => parseOverpassNeeds(body, here)), deadline) : Promise.resolve(undefined),
   ])
   if (treatment.status === "rejected") console.warn(`[resources] treatment lookup unavailable: ${failureReason(treatment.reason)}`)
   if (osm.status === "rejected") console.warn(`[resources] OpenStreetMap lookup unavailable: ${failureReason(osm.reason)}`)
@@ -244,7 +257,7 @@ export async function lookupKinds(kinds: readonly ResourceKind[], origin: Resour
   let widenFailed = false
   if (empty.length > 0) {
     try {
-      const wider = parseOverpassNeeds(await beforeDeadline(fetchOverpass(overpassNeedsQuery(here.lat, here.lon, empty, WIDE_RADIUS_METERS)), deadline), here, MAX_RESULTS_PER_KIND, WIDE_RADIUS_METERS)
+      const wider = parseOverpassNeeds(await beforeDeadline(cachedOverpass(overpassNeedsQuery(here.lat, here.lon, empty, WIDE_RADIUS_METERS)), deadline), here, MAX_RESULTS_PER_KIND, WIDE_RADIUS_METERS)
       for (const group of groups) {
         const found = group.kind !== "treatment" && empty.includes(group.kind) ? wider[group.kind] : []
         if (found.length > 0) Object.assign(group, { results: found, widenedMiles: Math.round(WIDE_RADIUS_METERS / 1609.344) })

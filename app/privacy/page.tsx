@@ -53,7 +53,8 @@ export default function PrivacyPolicy() {
               &quot;use my location&quot;, or the ZIP code you give. The location is rounded to about one kilometer and sent to
               SAMHSA&apos;s FindTreatment.gov or OpenStreetMap services to get listings. Angel&apos;s AI provider never receives
               your location, only the names, distances and phone numbers of the places found. We do not store or log the
-              location, and Angel forgets it when you leave the page or tap &quot;Stop using my location&quot;.
+              location on our servers. So you only enter it once, your phone remembers the ZIP or the rounded location in its own
+              storage; tap &quot;Forget where I am&quot;, or untick &quot;Remember … on this phone&quot; in Angel, to erase it.
             </p>
             <p>
               Bluetooth heart-rate and blood-oxygen readings are shown only on your screen while connected. They are not
