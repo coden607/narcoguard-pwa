@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { clientKey, isSameOrigin, readJson } from "@/lib/api-helpers"
-import { attemptTimeoutMs, endpointFor, modelAttempts, resolveAngelProvider, shouldTryFallback } from "@/lib/angel-provider"
+import { attemptTimeoutMs, availableAttempts, endpointFor, modelAttempts, noteRefusal, resolveAngelProvider, shouldTryFallback } from "@/lib/angel-provider"
 import { safetyNotices } from "@/lib/angel-ai"
 import { parseKindList } from "@/lib/need-intent"
 import { RESOURCE_KINDS, RESOURCE_LABELS } from "@/lib/resource-finder"
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
   try {
     // The configured model first, then the open fallback if this account cannot use it.
     let response: Response | undefined
-    const attempts = modelAttempts(provider, "quick")
+    const attempts = availableAttempts(provider, modelAttempts(provider, "quick"))
     const deadline = Date.now() + 50_000
     for (const [index, choice] of attempts.entries()) {
       const endpoint = endpointFor(provider, choice)
@@ -76,6 +76,7 @@ export async function POST(request: Request) {
       })
       if (!result) continue
       response = result
+      if (!response.ok) noteRefusal(endpoint, choice.model, response.status)
       if (response.ok || !next || !shouldTryFallback(response.status, crossService)) break
     }
     if (!response?.ok) throw new Error(`provider ${response?.status ?? 0}`)

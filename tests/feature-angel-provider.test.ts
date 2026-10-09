@@ -102,3 +102,18 @@ test("a network failure moves to another service only, and the chain shares one 
   for (let left = 3; left > 0; left--) total += attemptTimeoutMs(now + 55_000 - total, left, now)
   assert.ok(total <= 55_000, `chain fits the deadline (${total} ms)`)
 })
+
+test("a model that refused for account reasons is skipped for ten minutes, but the last choice is always kept", async () => {
+  const { availableAttempts, noteRefusal, COOLDOWN_MS } = await import("../lib/angel-provider")
+  const provider = resolveAngelProvider({ MOONSHOT_API_KEY: "mk-cooldown" }, "oidc-cooldown")!
+  const all = modelAttempts(provider, "quick")
+  const now = 5_000_000
+  noteRefusal(endpointFor(provider, all[0]), all[0].model, 429, now)
+  noteRefusal(endpointFor(provider, all[1]), all[1].model, 403, now)
+  assert.deepEqual(availableAttempts(provider, all, now + 1).map((a) => a.model), ["openai/gpt-oss-120b"])
+  noteRefusal(endpointFor(provider, all[2]), all[2].model, 500, now)
+  assert.equal(availableAttempts(provider, all, now + 1).length, 1, "a server error does not cool a model down")
+  noteRefusal(endpointFor(provider, all[2]), all[2].model, 429, now)
+  assert.equal(availableAttempts(provider, all, now + 1).length, 1, "never an empty chain")
+  assert.equal(availableAttempts(provider, all, now + COOLDOWN_MS + 1).length, 3, "everything is retried after the cooldown")
+})

@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert"
 import { test } from "node:test"
-import { coarsen, fallbackLinks, findTreatmentUrl, haversineMiles, overpassQuery, parseFindTreatment, parseOverpass } from "../lib/resource-finder"
+import { coarsen, fallbackLinks, findTreatmentUrl, haversineMiles, osmKindsOf, overpassQuery, parseFindTreatment, parseOverpass } from "../lib/resource-finder"
 
 test("coordinates are coarsened to about 1 km before leaving the server", () => {
   assert.equal(coarsen(40.748817), 40.75)
@@ -15,7 +15,8 @@ test("haversine distance is in miles", () => {
 
 test("overpass queries search only the requested kind around the point", () => {
   const query = overpassQuery("shelter", 40.75, -73.99)
-  assert.match(query, /social_facility"="shelter"\]\["tourism"!~"\^\(hotel\)\$"\]\(40.6063,-74.1797,40.8937,-73.8003\);/)
+  assert.match(query, /nwr\["social_facility"="shelter"\]\["tourism"!~"\^\(hotel\)\$"\]\["amenity"!~"\^\(animal_shelter\)\$"\]\["name"!~"[^"]+",i\]\(40.6063,-74.1797,40.8937,-73.8003\);/)
+  assert.match(query, /\["name"~"rescue mission\|salvation army/, "named missions and charities are searched too")
   assert.doesNotMatch(query, /around/)
   assert.doesNotMatch(query, /pharmacy|food_bank/)
 })
@@ -300,4 +301,18 @@ test("substance use treatment is listed before mental-health-only programs, near
   ] })
   assert.deepEqual(results.map((r) => r.name), ["Recovery Center", "Opioid Program", "Unknown Services", "Crisis Residence"])
   assert.match(findTreatmentUrl(42, -75), /pageSize=30/)
+})
+
+test("shelters, food, water and toilets are also found by well-known names and public amenities, never by animal shelters or shops", () => {
+  assert.deepEqual(osmKindsOf({ amenity: "place_of_worship", name: "Binghamton Rescue Mission" }), ["food", "shelter"])
+  assert.deepEqual(osmKindsOf({ office: "ngo", name: "Catholic Charities of Broome County" }), ["food", "shelter"])
+  assert.deepEqual(osmKindsOf({ building: "yes", name: "YWCA Women's Shelter" }), ["shelter"])
+  assert.deepEqual(osmKindsOf({ amenity: "animal_shelter", name: "Humane Society Shelter" }), [])
+  assert.deepEqual(osmKindsOf({ office: "company", name: "Cat Rescue Shelter for Strays" }), [])
+  assert.deepEqual(osmKindsOf({ highway: "residential", name: "Mission Street" }), [], "streets never match by name")
+  assert.deepEqual(osmKindsOf({ amenity: "place_of_worship", name: "St. Paul's Food Pantry" }), ["food"])
+  assert.ok(osmKindsOf({ leisure: "park", drinking_water: "yes", toilets: "yes", name: "Recreation Park" }).includes("water"))
+  assert.ok(osmKindsOf({ leisure: "park", drinking_water: "yes", toilets: "yes", name: "Recreation Park" }).includes("toilets"))
+  assert.deepEqual(osmKindsOf({ amenity: "fast_food", toilets: "yes", name: "Burger Place" }).filter((k) => k === "toilets"), [], "restaurant toilets are for customers")
+  assert.deepEqual(osmKindsOf({ amenity: "library", toilets: "yes", "toilets:access": "customers", name: "Branch" }).filter((k) => k === "toilets"), [])
 })
