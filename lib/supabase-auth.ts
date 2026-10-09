@@ -7,7 +7,7 @@ type SupabaseSession = {
   access_token: string
   refresh_token: string
   expires_in?: number
-  user?: { id: string; email?: string }
+  user?: { id: string; email?: string; user_metadata?: Record<string, unknown> }
 }
 
 function getSupabaseConfig() {
@@ -33,6 +33,13 @@ export async function signIn(email: string, password: string) {
 
 export async function signUp(email: string, password: string, displayName: string) {
   const response = await supabaseRequest("/auth/v1/signup", { method: "POST", body: JSON.stringify({ email, password, data: { display_name: displayName } }) })
+  if (!response.ok) return null
+  return (await response.json()) as SupabaseSession
+}
+
+/** Completes Google sign-in: trades the one-time code plus this browser's verifier for a session. */
+export async function exchangeCode(authCode: string, codeVerifier: string) {
+  const response = await supabaseRequest("/auth/v1/token?grant_type=pkce", { method: "POST", body: JSON.stringify({ auth_code: authCode, code_verifier: codeVerifier }) })
   if (!response.ok) return null
   return (await response.json()) as SupabaseSession
 }
@@ -67,6 +74,11 @@ export async function getSession() {
 }
 
 export const isAuthConfigured = () => Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
+
+/** Google sign-in is shown only after the Google provider is switched on in Supabase. */
+export const isGoogleSignInEnabled = () => isAuthConfigured() && process.env.AUTH_GOOGLE_ENABLED === "true"
+
+export const supabaseAuthUrl = () => getSupabaseConfig().url
 
 /** PostgREST call as the signed-in user, so row-level security applies. */
 export function userRest(accessToken: string, path: string, init: RequestInit = {}) {

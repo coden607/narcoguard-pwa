@@ -1025,6 +1025,22 @@ test.describe("Account", () => {
     await expect(page.getByTestId("account-unavailable")).toContainText("Everything works on this device without an account")
   })
 
+  test("Continue with Google appears only when switched on, and the start route falls back safely when off", async ({ page, request }) => {
+    await page.route("**/api/auth", (route) => route.fulfill({ json: { available: true, google: true, authenticated: false, user: null } }))
+    await page.goto("/auth")
+    await expect(page.getByTestId("google-sign-in")).toHaveAttribute("href", "/api/auth/google")
+    await page.unroute("**/api/auth")
+    await page.route("**/api/auth", (route) => route.fulfill({ json: { available: true, google: false, authenticated: false, user: null } }))
+    await page.goto("/auth?error=google")
+    await expect(page.getByText("Google sign-in did not finish")).toBeVisible()
+    await expect(page.getByTestId("google-sign-in")).toHaveCount(0)
+    const start = await request.get("/api/auth/google", { maxRedirects: 0 })
+    expect(start.status()).toBe(307)
+    expect(start.headers().location).toContain("/auth?error=google-off")
+    const callback = await request.get("/api/auth/callback?code=x", { maxRedirects: 0 })
+    expect(callback.headers().location).toContain("/auth?error=google")
+  })
+
   test("a signed-in person can back up and restore contacts with a passphrase", async ({ page }) => {
     let stored: unknown = null
     await page.route("**/api/auth", (route) => route.fulfill({ json: { available: true, authenticated: true, user: { email: "sam@example.com" } } }))

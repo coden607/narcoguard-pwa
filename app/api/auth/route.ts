@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { clearSession, ensureProfile, getSession, isAuthConfigured, signIn, signUp, storeSession } from "@/lib/supabase-auth"
+import { clearSession, ensureProfile, getSession, isAuthConfigured, isGoogleSignInEnabled, signIn, signUp, storeSession } from "@/lib/supabase-auth"
 
 const schema = z.object({
   action: z.enum(["login", "signup", "logout"]),
@@ -23,7 +23,7 @@ export async function GET() {
   if (!isAuthConfigured()) return NextResponse.json({ available: false, authenticated: false, user: null }, { headers: { "Cache-Control": "private, no-store" } })
   try {
     const user = await getSession()
-    return NextResponse.json({ available: true, authenticated: Boolean(user), user: user ? { id: user.id, email: user.email } : null })
+    return NextResponse.json({ available: true, google: isGoogleSignInEnabled(), authenticated: Boolean(user), user: user ? { id: user.id, email: user.email } : null })
   } catch {
     return NextResponse.json({ error: "Authentication service is unavailable" }, { status: 503 })
   }
