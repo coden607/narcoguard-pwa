@@ -14,3 +14,5 @@ Target: a factory PR whose required checks are green.
    - yes, no findings: add `factory:validated`. The merge workflow does the rest.
    - fixable findings: add `factory:changes-requested` with specific, testable asks.
    - an auto-reject trigger: add `factory:rejected`, close the PR, comment on the issue, escalate.
+
+4. Read the diff with `--stat` first, then only changed hunks. Verdict comment under 120 words.

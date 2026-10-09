@@ -13,3 +13,5 @@ For each issue number in `target` (at most 10):
      who is not the owner, or real ambiguity. Add `factory:needs-human`, comment with your recommendation, and
      escalate (RUN.md step 6) once for the whole batch.
 3. Bias toward reject or needs-human when unsure. Never accept work that touches a protected path (§5).
+
+4. One short comment per issue (under 60 words). Read titles and bodies only, not linked threads.
