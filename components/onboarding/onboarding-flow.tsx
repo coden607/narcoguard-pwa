@@ -909,18 +909,19 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
           </p>
 
           <div className="p-4 bg-secondary/10 rounded-lg border border-secondary/20">
-            <h4 className="font-semibold mb-2">Advocacy & Change</h4>
+            <h4 className="font-semibold mb-2">How the laws differ</h4>
             <p className="text-sm text-muted-foreground mb-3">
-              Not all states have strong Good Samaritan protections. Join our movement to expand these life-saving laws
-              nationwide.
+              Every state and DC has some Good Samaritan protection, but who and what it covers differs a lot. The Network for Public
+              Health Law keeps a 50-state survey.
             </p>
-            <Button
-              variant="outline"
-              className="w-full glass neon-border bg-transparent"
-              onClick={() => window.open("https://drugpolicy.org/issues/911-good-samaritan-overdose-laws", "_blank")}
+            <a
+              className="inline-flex min-h-11 w-full items-center justify-center rounded-md border px-4 text-sm font-medium glass neon-border"
+              href={GOOD_SAMARITAN_SOURCES[0].url}
+              target="_blank"
+              rel="noopener noreferrer"
             >
-              Support Legislation
-            </Button>
+              Read the 50-state survey
+            </a>
           </div>
         </div>
 

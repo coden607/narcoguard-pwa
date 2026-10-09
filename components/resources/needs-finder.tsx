@@ -7,6 +7,7 @@ import { safetyNotices } from "@/lib/angel-ai"
 import { QUICK_NEEDS, matchNeeds, orderByMaslow } from "@/lib/need-intent"
 import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 import { cardSummary } from "@/lib/resource-display"
+import { directionsUrl } from "@/lib/safer-use"
 import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
 
 interface KindLookup {
@@ -35,6 +36,7 @@ const CHIP_TONE_CLASS: Record<string, string> = {
 
 function ResourceCard({ resource }: { resource: NearbyResource }) {
   const summary = cardSummary(resource, new Date())
+  const directions = directionsUrl(resource.lat, resource.lon)
   const details = [summary.freshness, summary.wheelchair, summary.services].filter((line): line is string => line !== null)
   return (
     <li className="border rounded-lg p-3 space-y-1">
@@ -53,6 +55,9 @@ function ResourceCard({ resource }: { resource: NearbyResource }) {
         {resource.website && <a className="underline text-primary inline-flex min-h-6 items-center" href={resource.website} target="_blank" rel="noopener noreferrer">Website</a>}
         {resource.lat !== undefined && resource.lon !== undefined && (
           <a className="underline text-primary inline-flex min-h-6 items-center" href={`https://www.openstreetmap.org/?mlat=${resource.lat}&mlon=${resource.lon}#map=17/${resource.lat}/${resource.lon}`} target="_blank" rel="noopener noreferrer">Map</a>
+        )}
+        {directions && (
+          <a className="underline text-primary inline-flex min-h-6 items-center" href={directions} target="_blank" rel="noopener noreferrer" data-testid="directions">Directions</a>
         )}
       </div>
       <p className="text-xs text-muted-foreground">Source: {resource.source}. Hours, openings and eligibility are not confirmed; call first.</p>

@@ -2,6 +2,10 @@
 
 NarcoGuard explores overdose prevention and person-led recovery support. It is organized around [Maslow's hierarchy of needs](#how-narcoguard-uses-maslows-hierarchy-of-needs): basic needs first, then safety, connection, stability and the goals each person chooses. Today the free app offers needs-first resource search, Angel AI, emergency and CPR steps, training and Hero certification, Good Samaritan law summaries, an optional Guardian planner and Daily Life routines, emergency contacts, on-screen Bluetooth heart-rate and oxygen readings, an optional encrypted account backup, and install-to-home-screen. It is guided by a public [founding Constitution](#founding-constitution) draft, not yet ratified, whose proposed rights floor keeps ordinary help free of tracking or risk scores. The public web app is a **demo and research concept**. It is not a validated medical device, emergency dispatch service, treatment program, or proof that an experimental wearable can detect or reverse an overdose. In an immediate emergency, call 911.
 
+## Where the idea came from
+
+NarcoGuard began with one idea from Shannon Pillion Robinson, NarcoGuard's CFO: a wearable that could one day give naloxone automatically when someone overdoses with no one there to help. She shared the auto-injection idea with founder Stephen Blanford, and the whole project grew from it. The idea is still a research goal; no device delivers naloxone yet.
+
 ## Visit and contribute
 
 - [Public PWA](https://narcoguard-pwa.vercel.app)

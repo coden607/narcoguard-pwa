@@ -229,7 +229,71 @@ test.describe("PWA production flow", () => {
     await context.setOffline(true)
     await page.goto("/offline-check")
     await expect(page.getByRole("heading", { name: "You're Offline" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Someone won't wake up?" })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Call 911" })).toHaveAttribute("href", "tel:911")
+    await expect(page.getByRole("link", { name: /Never Use Alone/ })).toHaveAttribute("href", "tel:18004843731")
+    // Precached safety pages still load with no connection.
+    await page.goto("/safer-use")
+    await expect(page.getByRole("heading", { name: "Stay safer", level: 1 })).toBeVisible()
     await context.setOffline(false)
+  })
+
+  test("Stay safer lists Never Use Alone, naloxone, test strips, meetings and benefits with working links", async ({ page }) => {
+    await page.goto("/safer-use")
+    await expect(page.getByRole("heading", { name: "Stay safer", level: 1 })).toBeVisible()
+    await expect(page.getByTestId("never-use-alone").getByRole("link", { name: /Call Never Use Alone/ })).toHaveAttribute("href", "tel:18004843731")
+    for (const id of ["crisis-lines", "naloxone-sources", "test-strip-facts", "meeting-finders", "benefit-links"]) await expect(page.getByTestId(id)).toBeVisible()
+    await expect(page.getByTestId("test-strip-facts")).toContainText("does not mean the drug is safe")
+    for (const link of await page.locator("main a[target=_blank]").all()) {
+      expect(await link.getAttribute("href")).toMatch(/^https:\/\//)
+      expect(await link.getAttribute("rel")).toContain("noopener")
+    }
+    await page.addInitScript(() => localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true })))
+    await page.goto("/")
+    await expect(page.getByTestId("call-never-use-alone")).toBeVisible()
+  })
+
+  test("pages hydrate without errors and safety guidance shows its sources", async ({ page }) => {
+    const errors: string[] = []
+    page.on("pageerror", (error) => errors.push(error.message))
+    await page.goto("/watch")
+    await expect(page.getByTestId("engineering-drawing").first()).toBeVisible()
+    await page.waitForLoadState("networkidle")
+    expect(errors, "no hydration or runtime errors on /watch").toEqual([])
+
+    await page.goto("/ar")
+    for (const id of ["guide-sources", "lesson-sources"]) {
+      const sources = page.getByTestId(id)
+      await expect(sources).toContainText("SAMHSA")
+      for (const link of await sources.getByRole("link").all()) expect(await link.getAttribute("href")).toMatch(/^https:\/\//)
+    }
+    expect(errors).toEqual([])
+  })
+
+  test("phone vitals checks: breathing count works, camera pulse handles denied permission, and the founding idea is credited", async ({ page }) => {
+    await page.clock.install()
+    await page.addInitScript(() => {
+      localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true }))
+      Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: () => Promise.reject(new DOMException("denied", "NotAllowedError")) } })
+    })
+    const response = await page.goto("/")
+    // The camera pulse check needs camera access on this origin only; a blanket camera=() would silently break it.
+    expect(response?.headers()["permissions-policy"]).toContain("camera=(self)")
+    const vitals = page.getByTestId("manual-vitals")
+    await expect(vitals).toBeVisible()
+    await vitals.getByTestId("start-breath-count").click()
+    for (let i = 0; i < 7; i++) await vitals.getByTestId("breath-tap").click()
+    await page.clock.runFor(31_000)
+    await expect(vitals.getByTestId("breath-result")).toHaveText("14 breaths a minute")
+
+    await vitals.getByTestId("start-camera-pulse").click()
+    await expect(vitals.getByTestId("camera-pulse-error")).toContainText("Camera permission was not given")
+    await expect(vitals).toContainText("does not use them to detect overdoses")
+
+    for (const path of ["/about", "/fund"]) {
+      await page.goto(path)
+      await expect(page.getByTestId("idea-credit").first()).toContainText("Shannon Pillion Robinson, NarcoGuard's CFO")
+    }
   })
 
   test("Guardian needs planner requires consent and can be paused and erased", async ({ page }) => {

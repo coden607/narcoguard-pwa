@@ -3,6 +3,16 @@
 // Association CPR guidance (rate 100–120/min, depth 2–2.4 in, full recoil, 30:2 if trained).
 // Reviewed 2026-10-06. Steps advance only when the person taps Next; nothing here detects anything.
 
+/** Shown to users wherever these steps appear. Links were checked on 2026-10-08; named-only entries have no verified link yet. */
+export const GUIDE_SOURCES: { title: string; url?: string }[] = [
+  { title: "SAMHSA Overdose Prevention and Response Toolkit", url: "https://library.samhsa.gov/product/overdose-prevention-response-toolkit/pep23-03-00-001" },
+  { title: "FDA: Information about naloxone and nalmefene", url: "https://www.fda.gov/drugs/postmarket-drug-safety-information-patients-and-providers/information-about-naloxone-and-nalmefene" },
+  { title: "NIDA: Fentanyl", url: "https://nida.nih.gov/research-topics/fentanyl" },
+  { title: "American Heart Association CPR and Emergency Cardiovascular Care guidelines" },
+  { title: "ACMT/AACT position statement on fentanyl exposure for emergency responders" },
+]
+export const GUIDES_REVIEWED = "2026-10-06"
+
 export type GuideMode = "naloxone" | "cpr"
 
 export interface GuideStep {
