@@ -1,0 +1,17 @@
+{
+  "nominatim": { "00002": [{ "lat": "40.0000", "lon": "-100.0000" }] },
+  "overpass": [
+    {
+      "match": "-100.",
+      "body": {
+        "elements": [
+          { "type": "node", "id": 101, "lat": 40.0010, "lon": -100.0010, "tags": { "office": "ngo", "name": "Catholic Charities of Plainsville", "phone": "+1 555 010 0201" } },
+          { "type": "node", "id": 102, "lat": 40.0020, "lon": -100.0020, "tags": { "amenity": "animal_shelter", "name": "Plainsville Humane Society Animal Shelter" } },
+          { "type": "node", "id": 103, "lat": 40.0030, "lon": -100.0030, "tags": { "amenity": "social_facility", "social_facility": "shelter", "name": "Plainsville Pet Rescue Shelter" } },
+          { "type": "node", "id": 104, "lat": 40.0040, "lon": -100.0040, "tags": { "amenity": "fountain", "drinking_water": "no", "name": "Decorative Fountain" } },
+          { "type": "node", "id": 105, "lat": 40.0050, "lon": -100.0050, "tags": { "man_made": "water_tap", "drinking_water": "yes", "name": "Town Water Tap" } }
+        ]
+      }
+    }
+  ]
+}

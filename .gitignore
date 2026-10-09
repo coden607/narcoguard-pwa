@@ -71,3 +71,7 @@ tokens/
 !/.claude/skills/release/
 /.codex/skills/*
 !/.codex/skills/context-handoff/
+
+# Dark factory run artifacts
+.factory/runs/
+factory/__pycache__/

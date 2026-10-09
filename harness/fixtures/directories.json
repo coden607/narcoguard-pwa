@@ -1,0 +1,115 @@
+{
+  "nominatim": {
+    "13901": [
+      {
+        "lat": "42.1040",
+        "lon": "-75.9120"
+      }
+    ]
+  },
+  "overpass": {
+    "elements": [
+      {
+        "type": "node",
+        "id": 1,
+        "lat": 42.1001,
+        "lon": -75.9103,
+        "tags": {
+          "amenity": "social_facility",
+          "social_facility": "food_bank",
+          "name": "Broome Community Food Pantry",
+          "phone": "+1 607 555 0101",
+          "addr:city": "Binghamton"
+        }
+      },
+      {
+        "type": "node",
+        "id": 2,
+        "lat": 42.1022,
+        "lon": -75.9131,
+        "tags": {
+          "amenity": "drinking_water",
+          "name": "Court Street Water Fountain"
+        }
+      },
+      {
+        "type": "node",
+        "id": 3,
+        "lat": 42.0989,
+        "lon": -75.915,
+        "tags": {
+          "amenity": "toilets",
+          "name": "Riverside Park Restrooms",
+          "access": "yes"
+        }
+      },
+      {
+        "type": "node",
+        "id": 4,
+        "lat": 42.106,
+        "lon": -75.908,
+        "tags": {
+          "amenity": "social_facility",
+          "social_facility": "shelter",
+          "social_facility:for": "homeless",
+          "name": "Binghamton Night Shelter",
+          "phone": "+1 607 555 0104"
+        }
+      },
+      {
+        "type": "node",
+        "id": 5,
+        "lat": 42.1035,
+        "lon": -75.911,
+        "tags": {
+          "amenity": "pharmacy",
+          "name": "Main Street Pharmacy",
+          "phone": "+1 607 555 0105"
+        }
+      },
+      {
+        "type": "node",
+        "id": 6,
+        "lat": 42.1012,
+        "lon": -75.9112,
+        "tags": {
+          "amenity": "social_facility",
+          "social_facility": "food_bank",
+          "name": "Southern Tier Helping Hands",
+          "phone": "+1 607 555 0107"
+        }
+      },
+      {
+        "type": "node",
+        "id": 7,
+        "lat": 42.1018,
+        "lon": -75.9118,
+        "tags": {
+          "amenity": "drinking_water",
+          "drinking_water": "no",
+          "name": "Broken Bubbler"
+        }
+      }
+    ]
+  },
+  "findtreatment": {
+    "rows": [
+      {
+        "name1": "Broome Recovery Center",
+        "street1": "10 Front St",
+        "city": "Binghamton",
+        "state": "NY",
+        "zip": "13901",
+        "phone": "607-555-0106",
+        "latitude": 42.101,
+        "longitude": -75.912,
+        "miles": 0.4,
+        "services": [
+          {
+            "f2": "Substance use treatment"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -21,6 +21,7 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 - Never print, commit, or copy secret values. Refer to environment variables by name only.
 - Do not bypass sandbox, approval, branch-protection, or provider security controls.
 - Require explicit confirmation immediately before destructive operations, production deployment, database migration against production, payment activation, secret rotation, or sending external communications.
+- Dark factory exception (owner decision, 2026-10-09): a pull request from the factory (`factory/issue-*`) may merge and deploy to production without a fresh confirmation when `.github/workflows/factory-merge.yml` finds every gate in `FACTORY_RULES.md` §3 green and no protected file (§5) touched. Everything on the irreversible list (§7.3) still needs the owner. See `MISSION.md`, `FACTORY_RULES.md` and `FACTORY.md`.
 
 ## Required Checks
 

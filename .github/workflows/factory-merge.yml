@@ -1,0 +1,37 @@
+name: Factory Merge
+
+# The merge is code, never a model (FACTORY_RULES.md 3). Squash-merges a factory PR only when every
+# gate is green. Always runs factory/merge.sh from main, so a PR cannot supply its own merge rules.
+on:
+  workflow_run:
+    workflows: [CI, Factory Gate]
+    types: [completed]
+  pull_request:
+    types: [labeled]
+  schedule:
+    - cron: "41 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: read
+  issues: read
+
+concurrency:
+  group: factory-merge
+  cancel-in-progress: false
+
+jobs:
+  merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Merge factory PRs that passed every gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: bash factory/merge.sh
