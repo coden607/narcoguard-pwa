@@ -204,7 +204,7 @@ export function NeedsFinder() {
         {ai.available && needText.trim() && (
           <div className="space-y-1">
             <Button type="button" size="sm" variant="ghost" onClick={understandWithAi} disabled={aiBusy}><Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />{aiBusy ? "Reading…" : "Let AI read my words"}</Button>
-            <p className="text-xs text-muted-foreground">Only if you tap: your words are sent to {ai.provider === "OpenRouter" ? "OpenRouter (no-retention providers only)" : ai.provider ?? "an AI provider"} for this one match, and are not saved. Matching on this device already works without it.</p>
+            <p className="text-xs text-muted-foreground">Only if you tap: your words are sent to {ai.provider === "OpenRouter" ? "OpenRouter (no-retention providers only)" : ai.provider === "Kimi" ? "Kimi, from Moonshot AI, a company based in China (NarcoGuard has not confirmed whether it keeps or trains on them; if Kimi is unavailable they go to Vercel AI Gateway instead)" : ai.provider ?? "an AI provider"} for this one match, and NarcoGuard does not save them. Matching on this device already works without it.</p>
           </div>
         )}
         {aiNote && <p className="text-sm" role="status">{aiNote}</p>}

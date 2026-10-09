@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert"
 import { test } from "node:test"
-import { endpointFor, modelAttempts, resolveAngelProvider, shouldTryFallback } from "../lib/angel-provider"
+import { attemptTimeoutMs, endpointFor, modelAttempts, resolveAngelProvider, shouldTryFallback } from "../lib/angel-provider"
 
 test("a Groq key is used directly, with its own model override", () => {
   const provider = resolveAngelProvider({ GROQ_API_KEY: "k", GROQ_MODEL: "m", VERCEL_OIDC_TOKEN: "o" }, "h")
@@ -82,4 +82,23 @@ test("running out of Kimi credit switches services, but rate limits never switch
   assert.equal(shouldTryFallback(503, true), true)
   assert.equal(shouldTryFallback(429), false)
   assert.equal(shouldTryFallback(401), true)
+})
+
+test("Kimi's gateway fallback uses the gateway's own task-specific models", () => {
+  const provider = resolveAngelProvider({ MOONSHOT_API_KEY: "mk", KIMI_FAST_MODEL: "kimi-fast", ANGEL_GATEWAY_FAST_MODEL: "openai/gpt-oss-20b", ANGEL_GATEWAY_REASONING_MODEL: "anthropic/claude-opus-5" }, "oidc")!
+  assert.deepEqual(modelAttempts(provider, "quick").map((a) => a.model), ["kimi-fast", "openai/gpt-oss-20b", "openai/gpt-oss-120b"])
+  assert.deepEqual(modelAttempts(provider, "reasoning").map((a) => a.model), ["kimi-k2-turbo-preview", "anthropic/claude-opus-5", "openai/gpt-oss-120b"])
+  assert.deepEqual(modelAttempts(provider, "quick")[1].extraBody, { providerOptions: { gateway: { order: ["groq"] } } })
+})
+
+test("a network failure moves to another service only, and the chain shares one deadline", () => {
+  assert.equal(shouldTryFallback(0, true), true)
+  assert.equal(shouldTryFallback(0), false)
+  const now = 1_000_000
+  assert.equal(attemptTimeoutMs(now + 55_000, 3, now), 18_333, "three attempts split 55 s")
+  assert.equal(attemptTimeoutMs(now + 55_000, 1, now), 25_000, "never above the per-request cap")
+  assert.equal(attemptTimeoutMs(now + 1_000, 2, now), 3_000, "never below a usable minimum")
+  let total = 0
+  for (let left = 3; left > 0; left--) total += attemptTimeoutMs(now + 55_000 - total, left, now)
+  assert.ok(total <= 55_000, `chain fits the deadline (${total} ms)`)
 })

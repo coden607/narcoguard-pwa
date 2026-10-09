@@ -31,9 +31,13 @@ export interface AngelProvider {
   reasoningModel?: string
   /** Provider-specific request fields merged into every chat completion request. */
   extraBody: Record<string, unknown>
+  /** Request fields for a specific model, when they depend on it (gateway routing and retention). */
+  extraBodyFor?: (model: string) => Record<string, unknown>
   tokenParam?: AngelModelChoice["tokenParam"]
-  /** Tried in order when the account cannot use the configured model (for example a gateway free tier or no Kimi credit). */
+  /** Same-service models tried in order when the account cannot use the configured one (for example a gateway free tier). */
   fallbacks?: AngelModelChoice[]
+  /** Another service tried after this one fails, with its own task-specific models (Kimi falls back to the gateway). */
+  next?: AngelProvider
 }
 
 export const KIMI_DEFAULT_MODEL = "kimi-k2-turbo-preview"
@@ -58,6 +62,7 @@ function gatewayProvider(env: Env, oidcHeader: string | null): AngelProvider | n
     fastModel: env.ANGEL_GATEWAY_FAST_MODEL,
     reasoningModel: env.ANGEL_GATEWAY_REASONING_MODEL,
     extraBody: gatewayExtraBody(model),
+    extraBodyFor: gatewayExtraBody,
     // Frontier models need paid gateway credits; until then Angel keeps working on the open model.
     fallbacks: model === ANGEL_DEFAULT_MODEL ? [] : [{ model: ANGEL_DEFAULT_MODEL, extraBody: gatewayExtraBody(ANGEL_DEFAULT_MODEL) }],
   }
@@ -67,8 +72,6 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
   const kimiKey = env.MOONSHOT_API_KEY || env.KIMI_API_KEY
   if (kimiKey) {
     // The gateway (when this deployment has one) catches anything Kimi refuses, so Angel stays on.
-    const gateway = gatewayProvider(env, oidcHeader)
-    const endpoint = gateway && { name: gateway.name, url: gateway.url, token: gateway.token }
     return {
       name: "Kimi",
       url: env.MOONSHOT_BASE_URL ? `${env.MOONSHOT_BASE_URL.replace(/\/+$/, "")}/chat/completions` : KIMI_DEFAULT_URL,
@@ -78,9 +81,7 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
       reasoningModel: env.KIMI_REASONING_MODEL,
       extraBody: {},
       tokenParam: "max_tokens",
-      fallbacks: gateway && endpoint
-        ? [{ model: gateway.model, extraBody: gateway.extraBody, endpoint }, ...(gateway.fallbacks ?? []).map((choice) => ({ ...choice, endpoint }))]
-        : [],
+      next: gatewayProvider(env, oidcHeader) ?? undefined,
     }
   }
   if (env.GROQ_API_KEY) {
@@ -116,17 +117,14 @@ export function modelForAngelTask(provider: AngelProvider, task: "quick" | "reso
   return provider.model
 }
 
-/** Model choices for a task, in the order to try them. */
+/** Model choices for a task, in the order to try them, ending with any next service's own choices. */
 export function modelAttempts(provider: AngelProvider, task: "quick" | "resource" | "reasoning"): AngelModelChoice[] {
-  const first: AngelModelChoice = { model: modelForAngelTask(provider, task), extraBody: provider.extraBody, ...(provider.tokenParam ? { tokenParam: provider.tokenParam } : {}) }
-  const seen = new Set([`${provider.url} ${first.model}`])
-  const rest = (provider.fallbacks ?? []).filter((choice) => {
-    const key = `${choice.endpoint?.url ?? provider.url} ${choice.model}`
-    if (seen.has(key)) return false
-    seen.add(key)
-    return true
-  })
-  return [first, ...rest]
+  const model = modelForAngelTask(provider, task)
+  const first: AngelModelChoice = { model, extraBody: provider.extraBodyFor?.(model) ?? provider.extraBody, ...(provider.tokenParam ? { tokenParam: provider.tokenParam } : {}) }
+  const own = [first, ...(provider.fallbacks ?? []).filter((choice) => choice.model !== first.model)]
+  if (!provider.next) return own
+  const endpoint = { name: provider.next.name, url: provider.next.url, token: provider.next.token }
+  return [...own, ...modelAttempts(provider.next, task).map((choice) => ({ ...choice, endpoint: choice.endpoint ?? endpoint }))]
 }
 
 /** Where a choice is sent: its own endpoint for a cross-service fallback, else the provider's. */
@@ -136,7 +134,16 @@ export const endpointFor = (provider: AngelProvider, choice: AngelModelChoice): 
 /**
  * Statuses where the next choice may still work. On the same service only a refusal of the model
  * (no access, unsupported) switches models; a different service is also tried when this one is out
- * of credit (402, or 429 when a balance runs out), rate-limited or down.
+ * of credit (402, or 429 when a balance runs out), rate-limited, down or unreachable (0: network
+ * error or timeout before any response).
  */
 export const shouldTryFallback = (status: number, crossService = false) =>
-  [400, 401, 403, 404].includes(status) || (crossService && [402, 429, 500, 502, 503, 504].includes(status))
+  [400, 401, 403, 404].includes(status) || (crossService && [0, 402, 429, 500, 502, 503, 504].includes(status))
+
+/**
+ * Time for one attempt so the whole chain finishes by the deadline: an even share of what is left,
+ * at most the usual per-request limit and never less than a few seconds.
+ */
+export function attemptTimeoutMs(deadline: number, attemptsLeft: number, now = Date.now(), cap = 25_000): number {
+  return Math.max(3_000, Math.min(cap, Math.floor((deadline - now) / Math.max(1, attemptsLeft))))
+}
