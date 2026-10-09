@@ -117,3 +117,16 @@ test("a model that refused for account reasons is skipped for ten minutes, but t
   assert.equal(availableAttempts(provider, all, now + 1).length, 1, "never an empty chain")
   assert.equal(availableAttempts(provider, all, now + COOLDOWN_MS + 1).length, 3, "everything is retried after the cooldown")
 })
+
+test("with Kimi and a free Groq key, Groq answers before the gateway chain", () => {
+  const provider = resolveAngelProvider({ MOONSHOT_API_KEY: "mk", GROQ_API_KEY: "gk" }, "oidc")!
+  assert.deepEqual(modelAttempts(provider, "quick").map((a) => [a.endpoint?.name ?? provider.name, a.model]), [
+    ["Kimi", "kimi-k2-turbo-preview"],
+    ["Groq", "openai/gpt-oss-120b"],
+    ["Vercel AI Gateway", "anthropic/claude-sonnet-5"],
+    ["Vercel AI Gateway", "openai/gpt-oss-120b"],
+  ])
+  assert.equal(endpointFor(provider, modelAttempts(provider, "quick")[1]).token, "gk")
+  assert.deepEqual(modelAttempts(provider, "quick")[1].extraBody, { reasoning_effort: "low" })
+  assert.equal(modelAttempts(resolveAngelProvider({ MOONSHOT_API_KEY: "mk", GROQ_API_KEY: "gk" }, null)!, "quick").length, 2, "no gateway: Kimi then Groq")
+})

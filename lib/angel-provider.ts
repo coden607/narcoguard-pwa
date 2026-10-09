@@ -68,6 +68,27 @@ function gatewayProvider(env: Env, oidcHeader: string | null): AngelProvider | n
   }
 }
 
+function groqProvider(env: Env): AngelProvider | null {
+  if (!env.GROQ_API_KEY) return null
+  const model = env.GROQ_MODEL || ANGEL_DEFAULT_MODEL
+  return {
+    name: "Groq",
+    url: "https://api.groq.com/openai/v1/chat/completions",
+    token: env.GROQ_API_KEY,
+    model,
+    fastModel: env.GROQ_FAST_MODEL,
+    reasoningModel: env.GROQ_REASONING_MODEL,
+    extraBody: model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {},
+  }
+}
+
+/** Links fallback services in order, skipping any that are not configured. */
+function chain(...providers: (AngelProvider | null)[]): AngelProvider | undefined {
+  const present = providers.filter((p): p is AngelProvider => p !== null)
+  for (let i = 0; i < present.length - 1; i++) present[i] = { ...present[i], next: present[i + 1] }
+  return present[0]
+}
+
 export function resolveAngelProvider(env: Env, oidcHeader: string | null): AngelProvider | null {
   const kimiKey = env.MOONSHOT_API_KEY || env.KIMI_API_KEY
   if (kimiKey) {
@@ -81,21 +102,12 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
       reasoningModel: env.KIMI_REASONING_MODEL,
       extraBody: {},
       tokenParam: "max_tokens",
-      next: gatewayProvider(env, oidcHeader) ?? undefined,
+      // A free Groq key (when set) answers before the gateway, then the gateway chain catches anything left.
+      next: chain(groqProvider(env), gatewayProvider(env, oidcHeader)),
     }
   }
-  if (env.GROQ_API_KEY) {
-    const model = env.GROQ_MODEL || ANGEL_DEFAULT_MODEL
-    return {
-      name: "Groq",
-      url: "https://api.groq.com/openai/v1/chat/completions",
-      token: env.GROQ_API_KEY,
-      model,
-      fastModel: env.GROQ_FAST_MODEL,
-      reasoningModel: env.GROQ_REASONING_MODEL,
-      extraBody: model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {},
-    }
-  }
+  const groq = groqProvider(env)
+  if (groq) return groq
   if (env.OPENROUTER_API_KEY) {
     return {
       name: "OpenRouter",
