@@ -1,5 +1,7 @@
 "use client"
 
+import { SourceList } from "@/components/common/source-list"
+import { GUIDE_SOURCES, GUIDES_REVIEWED } from "@/lib/response-guides"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 import { Lock, ShieldAlert, ShieldCheck } from "lucide-react"
@@ -154,6 +156,8 @@ export function CertificationTest({ onCertified }: { onCertified?: (certificate:
   return (
     <section className="space-y-4" aria-labelledby="hero-test-heading" data-testid="hero-test">
       <h2 id="hero-test-heading" className="flex items-center gap-2 text-xl font-bold"><ShieldCheck className="h-5 w-5" aria-hidden="true" />Hero certification test</h2>
+
+      <SourceList sources={GUIDE_SOURCES} reviewed={GUIDES_REVIEWED} testId="hero-test-sources" />
 
       {phase.name === "result" ? (
         <div className="space-y-3" data-testid="hero-test-result">

@@ -5,7 +5,8 @@ import Link from "next/link"
 import { Award, BookOpen, CheckCircle, Clock } from "lucide-react"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { Button } from "@/components/ui/button"
-import { LESSONS, LESSON_PROGRESS_KEY, parseProgress } from "@/lib/response-guides"
+import { GUIDE_SOURCES, GUIDES_REVIEWED, LESSONS, LESSON_PROGRESS_KEY, parseProgress } from "@/lib/response-guides"
+import { SourceList } from "@/components/common/source-list"
 
 // Self-paced lessons. Progress is kept on this device only. The practice question checks
 // understanding; certification is the Hero test, graded on NarcoGuard's server.
@@ -127,6 +128,7 @@ export function ARTraining() {
       <p className="text-sm text-muted-foreground">
         Hands-on CPR and naloxone classes from a local health department or the Red Cross are strongly recommended. Lessons are general information, not medical advice.
       </p>
+      <SourceList sources={GUIDE_SOURCES} reviewed={GUIDES_REVIEWED} testId="lesson-sources" />
       {done.length > 0 && (
         <Button type="button" variant="ghost" size="sm" onClick={() => saveDone([])}>Reset lesson progress</Button>
       )}

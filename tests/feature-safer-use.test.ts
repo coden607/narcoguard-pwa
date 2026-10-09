@@ -2,7 +2,7 @@ import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
 import test from "node:test"
 import { ANGEL_SYSTEM_PROMPT } from "../lib/angel-ai"
-import { GUIDES } from "../lib/response-guides"
+import { GUIDES, GUIDE_SOURCES } from "../lib/response-guides"
 import {
   BENEFIT_LINKS, CRISIS_LINES, MEETING_FINDERS, NALOXONE_SOURCES, NEVER_USE_ALONE, TEST_STRIP_FACTS, TEST_STRIP_SOURCES, directionsUrl,
 } from "../lib/safer-use"
@@ -52,4 +52,11 @@ test("Angel knows Never Use Alone and never gives dosing advice", () => {
   assert.match(ANGEL_SYSTEM_PROMPT, /1-800-484-3731/)
   assert.match(ANGEL_SYSTEM_PROMPT, /negative result never means a drug is safe/)
   assert.match(ANGEL_SYSTEM_PROMPT, /Never give dosing advice/)
+})
+
+test("guide sources are https when linked, and the dead advocacy link is gone", () => {
+  assert.ok(GUIDE_SOURCES.length >= 3)
+  for (const source of GUIDE_SOURCES) if (source.url) assert.match(source.url, /^https:\/\//)
+  const onboarding = readFileSync(new URL("../components/onboarding/onboarding-flow.tsx", import.meta.url), "utf8")
+  assert.ok(!onboarding.includes("drugpolicy.org/issues/911-good-samaritan-overdose-laws"), "the old Drug Policy Alliance URL returns 404")
 })

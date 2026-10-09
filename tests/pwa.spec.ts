@@ -253,6 +253,23 @@ test.describe("PWA production flow", () => {
     await expect(page.getByTestId("call-never-use-alone")).toBeVisible()
   })
 
+  test("pages hydrate without errors and safety guidance shows its sources", async ({ page }) => {
+    const errors: string[] = []
+    page.on("pageerror", (error) => errors.push(error.message))
+    await page.goto("/watch")
+    await expect(page.getByTestId("engineering-drawing").first()).toBeVisible()
+    await page.waitForLoadState("networkidle")
+    expect(errors, "no hydration or runtime errors on /watch").toEqual([])
+
+    await page.goto("/ar")
+    for (const id of ["guide-sources", "lesson-sources"]) {
+      const sources = page.getByTestId(id)
+      await expect(sources).toContainText("SAMHSA")
+      for (const link of await sources.getByRole("link").all()) expect(await link.getAttribute("href")).toMatch(/^https:\/\//)
+    }
+    expect(errors).toEqual([])
+  })
+
   test("Guardian needs planner requires consent and can be paused and erased", async ({ page }) => {
     await page.goto("/stability")
     await expect(page.getByRole("heading", { name: "Guardian Stability" })).toBeVisible()

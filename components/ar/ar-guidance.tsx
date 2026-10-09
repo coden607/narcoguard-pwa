@@ -6,7 +6,8 @@ import { Camera, CameraOff, Heart, Phone, Syringe, Timer, X } from "lucide-react
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
 import { Button } from "@/components/ui/button"
-import { GUIDES, METRONOME_BPM, SECOND_DOSE_SECONDS, beatIntervalMs, formatClock, type GuideMode } from "@/lib/response-guides"
+import { GUIDES, GUIDE_SOURCES, GUIDES_REVIEWED, METRONOME_BPM, SECOND_DOSE_SECONDS, beatIntervalMs, formatClock, type GuideMode } from "@/lib/response-guides"
+import { SourceList } from "@/components/common/source-list"
 
 // Guided response steps. The person moves between steps; nothing advances on its own. The camera
 // view is optional, shown only on this screen and never recorded or sent anywhere.
@@ -194,6 +195,8 @@ export function ARGuidance() {
           </div>
         </HolographicCard>
       </div>
+
+      <SourceList sources={GUIDE_SOURCES} reviewed={GUIDES_REVIEWED} testId="guide-sources" />
 
       {/* Portalled to <body> so no page stacking context (or the sticky header) can cover it. */}
       {mode && createPortal(<GuideScreen key={mode} mode={mode} onExit={() => setMode(null)} />, document.body)}

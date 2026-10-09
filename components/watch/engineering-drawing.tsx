@@ -375,7 +375,7 @@ export function EngineeringDrawing({ selected, onSelect, geometry = GEOMETRY_46,
           aria-labelledby={`drawing-title-${caseMm} drawing-desc-${caseMm}`}
           fontFamily="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace"
         >
-          <title id={`drawing-title-${caseMm}`}>NarcoGuard NG {caseMm} mm Rev 4.2 concept engineering drawing</title>
+          <title id={`drawing-title-${caseMm}`}>{`NarcoGuard NG ${caseMm} mm Rev 4.2 concept engineering drawing`}</title>
           <desc id={`drawing-desc-${caseMm}`}>Plan view and section B-B of the {caseMm} mm watch case with numbered component callouts, a layer stack table, a parts list and open engineering issues. Dimensions in millimetres; concept only, not for manufacture.</desc>
           <defs>
             <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">

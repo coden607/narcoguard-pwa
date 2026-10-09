@@ -6,6 +6,17 @@ updates:
       interval: weekly
       day: monday
     open-pull-requests-limit: 5
+    # Compatibility caps from AGENTS.md: @types/node tracks the Node 24 runtime, eslint stays on 9
+    # until its React/import/jsx-a11y plugins support 10, and TypeScript stays below 6.1 for typescript-eslint.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        versions: [">=6.1.0"]
     groups:
       safe-minor-and-patch:
         update-types: [minor, patch]
