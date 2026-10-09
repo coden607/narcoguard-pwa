@@ -1,0 +1,71 @@
+name: Factory Live Check
+
+# After every production deploy, prove narcoguard.app really works (FACTORY_RULES.md 4). On failure:
+# roll back to the previous production deployment when VERCEL_TOKEN is set (else the next factory run
+# does it through the Vercel connector), push a revert branch for a factory merge, and file a critical
+# issue that @mentions the owner.
+on:
+  deployment_status:
+  schedule:
+    - cron: "23 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: factory-live-check
+  cancel-in-progress: false
+
+jobs:
+  live:
+    if: github.event_name != 'deployment_status' || (github.event.deployment_status.state == 'success' && github.event.deployment.environment == 'Production')
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Wait for the new deployment to take traffic
+        if: github.event_name == 'deployment_status'
+        run: sleep 45
+      - name: Live check
+        id: live
+        run: |
+          set -o pipefail
+          bash factory/live-check.sh https://www.narcoguard.app | tee live.log
+      - name: Roll back, revert and escalate
+        if: failure() && steps.live.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          SHA: ${{ github.event.deployment.sha || github.sha }}
+        run: |
+          for label in factory:needs-human factory:rollback priority:critical factory-live-check; do
+            gh label create "$label" --force >/dev/null 2>&1 || true
+          done
+          ROLLBACK="not attempted: no VERCEL_TOKEN secret, so the next hourly factory run will roll back through the Vercel connector"
+          if [ -n "${VERCEL_TOKEN:-}" ]; then
+            if npx --yes vercel@latest rollback --yes --token "$VERCEL_TOKEN" >/dev/null 2>&1; then ROLLBACK="done: previous production deployment promoted"; else ROLLBACK="FAILED: promote the previous deployment by hand"; fi
+          fi
+          REVERT="none (not a factory merge)"
+          HEAD_REF=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/pulls" --jq '.[0].head.ref' 2>/dev/null || true)
+          if [[ "$HEAD_REF" == factory/issue-* ]]; then
+            git config user.name "narcoguard-factory"; git config user.email "factory@users.noreply.github.com"
+            BR="factory/revert-${SHA:0:7}"
+            if git checkout -b "$BR" origin/main && git revert --no-edit "$SHA" && git push -u origin "$BR"; then
+              REVERT=$(gh pr create --base main --head "$BR" --title "Revert ${SHA:0:7}: live check failed" --body "Live check failed after this factory merge. See the linked issue." 2>/dev/null || echo "branch $BR pushed; open a PR from it")
+            else
+              REVERT="revert did not apply cleanly"
+            fi
+          fi
+          printf '%s\n' "**Factory · live check** failed on https://www.narcoguard.app after ${SHA:0:7}." "" '```' "$(cat live.log)" '```' "" "- Rollback: $ROLLBACK" "- Revert: $REVERT" "" "@coden607 please check the live site." > body.md
+          LABELS="priority:critical,factory:needs-human,factory-live-check"
+          [[ "$ROLLBACK" == not\ attempted* ]] && LABELS="$LABELS,factory:rollback"
+          if [ "$(gh issue list --label factory-live-check --state open --json number --jq length)" != "0" ]; then gh issue comment "$(gh issue list --label factory-live-check --state open --json number --jq ".[0].number")" --body-file body.md; exit 0; fi
+          gh issue create --title "Live check failed after ${SHA:0:7}" --label "$LABELS" --body-file body.md

@@ -1,0 +1,35 @@
+name: Factory Gate
+
+# The structural gate for factory pull requests (FACTORY_RULES.md 3). Runs the protected-path guard
+# and the full harness, then requires positive markers at or above the floors in .factory/locks.
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: factory-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    if: startsWith(github.head_ref, 'factory/')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Guard, harness and gate
+        run: |
+          set -o pipefail
+          mkdir -p .factory/runs
+          { python3 factory/guard.py --base origin/${{ github.base_ref }} --head HEAD; bash factory/validate.sh; } 2>&1 | tee .factory/runs/gate.log
+          bash factory/gate.sh .factory/runs/gate.log

@@ -1,0 +1,2 @@
+# Keep the hidden factory scenarios out of ripgrep (and the Grep tool) by default.
+.factory/holdout/
