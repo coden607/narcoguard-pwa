@@ -9,7 +9,7 @@ import {
 } from "@/lib/angel-ai"
 import { resourcesForModel, toAngelResources, type AngelResources } from "@/lib/angel-resources"
 import { orderByMaslow } from "@/lib/need-intent"
-import { modelAttempts, resolveAngelProvider, shouldTryFallback, type AngelModelChoice, type AngelProvider } from "@/lib/angel-provider"
+import { endpointFor, modelAttempts, resolveAngelProvider, shouldTryFallback, type AngelModelChoice, type AngelProvider } from "@/lib/angel-provider"
 import { routeAngelTurn } from "@/lib/angel-routing"
 import { lookupKinds } from "@/lib/resource-lookup"
 
@@ -40,14 +40,15 @@ class ProviderError extends Error {
 }
 
 async function complete(provider: AngelProvider, choice: AngelModelChoice, messages: ChatMessage[], withTools: boolean, maxTokens = 1024, temperature = 0.4) {
-  const response = await fetch(provider.url, {
+  const endpoint = endpointFor(provider, choice)
+  const response = await fetch(endpoint.url, {
     method: "POST",
-    headers: { Authorization: `Bearer ${provider.token}`, "Content-Type": "application/json" },
+    headers: { Authorization: `Bearer ${endpoint.token}`, "Content-Type": "application/json" },
     body: JSON.stringify({
       model: choice.model,
       messages,
       temperature,
-      max_completion_tokens: maxTokens,
+      [choice.tokenParam ?? "max_completion_tokens"]: maxTokens,
       ...choice.extraBody,
       ...(withTools ? { tools: [FIND_RESOURCES_TOOL], tool_choice: "auto" } : {}),
     }),
@@ -68,8 +69,9 @@ async function completeWithFallback(provider: AngelProvider, choices: AngelModel
       return { message: await complete(provider, choice, messages, withTools, maxTokens, temperature), choice }
     } catch (error) {
       const last = index === choices.length - 1
-      if (last || !(error instanceof ProviderError && shouldTryFallback(error.status))) throw error
-      console.warn(`[angel] ${provider.name} refused ${choice.model} (${error.status}); using the fallback model`)
+      const crossService = !last && endpointFor(provider, choices[index + 1]).url !== endpointFor(provider, choice).url
+      if (last || !(error instanceof ProviderError && shouldTryFallback(error.status, crossService))) throw error
+      console.warn(`[angel] ${endpointFor(provider, choice).name} refused ${choice.model} (${error.status}); trying ${endpointFor(provider, choices[index + 1]).name} ${choices[index + 1].model}`)
     }
   }
   throw new ProviderError(0)
@@ -84,7 +86,7 @@ export async function GET(request: Request) {
     if (!provider) return NextResponse.json({ ok: false, provider: null }, { headers: noStore })
     try {
       const { message: reply, choice } = await completeWithFallback(provider, modelAttempts(provider, "quick"), [{ role: "system", content: "Reply with the single word OK." }, { role: "user", content: "ping" }], false, 64)
-      return NextResponse.json({ ok: true, provider: provider.name, model: choice.model, configuredModel: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
+      return NextResponse.json({ ok: true, provider: provider.name, answeredBy: endpointFor(provider, choice).name, model: choice.model, configuredModel: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
     } catch (error) {
       return NextResponse.json({ ok: false, provider: provider.name, status: error instanceof ProviderError ? error.status : "network", detail: error instanceof ProviderError ? error.detail : undefined }, { headers: noStore })
     }

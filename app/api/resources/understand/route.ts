@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { clientKey, isSameOrigin, readJson } from "@/lib/api-helpers"
-import { modelAttempts, resolveAngelProvider, shouldTryFallback } from "@/lib/angel-provider"
+import { endpointFor, modelAttempts, resolveAngelProvider, shouldTryFallback } from "@/lib/angel-provider"
 import { safetyNotices } from "@/lib/angel-ai"
 import { parseKindList } from "@/lib/need-intent"
 import { RESOURCE_KINDS, RESOURCE_LABELS } from "@/lib/resource-finder"
@@ -48,10 +48,12 @@ export async function POST(request: Request) {
   try {
     // The configured model first, then the open fallback if this account cannot use it.
     let response: Response | undefined
-    for (const choice of modelAttempts(provider, "quick")) {
-      response = await fetch(provider.url, {
+    const attempts = modelAttempts(provider, "quick")
+    for (const [index, choice] of attempts.entries()) {
+      const endpoint = endpointFor(provider, choice)
+      response = await fetch(endpoint.url, {
         method: "POST",
-        headers: { Authorization: `Bearer ${provider.token}`, "Content-Type": "application/json" },
+        headers: { Authorization: `Bearer ${endpoint.token}`, "Content-Type": "application/json" },
         body: JSON.stringify({
           ...choice.extraBody,
           model: choice.model,
@@ -62,7 +64,8 @@ export async function POST(request: Request) {
         }),
         signal: AbortSignal.timeout(20_000),
       })
-      if (response.ok || !shouldTryFallback(response.status)) break
+      const next = attempts[index + 1]
+      if (response.ok || !next || !shouldTryFallback(response.status, endpointFor(provider, next).url !== endpoint.url)) break
     }
     if (!response?.ok) throw new Error(`provider ${response?.status ?? 0}`)
     const data = (await response.json()) as { choices?: { message?: { content?: string } }[] }

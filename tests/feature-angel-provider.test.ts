@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert"
 import { test } from "node:test"
-import { modelAttempts, resolveAngelProvider, shouldTryFallback } from "../lib/angel-provider"
+import { endpointFor, modelAttempts, resolveAngelProvider, shouldTryFallback } from "../lib/angel-provider"
 
 test("a Groq key is used directly, with its own model override", () => {
   const provider = resolveAngelProvider({ GROQ_API_KEY: "k", GROQ_MODEL: "m", VERCEL_OIDC_TOKEN: "o" }, "h")
@@ -55,4 +55,31 @@ test("the gateway falls back to the open model when the account cannot use Claud
   assert.equal(shouldTryFallback(500), false)
   assert.equal(modelAttempts(resolveAngelProvider({ ANGEL_GATEWAY_MODEL: "openai/gpt-oss-120b" }, "h")!, "quick").length, 1, "no fallback to itself")
   assert.equal(modelAttempts(resolveAngelProvider({ GROQ_API_KEY: "k" }, null)!, "quick").length, 1, "direct Groq has no fallback")
+})
+
+test("a Kimi key goes first, with the gateway chain as a cross-service fallback", () => {
+  const provider = resolveAngelProvider({ MOONSHOT_API_KEY: "mk" }, "oidc")!
+  assert.equal(provider.name, "Kimi")
+  assert.equal(provider.url, "https://api.moonshot.ai/v1/chat/completions")
+  assert.equal(provider.model, "kimi-k2-turbo-preview")
+  const attempts = modelAttempts(provider, "resource")
+  assert.deepEqual(attempts.map((a) => [a.endpoint?.name ?? "Kimi", a.model]), [
+    ["Kimi", "kimi-k2-turbo-preview"],
+    ["Vercel AI Gateway", "anthropic/claude-sonnet-5"],
+    ["Vercel AI Gateway", "openai/gpt-oss-120b"],
+  ])
+  assert.equal(attempts[0].tokenParam, "max_tokens", "Moonshot expects max_tokens")
+  assert.equal(endpointFor(provider, attempts[0]).token, "mk")
+  assert.equal(endpointFor(provider, attempts[1]).token, "oidc")
+  assert.equal(resolveAngelProvider({ KIMI_API_KEY: "k2", KIMI_MODEL: "kimi-x", MOONSHOT_BASE_URL: "https://api.moonshot.cn/v1/" }, null)?.url, "https://api.moonshot.cn/v1/chat/completions")
+  assert.equal(modelAttempts(resolveAngelProvider({ KIMI_API_KEY: "k2" }, null)!, "quick").length, 1, "no gateway, no fallback")
+  assert.equal(resolveAngelProvider({ MOONSHOT_API_KEY: "mk", GROQ_API_KEY: "g" }, null)?.name, "Kimi", "the owner's Kimi credits win")
+})
+
+test("running out of Kimi credit switches services, but rate limits never switch models on one service", () => {
+  assert.equal(shouldTryFallback(429, true), true)
+  assert.equal(shouldTryFallback(402, true), true)
+  assert.equal(shouldTryFallback(503, true), true)
+  assert.equal(shouldTryFallback(429), false)
+  assert.equal(shouldTryFallback(401), true)
 })

@@ -261,7 +261,9 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       {available && !consented && (
         <div className="space-y-3 rounded-lg border p-4" data-testid="angel-consent">
           <p className="text-sm">
-            {provider === "Vercel AI Gateway"
+            {provider === "Kimi"
+              ? "Your messages are sent to Kimi, an AI model from Moonshot AI, a company based in China, to write Angel's replies. NarcoGuard has not confirmed whether Moonshot AI keeps or trains on these messages, so share only what you are comfortable with. If Kimi is unavailable, they go through Vercel AI Gateway to Anthropic's Claude (zero data retention) or an open model run by Groq instead."
+              : provider === "Vercel AI Gateway"
               ? "Your messages are sent through Vercel AI Gateway to an AI model to write Angel's replies: Anthropic's Claude, with zero data retention required, or an open model run by Groq when Claude isn't available. Neither provider trains on them."
               : provider === "OpenRouter"
               ? "Your messages are sent through OpenRouter to an AI provider to write Angel's replies. NarcoGuard asks OpenRouter to use only providers that do not store or train on them."
