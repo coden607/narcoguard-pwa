@@ -80,8 +80,10 @@ export function haversineMiles(aLat: number, aLon: number, bLat: number, bLon: n
 }
 
 interface OsmKindSpec {
-  /** Each entry is a set of tags that must all match. */
+  /** Each entry is a set of tags that must all match. A value starting with "~" is a case-insensitive regular expression. */
   filters: Record<string, string>[]
+  /** Names that rule a place out even when its tags match, such as animal shelters. */
+  excludeName?: string
   /** Tag values that rule a place out, e.g. toilets for customers only. */
   exclude?: Record<string, string[]>
   /** Dense kinds use a smaller radius so the nearest places are not crowded out. */
@@ -92,15 +94,30 @@ interface OsmKindSpec {
 
 const NOT_PUBLIC = { access: ["private", "no", "customers"] }
 
+// Many shelters and meal programs are mapped only by name (a mission, a charity office, a church hall)
+// rather than tagged as a shelter or food bank. Matching well-known names finds them; requiring an
+// organisation-like tag keeps out streets and shops with the same words, and every listing says to call first.
+const ORG_TAGS: Record<string, string>[] = [{ amenity: "~^(social_facility|place_of_worship|community_centre)$" }, { office: "~." }, { building: "~." }]
+const byName = (pattern: string): Record<string, string>[] => ORG_TAGS.map((tags) => ({ ...tags, name: `~${pattern}` }))
+const SHELTER_NAMES = "rescue mission|salvation army|ywca|catholic charities|volunteers of america|homeless|warming (center|centre)|emergency shelter|(men|women|family|youth)'?s shelter|shelter for"
+const FOOD_NAMES = "food pantry|food bank|soup kitchen|community meal|free meal|food cupboard|salvation army|rescue mission|catholic charities"
+
 export const OSM_KINDS: Record<OsmKind, OsmKindSpec> = {
   // Community fridges and pantries are mapped as food_sharing.
-  food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }, { amenity: "food_sharing" }], radius: SEARCH_RADIUS_METERS, unnamed: (tags) => (tags.amenity === "food_sharing" ? "Food pantry or community fridge" : undefined) },
+  food: { filters: [{ social_facility: "food_bank" }, { social_facility: "soup_kitchen" }, { amenity: "food_bank" }, { amenity: "food_sharing" }, ...byName(FOOD_NAMES)], radius: SEARCH_RADIUS_METERS, unnamed: (tags) => (tags.amenity === "food_sharing" ? "Food pantry or community fridge" : undefined) },
   "quick-meal": { filters: [{ amenity: "fast_food" }, { amenity: "cafe" }, { shop: "convenience" }, { shop: "supermarket" }], radius: 5_000 },
   // Hotels contracted as temporary shelters are often mapped this way and go stale when contracts end.
   // Services for people experiencing homelessness are listed too; every listing says to call first, so none promises a bed.
-  shelter: { filters: [{ social_facility: "shelter" }, { amenity: "social_facility", "social_facility:for": "homeless" }], exclude: { tourism: ["hotel"] }, radius: SEARCH_RADIUS_METERS },
-  water: { filters: [{ amenity: "drinking_water" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Drinking water" },
-  toilets: { filters: [{ amenity: "toilets" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Public toilet" },
+  shelter: {
+    filters: [{ social_facility: "shelter" }, { amenity: "social_facility", "social_facility:for": "homeless" }, ...byName(SHELTER_NAMES)],
+    exclude: { tourism: ["hotel"], amenity: ["animal_shelter"] },
+    excludeName: "animal|humane|spca|pet (shelter|rescue|adoption)|(cat|dog) (shelter|rescue)|thrift|store",
+    radius: SEARCH_RADIUS_METERS,
+  },
+  // Fountains, and parks or public buildings that are tagged as having drinking water.
+  water: { filters: [{ amenity: "drinking_water" }, { amenity: "fountain", drinking_water: "yes" }, { drinking_water: "yes", leisure: "~^(park|playground|sports_centre)$" }, { drinking_water: "yes", amenity: "~^(library|community_centre|toilets|townhall)$" }], exclude: NOT_PUBLIC, radius: 2_000, unnamed: "Drinking water" },
+  // Public toilets, and parks, libraries and stations tagged as having toilets (not shops or restaurants).
+  toilets: { filters: [{ amenity: "toilets" }, { toilets: "yes", leisure: "~^(park|playground|sports_centre)$" }, { toilets: "yes", amenity: "~^(library|community_centre|townhall|bus_station|ferry_terminal)$" }], exclude: { ...NOT_PUBLIC, "toilets:access": ["private", "no", "customers"] }, radius: 2_000, unnamed: "Public toilet" },
   // Truck stops, campgrounds and pools tag showers on the main feature; some charge a fee.
   showers: { filters: [{ amenity: "shower" }, { shower: "yes" }, { shower: "hot" }], exclude: NOT_PUBLIC, radius: SEARCH_RADIUS_METERS, unnamed: "Public shower" },
   laundry: { filters: [{ shop: "laundry" }], radius: 5_000 },
@@ -127,10 +144,12 @@ export function boundingBox(lat: number, lon: number, radiusMeters: number): [nu
 // A bounding box, not (around:...): with a common tag such as amenity=toilets, "around" makes the
 // public servers scan every match worldwide and time out. Corners are trimmed by distance afterwards.
 function osmSelectors(kind: OsmKind, lat: number, lon: number, radius = OSM_KINDS[kind].radius): string {
-  const { filters, exclude } = OSM_KINDS[kind]
+  const { filters, exclude, excludeName } = OSM_KINDS[kind]
   const excluded = Object.entries(exclude ?? {}).map(([key, values]) => `[${quote(key)}!~${quote(`^(${values.join("|")})$`)}]`).join("")
+    + (excludeName ? `["name"!~${quote(excludeName)},i]` : "")
   const box = boundingBox(lat, lon, radius).join(",")
-  return filters.map((filter) => `nwr${Object.entries(filter).map(([key, value]) => `[${quote(key)}=${quote(value)}]`).join("")}${excluded}(${box});`).join("")
+  const selector = ([key, value]: [string, string]) => (value.startsWith("~") ? `[${quote(key)}~${quote(value.slice(1))},i]` : `[${quote(key)}=${quote(value)}]`)
+  return filters.map((filter) => `nwr${Object.entries(filter).map(selector).join("")}${excluded}(${box});`).join("")
 }
 
 export function overpassQuery(kind: OsmKind, lat: number, lon: number, radius?: number): string {
@@ -158,9 +177,11 @@ export const WIDE_RADIUS_METERS = 40_000 // about 25 miles
 /** Every kind a place matches, in display order: a truck stop can be a quick meal and a shower. */
 export function osmKindsOf(tags: Record<string, string>): OsmKind[] {
   return OSM_KIND_ORDER.filter((kind) => {
-    const { filters, exclude } = OSM_KINDS[kind]
+    const { filters, exclude, excludeName } = OSM_KINDS[kind]
     if (Object.entries(exclude ?? {}).some(([key, values]) => values.includes(tags[key]))) return false
-    return filters.some((filter) => Object.entries(filter).every(([key, value]) => tags[key] === value))
+    if (excludeName && tags.name && new RegExp(excludeName, "i").test(tags.name)) return false
+    return filters.some((filter) => Object.entries(filter).every(([key, value]) =>
+      value.startsWith("~") ? tags[key] !== undefined && new RegExp(value.slice(1), "i").test(tags[key]) : tags[key] === value))
   })
 }
 
@@ -257,9 +278,12 @@ export function parseOverpassNeeds(body: unknown, origin: { lat: number; lon: nu
   return grouped
 }
 
+export const TREATMENT_PAGE_SIZE = 30
+
 /** FindTreatment needs "lat,lon" in sAddr; a bare ZIP is ignored and silently falls back to a default location. */
 export function findTreatmentUrl(lat: number, lon: number, radius = SEARCH_RADIUS_METERS): string {
-  const params = new URLSearchParams({ sAddr: `${lat},${lon}`, limitType: "2", limitValue: String(radius), pageSize: String(MAX_RESULTS), page: "1", sort: "0" })
+  // A wider page lets substance use programs be ranked ahead of mental-health-only ones before trimming.
+  const params = new URLSearchParams({ sAddr: `${lat},${lon}`, limitType: "2", limitValue: String(radius), pageSize: String(TREATMENT_PAGE_SIZE), page: "1", sort: "0" })
   return `https://findtreatment.gov/locator/exportsAsJson/v2?${params}`
 }
 
@@ -292,7 +316,7 @@ export function parseFindTreatment(body: unknown): NearbyResource[] {
   const rows = (body as { rows?: Record<string, unknown>[] } | null)?.rows
   if (!Array.isArray(rows)) return []
   const seen = new Set<string>()
-  return rows.flatMap((row) => {
+  const parsed = rows.flatMap((row): NearbyResource[] => {
     const name = [str(row.name1), str(row.name2)].filter(Boolean).join(" – ")
     if (!name) return []
     const street = [str(row.street1), str(row.street2)].filter(Boolean).join(", ")
@@ -314,7 +338,16 @@ export function parseFindTreatment(body: unknown): NearbyResource[] {
     if (seen.has(key)) return []
     seen.add(key)
     return [resource]
-  }).slice(0, MAX_RESULTS)
+  })
+  // NarcoGuard's "treatment" means substance use care: programs listing it come first (still nearest
+  // first within each group); mental-health-only programs stay listed below rather than hidden.
+  const offersSubstanceUse = (resource: NearbyResource) => (resource.services ? /substance use|opioid|medication.assisted|detox/i.test(resource.services) : undefined)
+  const rank = (resource: NearbyResource) => (offersSubstanceUse(resource) === true ? 0 : offersSubstanceUse(resource) === undefined ? 1 : 2)
+  return parsed
+    .map((resource, index) => ({ resource, index }))
+    .sort((a, b) => rank(a.resource) - rank(b.resource) || a.index - b.index)
+    .map(({ resource }) => resource)
+    .slice(0, MAX_RESULTS)
 }
 
 /** Directory pages a person can always use when live results are empty or unavailable. */

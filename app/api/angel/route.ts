@@ -9,7 +9,7 @@ import {
 } from "@/lib/angel-ai"
 import { resourcesForModel, toAngelResources, type AngelResources } from "@/lib/angel-resources"
 import { orderByMaslow } from "@/lib/need-intent"
-import { attemptTimeoutMs, endpointFor, modelAttempts, resolveAngelProvider, shouldTryFallback, type AngelModelChoice, type AngelProvider } from "@/lib/angel-provider"
+import { attemptTimeoutMs, availableAttempts, endpointFor, modelAttempts, noteRefusal, resolveAngelProvider, shouldTryFallback, type AngelModelChoice, type AngelProvider } from "@/lib/angel-provider"
 import { routeAngelTurn } from "@/lib/angel-routing"
 import { lookupKinds } from "@/lib/resource-lookup"
 
@@ -37,6 +37,17 @@ type ToolCall = { id: string; type: "function"; function: { name: string; argume
 
 class ProviderError extends Error {
   constructor(readonly status: number, readonly detail = "") { super(`provider ${status}`) }
+}
+
+/** The provider's machine-readable error type or code (for example "exceeded_current_quota_error"); never message text. */
+function errorKind(detail: string): string {
+  try {
+    const error = (JSON.parse(detail) as { error?: { type?: unknown; code?: unknown } }).error
+    const kind = typeof error?.type === "string" ? error.type : typeof error?.code === "string" ? error.code : ""
+    return /^[\w.-]{1,60}$/.test(kind) ? ` ${kind}` : ""
+  } catch {
+    return ""
+  }
 }
 
 async function complete(provider: AngelProvider, choice: AngelModelChoice, messages: ChatMessage[], withTools: boolean, maxTokens = 1024, temperature = 0.4, timeoutMs = 25_000) {
@@ -67,16 +78,19 @@ async function complete(provider: AngelProvider, choice: AngelModelChoice, messa
  * Tries each model choice in order; a refusal (no access, unsupported) falls back to the next, and so
  * does any failure when the next choice is on another service. Every attempt shares one deadline.
  */
-async function completeWithFallback(provider: AngelProvider, choices: AngelModelChoice[], messages: ChatMessage[], withTools: boolean, deadline: number, maxTokens?: number, temperature?: number) {
+async function completeWithFallback(provider: AngelProvider, allChoices: AngelModelChoice[], messages: ChatMessage[], withTools: boolean, deadline: number, maxTokens?: number, temperature?: number) {
+  // Skip models that just refused for account reasons, so replies are not slowed by a known refusal.
+  const choices = availableAttempts(provider, allChoices)
   for (const [index, choice] of choices.entries()) {
     try {
       const timeoutMs = attemptTimeoutMs(deadline, choices.length - index)
       return { message: await complete(provider, choice, messages, withTools, maxTokens, temperature, timeoutMs), choice }
     } catch (error) {
       const last = index === choices.length - 1
+      if (error instanceof ProviderError) noteRefusal(endpointFor(provider, choice), choice.model, error.status)
       const crossService = !last && endpointFor(provider, choices[index + 1]).url !== endpointFor(provider, choice).url
       if (last || !(error instanceof ProviderError && shouldTryFallback(error.status, crossService))) throw error
-      console.warn(`[angel] ${endpointFor(provider, choice).name} refused ${choice.model} (${error.status}); trying ${endpointFor(provider, choices[index + 1]).name} ${choices[index + 1].model}`)
+      console.warn(`[angel] ${endpointFor(provider, choice).name} refused ${choice.model} (${error.status}${errorKind(error.detail)}); trying ${endpointFor(provider, choices[index + 1]).name} ${choices[index + 1].model}`)
     }
   }
   throw new ProviderError(0)

@@ -147,3 +147,33 @@ export const shouldTryFallback = (status: number, crossService = false) =>
 export function attemptTimeoutMs(deadline: number, attemptsLeft: number, now = Date.now(), cap = 25_000): number {
   return Math.max(3_000, Math.min(cap, Math.floor((deadline - now) / Math.max(1, attemptsLeft))))
 }
+
+/**
+ * Models that refused for account reasons (no access, no credit, rate limit) are skipped for a while,
+ * so every message does not wait on a refusal first. Per server instance, in memory only; the last
+ * choice in a chain is always tried, so Angel never skips everything.
+ */
+export const COOLDOWN_MS = 10 * 60_000
+const COOLDOWN_STATUSES = [401, 402, 403, 429]
+const coolingDown = new Map<string, number>()
+const cooldownKey = (endpoint: AngelEndpoint, model: string) => `${endpoint.url} ${model}`
+
+export function noteRefusal(endpoint: AngelEndpoint, model: string, status: number, now = Date.now()) {
+  if (COOLDOWN_STATUSES.includes(status)) coolingDown.set(cooldownKey(endpoint, model), now + COOLDOWN_MS)
+}
+
+export function isCoolingDown(endpoint: AngelEndpoint, model: string, now = Date.now()): boolean {
+  const until = coolingDown.get(cooldownKey(endpoint, model))
+  if (until === undefined) return false
+  if (until <= now) {
+    coolingDown.delete(cooldownKey(endpoint, model))
+    return false
+  }
+  return true
+}
+
+/** Choices worth trying now: those not cooling down, but never an empty list. */
+export function availableAttempts(provider: AngelProvider, choices: AngelModelChoice[], now = Date.now()): AngelModelChoice[] {
+  const ready = choices.filter((choice) => !isCoolingDown(endpointFor(provider, choice), choice.model, now))
+  return ready.length > 0 ? ready : choices.slice(-1)
+}
