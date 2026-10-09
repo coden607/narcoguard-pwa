@@ -8,6 +8,7 @@ import { QUICK_NEEDS, matchNeeds, orderByMaslow } from "@/lib/need-intent"
 import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 import { cardSummary } from "@/lib/resource-display"
 import { directionsUrl } from "@/lib/safer-use"
+import { forgetPlace, readRememberChoice, readSavedPlace, savePlace } from "@/lib/saved-place"
 import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
 
 interface KindLookup {
@@ -149,6 +150,8 @@ export function NeedsFinder() {
   const lookup = async (origin: Origin) => {
     setBusy(true)
     setNotice(undefined)
+    // Remembered on this phone only (coordinates rounded to about 1 km), unless the person turned that off in Angel.
+    if (readRememberChoice(window.localStorage)) savePlace(window.localStorage, origin)
     try {
       const params = new URLSearchParams("zip" in origin ? { zip: origin.zip } : { lat: String(origin.lat), lon: String(origin.lon) })
       const response = await fetch(`/api/resources/needs?${params}`, { cache: "no-store" })
@@ -160,6 +163,19 @@ export function NeedsFinder() {
       setBusy(false)
     }
   }
+
+  // A place remembered on this phone searches straight away, so help shows without asking again.
+  const [savedPlace, setSavedPlace] = useState<Origin | null>(null)
+  useEffect(() => {
+    const saved = readRememberChoice(window.localStorage) ? readSavedPlace(window.localStorage) : null
+    if (!saved) return
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from device storage */
+    setSavedPlace(saved)
+    if ("zip" in saved) setZip(saved.zip)
+    /* eslint-enable react-hooks/set-state-in-effect */
+    void lookup(saved)
+  }, [])
+  const forgetSavedPlace = () => { forgetPlace(window.localStorage); setSavedPlace(null); setZip("") }
 
   const findNearMe = () => {
     if (!("geolocation" in navigator)) {
@@ -226,8 +242,10 @@ export function NeedsFinder() {
           <Button type="submit" variant="outline" disabled={busy}>Search</Button>
         </form>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Your location is used only for this search, rounded to about a kilometer, and is not saved.
+      <p className="text-xs text-muted-foreground" data-testid="place-privacy">
+        Your location is rounded to about a kilometer and used only to search public directories. It is never stored on our
+        servers. So you only enter it once, this phone remembers it until you tap Forget (turn this off in Angel).
+        {savedPlace && <> <button type="button" className="inline-flex min-h-6 items-center underline text-primary" onClick={forgetSavedPlace} data-testid="forget-saved-place">Forget where I am</button></>}
       </p>
       {notice && <p className="text-sm" role="status">{notice}</p>}
       {busy && <p className="text-sm text-muted-foreground" role="status">Searching every need…</p>}

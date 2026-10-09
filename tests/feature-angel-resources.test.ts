@@ -1,10 +1,15 @@
+import { clearDirectoryCache } from "../lib/resource-lookup"
 import { strict as assert } from "node:assert"
-import { test } from "node:test"
+import { test, beforeEach } from "node:test"
 import { angelRequestSchema, buildChatMessages, findResourcesArgsSchema } from "../lib/angel-ai"
 import { resourcesForModel, spokenResourceSummary, toAngelResources } from "../lib/angel-resources"
 import { routeAngelTurn } from "../lib/angel-routing"
 import { parseAngelLocalCommand } from "../lib/angel-voice-commands"
 import type { NearbyResource } from "../lib/resource-finder"
+
+// Each test fakes its own directory answers, so nothing is reused from an earlier test.
+beforeEach(() => clearDirectoryCache())
+
 
 const place = (name: string, distanceMiles: number): NearbyResource => ({ name, kind: "food", lat: 42.1, lon: -75.9, distanceMiles, source: "OpenStreetMap contributors", address: "1 Main St", phone: "607-555-0100" })
 
@@ -123,6 +128,7 @@ test("lookupKinds says a sparse need is unavailable when the wider search fails,
     globalThis.fetch = realFetch
   }
 
+  clearDirectoryCache()
   globalThis.fetch = ((_input: string | URL, init?: RequestInit) => new Promise<Response>((_, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("aborted"))))) as typeof fetch
   try {
     const started = Date.now()

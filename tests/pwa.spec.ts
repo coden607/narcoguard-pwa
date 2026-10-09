@@ -296,6 +296,21 @@ test.describe("PWA production flow", () => {
     }
   })
 
+  test("Find help remembers the place on this phone, searches it straight away, and forgets it in one tap", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("narcoguard_saved_place_v1", JSON.stringify({ zip: "13901" })))
+    const searched: string[] = []
+    await page.route("**/api/resources/needs?**", async (route) => {
+      searched.push(new URL(route.request().url()).searchParams.get("zip") ?? "")
+      await route.fulfill({ json: { status: "ok", kinds: {} } })
+    })
+    await page.goto("/help")
+    await expect(page.getByLabel("ZIP code", { exact: true })).toHaveValue("13901")
+    await expect.poll(() => searched).toContain("13901")
+    await page.getByTestId("forget-saved-place").click()
+    await expect(page.getByLabel("ZIP code", { exact: true })).toHaveValue("")
+    expect(await page.evaluate(() => localStorage.getItem("narcoguard_saved_place_v1"))).toBeNull()
+  })
+
   test("Guardian needs planner requires consent and can be paused and erased", async ({ page }) => {
     await page.goto("/stability")
     await expect(page.getByRole("heading", { name: "Guardian Stability" })).toBeVisible()
