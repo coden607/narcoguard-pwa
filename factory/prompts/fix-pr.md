@@ -9,4 +9,4 @@ Target: a factory PR with failing checks or `factory:changes-requested`.
    `python3 factory/guard.py`.
 4. Push to the same branch. Remove `factory:changes-requested`. Comment **Factory · fix-pr** with what changed.
 
-5. Read only the failing step's last 60 log lines, not whole logs.
+5. For each failing check, read only that job's last 60 log lines, not whole logs, and fix every failure in the same push.
