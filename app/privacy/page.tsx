@@ -41,7 +41,10 @@ export default function PrivacyPolicy() {
               model to write replies. Which one depends on how this site is set up: through Vercel AI Gateway to Anthropic&apos;s
               Claude, for which NarcoGuard requires zero data retention (the provider keeps no copy); or to an open model run by Groq,
               directly, through Vercel AI Gateway, or through OpenRouter limited to providers that do not store or train on prompts.
-              Groq states that it does not use API inputs or outputs for training. NarcoGuard does not save the conversation; it is
+              Groq states that it does not use API inputs or outputs for training. When this site is set up to use Kimi, your
+              messages go first to Moonshot AI, a company based in China; NarcoGuard has not confirmed whether Moonshot AI keeps or
+              trains on API messages, and the chat screen says so before you start. If Kimi is unavailable, messages go to the
+              gateway options above instead. NarcoGuard does not save the conversation; it is
               cleared when you leave the page. To read replies aloud, NarcoGuard picks a voice that runs on your device and never
               chooses an online voice; if your device has none, your browser&apos;s default voice is used.
             </p>
