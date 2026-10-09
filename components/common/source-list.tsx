@@ -6,7 +6,7 @@ export function SourceList({ sources, reviewed, testId = "sources" }: { sources:
       <ul className="list-disc space-y-1 pl-5">
         {sources.map((source) => (
           <li key={source.title}>
-            {source.url ? <a className="underline hover:text-primary" href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a> : source.title}
+            {source.url ? <a className="inline-flex min-h-6 items-center underline hover:text-primary" href={source.url} target="_blank" rel="noopener noreferrer">{source.title}</a> : source.title}
           </li>
         ))}
       </ul>
