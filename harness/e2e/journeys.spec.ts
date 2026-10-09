@@ -36,6 +36,14 @@ test("find help: food and water near ZIP 13901 come from the real search with so
   await expect(yours).toContainText("OpenStreetMap")
 })
 
+test("find help: food banks match by their tag whatever their name, and water marked not drinkable never shows", async ({ request }) => {
+  const body = await (await request.get("/api/resources/needs?zip=13901")).json()
+  const names = (kind: string) => (body.kinds?.[kind]?.results ?? []).map((r: { name: string }) => r.name)
+  expect(names("food")).toContain("Southern Tier Helping Hands")
+  expect(names("water")).toContain("Court Street Water Fountain")
+  expect(names("water")).not.toContain("Broken Bubbler")
+})
+
 test("find help: a need with no listing offers Call 211", async ({ page }) => {
   await page.goto("/help")
   await page.getByLabel("ZIP code", { exact: true }).fill("13901")
