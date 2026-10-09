@@ -4,6 +4,7 @@ import { HolographicCard } from "@/components/effects/holographic-card"
 import { Heart, Activity, Droplet, Wind, Unplug } from "lucide-react"
 import { useVitals } from "@/lib/hooks/use-vitals"
 import { BluetoothVitals } from "@/components/dashboard/bluetooth-vitals"
+import { ManualVitals } from "@/components/dashboard/manual-vitals"
 
 export function VitalsMonitor() {
   const { vitals, overdoseCheck, status, message } = useVitals(2000)
@@ -29,6 +30,9 @@ export function VitalsMonitor() {
           <p className="text-sm text-muted-foreground text-balance">NarcoGuard is not monitoring you. If someone may be overdosing, call 911 and give naloxone if available.</p>
         </div>
         <div className="border-t pt-4">
+          <ManualVitals />
+        </div>
+        <div className="border-t pt-4 mt-4">
           <BluetoothVitals />
         </div>
       </HolographicCard>

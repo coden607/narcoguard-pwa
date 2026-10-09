@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { ORIGIN_CREDIT } from "@/lib/credits"
 import { MASLOW_LEVELS as LEVELS } from "@/lib/maslow-resources"
 
 export const metadata: Metadata = {
@@ -20,6 +21,11 @@ export default function AboutPage() {
         </header>
 
         <div className="space-y-6 text-sm text-muted-foreground">
+          <section className="space-y-3" aria-labelledby="origin" data-testid="idea-credit">
+            <h2 id="origin" className="text-2xl font-semibold text-foreground">Where NarcoGuard came from</h2>
+            <p>{ORIGIN_CREDIT}</p>
+          </section>
+
           <section className="space-y-3" aria-labelledby="maslow">
             <h2 id="maslow" className="text-2xl font-semibold text-foreground">Built around Maslow&apos;s hierarchy of needs</h2>
             <p>

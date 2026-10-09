@@ -56,6 +56,11 @@ export default function PrivacyPolicy() {
               Bluetooth heart-rate and blood-oxygen readings are shown only on your screen while connected. They are not
               uploaded, saved or used to detect overdoses.
             </p>
+            <p>
+              The camera pulse check asks for camera permission only when you tap it. It reads the brightness of your fingertip in
+              each video frame on your phone, shows an estimate, and then turns the camera off. No video, image or result is uploaded
+              or saved. The breathing count is a simple tap counter that stays on your screen. Neither is used to detect overdoses.
+            </p>
           </section>
 
           <section className="space-y-3">

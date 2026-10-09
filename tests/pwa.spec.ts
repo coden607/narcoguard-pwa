@@ -270,6 +270,32 @@ test.describe("PWA production flow", () => {
     expect(errors).toEqual([])
   })
 
+  test("phone vitals checks: breathing count works, camera pulse handles denied permission, and the founding idea is credited", async ({ page }) => {
+    await page.clock.install()
+    await page.addInitScript(() => {
+      localStorage.setItem("narcoguard_preferences", JSON.stringify({ hasCompletedOnboarding: true }))
+      Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: () => Promise.reject(new DOMException("denied", "NotAllowedError")) } })
+    })
+    const response = await page.goto("/")
+    // The camera pulse check needs camera access on this origin only; a blanket camera=() would silently break it.
+    expect(response?.headers()["permissions-policy"]).toContain("camera=(self)")
+    const vitals = page.getByTestId("manual-vitals")
+    await expect(vitals).toBeVisible()
+    await vitals.getByTestId("start-breath-count").click()
+    for (let i = 0; i < 7; i++) await vitals.getByTestId("breath-tap").click()
+    await page.clock.runFor(31_000)
+    await expect(vitals.getByTestId("breath-result")).toHaveText("14 breaths a minute")
+
+    await vitals.getByTestId("start-camera-pulse").click()
+    await expect(vitals.getByTestId("camera-pulse-error")).toContainText("Camera permission was not given")
+    await expect(vitals).toContainText("does not use them to detect overdoses")
+
+    for (const path of ["/about", "/fund"]) {
+      await page.goto(path)
+      await expect(page.getByTestId("idea-credit").first()).toContainText("Shannon Pillion Robinson, NarcoGuard's CFO")
+    }
+  })
+
   test("Guardian needs planner requires consent and can be paused and erased", async ({ page }) => {
     await page.goto("/stability")
     await expect(page.getByRole("heading", { name: "Guardian Stability" })).toBeVisible()

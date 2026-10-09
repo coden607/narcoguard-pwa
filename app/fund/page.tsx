@@ -1,5 +1,6 @@
 "use client"
 
+import { IDEA_ORIGINATOR, ORIGIN_CREDIT } from "@/lib/credits"
 import { useState } from "react"
 import { MotionConfig, motion } from "framer-motion"
 import { Heart, Mail, Share2, Copy, Check, Watch, Shield, Zap, Phone, MapPin, ArrowRight } from "lucide-react"
@@ -162,6 +163,9 @@ export default function FundPage() {
             one day recognize signs consistent with an opioid overdose, warn the wearer, and, if they do not respond, deliver a
             dose of naloxone automatically while help is called.
           </p>
+          <p className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-muted-foreground" data-testid="idea-credit">
+            <strong className="text-foreground">Where the idea came from.</strong> {ORIGIN_CREDIT}
+          </p>
           <p className="text-muted-foreground">
             None of that exists yet. The NG watch is a concept: it does not detect overdoses, it does not deliver naloxone, and it
             must not be relied on. Turning the idea into something safe takes work that costs money:
@@ -232,6 +236,11 @@ export default function FundPage() {
                   <p className="mb-6">
                     I've lost too many friends to opioid overdose. Most of them died alone - with no one there to
                     administer naloxone in time. By the time 911 arrived, it was too late.
+                  </p>
+
+                  <p className="mb-6">
+                    Then {IDEA_ORIGINATOR.name}, now NarcoGuard&apos;s {IDEA_ORIGINATOR.role}, told me her idea: a wearable that could
+                    give naloxone automatically when no one else is there. Everything in NarcoGuard grew from that idea.
                   </p>
 
                   <p className="mb-6">
