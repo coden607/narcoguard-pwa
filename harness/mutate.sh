@@ -5,10 +5,11 @@
 #   bash harness/mutate.sh [defect-id]
 set -uo pipefail
 ROOT="$(git rev-parse --show-toplevel)"; cd "$ROOT"
-WORK="$(mktemp -d)"; trap 'rm -rf "$WORK"' EXIT INT TERM
+# Inside the repo (gitignored) so node_modules can be hard-linked: Turbopack rejects a symlink.
+WORK="$ROOT/.factory/runs/mutate-$$"; mkdir -p "$WORK"; trap 'rm -rf "$WORK"' EXIT INT TERM
 git worktree add -q --detach "$WORK/tree" HEAD 2>/dev/null || { echo "MUTATE_ERROR worktree"; exit 2; }
 trap 'git worktree remove --force "$WORK/tree" >/dev/null 2>&1; rm -rf "$WORK"' EXIT INT TERM
-ln -s "$ROOT/node_modules" "$WORK/tree/node_modules"
+cp -al "$ROOT/node_modules" "$WORK/tree/node_modules"
 cp -r "$ROOT/.factory/holdout" "$WORK/tree/.factory/" 2>/dev/null || true
 fails() { grep -Eo '^(E2E|HOLDOUT)_FAILED passed=[0-9]+ failed=[0-9]+' "$1" | grep -Eo 'failed=[0-9]+' | cut -d= -f2 | paste -sd+ | bc 2>/dev/null || echo 0; }
 (cd "$WORK/tree" && FACTORY_PORT=3199 bash factory/validate.sh > "$WORK/baseline.log" 2>&1)
