@@ -9,6 +9,11 @@ export type SavedPlace = { zip: string } | { lat: number; lon: number }
 
 const round = (value: number) => Math.round(value * 100) / 100
 
+/** A place with coordinates rounded to about 1 km (2 decimal places), so exact location never leaves the phone. */
+export function roundPlace(place: SavedPlace): SavedPlace {
+  return "zip" in place ? place : { lat: round(place.lat), lon: round(place.lon) }
+}
+
 type Store = Pick<Storage, "getItem" | "setItem" | "removeItem">
 
 export function readSavedPlace(store: Store | undefined): SavedPlace | null {

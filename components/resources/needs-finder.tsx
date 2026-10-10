@@ -8,7 +8,7 @@ import { QUICK_NEEDS, matchNeeds, orderByMaslow } from "@/lib/need-intent"
 import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 import { cardSummary } from "@/lib/resource-display"
 import { directionsUrl } from "@/lib/safer-use"
-import { forgetPlace, readRememberChoice, readSavedPlace, savePlace } from "@/lib/saved-place"
+import { forgetPlace, readRememberChoice, readSavedPlace, roundPlace, savePlace } from "@/lib/saved-place"
 import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
 
 interface KindLookup {
@@ -147,7 +147,9 @@ export function NeedsFinder() {
     }
   }
 
-  const lookup = async (origin: Origin) => {
+  const lookup = async (exact: Origin) => {
+    // Rounded to about 1 km on the phone, before it is saved or sent (the server rounds again).
+    const origin = roundPlace(exact)
     setBusy(true)
     setNotice(undefined)
     // Remembered on this phone only (coordinates rounded to about 1 km), unless the person turned that off in Angel.
