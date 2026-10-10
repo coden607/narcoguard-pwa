@@ -521,7 +521,9 @@ test.describe("PWA production flow", () => {
     await context.setGeolocation({ latitude: 42.6526, longitude: -73.7562 })
     await search.getByRole("button", { name: "Find everything near me" }).click()
     await expect(search.getByRole("heading", { name: "Basic needs" })).toBeVisible()
-    expect(requested).toEqual(["?lat=42.6526&lon=-73.7562"])
+    expect(requested).toEqual(["?lat=42.65&lon=-73.76"])
+    const saved = await page.evaluate(() => window.localStorage.getItem("narcoguard_saved_place_v1"))
+    expect(saved === null || saved === JSON.stringify({ lat: 42.65, lon: -73.76 })).toBe(true)
   })
 
   test("Angel AI says when it is not configured and the search still works without it", async ({ page }) => {
