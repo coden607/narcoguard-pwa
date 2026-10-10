@@ -16,3 +16,5 @@ Target: one `factory:accepted` issue.
    titled with the outcome. Body: what changed and why, `Fixes #<N>`, and `## Assumptions` listing any product
    value you chose (§7.1). Labels: `factory:built`, plus `factory:assumption` if you listed any.
 7. Never read `.factory/holdout/`. The hidden scenarios run in CI; you get only a count.
+
+8. Keep context small: read the issue, then only the files it names or `rg` finds. PR body under 150 words.
