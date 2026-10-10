@@ -202,8 +202,9 @@ test.describe("PWA production flow", () => {
       }
     })
 
-    expect(registration.scope).toBe("http://localhost:3000/")
-    expect(registration.scriptURL).toBe("http://localhost:3000/sw.js")
+    const origin = new URL(page.url()).origin
+    expect(registration.scope).toBe(`${origin}/`)
+    expect(registration.scriptURL).toBe(`${origin}/sw.js`)
   })
 
   test("serves the offline fallback after installation", async ({ page, context }) => {
