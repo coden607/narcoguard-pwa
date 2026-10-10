@@ -2,7 +2,7 @@
 
 **Status: FOUNDING DRAFT — NOT YET RATIFIED**
 
-**Version:** 0.2 draft
+**Version:** 0.3 draft (proposed; awaiting human review)
 
 **Publication date:** October 1, 2026
 **Source:** The approved community governance design of September 18, 2026, revised through public draft review. This document remains a proposal: it does not itself create legal rights, an incorporated entity, or binding governance powers. Proposed commitments below are not currently enforceable.
@@ -21,6 +21,10 @@ Individual dignity, lawful freedom, autonomy, privacy, meaningful consent, equal
 
 The following rights floor is proposed as non-waivable: ordinary assistance, including food, hygiene, housing navigation and emergency guidance, must never depend on participation, tracking, a risk score, or disclosure of protected data. A person may refuse or revoke location and contact sharing, pause or delete optional tracking, inspect and correct personal information, and ask for an independent human appeal. No automated score or prediction may by itself deny assistance, impose a penalty, or contact another person. A person facing an adverse decision should receive notice, access to the evidence used, a meaningful chance to respond, written reasons, and timely independent review. Retaliation for refusing tracking, raising a concern, or appealing is prohibited by this proposal.
 
+Basic needs come first in planning, never as a condition. Food, potable water, sanitation, shelter and immediate safety are offered before anything else a person is asked to consider, following Maslow's hierarchy as a planning aid. The order never ranks people, never withholds a higher goal because a basic need is unmet, and never makes help depend on sobriety, treatment, compliance or progress. A person may start anywhere.
+
+Help must reach people as they are. Services should work without an account, on low-cost phones, with poor or no connectivity for lifesaving steps, in plain language, and with accessible design for people with disabilities. Language access should expand as resources allow, starting with the languages most spoken by the people served.
+
 Participation never transfers ownership of an independent person's or organization's work or property to NarcoGuard. No contributor receives employment, equity, payment, production access or additional voting power merely by contributing an idea.
 
 ## 2. Person-led support and data
@@ -28,6 +32,8 @@ Participation never transfers ownership of an independent person's or organizati
 People decide their goals, which needs to track, and whether to use guidance, location, contacts or wearable services. Consent must be understandable, specific and revocable. A refusal or pause must not remove access to ordinary assistance. People must have a practical way to inspect, correct and remove their data, subject to applicable law and narrowly necessary safety records.
 
 Consent for location, wearable data, support contacts, reminders and any future sharing must be separate, optional, purpose-specific and easy to revoke. Loved-one or other third-party alerts require explicit permission for each recipient and trigger, a preview of what will be shared, and a visible way to stop future alerts. No person should be required to disclose a recovery history to receive a community resource referral.
+
+Data should be collected only when it serves the person, kept on the person's own device by default, and stored on servers only for a stated purpose, for a stated time, with access limited to people who need it. When a person's words are processed by an outside service, such as an AI model, the person should be told in plain language which service it is and what is known about how it keeps or uses data, before they share anything. If those terms are unknown, that must be said. A data breach affecting people should be disclosed to them promptly.
 
 Protected personal and health data may not be sold or exchanged for governance influence. A person is never reduced to a risk score. Predictions must disclose their evidence, uncertainty and limits; a model with inadequate evidence abstains. Clinical claims require appropriate validation. Emergency and health information must not be exposed through public governance.
 
@@ -41,23 +47,36 @@ Decision-makers must disclose material conflicts in a public register that omits
 
 Money can support the mission but cannot buy sovereignty or more constitutional votes. Material conflicts of interest must be disclosed without exposing private user information. Major administrative steps should periodically justify the risks they control and be simplified or retired when no longer needed.
 
-## 4. AI and scientific integrity
+## 4. Volunteer responders
+
+Volunteer responders (the Hero Network) act by choice. Anyone may decline a request without penalty, and their safety comes first: no responder should enter a dangerous scene. Responders must complete current training and certification, and agree in writing that while they are marked on duty they carry naloxone and remain reachable for the on-call period they chose. They call or confirm 911 first, follow the dispatcher, and never present themselves as clinicians unless licensed.
+
+A person asking for a responder shares their location only for that request, only after agreeing in plain words to what is shared, with whom and for how long. That consent is separate from every other service, can be withdrawn at any time, and is never required for 911 guidance, naloxone steps, Angel or resource search. Shared locations are approximate, time-limited and deleted when the request ends. Responders' own locations and identities are protected in the same way.
+
+Responder agreements and consent forms are versioned, reviewed by qualified legal counsel before people rely on them, and publicly readable. The service starts in a limited pilot area and expands only after published review of how requests and responses actually went.
+
+## 5. AI and scientific integrity
 
 AI may help people and institutions understand options, but may not vote, govern, amend this document, grant itself authority, remove human oversight or certify its own consequential actions. An AI agent may not propose, approve, deploy and audit a consequential change as one unchecked chain.
 
 Evidence informs policy; scientific facts are not created by a vote. Evidence review records contrary evidence and uncertainty. NarcoGuard remains open to the possibility that its own policies or technology are wrong and must leave people a way to challenge and correct them.
 
-## 5. Participation and amendment
+## 6. Participation and amendment
 
 The public may support or object to this draft, suggest changes, submit evidence, identify harm and raise a constitutional challenge. The first process is advisory: a submission does not edit this document or control emergency functions. Substantive proposals should receive durable identifiers, history, objections, rights analysis, conflicts, decisions and later outcome review. Sensitive challenges must have a private submission path; no one should have to publish health, location or contact details to seek review.
 
 A later ratification process must define eligibility, identity, election security, privacy, accessibility, human appeals and anti-capture controls before binding votes begin. Before ratification, proposed binding institutions and procedures require public notice and a cooling-off period, an accessible and private vote of affected people, independent rights review, published conflicts and evidence, and an auditable repository review. Any amendment affecting the rights floor requires both affected-person approval and independent rights review. A vote cannot authorize a rights violation or remove the rights floor. The exact quorum and approval threshold must be set publicly before the vote, not changed during it; dissenting views and the final version must be preserved. Details remain subject to the founding convention and lawful organizational structure.
 
-## 6. Emergency safety and legal status
+## 7. Emergency safety and legal status
 
 No office, majority, funder, or AI may create its own emergency authority. Any future emergency action must rely on authority defined in advance, be necessary and least restrictive, narrowly scoped, recorded with written reasons, and expire automatically at a pre-set time. Emergency action may never suspend the rights floor. An independent reviewer must review the action within 72 hours, with a way for affected people to challenge it. Governance failure must not disable emergency functionality. Governance code is isolated from lifesaving paths unless a separately reviewed change explicitly requires interaction. This draft does not claim that NarcoGuard can detect, treat or prevent every overdose.
 
 This is a proposed civic and product framework, not a clinical certification, charitable trust, legal entity structure, or enforceable mission lock. Appropriate legal and clinical review is required before those claims could be made.
+
+## Revision history
+
+- 0.2 draft (October 1, 2026): public draft review revision.
+- 0.3 draft (proposed October 9, 2026): basic needs first without conditions; access without accounts, offline lifesaving steps, accessibility and language access; data minimisation with on-device defaults, plain-language disclosure of outside AI services, and breach notice; a new section on volunteer responders (duties, protections, request-only location consent, pilot-first expansion). Drafted with AI assistance at the founder's request; requires human review, rights analysis and approval before it replaces 0.2. It changes no existing protection and narrows none.
 
 ## Founding question
 
