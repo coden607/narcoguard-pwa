@@ -424,6 +424,28 @@ test.describe("PWA production flow", () => {
     expect(requested).toEqual(["?zip=12207"])
   })
 
+  test("a ZIP that cannot be located or a directory outage still shows a visible Call 211 link", async ({ page }) => {
+    let outage = false
+    await page.route("**/api/resources/needs**", (route) => outage
+      ? route.abort()
+      : route.fulfill({ status: 502, json: { status: "unavailable", message: "The ZIP code could not be looked up right now. Use the directories below.", kinds: {} } }))
+    await page.goto("/help")
+    const search = page.getByTestId("needs-finder")
+    await search.getByLabel("ZIP code").fill("00000")
+    await search.getByRole("button", { name: "Search" }).click()
+    await expect(search.getByText("The ZIP code could not be looked up right now.")).toBeVisible()
+    await expect(search.getByTestId("call-211-unavailable")).toBeVisible()
+    await expect(search.getByTestId("call-211-unavailable")).toHaveAttribute("href", "tel:211")
+
+    outage = true
+    await search.getByRole("button", { name: "Search" }).click()
+    await expect(search.getByText("Could not reach the directories.")).toBeVisible()
+    await expect(search.getByTestId("call-211-unavailable")).toBeVisible()
+    await expect(search.getByTestId("call-211-unavailable")).toHaveAttribute("href", "tel:211")
+    await expect(search.getByRole("link", { name: "911" })).toHaveAttribute("href", "tel:911")
+    await expect(search.getByRole("link", { name: "988" })).toHaveAttribute("href", "tel:988")
+  })
+
   test("stated needs are matched on the device and listed first in Maslow order, with everything else still shown", async ({ page }) => {
     let aiBody: unknown
     await page.route("**/api/resources/understand", async (route) => {

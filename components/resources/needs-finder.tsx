@@ -252,6 +252,11 @@ export function NeedsFinder() {
       {data && !busy && (
         <div className="space-y-5" aria-live="polite">
           {data.message && <p className="text-sm">{data.message}</p>}
+          {data.status === "unavailable" && (
+            <a href="tel:211" className="inline-flex min-h-11 items-center rounded-lg border border-primary/50 px-4 font-semibold text-primary hover:bg-primary/10" data-testid="call-211-unavailable">
+              Call 211 to find help near you
+            </a>
+          )}
           {stated.length > 0 && (
             <section className="space-y-2 rounded-lg border-2 border-primary/60 p-3" aria-labelledby="level-yours" data-testid="your-needs">
               <h3 id="level-yours" className="font-semibold">Your needs first</h3>
