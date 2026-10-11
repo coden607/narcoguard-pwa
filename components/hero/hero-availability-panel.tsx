@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { HERO_RESOURCE_KINDS, HERO_RESOURCE_LABELS, type HeroResourceKind } from "@/lib/hero-alerts"
 
-type HeroRequest = { id: string; kind: "emergency" | "resource"; resourceKind: HeroResourceKind | null; text: string }
+type HeroRequest = { id: string; kind: "emergency" | "resource"; resourceKind: HeroResourceKind | null; text: string; meetingNote?: string | null; location?: { lat: number; lon: number } | null }
 type HeroStatus = {
   live?: boolean
   reason?: string
@@ -156,7 +156,14 @@ export function HeroAvailabilityPanel() {
           <h3 className="font-semibold">Accepted by me</h3>
           {(status.accepted ?? []).map((request) => <article key={request.id} className="border rounded p-3 space-y-2">
             <p className="text-sm">{request.text}</p>
-            <p className="text-xs text-muted-foreground">NarcoGuard does not automatically reveal the requester&apos;s identity or exact location. For an emergency, keep 911 involved.</p>
+            {request.meetingNote && <p className="text-sm"><strong>Meeting point:</strong> {request.meetingNote}</p>}
+            {request.location && <a
+              className="inline-block underline text-primary text-sm"
+              href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(request.location.lat + "," + request.location.lon)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >Open requester-shared location ↗</a>}
+            <p className="text-xs text-muted-foreground">Only this accepted Hero receives an exact location when the requester explicitly opted in. For an emergency, keep 911 involved and follow EMS instructions.</p>
             <Button size="sm" variant="outline" onClick={() => void action({ action: "complete", requestId: request.id })} disabled={busy}>Mark completed</Button>
           </article>)}
         </div>}
