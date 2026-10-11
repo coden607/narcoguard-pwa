@@ -3,8 +3,18 @@
 import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { HERO_RESOURCE_KINDS, HERO_RESOURCE_LABELS, type HeroResourceKind } from "@/lib/hero-alerts"
+import type { HeroRequestStatus } from "@/lib/hero-lifecycle"
 
-type HeroRequest = { id: string; kind: "emergency" | "resource"; resourceKind: HeroResourceKind | null; text: string; meetingNote?: string | null; location?: { lat: number; lon: number } | null }
+type HeroRequest = {
+  id: string
+  kind: "emergency" | "resource"
+  resourceKind: HeroResourceKind | null
+  text: string
+  status?: HeroRequestStatus
+  meetingNote?: string | null
+  location?: { lat: number; lon: number } | null
+}
+
 type HeroStatus = {
   live?: boolean
   reason?: string
@@ -26,6 +36,19 @@ const locationOnce = () => new Promise<GeolocationPosition>((resolve, reject) =>
   navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: false, timeout: 10_000, maximumAge: 120_000 })
 })
 
+const base64UrlToBytes = (value: string) => {
+  const padding = "=".repeat((4 - value.length % 4) % 4)
+  const base64 = (value + padding).replace(/-/g, "+").replace(/_/g, "/")
+  const raw = atob(base64)
+  return Uint8Array.from(raw, (char) => char.charCodeAt(0))
+}
+
+const lifecycleLabel = (status?: HeroRequestStatus) => {
+  if (status === "en_route") return "On the way"
+  if (status === "arrived") return "Arrived"
+  return "Accepted"
+}
+
 export function HeroAvailabilityPanel() {
   const [status, setStatus] = useState<HeroStatus>({})
   const [resources, setResources] = useState<HeroResourceKind[]>([])
@@ -34,6 +57,8 @@ export function HeroAvailabilityPanel() {
   const [hours, setHours] = useState(2)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState("")
+  const [pushSupported, setPushSupported] = useState(false)
+  const [pushEnabled, setPushEnabled] = useState(false)
 
   const refresh = useCallback(async () => {
     try {
@@ -48,11 +73,26 @@ export function HeroAvailabilityPanel() {
     }
   }, [])
 
+  const refreshPushState = useCallback(async () => {
+    const supported = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window
+    setPushSupported(supported)
+    if (!supported) return
+    try {
+      const registration = await navigator.serviceWorker.ready
+      setPushEnabled(Boolean(await registration.pushManager.getSubscription()))
+    } catch {
+      setPushEnabled(false)
+    }
+  }, [])
+
   useEffect(() => {
-    const first = window.setTimeout(() => void refresh(), 0)
+    const first = window.setTimeout(() => {
+      void refresh()
+      void refreshPushState()
+    }, 0)
     const timer = window.setInterval(() => void refresh(), 15_000)
     return () => { window.clearTimeout(first); window.clearInterval(timer) }
-  }, [refresh])
+  }, [refresh, refreshPushState])
 
   const action = async (payload: Record<string, unknown>) => {
     setBusy(true)
@@ -63,8 +103,8 @@ export function HeroAvailabilityPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       })
-      const body = await response.json() as { error?: string; note?: string }
-      setNote(body.error ?? body.note ?? "Updated.")
+      const body = await response.json() as { error?: string; note?: string; status?: string }
+      setNote(body.error ?? body.note ?? (body.status ? `Request updated: ${body.status.replace("_", " ")}.` : "Updated."))
       await refresh()
     } catch {
       setNote("Hero Network could not be reached.")
@@ -91,6 +131,61 @@ export function HeroAvailabilityPanel() {
     } catch {
       setBusy(false)
       setNote("Location permission is required to appear in a nearby Hero area.")
+    }
+  }
+
+  const enablePush = async () => {
+    setBusy(true)
+    setNote("")
+    try {
+      if (!pushSupported) throw new Error("This browser does not support Web Push.")
+      const configResponse = await fetch("/api/heroes/push", { cache: "no-store" })
+      const config = await configResponse.json() as { configured?: boolean; publicKey?: string | null; error?: string }
+      if (!configResponse.ok || !config.configured || !config.publicKey) throw new Error(config.error ?? "Hero notifications are not configured yet.")
+      const permission = await Notification.requestPermission()
+      if (permission !== "granted") throw new Error("Notification permission was not granted.")
+
+      const registration = await navigator.serviceWorker.ready
+      const existing = await registration.pushManager.getSubscription()
+      const subscription = existing ?? await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: base64UrlToBytes(config.publicKey),
+      })
+      const response = await fetch("/api/heroes/push", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "subscribe", endpoint: subscription.endpoint }),
+      })
+      const body = await response.json() as { subscribed?: boolean; error?: string }
+      if (!response.ok || !body.subscribed) throw new Error(body.error ?? "Could not enable Hero notifications.")
+      setPushEnabled(true)
+      setNote("Request notifications enabled. Notifications are generic and do not reveal the requested resource on your lock screen.")
+    } catch (error) {
+      setNote(error instanceof Error ? error.message : "Could not enable Hero notifications.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const disablePush = async () => {
+    setBusy(true)
+    try {
+      const registration = await navigator.serviceWorker.ready
+      const subscription = await registration.pushManager.getSubscription()
+      if (subscription) {
+        await fetch("/api/heroes/push", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "unsubscribe", endpoint: subscription.endpoint }),
+        })
+        await subscription.unsubscribe()
+      }
+      setPushEnabled(false)
+      setNote("Hero request notifications disabled.")
+    } catch {
+      setNote("Could not disable notifications.")
+    } finally {
+      setBusy(false)
     }
   }
 
@@ -141,6 +236,14 @@ export function HeroAvailabilityPanel() {
           {(status.available || status.paused) && <Button variant="destructive" onClick={() => void action({ action: "leave" })} disabled={busy}>End availability</Button>}
         </div>
 
+        {pushSupported && <div className="rounded border p-3 space-y-2">
+          <p className="text-sm font-medium">Request notifications</p>
+          <p className="text-xs text-muted-foreground">Optional Web Push can alert you when the app is not open. The lock-screen message is generic and does not disclose what the person requested.</p>
+          {pushEnabled
+            ? <Button size="sm" variant="outline" onClick={() => void disablePush()} disabled={busy}>Disable notifications</Button>
+            : <Button size="sm" variant="outline" onClick={() => void enablePush()} disabled={busy}>Enable request notifications</Button>}
+        </div>}
+
         {status.availableUntil && <p className="text-xs text-muted-foreground">Availability ends {new Date(status.availableUntil).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} or earlier if you pause/end it.</p>}
 
         <div className="space-y-3">
@@ -153,8 +256,9 @@ export function HeroAvailabilityPanel() {
         </div>
 
         {(status.accepted ?? []).length > 0 && <div className="space-y-3">
-          <h3 className="font-semibold">Accepted by me</h3>
+          <h3 className="font-semibold">My active responses</h3>
           {(status.accepted ?? []).map((request) => <article key={request.id} className="border rounded p-3 space-y-2">
+            <p className="text-sm"><strong>{lifecycleLabel(request.status)}</strong></p>
             <p className="text-sm">{request.text}</p>
             {request.meetingNote && <p className="text-sm"><strong>Meeting point:</strong> {request.meetingNote}</p>}
             {request.location && <a
@@ -163,8 +267,13 @@ export function HeroAvailabilityPanel() {
               target="_blank"
               rel="noopener noreferrer"
             >Open requester-shared location ↗</a>}
-            <p className="text-xs text-muted-foreground">Only this accepted Hero receives an exact location when the requester explicitly opted in. For an emergency, keep 911 involved and follow EMS instructions.</p>
-            <Button size="sm" variant="outline" onClick={() => void action({ action: "complete", requestId: request.id })} disabled={busy}>Mark completed</Button>
+            <p className="text-xs text-muted-foreground">Only the accepted Hero receives an exact location when the requester explicitly opted in. For an emergency, keep 911 involved and follow EMS instructions.</p>
+            <div className="flex flex-wrap gap-2">
+              {request.status === "accepted" && <Button size="sm" onClick={() => void action({ action: "en-route", requestId: request.id })} disabled={busy}>I&apos;m on my way</Button>}
+              {request.status === "en_route" && <Button size="sm" onClick={() => void action({ action: "arrive", requestId: request.id })} disabled={busy}>I&apos;ve arrived</Button>}
+              {request.status === "arrived" && <Button size="sm" onClick={() => void action({ action: "complete", requestId: request.id })} disabled={busy}>Mark completed</Button>}
+              {(request.status === "accepted" || request.status === "en_route") && <Button size="sm" variant="outline" onClick={() => void action({ action: "release", requestId: request.id })} disabled={busy}>Can&apos;t respond — release</Button>}
+            </div>
           </article>)}
         </div>}
       </>}

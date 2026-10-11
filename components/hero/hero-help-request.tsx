@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { HERO_RESOURCE_KINDS, HERO_RESOURCE_LABELS, type HeroResourceKind } from "@/lib/hero-alerts"
+import { requesterStatusText, type HeroRequestStatus } from "@/lib/hero-lifecycle"
 
 type TrackedRequest = { id: string; token: string; kind: "emergency" | "resource"; resourceKind?: HeroResourceKind }
 
@@ -20,7 +21,7 @@ export function HeroHelpRequest() {
   const [shareExact, setShareExact] = useState(false)
   const [meetingNote, setMeetingNote] = useState("")
   const [tracked, setTracked] = useState<TrackedRequest | null>(null)
-  const [requestStatus, setRequestStatus] = useState("")
+  const [requestStatus, setRequestStatus] = useState<HeroRequestStatus | "expired" | "">("")
   const [note, setNote] = useState("")
   const [busy, setBusy] = useState(false)
 
@@ -39,7 +40,7 @@ export function HeroHelpRequest() {
     const check = async () => {
       try {
         const response = await fetch(`/api/heroes/alerts?requestId=${encodeURIComponent(tracked.id)}&token=${encodeURIComponent(tracked.token)}`, { cache: "no-store" })
-        const body = await response.json() as { request?: { status?: string; accepted?: boolean; completed?: boolean } }
+        const body = await response.json() as { request?: { status?: HeroRequestStatus | "expired"; accepted?: boolean; completed?: boolean } }
         if (body.request?.status) setRequestStatus(body.request.status)
         if (body.request?.completed || body.request?.status === "cancelled" || body.request?.status === "expired") {
           window.clearInterval(timer)
@@ -109,7 +110,6 @@ export function HeroHelpRequest() {
       if (body.cancelled) {
         setRequestStatus("cancelled")
         setNote("Request cancelled.")
-        localStorage.removeItem(STORAGE_KEY)
       } else setNote(body.error ?? "Could not cancel the request.")
     } finally {
       setBusy(false)
@@ -125,12 +125,15 @@ export function HeroHelpRequest() {
 
   if (tracked) return <section className="rounded-xl border p-4 space-y-3" data-testid="hero-request-status">
     <h3 className="font-semibold">{tracked.kind === "emergency" ? "Emergency Hero request" : `${tracked.resourceKind ? HERO_RESOURCE_LABELS[tracked.resourceKind] : "Resource"} request`}</h3>
-    <p className="text-sm">Status: <strong>{requestStatus || "checking…"}</strong></p>
-    {requestStatus === "accepted" && <p className="text-sm">A matching Hero accepted the request. NarcoGuard still does not automatically share your identity or exact location. For emergencies, continue following 911.</p>}
-    {requestStatus === "completed" && <p className="text-sm">The Hero marked this request completed.</p>}
+    <p className="text-sm">Status: <strong>{requestStatus === "expired" ? "Expired" : requestStatus ? requesterStatusText(requestStatus) : "Checking…"}</strong></p>
     {requestStatus === "open" && <p className="text-sm text-muted-foreground">Nearby matching Heroes can see the request. A volunteer response is not guaranteed.</p>}
+    {requestStatus === "accepted" && <p className="text-sm">A matching Hero accepted the request. They have not marked themselves on the way yet.</p>}
+    {requestStatus === "en_route" && <p className="text-sm">The Hero marked themselves on the way. For emergencies, continue following 911 while waiting.</p>}
+    {requestStatus === "arrived" && <p className="text-sm">The Hero marked themselves arrived. Only use the agreed handoff/location and keep emergency services involved when applicable.</p>}
+    {requestStatus === "completed" && <p className="text-sm">The Hero marked this request completed.</p>}
+    {requestStatus === "expired" && <p className="text-sm">No Hero accepted before this request expired. Create a new request if you still need help.</p>}
     <div className="flex gap-2">
-      {requestStatus === "open" && <Button variant="outline" onClick={() => void cancel()} disabled={busy}>Cancel request</Button>}
+      {["open","accepted","en_route","arrived"].includes(requestStatus) && <Button variant="outline" onClick={() => void cancel()} disabled={busy}>Cancel request</Button>}
       {["completed","cancelled","expired"].includes(requestStatus) && <Button variant="outline" onClick={clear}>Clear</Button>}
     </div>
     {note && <p role="status" className="text-sm">{note}</p>}

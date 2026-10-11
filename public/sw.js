@@ -1,4 +1,4 @@
-const CACHE_NAME = "narcoguard-shell-v4";
+const CACHE_NAME = "narcoguard-shell-v5";
 const APP_SHELL = [
   "/",
   "/offline.html",
@@ -61,5 +61,35 @@ self.addEventListener("fetch", (event) => {
         if (isNavigation) return caches.match("/offline.html");
         return Response.error();
       })
+  );
+});
+
+
+self.addEventListener("push", (event) => {
+  event.waitUntil(
+    self.registration.showNotification("NarcoGuard Hero request", {
+      body: "A new nearby request may match your current Hero availability. Open NarcoGuard to review it.",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      tag: "narcoguard-hero-request",
+      renotify: true,
+      data: { url: "/hero-signup" },
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = event.notification.data?.url || "/hero-signup";
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clients) => {
+      for (const client of clients) {
+        if ("focus" in client) {
+          client.navigate(target).catch(() => undefined);
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(target);
+    })
   );
 });

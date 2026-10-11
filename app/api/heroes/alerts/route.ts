@@ -3,6 +3,9 @@ import { clientKey, isSameOrigin, json, readJson } from "@/lib/api-helpers"
 import {
   alertText,
   alertsStatus,
+  matchHeroes,
+  nearbyCells,
+  parseCellKey,
   prepareAvailability,
   prepareRequest,
   prepareResourceRequest,
@@ -12,6 +15,8 @@ import {
   type HeroResourceKind,
 } from "@/lib/hero-alerts"
 import { cleanMeetingNote, openHeroLocation, sealHeroLocation } from "@/lib/hero-location"
+import { heroCanRelease, type HeroRequestStatus } from "@/lib/hero-lifecycle"
+import { sendEmptyWebPush, vapidConfigured } from "@/lib/hero-push"
 import { getAuthContext, heroServerRest } from "@/lib/supabase-auth"
 
 export const dynamic = "force-dynamic"
@@ -44,9 +49,11 @@ type RequestRow = {
   expires_at: string
   kind?: "emergency" | "resource"
   resource_kind?: HeroResourceKind | null
-  status?: "open" | "accepted" | "completed" | "cancelled"
+  status?: HeroRequestStatus
   accepted_by?: string | null
   accepted_at?: string | null
+  en_route_at?: string | null
+  arrived_at?: string | null
   completed_at?: string | null
   request_token_hash?: string | null
   location_ciphertext?: string | null
@@ -92,10 +99,47 @@ async function cleanupOldRequests() {
   }).catch(() => null)
 }
 
+type PushSubscriptionRow = { id: string; auth_user_id: string; endpoint: string }
+
+async function notifyMatchingHeroes(request: HeroRequest) {
+  if (!vapidConfigured(process.env)) return
+  const origin = parseCellKey(request.cell)
+  if (!origin) return
+  const cells = nearbyCells(origin).map((cell) => `"${cell}"`).join(",")
+  const response = await heroServerRest(
+    `hero_availability?select=auth_user_id,cell,available_until,paused,emergency_ready,naloxone_on_call,resource_kinds&paused=eq.false&available_until=gt.${new Date().toISOString()}&cell=in.(${encodeURIComponent(cells)})`,
+  ).catch(() => null)
+  if (!response?.ok) return
+
+  const rows = (await response.json()) as AvailabilityRow[]
+  const candidates = matchHeroes(
+    request,
+    rows.map((row) => toHero(row, Date.parse(row.available_until))),
+  )
+  if (candidates.length === 0) return
+
+  const ids = candidates.map((hero) => `"${hero.heroId}"`).join(",")
+  const subscriptionsResponse = await heroServerRest(
+    `hero_push_subscriptions?select=id,auth_user_id,endpoint&enabled=eq.true&auth_user_id=in.(${encodeURIComponent(ids)})`,
+  ).catch(() => null)
+  if (!subscriptionsResponse?.ok) return
+  const subscriptions = (await subscriptionsResponse.json()) as PushSubscriptionRow[]
+
+  await Promise.allSettled(subscriptions.map(async (subscription) => {
+    const result = await sendEmptyWebPush(subscription.endpoint, process.env)
+    if (result.status === 404 || result.status === 410) {
+      await heroServerRest(
+        `hero_push_subscriptions?id=eq.${encodeURIComponent(subscription.id)}`,
+        { method: "DELETE", headers: { Prefer: "return=minimal" } },
+      ).catch(() => null)
+    }
+  }))
+}
+
 async function trackedRequest(requestId: string, token: string) {
   const hash = tokenHash(token)
   const response = await heroServerRest(
-    `hero_requests?select=id,status,expires_at,kind,resource_kind,accepted_at,completed_at&id=eq.${encodeURIComponent(requestId)}&request_token_hash=eq.${hash}`,
+    `hero_requests?select=id,status,expires_at,kind,resource_kind,accepted_at,en_route_at,arrived_at,completed_at&id=eq.${encodeURIComponent(requestId)}&request_token_hash=eq.${hash}`,
   ).catch(() => null)
   if (!response?.ok) return null
   const [row] = (await response.json()) as RequestRow[]
@@ -121,7 +165,7 @@ export async function GET(request: Request) {
         kind: row.kind ?? "emergency",
         resourceKind: row.resource_kind ?? null,
         status: expired ? "expired" : (row.status ?? "open"),
-        accepted: row.status === "accepted" || row.status === "completed",
+        accepted: ["accepted", "en_route", "arrived", "completed"].includes(row.status ?? ""),
         completed: row.status === "completed",
       },
     })
@@ -138,7 +182,7 @@ export async function GET(request: Request) {
   const [row] = mine.ok ? ((await mine.json()) as AvailabilityRow[]) : []
 
   const acceptedResponse = await heroServerRest(
-    `hero_requests?select=id,cell,created_at,expires_at,kind,resource_kind,status,accepted_by,accepted_at,completed_at,location_ciphertext,meeting_note&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=eq.accepted&expires_at=gt.${new Date().toISOString()}`,
+    `hero_requests?select=id,cell,created_at,expires_at,kind,resource_kind,status,accepted_by,accepted_at,en_route_at,arrived_at,completed_at,location_ciphertext,meeting_note&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=in.(accepted,en_route,arrived)&expires_at=gt.${new Date().toISOString()}`,
   ).catch(() => null)
   const acceptedRows = acceptedResponse?.ok ? ((await acceptedResponse.json()) as RequestRow[]) : []
 
@@ -154,6 +198,7 @@ export async function GET(request: Request) {
         kind: item.kind ?? "emergency",
         resourceKind: item.resource_kind ?? null,
         text: alertText(toRequest(item)),
+        status: item.status ?? "accepted",
         meetingNote: item.meeting_note ?? null,
         location: openHeroLocation(item.location_ciphertext, process.env.HERO_CERT_SECRET ?? ""),
       })),
@@ -187,6 +232,7 @@ export async function GET(request: Request) {
       kind: item.kind ?? "emergency",
       resourceKind: item.resource_kind ?? null,
       text: alertText(toRequest(item)),
+      status: item.status ?? "accepted",
       meetingNote: item.meeting_note ?? null,
       location: openHeroLocation(item.location_ciphertext, process.env.HERO_CERT_SECRET ?? ""),
     })),
@@ -239,6 +285,12 @@ export async function POST(request: Request) {
     }).catch(() => null)
     if (!saved?.ok) return json({ error: prepared.request.kind === "emergency" ? "The request could not be sent. Stay with 911." : "The resource request could not be posted." }, 503)
     const [row] = (await saved.json()) as RequestRow[]
+    if (row?.id) {
+      await notifyMatchingHeroes({
+        ...prepared.request,
+        id: row.id,
+      }).catch(() => undefined)
+    }
     return json({
       sent: true,
       requestId: row?.id,
@@ -336,19 +388,62 @@ export async function POST(request: Request) {
     return json({ accepted: true, requestId: body.requestId, note: "Accepted. No exact location or requester identity is shared automatically. Use safe, public handoff practices and call 911 for emergencies." })
   }
 
-  if (body.action === "complete") {
+  if (body.action === "en-route" || body.action === "arrive" || body.action === "complete" || body.action === "release") {
     if (typeof body.requestId !== "string") return json({ error: "Request ID is missing." }, 400)
+    const now = new Date().toISOString()
+
+    if (body.action === "release") {
+      const current = await heroServerRest(
+        `hero_requests?select=id,status&id=eq.${encodeURIComponent(body.requestId)}&accepted_by=eq.${encodeURIComponent(auth.user.id)}`,
+      ).catch(() => null)
+      const [row] = current?.ok ? ((await current.json()) as RequestRow[]) : []
+      if (!row || !row.status || !heroCanRelease(row.status)) return json({ error: "That request can no longer be released." }, 409)
+      const released = await heroServerRest(
+        `hero_requests?id=eq.${encodeURIComponent(body.requestId)}&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=eq.${row.status}`,
+        {
+          method: "PATCH",
+          headers: { Prefer: "return=representation" },
+          body: JSON.stringify({
+            status: "open",
+            accepted_by: null,
+            accepted_at: null,
+            en_route_at: null,
+            arrived_at: null,
+          }),
+        },
+      ).catch(() => null)
+      if (!released?.ok) return json({ error: "Could not release the request." }, 503)
+      const rows = (await released.json()) as RequestRow[]
+      if (rows.length !== 1) return json({ error: "That request changed before it could be released." }, 409)
+      const releasedRequest = toRequest(rows[0])
+      await notifyMatchingHeroes(releasedRequest).catch(() => undefined)
+      return json({ released: true, note: "Request released so another matching Hero can accept it." })
+    }
+
+    const expected = body.action === "en-route" ? "accepted" : body.action === "arrive" ? "en_route" : "arrived"
+    const nextStatus = body.action === "en-route" ? "en_route" : body.action === "arrive" ? "arrived" : "completed"
+    const patch: Record<string, unknown> = { status: nextStatus }
+    if (body.action === "en-route") patch.en_route_at = now
+    if (body.action === "arrive") patch.arrived_at = now
+    if (body.action === "complete") {
+      patch.completed_at = now
+      patch.location_ciphertext = null
+      patch.meeting_note = null
+    }
+
     const saved = await heroServerRest(
-      `hero_requests?id=eq.${encodeURIComponent(body.requestId)}&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=eq.accepted`,
+      `hero_requests?id=eq.${encodeURIComponent(body.requestId)}&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=eq.${expected}`,
       {
         method: "PATCH",
         headers: { Prefer: "return=representation" },
-        body: JSON.stringify({ status: "completed", completed_at: new Date().toISOString(), location_ciphertext: null, meeting_note: null }),
+        body: JSON.stringify(patch),
       },
     ).catch(() => null)
-    if (!saved?.ok) return json({ error: "Could not complete the request." }, 503)
+    if (!saved?.ok) return json({ error: "Could not update the request." }, 503)
     const rows = (await saved.json()) as RequestRow[]
-    return rows.length === 1 ? json({ completed: true }) : json({ error: "That request is not assigned to you." }, 403)
+    return rows.length === 1
+      ? json({ updated: true, status: nextStatus })
+      : json({ error: "That request is no longer in the expected state." }, 409)
   }
 
   if (body.action === "pause" || body.action === "leave") {
