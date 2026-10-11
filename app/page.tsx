@@ -127,8 +127,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <ParticleField count={100} />
-      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
+      <BrandBackdrop />
+      <ParticleField count={72} />
 
       <div className="relative z-10 container mx-auto px-4 py-6 space-y-6">
         {skippedSetup && (
@@ -190,9 +190,9 @@ export default function DashboardPage() {
               <Image
                 src="/images/narcoguard-icon-256.jpeg"
                 alt="Narcoguard"
-                width={64}
-                height={64}
-                className="w-full h-full rounded-full pulse-glow"
+                width={96}
+                height={96}
+                className="w-full h-full rounded-full pulse-glow drop-shadow-[0_0_32px_rgba(34,197,94,0.35)]"
               />
             </div>
             <div>
