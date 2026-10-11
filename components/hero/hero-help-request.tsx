@@ -17,6 +17,8 @@ export function HeroHelpRequest() {
   const [kind, setKind] = useState<HeroResourceKind>("naloxone")
   const [called911, setCalled911] = useState(false)
   const [emergency, setEmergency] = useState(false)
+  const [shareExact, setShareExact] = useState(false)
+  const [meetingNote, setMeetingNote] = useState("")
   const [tracked, setTracked] = useState<TrackedRequest | null>(null)
   const [requestStatus, setRequestStatus] = useState("")
   const [note, setNote] = useState("")
