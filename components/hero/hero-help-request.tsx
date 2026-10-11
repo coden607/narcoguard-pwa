@@ -62,11 +62,14 @@ export function HeroHelpRequest() {
           lat: position.coords.latitude,
           lon: position.coords.longitude,
           called911,
+          shareExact,
         } : {
           action: "resource-request",
           lat: position.coords.latitude,
           lon: position.coords.longitude,
           resourceKind: kind,
+          shareExact,
+          meetingNote: meetingNote.trim(),
         }),
       })
       const body = await response.json() as { sent?: boolean; requestId?: string; requestToken?: string; note?: string; error?: string }
@@ -151,7 +154,24 @@ export function HeroHelpRequest() {
       </select>
     </label>}
 
-    <Button onClick={() => void send()} disabled={busy || (emergency && !called911)}>
+    <label className="flex items-start gap-2 border rounded p-3">
+      <input type="checkbox" checked={shareExact} onChange={(event)=>setShareExact(event.target.checked)} />
+      <span><strong>Share my exact location only with the Hero who accepts.</strong> NarcoGuard encrypts it at rest and clears it when the request is completed or cancelled.</span>
+    </label>
+
+    {!emergency && !shareExact && <label className="block text-sm">Public meeting point or handoff note
+      <input
+        className="block mt-1 w-full border rounded p-2 bg-background"
+        maxLength={240}
+        value={meetingNote}
+        onChange={(event)=>setMeetingNote(event.target.value)}
+        placeholder="Example: library front entrance. Do not include private medical details."
+      />
+    </label>}
+
+    {emergency && !shareExact && <p className="text-xs text-amber-300">Emergency Hero dispatch needs your explicit permission to share the exact location with the Hero who accepts.</p>}
+
+    <Button onClick={() => void send()} disabled={busy || (emergency && (!called911 || !shareExact)) || (!emergency && !shareExact && !meetingNote.trim())}>
       {busy ? "Posting…" : emergency ? "Request nearby emergency Hero" : `Request ${HERO_RESOURCE_LABELS[kind]}`}
     </Button>
     <p className="text-xs text-muted-foreground">NarcoGuard cannot guarantee a Hero or resource is available. For immediate danger, call 911.</p>
