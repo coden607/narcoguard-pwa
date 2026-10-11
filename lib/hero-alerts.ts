@@ -1,3 +1,5 @@
+import type { HeroRequestStatus } from "@/lib/hero-lifecycle"
+
 // Live Hero/community-resource matching primitives.
 // Exact coordinates are converted immediately into a coarse ~5 km cell; exact location is never stored here.
 
@@ -84,7 +86,7 @@ export interface HeroRequest {
   kind: HeroRequestKind
   called911: boolean
   resourceKind?: HeroResourceKind
-  status?: "open" | "accepted" | "completed" | "cancelled"
+  status?: HeroRequestStatus
 }
 
 export type RequestCheck = { ok: true; request: Omit<HeroRequest, "id"> } | { ok: false; error: string }
