@@ -1,0 +1,23 @@
+{
+  "NG46": {
+    "result": "PASS under current envelope assumptions",
+    "board_diameter_mm": 39.9,
+    "case_thickness_mm": 13.8,
+    "component_envelopes_inside_board": true,
+    "pairwise_component_collisions": 0,
+    "core_stack_within_case": true
+  },
+  "NG40": {
+    "result": "PASS under current envelope assumptions",
+    "board_diameter_mm": 34.2,
+    "case_thickness_mm": 12.2,
+    "component_envelopes_inside_board": true,
+    "pairwise_component_collisions": 0,
+    "core_stack_within_case": true,
+    "corrective_changes": [
+      "Moved 12x12 mm SDX35/RF envelope inward to x=7.0 mm, y=4.5 mm.",
+      "Moved ST54K center to y=-11.3 mm to clear the Snapdragon envelope."
+    ]
+  },
+  "truth_boundary": "Mechanical-envelope checks only. Supplier STEP/IGES models, PCB routing, flex, fasteners, gaskets, battery swelling, antenna, thermal and tolerance data remain required."
+}
