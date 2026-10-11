@@ -49,9 +49,9 @@ export function HeroAvailabilityPanel() {
   }, [])
 
   useEffect(() => {
-    void refresh()
+    const first = window.setTimeout(() => void refresh(), 0)
     const timer = window.setInterval(() => void refresh(), 15_000)
-    return () => window.clearInterval(timer)
+    return () => { window.clearTimeout(first); window.clearInterval(timer) }
   }, [refresh])
 
   const action = async (payload: Record<string, unknown>) => {
