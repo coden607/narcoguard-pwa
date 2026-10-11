@@ -11,6 +11,7 @@ import {
   type HeroRequest,
   type HeroResourceKind,
 } from "@/lib/hero-alerts"
+import { cleanMeetingNote, openHeroLocation, sealHeroLocation } from "@/lib/hero-location"
 import { getAuthContext, serviceRest } from "@/lib/supabase-auth"
 
 export const dynamic = "force-dynamic"
@@ -81,6 +82,14 @@ async function enrolledCertificate(userId: string) {
   return row?.enrolled && expires > Date.now() ? expires : null
 }
 
+async function cleanupOldRequests() {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60_000).toISOString()
+  await serviceRest(`hero_requests?expires_at=lt.${cutoff}`, {
+    method: "DELETE",
+    headers: { Prefer: "return=minimal" },
+  }).catch(() => null)
+}
+
 async function trackedRequest(requestId: string, token: string) {
   const hash = tokenHash(token)
   const response = await serviceRest(
@@ -94,6 +103,7 @@ async function trackedRequest(requestId: string, token: string) {
 export async function GET(request: Request) {
   const status = alertsStatus(process.env)
   if (!status.live) return json(status)
+  await cleanupOldRequests()
 
   const url = new URL(request.url)
   const requestId = url.searchParams.get("requestId")
@@ -126,7 +136,7 @@ export async function GET(request: Request) {
   const [row] = mine.ok ? ((await mine.json()) as AvailabilityRow[]) : []
 
   const acceptedResponse = await serviceRest(
-    `hero_requests?select=id,cell,created_at,expires_at,kind,resource_kind,status,accepted_by,accepted_at,completed_at&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=eq.accepted&expires_at=gt.${new Date().toISOString()}`,
+    `hero_requests?select=id,cell,created_at,expires_at,kind,resource_kind,status,accepted_by,accepted_at,completed_at,location_ciphertext,meeting_note&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=eq.accepted&expires_at=gt.${new Date().toISOString()}`,
   ).catch(() => null)
   const acceptedRows = acceptedResponse?.ok ? ((await acceptedResponse.json()) as RequestRow[]) : []
 
@@ -137,7 +147,14 @@ export async function GET(request: Request) {
       enrolled: true,
       available: false,
       requests: [],
-      accepted: acceptedRows.map((item) => ({ id: item.id, kind: item.kind ?? "emergency", resourceKind: item.resource_kind ?? null, text: alertText(toRequest(item)) })),
+      accepted: acceptedRows.map((item) => ({
+        id: item.id,
+        kind: item.kind ?? "emergency",
+        resourceKind: item.resource_kind ?? null,
+        text: alertText(toRequest(item)),
+        meetingNote: item.meeting_note ?? null,
+        location: openHeroLocation(item.location_ciphertext, process.env.HERO_CERT_SECRET ?? ""),
+      })),
     })
   }
 
@@ -168,6 +185,8 @@ export async function GET(request: Request) {
       kind: item.kind ?? "emergency",
       resourceKind: item.resource_kind ?? null,
       text: alertText(toRequest(item)),
+      meetingNote: item.meeting_note ?? null,
+      location: openHeroLocation(item.location_ciphertext, process.env.HERO_CERT_SECRET ?? ""),
     })),
   })
 }
@@ -176,6 +195,7 @@ export async function POST(request: Request) {
   if (!isSameOrigin(request)) return json({ error: "Cross-origin request rejected" }, 403)
   const status = alertsStatus(process.env)
   if (!status.live) return json({ error: status.reason, live: false }, 503)
+  await cleanupOldRequests()
   const body = await readJson(request)
   if (!body) return json({ error: "Invalid request" }, 400)
 
@@ -185,6 +205,19 @@ export async function POST(request: Request) {
       ? prepareRequest({ lat: body.lat, lon: body.lon, called911: body.called911 })
       : prepareResourceRequest({ lat: body.lat, lon: body.lon, resourceKind: body.resourceKind })
     if (!prepared.ok) return json({ error: prepared.error }, 400)
+
+    const shareExact = body.shareExact === true
+    const meetingNote = cleanMeetingNote(body.meetingNote)
+    if (prepared.request.kind === "emergency" && !shareExact) {
+      return json({ error: "To dispatch a volunteer to an emergency, explicitly allow the accepted Hero to receive your exact location. 911 remains primary." }, 400)
+    }
+    if (prepared.request.kind === "resource" && !shareExact && !meetingNote) {
+      return json({ error: "Choose exact-location sharing with the accepted Hero or enter a short public meeting-point note." }, 400)
+    }
+    const locationCiphertext = shareExact && typeof body.lat === "number" && typeof body.lon === "number"
+      ? sealHeroLocation({ lat: body.lat, lon: body.lon }, process.env.HERO_CERT_SECRET ?? "")
+      : null
+    if (shareExact && !locationCiphertext) return json({ error: "Could not protect the location handoff." }, 503)
 
     const requestToken = newRequestToken()
     const saved = await serviceRest("hero_requests", {
@@ -198,6 +231,8 @@ export async function POST(request: Request) {
         resource_kind: prepared.request.resourceKind ?? null,
         status: "open",
         request_token_hash: tokenHash(requestToken),
+        location_ciphertext: locationCiphertext,
+        meeting_note: meetingNote,
       }),
     }).catch(() => null)
     if (!saved?.ok) return json({ error: prepared.request.kind === "emergency" ? "The request could not be sent. Stay with 911." : "The resource request could not be posted." }, 503)
@@ -220,7 +255,7 @@ export async function POST(request: Request) {
     if (row.status === "completed") return json({ error: "A completed request cannot be cancelled." }, 409)
     const saved = await serviceRest(
       `hero_requests?id=eq.${encodeURIComponent(body.requestId)}&request_token_hash=eq.${tokenHash(body.requestToken)}`,
-      { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ status: "cancelled" }) },
+      { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ status: "cancelled", location_ciphertext: null, meeting_note: null }) },
     ).catch(() => null)
     return saved?.ok ? json({ cancelled: true }) : json({ error: "Could not cancel the request." }, 503)
   }
@@ -306,7 +341,7 @@ export async function POST(request: Request) {
       {
         method: "PATCH",
         headers: { Prefer: "return=representation" },
-        body: JSON.stringify({ status: "completed", completed_at: new Date().toISOString() }),
+        body: JSON.stringify({ status: "completed", completed_at: new Date().toISOString(), location_ciphertext: null, meeting_note: null }),
       },
     ).catch(() => null)
     if (!saved?.ok) return json({ error: "Could not complete the request." }, 503)
