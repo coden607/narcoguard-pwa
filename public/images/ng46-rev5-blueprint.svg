@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="t d">
+<title id="t">NarcoGuard NG46 Rev 5 blueprint</title><desc id="d">Concept engineering blueprint showing front, side, back and internal layout for the 46 millimeter rugged edition.</desc>
+<rect width="1200" height="800" fill="#061018"/><g stroke="#38f2b1" fill="none" stroke-width="2">
+<circle cx="250" cy="260" r="184"/><circle cx="250" cy="260" r="147"/><circle cx="250" cy="260" r="60"/><rect x="66" y="245" width="368" height="30" rx="8"/>
+<line x1="66" y1="50" x2="434" y2="50"/><line x1="66" y1="40" x2="66" y2="60"/><line x1="434" y1="40" x2="434" y2="60"/>
+<rect x="570" y="190" width="368" height="110" rx="36"/><rect x="930" y="215" width="60" height="60" rx="14"/>
+<circle cx="750" cy="565" r="175"/><circle cx="750" cy="565" r="120"/><circle cx="750" cy="565" r="48"/>
+<rect x="684" y="499" width="132" height="132" rx="8"/><rect x="800" y="530" width="84" height="72" rx="6"/><rect x="625" y="505" width="58" height="58" rx="5"/>
+<path d="M635 565 A115 115 0 0 1 865 565" stroke-dasharray="10 8"/>
+</g>
+<g fill="#d7fff2" font-family="monospace"><text x="40" y="28" font-size="26" font-weight="bold">NARCOGUARD NG46 — REV 5 BLUEPRINT</text>
+<text x="170" y="45" font-size="18">46.0 mm</text><text x="575" y="170" font-size="18">SIDE — 13.8 mm target thickness</text>
+<text x="88" y="480" font-size="18">FRONT</text><text x="680" y="775" font-size="18">BACK / INTERNAL PLAN</text>
+<text x="575" y="330" font-size="16">22 mm strap • 1.45 in AMOLED • 500 mAh</text>
+<text x="575" y="355" font-size="16">W5+ Gen 2 + nRF5340 safety MCU</text>
+<text x="575" y="380" font-size="16">SDX35 5G RedCap + ST4SIM eSIM</text>
+<text x="575" y="405" font-size="16">MAX86178 PPG / ECG / BioZ sensor stack</text>
+<text x="575" y="430" font-size="16">Qi primary charging • emergency reserve</text>
+<text x="575" y="455" font-size="16">solar ring • TEG • crown generator • rotor (research)</text>
+<text x="575" y="480" font-size="16">camera + mechanical privacy shutter (research)</text>
+<text x="828" y="495" font-size="14">RF zone</text><text x="685" y="492" font-size="14">SoC</text><text x="608" y="492" font-size="14">MCU</text>
+<text x="705" y="570" font-size="14">12 mm optical window</text><text x="638" y="690" font-size="14">annular rotor envelope</text>
+<text x="40" y="760" font-size="13" fill="#9adcc7">CONCEPT ONLY — supplier CAD, routed PCB, tolerances, antenna and thermal validation still required.</text></g>
+</svg>
