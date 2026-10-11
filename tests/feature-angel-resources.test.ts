@@ -170,7 +170,11 @@ test("on a gateway free tier, Angel answers with the open model instead of switc
   const { POST } = await import("../app/api/angel/route")
   const realFetch = globalThis.fetch
   const saved = process.env.GROQ_API_KEY
+  const savedKimi = process.env.KIMI_API_KEY
+  const savedMoonshot = process.env.MOONSHOT_API_KEY
   delete process.env.GROQ_API_KEY
+  delete process.env.KIMI_API_KEY
+  delete process.env.MOONSHOT_API_KEY
   const models: string[] = []
   globalThis.fetch = (async (_input: string | URL, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body))
@@ -188,5 +192,9 @@ test("on a gateway free tier, Angel answers with the open model instead of switc
   } finally {
     globalThis.fetch = realFetch
     if (saved !== undefined) process.env.GROQ_API_KEY = saved
+    if (savedKimi !== undefined) process.env.KIMI_API_KEY = savedKimi
+    else delete process.env.KIMI_API_KEY
+    if (savedMoonshot !== undefined) process.env.MOONSHOT_API_KEY = savedMoonshot
+    else delete process.env.MOONSHOT_API_KEY
   }
 })
