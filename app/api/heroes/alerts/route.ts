@@ -12,7 +12,7 @@ import {
   type HeroResourceKind,
 } from "@/lib/hero-alerts"
 import { cleanMeetingNote, openHeroLocation, sealHeroLocation } from "@/lib/hero-location"
-import { getAuthContext, serviceRest } from "@/lib/supabase-auth"
+import { getAuthContext, heroServerRest } from "@/lib/supabase-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -77,7 +77,7 @@ const toRequest = (row: RequestRow): HeroRequest => ({
 })
 
 async function enrolledCertificate(userId: string) {
-  const response = await serviceRest(`hero_certifications?select=expires_at,enrolled&auth_user_id=eq.${encodeURIComponent(userId)}`)
+  const response = await heroServerRest(`hero_certifications?select=expires_at,enrolled&auth_user_id=eq.${encodeURIComponent(userId)}`)
   if (!response.ok) return null
   const [row] = (await response.json()) as CertificationRow[]
   const expires = row ? Date.parse(row.expires_at) : 0
@@ -86,7 +86,7 @@ async function enrolledCertificate(userId: string) {
 
 async function cleanupOldRequests() {
   const cutoff = new Date(Date.now() - 24 * 60 * 60_000).toISOString()
-  await serviceRest(`hero_requests?expires_at=lt.${cutoff}`, {
+  await heroServerRest(`hero_requests?expires_at=lt.${cutoff}`, {
     method: "DELETE",
     headers: { Prefer: "return=minimal" },
   }).catch(() => null)
@@ -94,7 +94,7 @@ async function cleanupOldRequests() {
 
 async function trackedRequest(requestId: string, token: string) {
   const hash = tokenHash(token)
-  const response = await serviceRest(
+  const response = await heroServerRest(
     `hero_requests?select=id,status,expires_at,kind,resource_kind,accepted_at,completed_at&id=eq.${encodeURIComponent(requestId)}&request_token_hash=eq.${hash}`,
   ).catch(() => null)
   if (!response?.ok) return null
@@ -132,12 +132,12 @@ export async function GET(request: Request) {
   const certificate = await enrolledCertificate(auth.user.id)
   if (!certificate) return json({ ...status, authenticated: true, enrolled: false, requests: [], note: "Only enrolled Heroes with a current certificate see requests." })
 
-  const mine = await serviceRest(
+  const mine = await heroServerRest(
     `hero_availability?select=auth_user_id,cell,available_until,paused,emergency_ready,naloxone_on_call,resource_kinds&auth_user_id=eq.${encodeURIComponent(auth.user.id)}`,
   )
   const [row] = mine.ok ? ((await mine.json()) as AvailabilityRow[]) : []
 
-  const acceptedResponse = await serviceRest(
+  const acceptedResponse = await heroServerRest(
     `hero_requests?select=id,cell,created_at,expires_at,kind,resource_kind,status,accepted_by,accepted_at,completed_at,location_ciphertext,meeting_note&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=eq.accepted&expires_at=gt.${new Date().toISOString()}`,
   ).catch(() => null)
   const acceptedRows = acceptedResponse?.ok ? ((await acceptedResponse.json()) as RequestRow[]) : []
@@ -161,7 +161,7 @@ export async function GET(request: Request) {
   }
 
   const hero = toHero(row, certificate)
-  const open = await serviceRest(
+  const open = await heroServerRest(
     `hero_requests?select=id,cell,created_at,expires_at,kind,resource_kind,status&status=eq.open&expires_at=gt.${new Date().toISOString()}`,
   )
   const requests = open.ok ? ((await open.json()) as RequestRow[]).map(toRequest) : []
@@ -222,7 +222,7 @@ export async function POST(request: Request) {
     if (shareExact && !locationCiphertext) return json({ error: "Could not protect the location handoff." }, 503)
 
     const requestToken = newRequestToken()
-    const saved = await serviceRest("hero_requests", {
+    const saved = await heroServerRest("hero_requests", {
       method: "POST",
       headers: { Prefer: "return=representation" },
       body: JSON.stringify({
@@ -255,7 +255,7 @@ export async function POST(request: Request) {
     const row = await trackedRequest(body.requestId, body.requestToken)
     if (!row) return json({ error: "Request not found." }, 404)
     if (row.status === "completed") return json({ error: "A completed request cannot be cancelled." }, 409)
-    const saved = await serviceRest(
+    const saved = await heroServerRest(
       `hero_requests?id=eq.${encodeURIComponent(body.requestId)}&request_token_hash=eq.${tokenHash(body.requestToken)}`,
       { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ status: "cancelled", location_ciphertext: null, meeting_note: null }) },
     ).catch(() => null)
@@ -286,7 +286,7 @@ export async function POST(request: Request) {
           : "Choose at least one resource or emergency responder mode, choose an availability time, and allow approximate location.",
       }, 400)
     }
-    const saved = await serviceRest("hero_availability?on_conflict=auth_user_id", {
+    const saved = await heroServerRest("hero_availability?on_conflict=auth_user_id", {
       method: "POST",
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify({
@@ -307,14 +307,14 @@ export async function POST(request: Request) {
 
   if (body.action === "accept") {
     if (typeof body.requestId !== "string") return json({ error: "Request ID is missing." }, 400)
-    const mine = await serviceRest(
+    const mine = await heroServerRest(
       `hero_availability?select=auth_user_id,cell,available_until,paused,emergency_ready,naloxone_on_call,resource_kinds&auth_user_id=eq.${encodeURIComponent(auth.user.id)}`,
     )
     const [availabilityRow] = mine.ok ? ((await mine.json()) as AvailabilityRow[]) : []
     if (!availabilityRow) return json({ error: "Go available before accepting requests." }, 409)
     const hero = toHero(availabilityRow, certificate)
 
-    const wanted = await serviceRest(
+    const wanted = await heroServerRest(
       `hero_requests?select=id,cell,created_at,expires_at,kind,resource_kind,status&id=eq.${encodeURIComponent(body.requestId)}&status=eq.open`,
     )
     const [requestRow] = wanted.ok ? ((await wanted.json()) as RequestRow[]) : []
@@ -322,7 +322,7 @@ export async function POST(request: Request) {
     const matching = visibleRequests(hero, [toRequest(requestRow)])
     if (matching.length !== 1) return json({ error: "That request is not currently a match for your availability." }, 403)
 
-    const accepted = await serviceRest(
+    const accepted = await heroServerRest(
       `hero_requests?id=eq.${encodeURIComponent(body.requestId)}&status=eq.open`,
       {
         method: "PATCH",
@@ -338,7 +338,7 @@ export async function POST(request: Request) {
 
   if (body.action === "complete") {
     if (typeof body.requestId !== "string") return json({ error: "Request ID is missing." }, 400)
-    const saved = await serviceRest(
+    const saved = await heroServerRest(
       `hero_requests?id=eq.${encodeURIComponent(body.requestId)}&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=eq.accepted`,
       {
         method: "PATCH",
@@ -354,8 +354,8 @@ export async function POST(request: Request) {
   if (body.action === "pause" || body.action === "leave") {
     const path = `hero_availability?auth_user_id=eq.${encodeURIComponent(auth.user.id)}`
     const saved = await (body.action === "pause"
-      ? serviceRest(path, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ paused: true, updated_at: new Date().toISOString() }) })
-      : serviceRest(path, { method: "DELETE", headers: { Prefer: "return=minimal" } })).catch(() => null)
+      ? heroServerRest(path, { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ paused: true, updated_at: new Date().toISOString() }) })
+      : heroServerRest(path, { method: "DELETE", headers: { Prefer: "return=minimal" } })).catch(() => null)
     return saved?.ok ? json({ available: false, removed: body.action === "leave" }) : json({ error: "Could not update your availability." }, 503)
   }
 
