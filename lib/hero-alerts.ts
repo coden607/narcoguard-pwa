@@ -225,7 +225,7 @@ export type AlertsStatus = { live: boolean; reason: string }
 /** Live only with the explicit switch and every dependency in place. */
 export function alertsStatus(env: Record<string, string | undefined>): AlertsStatus {
   if (env.HERO_ALERTS_ENABLED !== "true") return { live: false, reason: "Nearby Hero requests are not live until the network safety/privacy launch switch is enabled." }
-  const missing = ["SUPABASE_URL", "SUPABASE_ANON_KEY", "SUPABASE_SERVICE_ROLE_KEY", "HERO_CERT_SECRET"].filter((name) => !env[name])
+  const missing = ["SUPABASE_URL", "SUPABASE_ANON_KEY", "HERO_DB_API_KEY", "HERO_CERT_SECRET"].filter((name) => !env[name])
   if (missing.length > 0) return { live: false, reason: "Nearby Hero requests are switched on but not fully configured yet." }
   return { live: true, reason: "Nearby Hero and community-resource requests are live." }
 }
