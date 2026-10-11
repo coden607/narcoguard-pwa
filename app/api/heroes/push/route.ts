@@ -32,6 +32,7 @@ export async function POST(request: Request) {
 
   const body = await readJson(request)
   if (!body || !isAllowedPushEndpoint(body.endpoint)) return json({ error: "Invalid push subscription endpoint." }, 400)
+  const endpoint = body.endpoint as string
 
   if (body.action === "subscribe") {
     const response = await heroServerRest("hero_push_subscriptions?on_conflict=endpoint", {
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
       headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
       body: JSON.stringify({
         auth_user_id: auth.user.id,
-        endpoint: body.endpoint,
+        endpoint,
         enabled: true,
         updated_at: new Date().toISOString(),
       }),
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
 
   if (body.action === "unsubscribe") {
     const response = await heroServerRest(
-      `hero_push_subscriptions?auth_user_id=eq.${encodeURIComponent(auth.user.id)}&endpoint=eq.${encodeURIComponent(body.endpoint)}`,
+      `hero_push_subscriptions?auth_user_id=eq.${encodeURIComponent(auth.user.id)}&endpoint=eq.${encodeURIComponent(endpoint)}`,
       { method: "DELETE", headers: { Prefer: "return=minimal" } },
     ).catch(() => null)
     return response?.ok
