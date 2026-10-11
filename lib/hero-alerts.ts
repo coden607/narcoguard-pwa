@@ -163,7 +163,7 @@ export function prepareAvailability(
   return {
     heroId: input.heroId,
     cell: cellKey(cell),
-    availableUntil: now + Math.min(hours * 3_600_000, MAX_AVAILABILITY_MS),
+    availableUntil: Math.min(now + Math.min(hours * 3_600_000, MAX_AVAILABILITY_MS), input.certificateExpiresAt),
     paused: false,
     certificateExpiresAt: input.certificateExpiresAt,
     emergencyReady,
