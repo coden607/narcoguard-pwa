@@ -29,14 +29,22 @@ export async function GET(request: Request) {
   const origin = cellOf(lat, lon)
   if (!origin) return json({ error: "A valid location is required." }, 400)
 
-  const response = await serviceRest(
-    `hero_availability?select=cell,available_until,paused,emergency_ready,resource_kinds&paused=eq.false&available_until=gt.${new Date().toISOString()}`,
-  ).catch(() => null)
-  if (!response?.ok) return json({ error: "Hero map is temporarily unavailable." }, 503)
-  const rows = (await response.json()) as AvailabilityRow[]
-  const allowed = new Set(nearbyCells(origin))
-  const nearby = rows.filter((row) => allowed.has(row.cell))
-
+  const now = new Date().toISOString()
+  const nearbyKeys = nearbyCells(origin)
+  const inFilter = nearbyKeys.map((key) => `"${key}"`).join(",")
+  const [nearbyResponse, countResponse] = await Promise.all([
+    serviceRest(
+      `hero_availability?select=cell,available_until,paused,emergency_ready,resource_kinds&paused=eq.false&available_until=gt.${now}&cell=in.(${encodeURIComponent(inFilter)})`,
+    ).catch(() => null),
+    serviceRest(
+      `hero_availability?select=auth_user_id&paused=eq.false&available_until=gt.${now}`,
+      { headers: { Prefer: "count=exact", Range: "0-0" } },
+    ).catch(() => null),
+  ])
+  if (!nearbyResponse?.ok) return json({ error: "Hero map is temporarily unavailable." }, 503)
+  const nearby = (await nearbyResponse.json()) as AvailabilityRow[]
+  const contentRange = countResponse?.headers.get("content-range") ?? ""
+  const online = Number(contentRange.split("/")[1])
   const grouped = new Map<string, { emergencyHeroes: number; resources: Set<HeroResourceKind>; totalHeroes: number }>()
   for (const row of nearby) {
     const item = grouped.get(row.cell) ?? { emergencyHeroes: 0, resources: new Set<HeroResourceKind>(), totalHeroes: 0 }
@@ -48,7 +56,7 @@ export async function GET(request: Request) {
 
   return json({
     live: true,
-    online: rows.length,
+    online: Number.isFinite(online) ? online : nearby.length,
     nearby: nearby.length,
     cells: [...grouped.entries()].flatMap(([cell, item]) => {
       const center = cellCenter(cell)
