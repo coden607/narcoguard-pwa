@@ -8,6 +8,7 @@ import { GlowButton } from "@/components/effects/glow-button"
 import { Award, BookOpen, Heart, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CertificationTest, HERO_CERTIFICATE_KEY } from "@/components/hero/certification-test"
+import { HeroAvailabilityPanel } from "@/components/hero/hero-availability-panel"
 
 type Status = { enrollment: boolean; certification: boolean; nearbyRequests: boolean }
 
@@ -107,6 +108,10 @@ export default function HeroSignup() {
               Heroes never replace 911.
             </p>
           </section>
+        </HolographicCard>
+
+        <HolographicCard className="p-6 sm:p-8">
+          <HeroAvailabilityPanel />
         </HolographicCard>
 
         <HolographicCard className="p-6">
