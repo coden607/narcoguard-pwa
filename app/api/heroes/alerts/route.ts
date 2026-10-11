@@ -49,6 +49,8 @@ type RequestRow = {
   accepted_at?: string | null
   completed_at?: string | null
   request_token_hash?: string | null
+  location_ciphertext?: string | null
+  meeting_note?: string | null
 }
 type CertificationRow = { expires_at: string; enrolled: boolean }
 
