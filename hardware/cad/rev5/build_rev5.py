@@ -33,20 +33,20 @@ def build(name):
     if name=="NG46":
         comps={
           "snapdragon":box(18,18,1.1,-5.5,-1.0,comp_z),
-          "nrf5340":box(7,7,0.9,-3,12,comp_z),
+          "nrf5340":box(*MANUFACTURER_PACKAGES["nrf5340_aqfn94"],-3,12,comp_z),
           "st54k":box(4.5,4.5,0.7,-6,-14,comp_z),
-          "imu":box(2.5,3,0.86,5,-13,comp_z),
-          "bmp390":box(2,2,0.75,9,-12,comp_z),
+          "imu":box(*MANUFACTURER_PACKAGES["lsm6dso32x_lga14"],5,-13,comp_z),
+          "bmp390":box(*MANUFACTURER_PACKAGES["bmp390_lga10"],9,-12,comp_z),
           "sdx35_rf":box(14,16,1.0,10.5,1.0,pcb_z-1.2),
           "emmc":box(11.5,13,0.7,-6,4.5,pcb_z-0.85),
         }
     else:
         comps={
           "snapdragon":box(18,18,1.1,-4,0,comp_z),
-          "nrf5340":box(7,7,0.9,0,12.5,comp_z),
+          "nrf5340":box(*MANUFACTURER_PACKAGES["nrf5340_aqfn94"],0,12.5,comp_z),
           "st54k":box(4.5,4.5,0.7,-1,-11.3,comp_z),
-          "imu":box(2.5,3,0.86,5,-11.5,comp_z),
-          "bmp390":box(2,2,0.75,8.5,-10.2,comp_z),
+          "imu":box(*MANUFACTURER_PACKAGES["lsm6dso32x_lga14"],5,-11.5,comp_z),
+          "bmp390":box(*MANUFACTURER_PACKAGES["bmp390_lga10"],8.5,-10.2,comp_z),
           "sdx35_rf":box(12,12,1.0,7,4.5,pcb_z-1.2),
           "emmc":box(11.5,13,0.7,-6,4.2,pcb_z-0.85),
         }
