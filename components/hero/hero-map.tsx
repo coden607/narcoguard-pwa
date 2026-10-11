@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react"
 import { MapPin, Navigation, Users } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { HERO_RESOURCE_LABELS, type HeroResourceKind } from "@/lib/hero-alerts"
+import { HERO_RESOURCE_LABELS, cellKey, cellOf, type HeroResourceKind } from "@/lib/hero-alerts"
 
 type MapCell = {
   cell: string
@@ -32,7 +32,9 @@ export function HeroMap() {
 
   const loadMap = async (latitude: number, longitude: number) => {
     try {
-      const response = await fetch(`/api/heroes/map?lat=${encodeURIComponent(latitude)}&lon=${encodeURIComponent(longitude)}`, { cache: "no-store" })
+      const coarse = cellOf(latitude, longitude)
+      if (!coarse) throw new Error("Location could not be converted to a nearby area.")
+      const response = await fetch(`/api/heroes/map?cell=${encodeURIComponent(cellKey(coarse))}`, { cache: "no-store" })
       const body = await response.json() as MapResponse
       setData(body)
       setLocationNote(body.error ?? body.reason ?? body.note)
