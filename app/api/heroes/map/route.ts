@@ -24,10 +24,9 @@ export async function GET(request: Request) {
   if (!status.live) return json({ ...status, cells: [], online: 0, nearby: 0 })
 
   const url = new URL(request.url)
-  const lat = Number(url.searchParams.get("lat"))
-  const lon = Number(url.searchParams.get("lon"))
-  const origin = cellOf(lat, lon)
-  if (!origin) return json({ error: "A valid location is required." }, 400)
+  const cell = url.searchParams.get("cell") ?? ""
+  const origin = parseCellKey(cell)
+  if (!origin) return json({ error: "A valid coarse map area is required." }, 400)
 
   const now = new Date().toISOString()
   const nearbyKeys = nearbyCells(origin)
