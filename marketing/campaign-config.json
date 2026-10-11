@@ -1,18 +1,28 @@
 {
   "campaign": {
-    "name": "NarcoGuard NG Watch Funding",
-    "goal": 36032,
-    "watches": 80,
-    "costPerWatch": 450.4,
+    "name": "NarcoGuard Rev 5 Development",
+    "goal": 75000,
+    "goalType": "development-and-validation-planning-target",
+    "fixedWatchCount": null,
     "location": "Broome County, NY",
-    "startDate": "2025-01-01",
     "organization": "Broome Estates LLC",
-    "founder": "Stephen Blanford"
+    "founder": "Stephen Blanford",
+    "note": "Goal is a planning budget, not a supplier quote or promise to manufacture a fixed number of watches."
+  },
+  "budget": {
+    "mechanicalCadEnclosureSeals": 15000,
+    "ng46Ng40PrototypeElectronicsAndAssembly": 20000,
+    "benchFixturesHarvestingReliability": 10000,
+    "rfCellularGnssAntennaIntegration": 10000,
+    "safetyClinicalHumanFactorsRegulatory": 10000,
+    "freeAppHeroHostingSecurityAccessibility": 5000,
+    "contingency": 5000
   },
   "links": {
-    "gofundme": "https://gofund.me/9acf270ea",
+    "gofundme": "TO_BE_CREATED_OR_REPLACED",
     "app": "https://narcoguard.app",
     "demo": "https://narcoguard.app",
+    "watch": "https://narcoguard.app/watch",
     "github": "https://github.com/coden607/narcoguard-pwa"
   },
   "contact": {
@@ -21,48 +31,26 @@
     "founder": "Stephen Blanford",
     "location": "Binghamton, NY"
   },
-  "social": {
-    "hashtags": {
-      "primary": ["NarcoGuard", "SaveLives", "OpioidCrisis", "EndOverdose"],
-      "secondary": ["Binghamton", "BroomeCounty", "HarmReduction", "OverdosePrevention", "Naloxone"],
-      "features": ["HeroNetworkConcept", "PrototypeDevelopment", "RecoverySupport", "NarcoGuardNG"],
-      "tiktok": ["fyp", "viral", "saveliveschallenge", "recovery", "harmreduction"],
-      "youtube": ["shorts", "medtech", "smartwatch", "healthtech"]
-    },
-    "platforms": ["twitter", "facebook", "instagram", "linkedin", "reddit", "tiktok", "youtube"],
-    "postFrequency": "daily",
-    "timezone": "America/New_York"
-  },
   "messaging": {
-    "tagline": "Help fund responsible development of the NarcoGuard NG concept",
-    "mission": "Fighting the opioid crisis with technology and community",
-    "callToAction": "Support transparent prototype development and community-led overdose prevention in Broome County",
-    "urgency": "Overdose remains a serious public-health crisis. Help us explore a responsible, evidence-led response.",
-    "personal": "I'm a person in recovery who has lost friends to overdose. I started NarcoGuard to explore better ways to connect people with timely help."
+    "tagline": "Help build NarcoGuard: free recovery help now, responsible wearable R&D next",
+    "mission": "Free person-led overdose prevention and recovery support, plus transparent wearable research",
+    "callToAction": "Support Rev 5 prototype engineering, validation, and continued free access to NarcoGuard",
+    "truthBoundary": "The app is live; the watch is a research concept and not a validated medical device."
   },
-  "videoContent": {
-    "platforms": ["tiktok", "youtube_shorts", "instagram_reels"],
-    "themes": ["problem_awareness", "technology_demo", "personal_story", "call_to_action", "milestone_update"],
-    "frequency": "daily"
-  },
-  "freeAdvertisingSites": [
-    "reddit.com/r/harmreduction",
-    "reddit.com/r/opiates",
-    "reddit.com/r/addiction",
-    "reddit.com/r/recovery",
-    "reddit.com/r/gofundme",
-    "reddit.com/r/assistance",
-    "reddit.com/r/newyork",
-    "reddit.com/r/binghamton",
-    "reddit.com/r/upstate_new_york",
-    "reddit.com/r/charity",
-    "reddit.com/r/nonprofit",
-    "craigslist.org/community",
-    "facebook.com/groups",
-    "nextdoor.com",
-    "linkedin.com",
-    "producthunt.com",
-    "indiehackers.com",
-    "hackernews"
-  ]
+  "rev5": {
+    "sizes": [
+      "NG46",
+      "NG40"
+    ],
+    "energy": [
+      "sealed Qi + Li-ion primary",
+      "manual crown generator research",
+      "segmented solar ring research",
+      "thermoelectric harvesting research",
+      "automatic electrical rotor experimental",
+      "isolated emergency reserve"
+    ],
+    "camera": "off-by-default privacy-controlled camera with mechanical shutter, hardware power gate, and power-linked indicator",
+    "heroNetwork": "community responder/resource architecture that supplements rather than replaces 911"
+  }
 }

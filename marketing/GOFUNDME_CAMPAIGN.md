@@ -1,130 +1,302 @@
-# NarcoGuard GoFundMe campaign copy
+# NarcoGuard Rev 5 GoFundMe campaign copy
 
-Paste-ready text for https://gofund.me/9acf270ea, rewritten in October 2026 to match what is live today and what comes next. Every claim below can be checked on https://www.narcoguard.app. Before posting, go through **Confirm before posting** at the end; those are facts and decisions only Stephen can supply.
+Paste-ready campaign draft updated for the current NarcoGuard app and Rev 5 NG46 / NG40 wearable concept.
+
+## Recommended title
+
+**Help Build NarcoGuard: Free Recovery Help + Safer Wearable R&D**
+
+## Short description
+
+NarcoGuard is a free overdose-prevention and recovery-support app from Binghamton, NY. We are now funding Rev 5 development of two wearable sizes, safety-focused energy harvesting, privacy-controlled camera hardware, sensing research, and real prototype validation.
+
+## Recommended initial goal
+
+**$75,000 development goal**
+
+This is a planning target, not a supplier quote and not a promise to manufacture a fixed number of watches. Rev 5 adds unquoted research hardware and engineering work, so an exact per-watch cost would be misleading until vendor quotes and physical prototypes exist.
+
+Suggested planning allocation:
+
+| Workstream | Planning amount |
+| --- | ---: |
+| Mechanical CAD, industrial design, enclosure, seals and tolerance stack | $15,000 |
+| NG46 + NG40 prototype electronics, PCB spins, displays, batteries and assembly | $20,000 |
+| Bench equipment, sensor fixtures, power/harvesting characterization and reliability tests | $10,000 |
+| RF, 5G RedCap, GNSS, antenna, eSIM and wireless-integration work | $10,000 |
+| Safety, clinical, human-factors and regulatory consulting | $10,000 |
+| Free app, Hero network, resource data, hosting, security and accessibility | $5,000 |
+| Contingency for failed prototypes, replacement parts and supplier changes | $5,000 |
+| **Total** | **$75,000** |
+
+These are planning allowances, not contracted quotes. Public updates should report actual spending and revise the budget when supplier quotes arrive.
 
 ---
 
-## Title (GoFundMe allows 60 characters)
+# Story
 
-**Help build NarcoGuard: free overdose & recovery help app**
+## Why NarcoGuard exists
 
-Alternate: **NarcoGuard: free recovery help now, a safer watch next**
+My name is Stephen Blanford. I'm in recovery, and I have lost too many friends to overdose. I built NarcoGuard around a simple idea: help should still be available when someone is alone, scared, hungry, without transportation, looking for treatment, or trying to build a more stable life.
 
-## Short description (shown on shares)
+NarcoGuard starts with the person, not a score. It uses a needs-first approach inspired by Maslow's hierarchy: food, shelter, sleep and safety matter before anyone can reasonably be expected to focus on bigger goals.
 
-NarcoGuard is a free app from Binghamton, NY that helps people find food, shelter, treatment and overdose-response steps, and is building toward a wearable. Your gift funds careful prototype engineering and testing.
+The long-term wearable vision grew from an even harder problem: many fatal overdoses happen when nobody is there to recognize what is happening and give naloxone. We want to research whether a wearable can safely recognize concerning patterns, warn the wearer, summon help with consent and appropriate emergency boundaries, and one day support clinically validated overdose-response technology.
 
----
+That future is not here yet. The watch is a research concept, not a medical device, and NarcoGuard does not replace 911 or naloxone.
 
-## Story
+## What is live now
 
-### Why I started
+The free web app is available at **https://www.narcoguard.app**.
 
-My name is Stephen Blanford. I'm in recovery, and I have lost too many friends to overdose here in Binghamton. I remember the fear of using alone. NarcoGuard is my answer: help that is there when someone needs it, without judgment, and that starts with whatever the person needs today.
+Current app capabilities include:
 
-### How addiction hijacks the ladder
+- emergency overdose-response and CPR guidance;
+- needs-first resource search for food, shelter, showers, treatment, clinics, pharmacies and other practical support;
+- Angel AI for optional conversational support and small next-step planning;
+- Guardian Stability planning for basic needs, sleep, goals and tomorrow's task;
+- Daily Life routines, schedule, journals and reset tools;
+- local Calm Audio with binaural tone presets and generated meditation soundscapes;
+- Hero training and certification;
+- a live Hero/resource network architecture with coarse privacy-preserving map areas;
+- certified-Hero request lifecycle and optional Web Push alerts;
+- overdose Good Samaritan law summaries;
+- optional account features while keeping ordinary help available without an account;
+- installable PWA behavior for phones.
 
-Psychologist Abraham Maslow described human needs as a ladder: food, sleep and shelter first, then safety, connection, self-respect and the goals that matter to you. Addiction can turn that ladder upside down. The National Institute on Drug Abuse explains that drugs over-activate the brain's reward circuit, and with repeated use it becomes hard to feel pleasure from anything besides the drug (https://nida.nih.gov/publications/drugs-brains-behavior-science-addiction/drugs-brain). Money for meals goes to using, sleep and safety slip, housing, family and work fall away, and every lost step makes recovery harder to start.
+NarcoGuard remains a public research project. Resource listings can change, Hero availability is not emergency dispatch, and the app does not diagnose overdose.
 
-NarcoGuard is built to help rebuild that ladder from the bottom, alongside treatment, not instead of it. It can't cure addiction or promise recovery, but meeting basic needs removes obstacles that stand in the way. For treatment referrals, SAMHSA's National Helpline is free, confidential and open 24/7: 1-800-662-4357.
+## The Rev 5 NarcoGuard NG wearable
 
-### What already works, free, today
+The hardware program now has two size targets:
 
-Open https://www.narcoguard.app on any phone. No account is needed, and nothing here replaces 911.
+### NG46
 
-- **Emergency steps.** Clear, step-by-step overdose and CPR guidance, with a beat to keep compressions on pace and a reminder about when to consider a second naloxone dose.
-- **Find Help, basic needs first.** Type what you need in your own words, like "I'm hungry and have nowhere to sleep". NarcoGuard shows the needs you name first, with basic needs such as food, water and shelter leading, then health, recovery and connection, and growth. Listings come from SAMHSA's FindTreatment.gov and OpenStreetMap, and every one says "call first", with 211 as a backup.
-- **Angel AI.** A private chat that listens to what you want and helps break it into small next steps. It reminds you to call 911 or 988 when you need to. Your messages go to an AI provider to get a reply, but NarcoGuard doesn't store or log your conversations, and you decide every step.
-- **Guardian planner.** An optional planner that stays on your phone: daily needs, sleep, goals and tomorrow's task. You can pause or erase it any time.
-- **Training and Hero certification.** Short lessons on overdose response, and a 12-question test you must pass with 100% to become a certified NarcoGuard Hero.
-- **Overdose Good Samaritan law summaries** for every state, with citations.
+- 46 mm Grade 5 titanium case;
+- 13.8 mm target thickness;
+- 22 mm strap;
+- 1.4–1.5 inch round LTPO AMOLED target;
+- 500 mAh protected Li-ion battery target.
 
-The app is built around Maslow's hierarchy of needs. It is hard to work on recovery or a job while hungry or without a safe place to sleep, so NarcoGuard puts those needs first and then helps you work toward your own goals. You can read how it works at https://www.narcoguard.app/about.
+### NG40
 
-### What we are building next
+- 40 mm Grade 5 titanium case;
+- 12.2 mm target thickness;
+- 20 mm strap;
+- 1.2 inch round AMOLED target;
+- 300 mAh protected Li-ion battery target.
 
-**The NarcoGuard NG watch** is a wearable concept, and no watch has shipped. Its full parts list and engineering drawings are public at https://www.narcoguard.app/watch. The current parts estimate is **$325.40 in components**, or about **$450 per finished prototype** once assembly, quality and compliance testing, packaging and a naloxone refill are added.
+Anyone can wear either size. The smaller model is not a different safety product; it is a smaller enclosure with the same core safety architecture.
 
-**Why auto-injection.** Naloxone can reverse an opioid overdose, but only if someone is there to give it, and many people use alone. We want to research whether a wearable could one day recognize signs consistent with an opioid overdose, warn the wearer, and, if they don't respond, deliver a dose of naloxone automatically while help is called.
+## Current candidate electronics
 
-The watch is **not a medical device**. It does not detect overdoses or deliver naloxone today, and it must not be relied on. Getting there honestly takes:
+The current engineering concept includes:
 
-1. **Sensing research:** bench prototypes to test which signals (breathing, heart rate, blood oxygen) can be measured reliably on a wrist, and where they fail.
-2. **Delivery engineering:** the auto-injection mechanism and naloxone cartridge, with safeguards against accidental triggers, a way for the wearer to cancel, and checks that the dose was delivered.
-3. **Independent review:** safety, clinical and human-factors review, and testing with people who use drugs and recovery communities before anyone wears it.
-4. **The FDA pathway:** a device that delivers a drug is regulated as a combination product and needs FDA review and marketing authorization before it can be offered to anyone; the exact pathway (for example NDA, PMA, De Novo or 510(k)) is still to be determined (https://www.fda.gov/combination-products/about-combination-products).
+- **Qualcomm Snapdragon W5+ Gen 2** wearable platform;
+- **Nordic nRF5340** independent safety MCU;
+- **32 GB eMMC** and **2 GB LPDDR4X** target memory;
+- **Analog Devices MAX86178** PPG / ECG / BioZ front end;
+- **ST LSM6DSO32X** 6-axis IMU;
+- **Bosch BMP390** barometer;
+- **ST LIS2MDL** magnetometer;
+- **Melexis MLX90632** temperature-sensing candidate;
+- **ams-OSRAM AS7038RB** secondary biosensing candidate;
+- **Qualcomm X35 / SDX35 5G RedCap** cellular concept;
+- **ST4SIM-200M** eSIM;
+- **ST54K** NFC / secure-element architecture;
+- sealed **Qi wireless charging**;
+- zirconia ceramic case back;
+- sapphire crystal;
+- microphone, speaker and haptic alert hardware.
 
-The app also has features that are **built but switched off** until they pass a separate safety and privacy review. One is a way for certified Heroes nearby to see that someone asked for help after 911 was called. We will not turn anything like that on until it is reviewed.
+Every candidate still requires supplier confirmation, electrical integration, firmware, physical prototyping and validation.
 
-### The goal: $36,032
+## Rev 5 energy system
 
-The goal is sized at up to 80 prototype builds, at the current estimate of about $450 each including assembly, testing, packaging and a naloxone refill. Some of what is raised also goes to the other costs below, such as bench test equipment, expert review and keeping the free app running, so the actual number of builds will be lower. Updates will report how many were built and how the money was split.
+The primary power system remains a protected Li-ion battery with sealed Qi wireless charging.
 
-### Where your money goes
+Rev 5 adds research paths intended to extend emergency reserve or runtime:
 
-Donations fund:
+### Manual crown generator
 
-- prototype parts and builds, at about $450 per prototype under the current estimate;
-- bench testing equipment and test fixtures;
-- expert design and safety review;
-- keeping the free app running (hosting, maps and directory lookups, AI chat).
+The crown is being redesigned as both a physical SOS/cancel control and a possible manual microgenerator. The goal is not to run the whole watch by hand. The research goal is to determine whether turning the crown can restore enough reserve energy for the independent safety MCU, a local alarm, and potentially an emergency communications attempt.
 
-A donation does not buy a device, a service or early access. Donations are not tax-deductible. If you donated by mistake, email narcoguard607@gmail.com within 30 days for a refund.
+### Solar harvesting
 
-### My promise to you
+A segmented photovoltaic ring around the bezel or crystal area is being investigated for supplemental charging.
 
-- **Spending reports.** I'll post what was spent and on what, with receipts available on request.
-- **Honest updates.** You'll see photos and video of prototype and test progress, including what didn't work.
-- **No hype.** I won't call anything finished, approved or life-saving before it has been tested and reviewed.
-- **Privacy first.** Personal data is never sold, and help in the app never depends on making an account. Some features need outside services: Angel sends your messages to an AI provider only after you agree to start a chat, and nearby searches send a location rounded to about 1 km to public directories. NarcoGuard does not store or log either.
+### Thermoelectric harvesting
 
-### How you can help
+A thin case-back thermoelectric layer is being investigated to recover a small amount of energy from the skin-to-ambient temperature difference.
 
-- **Donate any amount.** Every gift goes to the work above.
-- **Share this page.** Tell people about the free app at https://www.narcoguard.app.
-- **Become a Hero.** Take the training and test at https://www.narcoguard.app/hero-signup.
-- **Have a say.** NarcoGuard's founding Constitution draft is open for public feedback at https://www.narcoguard.app/constitution.
+### Automatic self-winding electrical rotor
 
-If someone may be overdosing, call 911 now and give naloxone if you have it. For a crisis, call or text 988.
+We are also investigating an electrical version of an automatic mechanical watch: an oscillating mass converts wrist motion into electricity. This is experimental because the rotor competes with the battery, Qi coil, sensors and antennas for space.
 
-With gratitude,
-Stephen Blanford
-Founder, NarcoGuard · Binghamton, NY
+### Emergency reserve
+
+The design includes a separate supercapacitor-style safety reserve so the main processor and display cannot drain every last bit of emergency power.
+
+None of these harvesting systems is represented as capable of continuously powering the full watch. We will publish measured output before making any runtime claim.
+
+## Privacy-controlled camera
+
+Rev 5 also investigates a miniature camera for user-started functions such as:
+
+- video calls;
+- QR or barcode capture;
+- document capture;
+- explicitly shared emergency context.
+
+The camera is **not** part of overdose detection and is not intended for always-on recording.
+
+Our design rules require:
+
+- camera off by default;
+- a mechanical shutter that physically blocks the lens;
+- a hard sensor power gate;
+- a privacy indicator electrically tied to camera power;
+- no default continuous background recording;
+- no requirement for facial recognition;
+- local storage unless the wearer explicitly chooses to share.
+
+Emergency functions must continue to work with the camera disabled.
+
+## Why we need physical prototypes
+
+Good renders are not proof that a watch can be built.
+
+Before NarcoGuard should call the hardware build-ready, we need to prove:
+
+- actual component packages fit together;
+- the NG46 and NG40 PCB layouts can be routed;
+- the Snapdragon, safety MCU, radio, battery and sensor stack fit with real tolerances;
+- antennas work inside a titanium enclosure;
+- heat can leave the case safely;
+- the camera and privacy shutter can be sealed;
+- the crown generator produces useful energy;
+- solar, thermoelectric and automatic-rotor harvesting produce enough energy to justify their size and complexity;
+- the Qi coil, rear optical sensor and any rotor architecture can coexist;
+- the optical sensors remain usable across motion, placement and skin conditions;
+- the battery, charging system and emergency reserve are electrically safe;
+- seals survive water, sweat, button cycles, charging cycles and drops.
+
+Failed prototypes are useful information. We will publish what fails instead of hiding it.
+
+## The future naloxone research module
+
+NarcoGuard began with the idea of a wearable that might one day help when someone overdoses alone.
+
+That remains a **future research program**, not a current feature.
+
+A drug-delivery wearable would require a separate clinical, mechanical, pharmaceutical, human-factors and regulatory program. Needle geometry, dose, primary drug container, insertion mechanism and activation logic are not finalized and will not be treated as solved by a 3D render.
+
+No NarcoGuard watch currently injects naloxone.
+
+## The Hero network
+
+NarcoGuard also includes a community responder concept.
+
+Certified Heroes can be trained in overdose response and are expected to understand that **911 remains the emergency system**. The network is intended to supplement help, not replace EMS.
+
+The architecture supports privacy-preserving coarse areas and only uses more precise location where an accepted request and explicit emergency workflow require it.
+
+Community resources can also appear independently of Hero responders so people can contribute useful information without acting as emergency responders.
+
+## Where the money goes
+
+The recommended initial campaign goal is **$75,000**.
+
+The money is intended for:
+
+- CAD and mechanical engineering;
+- NG46 and NG40 prototype enclosures;
+- PCB layout and fabrication;
+- component purchases;
+- sensor and power test fixtures;
+- crown-generator prototypes;
+- solar, thermoelectric and kinetic energy testing;
+- camera/privacy-shutter prototypes;
+- RF and antenna development;
+- 5G/eSIM/GNSS integration work;
+- safety and human-factors review;
+- app hosting and continued free public access;
+- failed prototype replacement and design revisions.
+
+This is research and prototype funding. A donation does not purchase a watch or reserve a production unit.
+
+## Transparency
+
+I will keep the project public and distinguish between:
+
+- what exists in software;
+- what has been built in hardware;
+- what has been tested;
+- what is still only a candidate design;
+- what has failed.
+
+The parts list, engineering notes and software are published through the NarcoGuard project and GitHub repository.
+
+The campaign will not call NarcoGuard FDA approved, medically validated, waterproof, self-powered or capable of detecting/reversing overdose unless independent evidence supports those claims.
+
+## How you can help
+
+**Donate:** support prototype development and testing.
+
+**Share:** send people to https://www.narcoguard.app.
+
+**Use the free app:** practical help is available without buying a device.
+
+**Become a Hero:** take the training and certification process.
+
+**Contribute engineering expertise:** RF, embedded systems, PCB design, wearable mechanics, clinical sensing, battery safety, human factors and regulatory expertise are all useful.
+
+If someone may be overdosing, call 911 and give naloxone if available.
+
+Thank you,
+
+**Stephen Blanford**  
+Founder, NarcoGuard  
+Binghamton, New York  
 narcoguard607@gmail.com
 
 ---
 
 ## Suggested giving levels
 
-| Amount | What it supports |
+| Amount | Example use |
 | --- | --- |
-| $10 | Hosting and directory lookups that keep the free app running |
-| $25 | Small parts and supplies for bench testing |
-| $50 | Prototype materials |
-| $100 | Test fixtures and design-review time |
-| $450 | About one prototype build under the current estimate |
+| $10 | Hosting, data access or bench consumables |
+| $25 | Small components, connectors, seals or test materials |
+| $50 | Sensors, power-management parts or prototype materials |
+| $100 | PCB, fixture or mechanical prototype work |
+| $250 | Partial prototype assembly/testing costs |
+| $500 | Major electronics/mechanical prototype work |
+| $1,000+ | Engineering, RF, testing or specialist review work |
 
-## Campaign settings
+Do not say a donation amount purchases a finished watch.
 
-- **Category:** Community or Medical. Pick the one GoFundMe's terms fit best for a prototype-development fundraiser. "Medical" is meant for an individual's treatment, so "Community" is usually the closer fit.
-- **Tags:** overdose prevention, naloxone, recovery, harm reduction, Binghamton, Broome County, community app
-- **Photos:** use the concept images labelled as concept renders, plus real screenshots of the app. Don't use any image that looks like a finished product in use.
+## Campaign images
 
-## Weekly update ideas
+Use:
+1. real screenshots of the live app;
+2. the NG46 / NG40 Rev 5 concept board, clearly marked "concept";
+3. engineering drawings generated from the repository geometry;
+4. future photos of real PCB, enclosure and bench prototypes;
+5. spending/test updates.
 
-- **Build log:** a photo of a prototype part or test and one sentence on what was learned.
-- **App feature:** a short screen recording of one live feature, such as Find Help, Angel or training.
-- **Spending:** a short spending summary with a running total.
-- **Thanks:** thank donors and Heroes by first name only, and only with their permission.
+Do not use a concept render as though it were a photographed finished product.
 
----
+## Publication checklist
 
-## Confirm before posting
-
-Stephen must check these; nothing above should be posted until they are true.
-
-1. **Goal amount.** Set the GoFundMe goal to **$36,032**: 80 prototype builds at the current estimate of $450.40 each, published at https://www.narcoguard.app/watch. The app's home page, support page and stats API now use the same figure (`lib/funding-goal.ts`). The copy avoids promising 80 free watches, because no watch can be given to people until it is tested and allowed.
-2. **Use of funds.** If you want percentages, such as how much goes to prototypes or to app hosting, add your real numbers. Don't keep the old "100% to watches, no salary, no admin costs" line unless it is true and you can show it.
-3. **Your story.** The "Why I started" paragraph keeps your own words from the old campaign. Edit it so every detail is yours and accurate.
-4. **Statistics.** The old copy said "every 5 minutes" and "over 150 deaths in Broome County". Those lines were removed because they had no source. Add a number only with a current source link, such as CDC's provisional overdose data or New York State's county opioid dashboard.
-5. **Who receives the money.** The old settings listed Broome Estates LLC (Stephen Blanford). Make sure the GoFundMe beneficiary and payout account match who will actually spend the funds.
+Before launch:
+- verify payout recipient and organization;
+- verify current campaign category and platform requirements;
+- replace any old $36,032 / 80-watch language;
+- confirm the $75,000 planning target is acceptable;
+- keep the public app URL current;
+- update campaign images with Rev 5 concept labels;
+- publish the spending allocation as a planning budget, not quotes;
+- add real vendor quotes as they become available;
+- never imply donations are tax-deductible unless that is legally true;
+- never promise devices to donors before manufacturing, regulatory and safety status permits it.
