@@ -23,10 +23,13 @@ export function HeroHelpRequest() {
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY)
-      if (raw) setTracked(JSON.parse(raw) as TrackedRequest)
-    } catch {}
+    const timer = window.setTimeout(() => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY)
+        if (raw) setTracked(JSON.parse(raw) as TrackedRequest)
+      } catch {}
+    }, 0)
+    return () => window.clearTimeout(timer)
   }, [])
 
   useEffect(() => {
