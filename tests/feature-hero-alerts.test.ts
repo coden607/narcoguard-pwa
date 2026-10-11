@@ -40,7 +40,7 @@ test("alerts stay off unless explicitly switched on and fully configured", () =>
   assert.equal(alertsStatus({}).live, false)
   assert.equal(alertsStatus({ HERO_ALERTS_ENABLED: "yes" }).live, false)
   assert.equal(alertsStatus({ HERO_ALERTS_ENABLED: "true" }).live, false, "switch alone is not enough")
-  assert.equal(alertsStatus({ HERO_ALERTS_ENABLED: "true", SUPABASE_URL: "u", SUPABASE_ANON_KEY: "a", SUPABASE_SERVICE_ROLE_KEY: "s", HERO_CERT_SECRET: "h" }).live, true)
+  assert.equal(alertsStatus({ HERO_ALERTS_ENABLED: "true", SUPABASE_URL: "u", SUPABASE_ANON_KEY: "a", HERO_DB_API_KEY: "s", HERO_CERT_SECRET: "h" }).live, true)
 })
 
 test("an emergency request needs 911 called first and keeps only a coarse cell", () => {

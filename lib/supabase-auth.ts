@@ -74,6 +74,7 @@ export async function getSession() {
 }
 
 export const isAuthConfigured = () => Boolean(process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY)
+export const isHeroServerConfigured = () => isAuthConfigured() && Boolean(process.env.HERO_DB_API_KEY)
 
 /** Google sign-in is shown only after the Google provider is switched on in Supabase. */
 export const isGoogleSignInEnabled = () => isAuthConfigured() && process.env.AUTH_GOOGLE_ENABLED === "true"
@@ -85,6 +86,18 @@ export function userRest(accessToken: string, path: string, init: RequestInit = 
   const headers = new Headers(init.headers)
   headers.set("Authorization", `Bearer ${accessToken}`)
   return supabaseRequest(`/rest/v1/${path}`, { ...init, headers })
+}
+
+/** Hero-only PostgREST call authenticated by a server secret checked inside RLS. */
+export function heroServerRest(path: string, init: RequestInit = {}) {
+  const serverKey = process.env.HERO_DB_API_KEY
+  if (!serverKey) throw new Error("Hero database access is not configured")
+  const { url, key } = getSupabaseConfig()
+  const headers = new Headers(init.headers)
+  headers.set("apikey", key)
+  headers.set("x-narcoguard-server-key", serverKey)
+  headers.set("Content-Type", "application/json")
+  return fetch(`${url}/rest/v1/${path}`, { ...init, headers, cache: "no-store" })
 }
 
 /** PostgREST call with the service role (bypasses RLS). Server-only writes the client must not make itself. */

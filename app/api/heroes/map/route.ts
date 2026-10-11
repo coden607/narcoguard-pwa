@@ -6,7 +6,7 @@ import {
   parseCellKey,
   type HeroResourceKind,
 } from "@/lib/hero-alerts"
-import { serviceRest } from "@/lib/supabase-auth"
+import { heroServerRest } from "@/lib/supabase-auth"
 
 export const dynamic = "force-dynamic"
 
@@ -31,10 +31,10 @@ export async function GET(request: Request) {
   const nearbyKeys = nearbyCells(origin)
   const inFilter = nearbyKeys.map((key) => `"${key}"`).join(",")
   const [nearbyResponse, countResponse] = await Promise.all([
-    serviceRest(
+    heroServerRest(
       `hero_availability?select=cell,available_until,paused,emergency_ready,resource_kinds&paused=eq.false&available_until=gt.${now}&cell=in.(${encodeURIComponent(inFilter)})`,
     ).catch(() => null),
-    serviceRest(
+    heroServerRest(
       `hero_availability?select=auth_user_id&paused=eq.false&available_until=gt.${now}`,
       { headers: { Prefer: "count=exact", Range: "0-0" } },
     ).catch(() => null),
