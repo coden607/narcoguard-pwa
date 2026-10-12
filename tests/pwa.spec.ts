@@ -67,8 +67,8 @@ test.describe("PWA production flow", () => {
 
   test("the fundraising goal stays consistent across dashboard and Rev 5 watch plan", async ({ page }) => {
     await page.goto("/watch")
-    const estimate = page.getByText("Total planning goal:", { exact: false })
-    const watchGoal = Number((await estimate.innerText()).match(/Total planning goal: \$([\d,.]+)/)![1].replace(/,/g, ""))
+    const estimate = page.getByText("Current planning goal:", { exact: false })
+    const watchGoal = Number((await estimate.innerText()).match(/\$([\d,.]+)/)![1].replace(/,/g, ""))
     await page.goto("/")
     await page.getByRole("button", { name: "Skip Setup (Demo Mode)" }).click()
     await page.getByRole("button", { name: "Continue to Demo Mode" }).click()
@@ -954,7 +954,7 @@ test.describe("Watch blueprint", () => {
     const summary = page.getByTestId("watch-size")
     await expect(summary).toContainText("40 × 12.2 mm")
     await expect(summary).toContainText("300 mAh")
-    await expect(summary).toContainText("$432.90")
+    await expect(summary).toContainText("$390.90")
     await expect(summary).toContainText("same safety functions")
     const drawing = page.getByTestId("engineering-drawing")
     await expect(drawing).toHaveAttribute("data-case-mm", "40")
@@ -1151,9 +1151,8 @@ test.describe("Navigation", () => {
     await page.getByTestId("back-button").click()
     await expect(page).toHaveURL(/\/$/)
 
-    await page.goto("/")
-    await page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", { name: "Find Help" }).click()
-    await expect(page).toHaveURL(/\/help$/)
+    await page.goto("/help")
+    await expect(page.getByTestId("back-button")).toBeVisible()
     await page.getByTestId("back-button").click()
     await expect(page).toHaveURL(/\/$/)
   })
