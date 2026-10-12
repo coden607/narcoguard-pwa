@@ -1,4 +1,4 @@
-# NarcoGuard — Next 20 Anticipated Features
+# NarcoGuard — Next 25 Anticipated Features
 
 Execution rule: implement and validate **one feature at a time**. Each feature must preserve privacy, explicit consent, uncertainty, accessibility, offline safety, and emergency-path isolation. A later item may move earlier only for a verified blocker or safety dependency.
 
@@ -22,6 +22,11 @@ Execution rule: implement and validate **one feature at a time**. Each feature m
 18. **Context-aware gentle prompts** — user-configurable timing windows for food, sleep, hygiene, appointments, connection, and resource follow-through; no punitive notifications.
 19. **Model transparency dashboard** — show what signals each local learner used, training counts, abstention reason, and what changed since the last model update.
 20. **Safety/fairness calibration harness** — offline evaluation suite for false alarms, missed cues, subgroup-independent feature behavior, calibration drift, deletion/pause behavior, and notification privacy before stronger predictive claims.
+21. **On-device model changelog + rollback** — versioned local learner bundles with signed manifests; revert to the previous learner when the calibration harness reports regression, with the reason shown in the transparency dashboard.
+22. **Support-circle check-ins (opt-in)** — user-approved, bounded read-only view for a trusted contact: prepared plans, "I'm safe" check-ins, and resource follow-through nudges they can see; nothing about predictions or need history.
+23. **Supply exchange board** — local, moderated listings for naloxone kits, chargers, hygiene packs, and transit help between users and organizations, reusing contributor provenance and the moderation queue.
+24. **Severe-weather resource overlay** — seasonal warming/cooling centers and shelter windows layered onto the existing watch framework, with weather-triggered escalation and the same no-confirmed-availability rule.
+25. **Anonymous quality telemetry (opt-in)** — aggregate, k-anonymized counters for feature usefulness, abstention rates, and moderation outcomes to guide the roadmap without user profiling or content payloads.
 
 ## Current execution state
 
@@ -40,4 +45,4 @@ Execution rule: implement and validate **one feature at a time**. Each feature m
 - Feature 13: **complete and merged**
 - Feature 14: **complete in this change**
 - Feature 15: **next after Feature 14 merges**
-- Features 16–20: queued in this order
+- Features 16–25: queued in this order
