@@ -196,3 +196,38 @@ export function neuralPatternScore(entries: readonly CheckIn[], today: CheckIn):
     note: "Experimental personal pattern score only. It is not a calibrated probability, diagnosis, or prediction of relapse and should not trigger outside contact automatically.",
   }
 }
+
+
+export type LearnedSuggestion = {
+  need: Need
+  from: LearnedEvent
+  observed: number
+  comparable: number
+  percent: number
+}
+
+export function activeLearnedEvents(entry: CheckIn): LearnedEvent[] {
+  return LEARNED_EVENTS.filter((event) => knownEvent(entry, event) === true)
+}
+
+export function learnedNeedSuggestions(
+  entries: readonly CheckIn[],
+  today: CheckIn,
+  selectedNeeds: readonly Need[],
+  minComparable = 5,
+  minPercent = 60,
+): LearnedSuggestion[] {
+  const active = new Set(activeLearnedEvents(today))
+  const allowed = new Set(selectedNeeds)
+  return transitionInsights(entries, minComparable)
+    .filter((row) => active.has(row.from) && row.to.startsWith("need:") && row.percent >= minPercent)
+    .map((row) => ({
+      need: row.to.slice(5) as Need,
+      from: row.from,
+      observed: row.observed,
+      comparable: row.comparable,
+      percent: row.percent,
+    }))
+    .filter((row) => allowed.size === 0 || allowed.has(row.need))
+    .filter((row, index, all) => all.findIndex((candidate) => candidate.need === row.need) === index)
+}
