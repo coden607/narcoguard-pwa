@@ -154,8 +154,12 @@ create policy community_connections_delete on public.community_connections
 for delete to authenticated
 using (requester_id = auth.uid() or addressee_id = auth.uid());
 
-drop policy if exists community_blocks_own on public.community_blocks;
-create policy community_blocks_own on public.community_blocks
+drop policy if exists community_blocks_participant_read on public.community_blocks;
+create policy community_blocks_participant_read on public.community_blocks
+for select to authenticated
+using (blocker_id = auth.uid() or blocked_id = auth.uid());
+drop policy if exists community_blocks_own_write on public.community_blocks;
+create policy community_blocks_own_write on public.community_blocks
 for all to authenticated
 using (blocker_id = auth.uid())
 with check (blocker_id = auth.uid());
