@@ -47,13 +47,13 @@ export default function FundPage() {
     { amount: 25, description: "Sensor evaluation", impact: "Supports benchtop testing of candidate sensors" },
     { amount: 50, description: "Prototype materials", impact: "Contributes to non-clinical prototype fabrication" },
     { amount: 100, description: "Engineering support", impact: "Helps fund design review and test fixtures" },
-    { amount: 450, description: "Prototype milestone", impact: "About one prototype build under the current estimate", highlight: true },
+    { amount: 250, description: "Prototype engineering", impact: "Contributes to PCB, enclosure, fixture, or bench-validation work", highlight: true },
     { amount: 500, description: "Validation support", impact: "Contributes to documented testing and expert review" },
   ]
 
   const stats = [
-    { value: "80", label: "Long-term prototype goal" },
-    { value: "$325", label: "Component estimate (BOM)" },
+    { value: "$75K", label: "Rev 5 planning goal" },
+    { value: "Rev 5", label: "Current engineering program" },
     { value: "Public", label: "Development status" },
     { value: "Concept", label: "Not a medical device" },
   ]
@@ -167,13 +167,12 @@ export default function FundPage() {
             <strong className="text-foreground">Where the idea came from.</strong> {ORIGIN_CREDIT}
           </p>
           <p className="text-muted-foreground">
-            None of that exists yet. The NG watch is a concept: it does not detect overdoses, it does not deliver naloxone, and it
-            must not be relied on. Turning the idea into something safe takes work that costs money:
+            None of that exists yet. The NG watch is a concept: it does not detect overdoses, it does not deliver naloxone, and it\n            must not be relied on. Rev 5 treats any future auto-injector as a separate removable research module so the base watch remains independent of drug delivery. Turning the idea into something safe takes work that costs money:
           </p>
           <ol className="grid gap-4 md:grid-cols-2">
             {[
               { title: "1. Sensing research", body: "Bench prototypes to test which signals, such as breathing, heart rate and blood oxygen, can be measured reliably on a wrist, and where they fail." },
-              { title: "2. Delivery engineering", body: "Designing the auto-injection mechanism and naloxone cartridge, with safeguards against accidental triggers, a way for the wearer to cancel, and checks that the dose was delivered." },
+              { title: "2. Delivery engineering", body: "Researching a separate removable auto-injector pod with isolation, interlocks, a controlled service/cartridge boundary, and human-factors safeguards. Dose, cartridge, delivery mechanism, and activation logic are not finalized." },
               { title: "3. Independent review", body: "Safety, clinical and human-factors review by experts, and testing with people who use drugs and recovery communities before anyone wears it." },
               { title: "4. FDA pathway", body: "A device that delivers a drug is regulated by the FDA as a combination product. It needs FDA review and marketing authorization before it can be offered to anyone; the exact pathway (for example NDA, PMA, De Novo or 510(k)) is still to be determined." },
             ].map((step) => (
@@ -251,7 +250,7 @@ export default function FundPage() {
 
                   <p className="mb-6">
                     I am raising funds for responsible prototype development, documented testing, and expert and
-                    community review, with a long-term goal of evaluating up to <strong>80 prototype units</strong>.
+                    community review, without promising a fixed number of watches before supplier quotes, PCB routing, physical prototypes, and validation are complete.
                   </p>
 
                   <p className="text-primary font-semibold">
