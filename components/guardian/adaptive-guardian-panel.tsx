@@ -100,7 +100,7 @@ export function AdaptiveGuardianPanel({
       <div>
         <h2 className="text-xl font-semibold">Adaptive Guardian learning</h2>
         <p className="text-sm text-muted-foreground">
-          Optional, local-first learning from check-ins you choose to record. NarcoGuard learns descriptive personal sequences and can surface resources earlier. Unknown answers stay unknown.
+          Optional, local-first learning from check-ins you choose to record. NarcoGuard learns descriptive personal sequences, retrains its small local models as your voluntary history changes, and can surface resources earlier. Unknown answers stay unknown.
         </p>
       </div>
     </div>
@@ -187,7 +187,7 @@ export function AdaptiveGuardianPanel({
           <p className="text-xs text-muted-foreground">{neural.note}</p>
           <p className="text-xs text-muted-foreground">Current voluntary labels: {neural.labeledDays} days ({neural.positiveDays} return-to-use, {neural.negativeDays} no-return-to-use).</p>
         </> : null}
-        <p className="text-xs text-muted-foreground">The neural output is intentionally not displayed as “chance of relapse.” It is not clinically calibrated and never contacts a Hero, friend, clinician, or emergency service by itself.</p>
+        <p className="text-xs text-muted-foreground">The neural outputs are intentionally not displayed as “chance of relapse.” They are not clinically calibrated. The local models automatically relearn from the voluntary history stored on this device, and they never contact a Hero, friend, clinician, or emergency service by themselves.</p>
       </div>
 
       {activeEvents.length > 0 && <p className="text-xs text-muted-foreground">Current voluntary signals used for local matching: {activeEvents.map(learnedEventLabel).join("; ")}.</p>}
