@@ -473,10 +473,12 @@ export async function POST(request: Request) {
     if (body.action === "en-route") patch.en_route_at = now
     if (body.action === "arrive") patch.arrived_at = now
     if (body.action === "complete") {
-      patch.completed_at = now
-      patch.location_ciphertext = null
-      patch.meeting_note = null
-      patch.contact_ciphertext = null
+      Object.assign(patch, {
+        completed_at: now,
+        location_ciphertext: null,
+        meeting_note: null,
+        contact_ciphertext: null,
+      })
     }
 
     const saved = await heroServerRest(
