@@ -25,6 +25,7 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 
 - Canonical orchestration source: `https://github.com/coden607/continuity-os`.
 - Route discrete classification/gating decisions through Continuity OS Jev semantics; use deterministic code when a rule is exact.
+- Route mid-task interruptions through the canonical `route-interrupts` skill: steering folds into the active task, side questions resume afterward, new tasks queue visibly, and only explicit stop/redirect messages halt work.
 - Apply `compress-token-spend` on substantive runs: search/read narrowly, keep context minimal, and use the cheapest capable tier from Continuity OS `config/orchestration/models.yaml`.
 - Keep Jev as a decision layer only; LLM/code still performs reasoning, implementation, and verification.
 - Do not vendor or fork the whole Continuity OS into NarcoGuard. Reference the canonical repository so routing policy remains centralized.
