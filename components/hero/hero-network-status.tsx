@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { useEffect, useState } from "react"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
@@ -55,6 +56,19 @@ export function HeroNetworkStatus() {
             <p className="text-3xl font-bold glow-text">Map</p>
             <p className="text-[11px] text-muted-foreground mt-1">Approximate areas only</p>
           </div>
+        </div>
+
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-3">
+          <div>
+            <p className="font-semibold text-primary">We need Heroes</p>
+            <p className="text-sm text-muted-foreground">NarcoGuard has the Hero Network infrastructure, but real coverage depends on trained volunteers. To become a lifesaving emergency Hero, you must complete the training, pass the certification test at 100%, enroll with a current certificate, carry naloxone while on call, and explicitly turn on emergency responder mode. Practical resource help remains separate from emergency Hero status.</p>
+          </div>
+          <GlowButton asChild variant="default" className="w-full">
+            <Link href="/hero-signup#hero-setup">
+              <Users className="w-4 h-4 mr-2" />
+              Earn Hero certification — start setup
+            </Link>
+          </GlowButton>
         </div>
 
         <HeroHelpRequest />

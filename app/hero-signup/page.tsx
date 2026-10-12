@@ -58,10 +58,18 @@ export default function HeroSignup() {
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-4">
+        <div id="hero-setup" className="text-center space-y-4 scroll-mt-24">
           <Shield className="w-20 h-20 mx-auto text-primary pulse-glow" aria-hidden="true" />
           <h1 className="text-4xl font-bold glow-text">Become a Hero</h1>
-          <p className="text-lg text-muted-foreground">Volunteers who know what to do in an overdose. Every Hero passes the test below with a perfect score.</p>
+          <p className="text-lg text-muted-foreground">We need trained Heroes. A lifesaving emergency Hero must earn certification: learn the overdose-response steps, pass the certification test at 100%, enroll with the current certificate, carry naloxone while on call, then explicitly choose emergency responder mode.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg">
+              <a href="#hero-certification">Start certification</a>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/auth">Sign in first</Link>
+            </Button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -77,14 +85,16 @@ export default function HeroSignup() {
           </HolographicCard>
           <HolographicCard className="p-6 text-center">
             <Shield className="w-12 h-12 mx-auto mb-4 text-blue-500" aria-hidden="true" />
-            <h2 className="font-bold mb-2">3. Enroll</h2>
-            <p className="text-sm text-muted-foreground">Link your certificate to your account. Valid for one year.</p>
+            <h2 className="font-bold mb-2">3. Earn Hero status</h2>
+            <p className="text-sm text-muted-foreground">After a perfect score, link the earned certificate to your account. The certificate must remain current.</p>
           </HolographicCard>
         </div>
 
-        <HolographicCard className="p-6 sm:p-8">
-          <CertificationTest onCertified={setFresh} />
-        </HolographicCard>
+        <div id="hero-certification" className="scroll-mt-24">
+          <HolographicCard className="p-6 sm:p-8">
+            <CertificationTest onCertified={setFresh} />
+          </HolographicCard>
+        </div>
 
         <HolographicCard className="p-6 sm:p-8">
           <section className="space-y-3" data-testid="hero-enroll">
