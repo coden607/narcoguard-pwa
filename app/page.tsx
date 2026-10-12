@@ -5,6 +5,7 @@ import { useState } from "react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
+import { BrandBackdrop } from "@/components/effects/brand-backdrop"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { VitalsMonitor } from "@/components/dashboard/vitals-monitor"
 import { EmergencyButton } from "@/components/emergency/emergency-button"
@@ -126,8 +127,8 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <ParticleField count={100} />
-      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
+      <BrandBackdrop />
+      <ParticleField count={72} />
 
       <div className="relative z-10 container mx-auto px-4 py-6 space-y-6">
         {skippedSetup && (
@@ -185,13 +186,13 @@ export default function DashboardPage() {
 
         <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 dashboard-hero">
           <div className="flex items-center gap-4">
-            <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 float-animation">
+            <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 float-animation">
               <Image
                 src="/images/narcoguard-icon-256.jpeg"
                 alt="Narcoguard"
-                width={64}
-                height={64}
-                className="w-full h-full rounded-full pulse-glow"
+                width={96}
+                height={96}
+                className="w-full h-full rounded-full pulse-glow drop-shadow-[0_0_32px_rgba(34,197,94,0.35)]"
               />
             </div>
             <div>
