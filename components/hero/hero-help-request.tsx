@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { HERO_RESOURCE_KINDS, HERO_RESOURCE_LABELS, type HeroResourceKind } from "@/lib/hero-alerts"
+import { HERO_CONTACT_METHODS, type HeroContactMethod } from "@/lib/hero-handoff"
 import { requesterStatusText, type HeroRequestStatus } from "@/lib/hero-lifecycle"
 
 type TrackedRequest = { id: string; token: string; kind: "emergency" | "resource"; resourceKind?: HeroResourceKind }
@@ -20,6 +21,9 @@ export function HeroHelpRequest() {
   const [emergency, setEmergency] = useState(false)
   const [shareExact, setShareExact] = useState(false)
   const [meetingNote, setMeetingNote] = useState("")
+  const [shareContact, setShareContact] = useState(false)
+  const [contactMethod, setContactMethod] = useState<HeroContactMethod>("text")
+  const [contactValue, setContactValue] = useState("")
   const [tracked, setTracked] = useState<TrackedRequest | null>(null)
   const [requestStatus, setRequestStatus] = useState<HeroRequestStatus | "expired" | "">("")
   const [note, setNote] = useState("")
@@ -73,6 +77,9 @@ export function HeroHelpRequest() {
           resourceKind: kind,
           shareExact,
           meetingNote: meetingNote.trim(),
+          shareContact,
+          contactMethod,
+          contactValue: contactValue.trim(),
         }),
       })
       const body = await response.json() as { sent?: boolean; requestId?: string; requestToken?: string; note?: string; error?: string }
@@ -175,9 +182,38 @@ export function HeroHelpRequest() {
       <span className="mt-1 block text-xs text-muted-foreground">This note is not shown publicly; it is revealed only to the Hero who accepts the request.</span>
     </label>}
 
+
+    {!emergency && <div className="rounded border p-3 space-y-3">
+      <label className="flex items-start gap-2">
+        <input type="checkbox" checked={shareContact} onChange={(event)=>setShareContact(event.target.checked)} />
+        <span><strong>Share one contact method only with the Hero who accepts.</strong> This is optional. NarcoGuard encrypts it at rest and clears it when the request is completed or cancelled.</span>
+      </label>
+      {shareContact && <div className="grid gap-2 sm:grid-cols-2">
+        <label className="text-sm">Contact method
+          <select
+            className="block mt-1 w-full border rounded p-2 bg-background"
+            value={contactMethod}
+            onChange={(event)=>setContactMethod(event.target.value as HeroContactMethod)}
+          >
+            {HERO_CONTACT_METHODS.map((method)=><option key={method} value={method}>{method === "community-handle" ? "NarcoGuard Community handle" : method[0].toUpperCase() + method.slice(1)}</option>)}
+          </select>
+        </label>
+        <label className="text-sm">Contact value
+          <input
+            className="block mt-1 w-full border rounded p-2 bg-background"
+            maxLength={160}
+            value={contactValue}
+            onChange={(event)=>setContactValue(event.target.value)}
+            placeholder={contactMethod === "email" ? "name@example.com" : contactMethod === "community-handle" ? "your_handle" : "Phone number"}
+          />
+        </label>
+      </div>}
+      <p className="text-xs text-muted-foreground">No profile, recovery history, email, phone number, or Community handle is shared unless you explicitly enter and approve that specific contact method here.</p>
+    </div>}
+
     {emergency && !shareExact && <p className="text-xs text-amber-300">Emergency Hero dispatch needs your explicit permission to share the exact location with the Hero who accepts.</p>}
 
-    <Button onClick={() => void send()} disabled={busy || (emergency && (!called911 || !shareExact)) || (!emergency && !shareExact && !meetingNote.trim()) || (!emergency && kind === "other" && !meetingNote.trim())}>
+    <Button onClick={() => void send()} disabled={busy || (emergency && (!called911 || !shareExact)) || (!emergency && !shareExact && !meetingNote.trim()) || (!emergency && kind === "other" && !meetingNote.trim()) || (!emergency && shareContact && !contactValue.trim())}>
       {busy ? "Posting…" : emergency ? "Request nearby emergency Hero" : `Request ${HERO_RESOURCE_LABELS[kind]}`}
     </Button>
     <p className="text-xs text-muted-foreground">NarcoGuard cannot guarantee a Hero or resource is available. For immediate danger, call 911.</p>
