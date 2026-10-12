@@ -290,6 +290,9 @@ export async function POST(request: Request) {
 
     const shareExact = body.shareExact === true
     const meetingNote = cleanMeetingNote(body.meetingNote)
+    if (prepared.request.kind === "resource" && prepared.request.resourceKind === "other" && !meetingNote) {
+      return json({ error: "Describe the practical help you need in the private handoff note." }, 400)
+    }
     if (prepared.request.kind === "emergency" && !shareExact) {
       return json({ error: "To dispatch a volunteer to an emergency, explicitly allow the accepted Hero to receive your exact location. 911 remains primary." }, 400)
     }
