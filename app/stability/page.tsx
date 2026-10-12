@@ -9,8 +9,9 @@ import {
 } from "@/lib/guardian-stability"
 import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
 import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
-import { learnedNeedSuggestions } from "@/lib/adaptive-guardian"
+import { learnedNeedSuggestions, neuralNeedForecasts } from "@/lib/adaptive-guardian"
 import { AdaptiveGuardianPanel } from "@/components/guardian/adaptive-guardian-panel"
+import { GuardianRewardsPanel } from "@/components/guardian/guardian-rewards-panel"
 import { anticipateResourceNeeds, questionsForUnknowns } from "@/lib/proactive-resource-needs"
 import { CalmingAudio } from "@/components/calming-audio"
 import { MealLogSection } from "@/components/guardian/meal-log-section"
@@ -62,7 +63,9 @@ export default function StabilityPage() {
   const proactiveNeeds = proactive.map((cue) => cue.need)
   const learnedSuggestions = state.adaptiveLearningEnabled ? learnedNeedSuggestions(state.entries, today, state.alertNeeds) : []
   const learnedNeeds = learnedSuggestions.map((cue) => cue.need)
-  const resourceNeeds = [...new Set([...needsHelp, ...suggested, ...proactiveNeeds, ...learnedNeeds])]
+  const neuralForecasts = state.adaptiveLearningEnabled ? neuralNeedForecasts(state.entries, today, state.alertNeeds) : []
+  const neuralNeeds = neuralForecasts.filter((forecast) => forecast.score >= 65).map((forecast) => forecast.need)
+  const resourceNeeds = [...new Set([...needsHelp, ...suggested, ...proactiveNeeds, ...learnedNeeds, ...neuralNeeds])]
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
 
   const updateCheckIn = (need: Need, status: NeedStatus | undefined) => {
@@ -112,6 +115,7 @@ export default function StabilityPage() {
         </label>
       </section>
       <AdaptiveGuardianPanel state={state} today={today} onChange={update} />
+      <GuardianRewardsPanel state={state} onChange={update} />
       <MealLogSection
         today={today}
         entries={state.entries}
@@ -143,6 +147,15 @@ export default function StabilityPage() {
           <button disabled={state.paused} className="underline ml-auto" onClick={() => update({ ...state, plan: state.plan.filter((candidate) => candidate.id !== item.id) })}>Remove</button>
         </li>)}</ul>
       </section>
+      {neuralForecasts.length > 0 && <section className="border rounded-xl p-5 space-y-4" aria-live="polite" data-testid="neural-maslow-forecast">
+        <h2 className="text-xl font-semibold">Neural Maslow forecast</h2>
+        <p className="text-sm text-muted-foreground">These experimental local models learn which needs tended to appear on your next recorded check-in after combinations like missed meals, isolation, low mood, sleep loss, or other needs. Scores are pattern scores, not probabilities or diagnoses.</p>
+        <ul className="space-y-2">{neuralForecasts.slice(0, 5).map((forecast) => <li key={forecast.need} className="rounded-lg border p-3">
+          <strong>{names[forecast.need]}</strong>
+          <span className="block text-sm">Next-check-in pattern score: {forecast.score}/100</span>
+          <span className="block text-xs text-muted-foreground">Learned from {forecast.trainingPairs} comparable transitions ({forecast.positivePairs} where this need appeared, {forecast.negativePairs} where it did not). {forecast.score >= 65 ? "NarcoGuard is preloading matching resources below." : "Below the early-sourcing threshold for now."}</span>
+        </li>)}</ul>
+      </section>}
       {proactive.length > 0 && <section className="border rounded-xl p-5 space-y-4" aria-live="polite">
         <h2 className="text-xl font-semibold">Plan ahead before a need becomes urgent</h2>
         <p className="text-sm text-muted-foreground">These cues use only information you chose to record. NarcoGuard can search early, but it does not turn missing logs into facts.</p>
