@@ -6,6 +6,7 @@ import { normalizePostalCode } from "@/lib/guardian-resources"
 import { MASLOW_LEVELS, resourceKindsForNeeds } from "@/lib/maslow-resources"
 import { RESOURCE_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 import { cardSummary } from "@/lib/resource-display"
+import { upcomingOpeningWindows } from "@/lib/opening-hours"
 import { inventoryFreshness, knownResourcesFor, readKnownResources, rememberKnownResources, type KnownResource } from "@/lib/resource-inventory"
 import { detectResourceChanges, readResourceChangeWatches, setResourceChangeWatch, type ResourceChange } from "@/lib/resource-change-watch"
 import { activeResourceVerification, readResourceVerifications, saveResourceVerification, verificationLabel, type ResourceVerification, type ResourceVerificationMethod, type ResourceVerificationStatus } from "@/lib/resource-verification"
@@ -232,6 +233,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
                       {lookup.results.slice(0, 3).map((resource, optionIndex) => {
                         const summary = cardSummary(resource, new Date())
                         const detail = [summary.hours, summary.freshness, summary.wheelchair, summary.services].filter((line): line is string => line !== null).join(" · ")
+                        const windows = upcomingOpeningWindows(resource.hours, new Date(), 7).slice(0, 4)
                         const key = resourceKey(resource)
                         const verification = activeResourceVerification(verifications, resource)
                         const verificationMethod = verificationMethods[key] ?? (resource.phone ? "phone" : resource.website ? "website" : "other")
@@ -274,6 +276,15 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
                               <button type="button" className="border rounded px-2 py-1" onClick={()=>recordVerification(resource,"could-not-confirm")}>Couldn’t confirm</button>
                             </div>
                           </details>
+                          {windows.length > 0 && <details className="mt-2 rounded border p-2 text-xs" data-testid="resource-calendar-windows">
+                            <summary className="cursor-pointer font-medium">Upcoming listed hours</summary>
+                            <ul className="mt-2 space-y-1">
+                              {windows.map((window, index) => <li key={window.date + "-" + index}>
+                                {window.dayLabel} {window.date}: {window.start}–{window.end}{window.crossesMidnight ? " (crosses midnight)" : ""}
+                              </li>)}
+                            </ul>
+                            <p className="mt-2 text-muted-foreground">Generated only from machine-readable listed hours. This is not an appointment, reservation, or guarantee that a specific service is available during the window.</p>
+                          </details>}
                           {verification && <div className="mt-2 rounded border border-primary/25 p-2 text-xs" data-testid="resource-verification">
                             <strong>{verificationLabel(verification)}.</strong>
                             <span className="block text-muted-foreground">Method: {verification.method} · checked {new Date(verification.verifiedAt).toLocaleString()} · expires {new Date(verification.expiresAt).toLocaleString()}.</span>
