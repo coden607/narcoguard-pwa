@@ -4,18 +4,19 @@ export const GUARDIAN_STORAGE_KEY = "narcoguard_guardian_stability_v2"
 export const NEEDS = ["food", "water", "sleep", "hygiene", "laundry", "safePlace", "connection", "treatment"] as const
 export type Need = typeof NEEDS[number]
 export type NeedStatus = "met" | "needs-help"
-export interface CheckIn { date: string; needs: Partial<Record<Need, NeedStatus>>; sleepHours?: number; mood?: "low" | "okay" | "good"; craving?: "none" | "some" | "strong"; isolated?: boolean; meals?: Meal[] }
+export interface CheckIn { date: string; needs: Partial<Record<Need, NeedStatus>>; sleepHours?: number; mood?: "low" | "okay" | "good"; craving?: "none" | "some" | "strong"; isolated?: boolean; meals?: Meal[]; returnToUse?: boolean }
 export interface PlanItem { id: string; date: string; title: string; done: boolean; kind?: "task" | "appointment"; time?: string; location?: string; need?: Need }
 export interface GuardianState {
   enabled: boolean; paused: boolean; postalCode: string; supportPhone: string; goals: string[]; entries: CheckIn[]; plan: PlanItem[]
   escalationEnabled: boolean; escalationThreshold: number
+  adaptiveLearningEnabled: boolean; patternAlertsEnabled: boolean; alertNeeds: Need[]
 }
 export interface GuardianStorage { getItem(key: string): string | null; setItem(key: string, value: string): void; removeItem(key: string): void }
 export interface PatternInsight { trigger: Need; companion: Need; observed: number; answered: number; percent: number }
 export interface EarlyWarning { level: "steady" | "check-in" | "support"; signals: Need[]; sleepSignal: boolean; score: number; reasons: string[] }
 
 export function defaultGuardianState(): GuardianState {
-  return { enabled: false, paused: false, postalCode: "", supportPhone: "", goals: [], entries: [], plan: [], escalationEnabled: false, escalationThreshold: 3 }
+  return { enabled: false, paused: false, postalCode: "", supportPhone: "", goals: [], entries: [], plan: [], escalationEnabled: false, escalationThreshold: 3, adaptiveLearningEnabled: false, patternAlertsEnabled: false, alertNeeds: [] }
 }
 const isDate = (value: unknown): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
 
@@ -37,7 +38,8 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
         ...(entry.mood === "low" || entry.mood === "okay" || entry.mood === "good" ? { mood: entry.mood } : {}),
         ...(entry.craving === "none" || entry.craving === "some" || entry.craving === "strong" ? { craving: entry.craving } : {}),
         ...(typeof entry.isolated === "boolean" ? { isolated: entry.isolated } : {}),
-        ...(meals.length ? { meals } : {}),
+        ...(entry.meals !== undefined ? { meals } : {}),
+        ...(typeof entry.returnToUse === "boolean" ? { returnToUse: entry.returnToUse } : {}),
       }
     })
     return {
@@ -49,6 +51,9 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
       plan: value.plan.filter((i: unknown) => i && typeof i === "object" && isDate((i as PlanItem).date) && typeof (i as PlanItem).title === "string" && typeof (i as PlanItem).id === "string").slice(-100).map((i: PlanItem) => ({ id: i.id.slice(0,80), date:i.date, title:i.title.slice(0,160), done:i.done===true, ...(i.kind === "appointment" || i.kind === "task" ? { kind: i.kind } : {}), ...(typeof i.time === "string" && /^\d{2}:\d{2}$/.test(i.time) ? { time: i.time } : {}), ...(typeof i.location === "string" ? { location: i.location.slice(0,160) } : {}), ...(NEEDS.includes(i.need as Need) ? { need: i.need as Need } : {}) })),
       escalationEnabled: value.escalationEnabled === true,
       escalationThreshold: typeof value.escalationThreshold === "number" && value.escalationThreshold >= 2 && value.escalationThreshold <= 6 ? Math.round(value.escalationThreshold) : 3,
+      adaptiveLearningEnabled: value.adaptiveLearningEnabled === true,
+      patternAlertsEnabled: value.patternAlertsEnabled === true,
+      alertNeeds: Array.isArray(value.alertNeeds) ? value.alertNeeds.filter((need: unknown): need is Need => NEEDS.includes(need as Need)).slice(0, NEEDS.length) : [],
     }
   } catch { return defaultGuardianState() }
 }
