@@ -35,7 +35,7 @@ export function ServiceWorkerRegister() {
       })
     }
 
-    const checkDeploymentVersion = async (registration: ServiceWorkerRegistration, establishBaseline = false) => {
+    const checkDeploymentVersion = async (registration: ServiceWorkerRegistration) => {
       try {
         const response = await fetch("/api/app-version", { cache: "no-store" })
         if (!response.ok) return
@@ -44,7 +44,7 @@ export function ServiceWorkerRegister() {
         if (!version || version === "local") return
 
         const seen = window.localStorage.getItem(VERSION_STORAGE_KEY)
-        if (!seen || establishBaseline) {
+        if (!seen) {
           window.localStorage.setItem(VERSION_STORAGE_KEY, version)
           return
         }
@@ -62,9 +62,9 @@ export function ServiceWorkerRegister() {
       if (disposed) return
       registrationRef = registration
 
-      // Establish a deployment baseline on first use. Subsequent checks compare
-      // the last version this device actually loaded with the current deployment.
-      void checkDeploymentVersion(registration, true)
+      // Establish a deployment baseline only on first use. Subsequent launches
+      // compare the last version this device actually loaded with current production.
+      void checkDeploymentVersion(registration)
 
       // Check immediately on launch and periodically while the app stays open.
       void registration.update().catch(() => undefined)
