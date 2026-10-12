@@ -46,9 +46,12 @@ export default function CommunityPage() {
   }, [])
 
   useEffect(() => {
-    void refresh()
+    const first = window.setTimeout(() => void refresh(), 0)
     const timer = window.setInterval(() => void refresh(), 20_000)
-    return () => window.clearInterval(timer)
+    return () => {
+      window.clearTimeout(first)
+      window.clearInterval(timer)
+    }
   }, [refresh])
 
   const act = async (payload: Record<string, unknown>) => {
