@@ -83,7 +83,7 @@ test.describe("PWA production flow", () => {
     await page.getByRole("button", { name: "Enable my private planner" }).click()
     await page.getByLabel("Food status").selectOption("needs-help")
     await page.getByLabel("Hours slept last night").fill("7")
-    await expect(page.getByRole("link", { name: /Find local help through 211/ })).toBeVisible()
+    await expect(page.getByRole("link", { name: "Find local help through 211", exact: true }).first()).toBeVisible()
     await page.getByLabel("Task or appointment").fill("Visit pantry")
     await page.getByLabel("Plan time").fill("09:00")
     await page.getByLabel("Plan location").fill("Community pantry")
