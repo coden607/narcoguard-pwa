@@ -41,3 +41,22 @@ test("appointment planning data is retained only within the safe local schema", 
   saveGuardianState(store, enabled)
   assert.deepEqual(readGuardianState(store).plan[0], enabled.plan[0])
 })
+
+
+test("adaptive learning choices and voluntary return-to-use labels survive the local schema", () => {
+  const store = storage()
+  const enabled = {
+    ...defaultGuardianState(),
+    enabled: true,
+    adaptiveLearningEnabled: true,
+    patternAlertsEnabled: true,
+    alertNeeds: ["food", "hygiene"] as const,
+    entries: [{ date: "2026-10-12", needs: { food: "needs-help" as const }, returnToUse: false }],
+  }
+  saveGuardianState(store, enabled)
+  const saved = readGuardianState(store)
+  assert.equal(saved.adaptiveLearningEnabled, true)
+  assert.equal(saved.patternAlertsEnabled, true)
+  assert.deepEqual(saved.alertNeeds, ["food", "hygiene"])
+  assert.equal(saved.entries[0].returnToUse, false)
+})
