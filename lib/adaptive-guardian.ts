@@ -320,3 +320,139 @@ export function neuralNeedForecasts(
 
   return forecasts.sort((a, b) => b.score - a.score || b.trainingPairs - a.trainingPairs)
 }
+
+
+export type TransitionChainInsight = {
+  steps: 2 | 3
+  events: LearnedEvent[]
+  observed: number
+  comparable: number
+  percent: number
+}
+
+function distinctChain(events: readonly LearnedEvent[]) {
+  return new Set(events).size === events.length
+}
+
+export function transitionChains(
+  entries: readonly CheckIn[],
+  fromEvents: readonly LearnedEvent[] = LEARNED_EVENTS,
+  {
+    steps = [2, 3],
+    minComparable = 5,
+    minObserved = 2,
+    limit = 12,
+  }: {
+    steps?: readonly (2 | 3)[]
+    minComparable?: number
+    minObserved?: number
+    limit?: number
+  } = {},
+): TransitionChainInsight[] {
+  const ordered = uniqueSorted(entries)
+  const out: TransitionChainInsight[] = []
+  const intermediateEvents = LEARNED_EVENTS.filter((event) => event !== "return-to-use")
+
+  for (const start of fromEvents) {
+    if (start === "return-to-use") continue
+    for (const stepCount of steps) {
+      const visit = (prefix: LearnedEvent[]) => {
+        if (prefix.length === stepCount + 1) {
+          if (!distinctChain(prefix)) return
+          let comparable = 0
+          let observed = 0
+
+          for (let index = 0; index < ordered.length - stepCount; index++) {
+            if (knownEvent(ordered[index], prefix[0]) !== true) continue
+            let chainKnown = true
+            let chainObserved = true
+            for (let offset = 1; offset <= stepCount; offset++) {
+              const value = knownEvent(ordered[index + offset], prefix[offset])
+              if (value === undefined) {
+                chainKnown = false
+                break
+              }
+              if (value !== true) chainObserved = false
+            }
+            if (!chainKnown) continue
+            comparable++
+            if (chainObserved) observed++
+          }
+
+          if (comparable >= minComparable && observed >= minObserved) {
+            out.push({
+              steps: stepCount,
+              events: [...prefix],
+              observed,
+              comparable,
+              percent: Math.round(100 * observed / comparable),
+            })
+          }
+          return
+        }
+
+        const isTerminal = prefix.length === stepCount
+        const options = isTerminal ? LEARNED_EVENTS : intermediateEvents
+        for (const event of options) visit([...prefix, event])
+      }
+
+      visit([start])
+    }
+  }
+
+  return out
+    .sort((a, b) => b.percent - a.percent || b.observed - a.observed || b.comparable - a.comparable)
+    .slice(0, Math.max(1, limit))
+}
+
+export type NeuralNeedHorizonForecast = NeuralNeedForecast & {
+  horizon: 2 | 3
+}
+
+export function neuralNeedHorizonForecasts(
+  entries: readonly CheckIn[],
+  today: CheckIn,
+  selectedNeeds: readonly Need[] = [],
+  {
+    minPairs = 20,
+    minPositive = 4,
+    minNegative = 8,
+  }: { minPairs?: number; minPositive?: number; minNegative?: number } = {},
+): NeuralNeedHorizonForecast[] {
+  const ordered = uniqueSorted(entries)
+  const allowed = new Set(selectedNeeds)
+  const forecasts: NeuralNeedHorizonForecast[] = []
+
+  for (const horizon of [2, 3] as const) {
+    NEEDS.forEach((need, needIndex) => {
+      if (allowed.size > 0 && !allowed.has(need)) return
+
+      const pairs: { x: number[]; target: number }[] = []
+      for (let index = 0; index < ordered.length - horizon; index++) {
+        const targetValue = ordered[index + horizon].needs[need]
+        if (targetValue === undefined) continue
+        pairs.push({
+          x: featureVector(ordered[index]),
+          target: targetValue === "needs-help" ? 1 : 0,
+        })
+      }
+
+      const positivePairs = pairs.filter((pair) => pair.target === 1).length
+      const negativePairs = pairs.length - positivePairs
+      if (pairs.length < minPairs || positivePairs < minPositive || negativePairs < minNegative) return
+
+      forecasts.push({
+        need,
+        horizon,
+        status: "ready",
+        score: trainBinaryNeedModel(pairs, today, 6000 + horizon * 1000 + needIndex * 500),
+        trainingPairs: pairs.length,
+        positivePairs,
+        negativePairs,
+        note: "Experimental local multi-horizon pattern score. It is not a calibrated probability, diagnosis, or proof this need will occur.",
+      })
+    })
+  }
+
+  return forecasts.sort((a, b) => b.score - a.score || a.horizon - b.horizon || b.trainingPairs - a.trainingPairs)
+}
