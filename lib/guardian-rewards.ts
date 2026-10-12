@@ -17,8 +17,7 @@ export function guardianRewardSummary(state: GuardianState): RewardSummary {
     entry.sleepHours !== undefined ||
     entry.mood !== undefined ||
     entry.craving !== undefined ||
-    entry.isolated !== undefined ||
-    entry.returnToUse !== undefined,
+    entry.isolated !== undefined,
   ).length
 
   const mealLogs = state.entries.reduce((sum, entry) => sum + Math.min(entry.meals?.length ?? 0, 3), 0)
