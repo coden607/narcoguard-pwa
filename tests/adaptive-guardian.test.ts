@@ -5,6 +5,8 @@ import {
   learnedNeedSuggestions,
   neuralPatternScore,
   neuralNeedForecasts,
+  neuralNeedHorizonForecasts,
+  transitionChains,
   transitionInsights,
 } from "../lib/adaptive-guardian"
 import type { CheckIn } from "../lib/guardian-stability"
@@ -127,4 +129,98 @@ test("neural need forecasters learn next-check-in Maslow needs from local histor
     assert.ok(forecast.score >= 0 && forecast.score <= 100)
     assert.match(forecast.note, /not a calibrated probability/i)
   }
+})
+
+
+test("transition chains require complete known 2–3 step sequences and abstain below evidence", () => {
+  const entries: CheckIn[] = []
+  for (let cycle = 0; cycle < 7; cycle++) {
+    const base = cycle * 4
+    for (const [offset, needs] of [
+      [0, { food: "needs-help" as const }],
+      [1, { hygiene: "needs-help" as const }],
+      [2, { connection: "needs-help" as const }],
+      [3, { treatment: cycle < 5 ? "needs-help" as const : "met" as const }],
+    ] as const) {
+      const date = new Date(Date.UTC(2026, 0, 1 + base + offset))
+      entries.push({ date: date.toISOString().slice(0, 10), needs })
+    }
+  }
+
+  const chains = transitionChains(entries, ["need:food"], {
+    steps: [2, 3],
+    minComparable: 5,
+    minObserved: 2,
+    limit: 20,
+  })
+  assert.ok(chains.some((row) =>
+    row.steps === 2 &&
+    row.events.join("->") === "need:food->need:hygiene->need:connection" &&
+    row.comparable >= 5 &&
+    row.observed >= 5
+  ))
+  assert.ok(chains.every((row) => row.steps === 2 || row.steps === 3))
+  assert.equal(transitionChains(entries.slice(0, 8), ["need:food"], { minComparable: 5 }).length, 0)
+})
+
+test("transition chains exclude windows with unknown future answers from denominators", () => {
+  const entries: CheckIn[] = []
+  for (let cycle = 0; cycle < 6; cycle++) {
+    const dates = [0, 1, 2].map((offset) =>
+      new Date(Date.UTC(2026, 2, 1 + cycle * 3 + offset)).toISOString().slice(0, 10)
+    )
+    entries.push({ date: dates[0], needs: { food: "needs-help" } })
+    entries.push({ date: dates[1], needs: { hygiene: "needs-help" } })
+    entries.push({
+      date: dates[2],
+      needs: cycle === 5 ? {} : { connection: "needs-help" },
+    })
+  }
+
+  const chain = transitionChains(entries, ["need:food"], {
+    steps: [2],
+    minComparable: 5,
+    minObserved: 2,
+    limit: 20,
+  }).find((row) => row.events.join("->") === "need:food->need:hygiene->need:connection")
+
+  assert.ok(chain)
+  assert.equal(chain?.comparable, 5)
+  assert.equal(chain?.observed, 5)
+  assert.equal(chain?.percent, 100)
+})
+
+test("neural need horizon forecasts stay bounded to 2–3 check-ins and enforce evidence", () => {
+  const entries: CheckIn[] = Array.from({ length: 60 }, (_, index) => {
+    const date = new Date(Date.UTC(2026, 4, 1 + index))
+    return {
+      date: date.toISOString().slice(0, 10),
+      needs: {
+        food: index % 3 === 0 ? "needs-help" as const : "met" as const,
+        hygiene: index % 4 === 0 ? "needs-help" as const : "met" as const,
+        connection: index % 5 === 0 ? "needs-help" as const : "met" as const,
+      },
+      isolated: index % 5 === 0,
+      sleepHours: index % 6 === 0 ? 4 : 7,
+    }
+  })
+  const today: CheckIn = {
+    date: "2026-07-15",
+    needs: { food: "needs-help" },
+    isolated: true,
+    sleepHours: 4,
+  }
+
+  const forecasts = neuralNeedHorizonForecasts(entries, today, [], {
+    minPairs: 20,
+    minPositive: 4,
+    minNegative: 8,
+  })
+  assert.ok(forecasts.length > 0)
+  assert.ok(forecasts.every((row) => row.horizon === 2 || row.horizon === 3))
+  assert.ok(forecasts.every((row) => /not a calibrated probability/i.test(row.note)))
+  assert.equal(
+    neuralNeedHorizonForecasts(entries.slice(0, 8), today, [], { minPairs: 20 }).length,
+    0,
+  )
 })
