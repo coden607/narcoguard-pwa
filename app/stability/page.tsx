@@ -9,6 +9,8 @@ import {
 } from "@/lib/guardian-stability"
 import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
 import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
+import { learnedNeedSuggestions } from "@/lib/adaptive-guardian"
+import { AdaptiveGuardianPanel } from "@/components/guardian/adaptive-guardian-panel"
 import { anticipateResourceNeeds, questionsForUnknowns } from "@/lib/proactive-resource-needs"
 import { CalmingAudio } from "@/components/calming-audio"
 import { MealLogSection } from "@/components/guardian/meal-log-section"
@@ -58,7 +60,9 @@ export default function StabilityPage() {
   const proactive = anticipateResourceNeeds({ entries: state.entries, today, plan: state.plan, now: { date: now, time: clockTime } })
   const pendingQuestions = questionsForUnknowns(today, proactive)
   const proactiveNeeds = proactive.map((cue) => cue.need)
-  const resourceNeeds = [...new Set([...needsHelp, ...suggested, ...proactiveNeeds])]
+  const learnedSuggestions = state.adaptiveLearningEnabled ? learnedNeedSuggestions(state.entries, today, state.alertNeeds) : []
+  const learnedNeeds = learnedSuggestions.map((cue) => cue.need)
+  const resourceNeeds = [...new Set([...needsHelp, ...suggested, ...proactiveNeeds, ...learnedNeeds])]
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
 
   const updateCheckIn = (need: Need, status: NeedStatus | undefined) => {
@@ -107,6 +111,7 @@ export default function StabilityPage() {
           }} />
         </label>
       </section>
+      <AdaptiveGuardianPanel state={state} today={today} onChange={update} />
       <MealLogSection
         today={today}
         entries={state.entries}

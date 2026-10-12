@@ -68,6 +68,22 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Adaptive Guardian learning</h2>
+            <p>
+              Adaptive Guardian is optional and local-first. When you enable it, your Guardian check-ins can include an optional
+              return-to-use outcome label. NarcoGuard can calculate descriptive next-check-in transition rates and train a small
+              experimental neural model in this browser from the entries you voluntarily recorded.
+            </p>
+            <p>
+              The adaptive history and model are not uploaded by this feature. Unknown answers stay unknown, the neural layer
+              abstains until it has enough labeled examples, and its output is a personal pattern score rather than a clinically
+              calibrated relapse probability. Pattern notifications use generic text and do not automatically contact Heroes,
+              friends, clinicians, employers or emergency services. Pausing or erasing Guardian data also stops or erases this
+              learning history on this device.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="text-2xl font-semibold text-foreground">Community profiles, posts and messages</h2>
             <p>
               The optional Community feature requires an account. If you use it, NarcoGuard stores the community handle, display name and

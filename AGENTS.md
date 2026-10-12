@@ -21,6 +21,14 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 - The pinned commit in `.agent-skills/manifest.json` is the reproducible source of truth.
 - `npm run validate:agent-skills` must remain green in CI.
 
+## Continuity OS Routing
+
+- Canonical orchestration source: `https://github.com/coden607/continuity-os`.
+- Route discrete classification/gating decisions through Continuity OS Jev semantics; use deterministic code when a rule is exact.
+- Apply `compress-token-spend` on substantive runs: search/read narrowly, keep context minimal, and use the cheapest capable tier from Continuity OS `config/orchestration/models.yaml`.
+- Keep Jev as a decision layer only; LLM/code still performs reasoning, implementation, and verification.
+- Do not vendor or fork the whole Continuity OS into NarcoGuard. Reference the canonical repository so routing policy remains centralized.
+
 ## Working Style
 
 - Work autonomously on safe, in-scope implementation and verification steps.

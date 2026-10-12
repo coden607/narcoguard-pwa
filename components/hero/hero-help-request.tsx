@@ -130,7 +130,7 @@ export function HeroHelpRequest() {
     {requestStatus === "accepted" && <p className="text-sm">A matching Hero accepted the request. They have not marked themselves on the way yet.</p>}
     {requestStatus === "en_route" && <p className="text-sm">The Hero marked themselves on the way. For emergencies, continue following 911 while waiting.</p>}
     {requestStatus === "arrived" && <p className="text-sm">The Hero marked themselves arrived. Only use the agreed handoff/location and keep emergency services involved when applicable.</p>}
-    {requestStatus === "completed" && <p className="text-sm">The Hero marked this request completed.</p>}
+    {requestStatus === "completed" && <><p className="text-sm">The Hero marked this request completed.</p><p className="text-xs text-muted-foreground">If you both want ongoing contact, you can exchange NarcoGuard Community handles. The help request itself never automatically connects profiles.</p></>}
     {requestStatus === "expired" && <p className="text-sm">No Hero accepted before this request expired. Create a new request if you still need help.</p>}
     <div className="flex gap-2">
       {["open","accepted","en_route","arrived"].includes(requestStatus) && <Button variant="outline" onClick={() => void cancel()} disabled={busy}>Cancel request</Button>}
@@ -164,19 +164,20 @@ export function HeroHelpRequest() {
       <span><strong>Share my exact location only with the Hero who accepts.</strong> NarcoGuard encrypts it at rest and clears it when the request is completed or cancelled.</span>
     </label>
 
-    {!emergency && !shareExact && <label className="block text-sm">Public meeting point or handoff note
+    {!emergency && <label className="block text-sm">{kind === "other" ? "What practical help do you need? / handoff note" : "Meeting point or handoff note (optional if exact location is shared)"}
       <input
         className="block mt-1 w-full border rounded p-2 bg-background"
         maxLength={240}
         value={meetingNote}
         onChange={(event)=>setMeetingNote(event.target.value)}
-        placeholder="Example: library front entrance. Do not include private medical details."
+        placeholder={kind === "other" ? "Example: help getting laundry done or making a phone call. Do not include private medical details." : "Example: library front entrance. Do not include private medical details."}
       />
+      <span className="mt-1 block text-xs text-muted-foreground">This note is not shown publicly; it is revealed only to the Hero who accepts the request.</span>
     </label>}
 
     {emergency && !shareExact && <p className="text-xs text-amber-300">Emergency Hero dispatch needs your explicit permission to share the exact location with the Hero who accepts.</p>}
 
-    <Button onClick={() => void send()} disabled={busy || (emergency && (!called911 || !shareExact)) || (!emergency && !shareExact && !meetingNote.trim())}>
+    <Button onClick={() => void send()} disabled={busy || (emergency && (!called911 || !shareExact)) || (!emergency && !shareExact && !meetingNote.trim()) || (!emergency && kind === "other" && !meetingNote.trim())}>
       {busy ? "Posting…" : emergency ? "Request nearby emergency Hero" : `Request ${HERO_RESOURCE_LABELS[kind]}`}
     </Button>
     <p className="text-xs text-muted-foreground">NarcoGuard cannot guarantee a Hero or resource is available. For immediate danger, call 911.</p>
