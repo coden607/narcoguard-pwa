@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { NeedsFinder } from "@/components/resources/needs-finder"
+import { ResourceWatchPanel } from "@/components/resources/resource-watch-panel"
 
 export const metadata: Metadata = {
   title: "Find help near me | NarcoGuard",
@@ -18,6 +19,7 @@ export default function HelpPage() {
       <div className="border rounded-xl p-5">
         <NeedsFinder />
       </div>
+      <ResourceWatchPanel />
     </main>
   )
 }

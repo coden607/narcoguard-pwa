@@ -100,6 +100,40 @@ async function cleanupOldRequests() {
 }
 
 type PushSubscriptionRow = { id: string; auth_user_id: string; endpoint: string }
+type ResourceWatchRow = { auth_user_id: string; resource_kind: HeroResourceKind }
+type UserPushSubscriptionRow = { id: string; auth_user_id: string; endpoint: string }
+
+async function notifyMatchingResourceWatchers(availability: HeroAvailability) {
+  if (!vapidConfigured(process.env) || availability.resources.length === 0) return
+  const origin = parseCellKey(availability.cell)
+  if (!origin) return
+  const cells = nearbyCells(origin).map((cell) => `"${cell}"`).join(",")
+  const kinds = availability.resources.map((kind) => `"${kind}"`).join(",")
+  const watchResponse = await heroServerRest(
+    `resource_watch_subscriptions?select=auth_user_id,resource_kind&enabled=eq.true&expires_at=gt.${new Date().toISOString()}&cell=in.(${encodeURIComponent(cells)})&resource_kind=in.(${encodeURIComponent(kinds)})`,
+  ).catch(() => null)
+  if (!watchResponse?.ok) return
+  const watches = (await watchResponse.json()) as ResourceWatchRow[]
+  const userIds = [...new Set(watches.map((row) => row.auth_user_id))]
+  if (userIds.length === 0) return
+
+  const ids = userIds.map((id) => `"${id}"`).join(",")
+  const subscriptionsResponse = await heroServerRest(
+    `user_push_subscriptions?select=id,auth_user_id,endpoint&enabled=eq.true&auth_user_id=in.(${encodeURIComponent(ids)})`,
+  ).catch(() => null)
+  if (!subscriptionsResponse?.ok) return
+  const subscriptions = (await subscriptionsResponse.json()) as UserPushSubscriptionRow[]
+
+  await Promise.allSettled(subscriptions.map(async (subscription) => {
+    const result = await sendEmptyWebPush(subscription.endpoint, process.env)
+    if (result.status === 404 || result.status === 410) {
+      await heroServerRest(
+        `user_push_subscriptions?id=eq.${encodeURIComponent(subscription.id)}`,
+        { method: "DELETE", headers: { Prefer: "return=minimal" } },
+      ).catch(() => null)
+    }
+  }))
+}
 
 async function notifyMatchingHeroes(request: HeroRequest) {
   if (!vapidConfigured(process.env)) return
@@ -352,9 +386,9 @@ export async function POST(request: Request) {
         updated_at: new Date().toISOString(),
       }),
     }).catch(() => null)
-    return saved?.ok
-      ? json({ available: true, availableUntil: availability.availableUntil, emergencyReady: availability.emergencyReady, resources: availability.resources })
-      : json({ error: "Could not save your availability." }, 503)
+    if (!saved?.ok) return json({ error: "Could not save your availability." }, 503)
+    await notifyMatchingResourceWatchers(availability).catch(() => undefined)
+    return json({ available: true, availableUntil: availability.availableUntil, emergencyReady: availability.emergencyReady, resources: availability.resources })
   }
 
   if (body.action === "accept") {

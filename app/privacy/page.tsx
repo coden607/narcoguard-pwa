@@ -3,7 +3,7 @@ export default function PrivacyPolicy() {
     <main className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-4xl font-bold text-center">NarcoGuard Privacy</h1>
-        <p className="text-sm text-muted-foreground text-center">Updated October 8, 2026</p>
+        <p className="text-sm text-muted-foreground text-center">Updated October 11, 2026</p>
 
         <div className="space-y-6 text-sm text-muted-foreground">
           <section className="space-y-3">
@@ -68,6 +68,20 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Community profiles, posts and messages</h2>
+            <p>
+              The optional Community feature requires an account. If you use it, NarcoGuard stores the community handle, display name and
+              bio you choose, posts you publish, connection requests and accepted connections, blocks, and direct messages. Other signed-in
+              community members can see community profiles and posts that their access rules allow. Direct messages are limited to accepted,
+              unblocked connections.
+            </p>
+            <p>
+              Community features are separate from emergency requests. Do not post another person&apos;s exact location, health information,
+              recovery status or other sensitive information without their permission. Blocking is enforced in the community data rules.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="text-2xl font-semibold text-foreground">Donations</h2>
             <p>
               Card donations are processed by Stripe on its checkout page. NarcoGuard does not receive your card details;
@@ -101,9 +115,16 @@ export default function PrivacyPolicy() {
               version and the dates; your answers are graded and discarded, never stored or logged.
             </p>
             <p>
-              Nearby Hero requests are not live. They are switched off until a separate safety and privacy review approves them. If they
-              are ever switched on, a request would keep only an area about 5 km across for 30 minutes, never your exact location, name or
-              health details, and NarcoGuard would send no texts or calls.
+              The Hero/resource request infrastructure can be enabled by deployment. Public Hero map data uses coarse areas, not volunteer
+              addresses. A resource request stores a coarse nearby area, the requested resource type, timestamps and request status. Exact
+              location is stored only when the requester explicitly chooses to share it with the Hero who accepts; it is encrypted at rest
+              and cleared when the request is completed or cancelled. Hero availability is voluntary and time-limited, and NarcoGuard does
+              not guarantee that a Hero or resource is available.
+            </p>
+            <p>
+              Optional Web Push stores a browser push endpoint so NarcoGuard can send generic notifications. A 24-hour resource watch stores
+              your account id, a coarse nearby area, the resource type you chose and an expiration time. Push notifications are intentionally
+              generic so a lock screen does not reveal recovery status, a medical condition or the specific resource you requested.
             </p>
           </section>
 

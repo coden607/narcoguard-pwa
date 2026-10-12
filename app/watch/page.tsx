@@ -27,7 +27,8 @@ import { watchDesignCalculations, watchDesignCalculations40, watchDesignModel, w
 import { WATCH_COMPONENTS, WATCH_COMPONENTS_40 } from "@/lib/watch-components"
 import { GEOMETRY_40, GEOMETRY_46 } from "@/lib/watch-geometry"
 import { BOM_40, BOM_46, UNIT_COSTS, bomTotals } from "@/lib/watch-bom"
-import { FUNDING_GOAL, PROTOTYPE_UNIT_COST, PROTOTYPE_UNITS } from "@/lib/funding-goal"
+import { FUNDING_GOAL } from "@/lib/funding-goal"
+import { REV5_POWER_ARCHITECTURE, WATCH_REV5_MODULES } from "@/lib/watch-rev5"
 import { EngineeringDrawing } from "@/components/watch/engineering-drawing"
 import { Watch3D } from "@/components/watch/watch-3d"
 import { OwnerLock } from "@/components/watch/owner-lock"
@@ -36,8 +37,8 @@ import { OwnerLock } from "@/components/watch/owner-lock"
 // confirmation. This is a research concept, not a manufacturing-ready or medical-device BOM.
 const VARIANTS = {
   "46": {
-    label: "NG 46 mm",
-    fit: "Larger wrists",
+    label: "NG46 Rugged",
+    fit: "Larger / rugged fit",
     model: watchDesignModel,
     calc: watchDesignCalculations,
     geometry: GEOMETRY_46,
@@ -46,8 +47,8 @@ const VARIANTS = {
     drawingNumber: "NG-CON-001",
   },
   "40": {
-    label: "NG 40 mm",
-    fit: "Women's fit, smaller wrists",
+    label: "NG40 Elegant",
+    fit: "Smaller-wrist / refined fit",
     model: watchDesignModel40,
     calc: watchDesignCalculations40,
     geometry: GEOMETRY_40,
@@ -145,7 +146,7 @@ export default function NGWatchPage() {
               ["Display", variant.geometry.ENVELOPE.displayDiameter > 33 ? '1.45" round' : '1.2" round'],
               ["Battery", `${variant.model.nominalBatteryCapacityMah} mAh`],
               ["Strap", `${variant.geometry.ENVELOPE.strapWidth} mm`],
-              ["Est. build", `$${totalWithNaloxone.toFixed(2)}`],
+              ["Base candidate HW", `${totalPerUnit.toFixed(2)}`],
             ].map(([term, value]) => (
               <div key={term} className="rounded-lg border border-border/60 p-2">
                 <dt className="text-xs text-muted-foreground">{term}</dt>
@@ -159,19 +160,61 @@ export default function NGWatchPage() {
           </figure>
         </section>
 
-        {/* Hero Product Showcase with New Images */}
-        <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 rounded-2xl overflow-hidden neon-border">
-            <Image src="/images/ng-modular-exploded.jpg" alt="NarcoGuard NG concept exploded view showing candidate modular components" width={1200} height={675} priority className="w-full h-auto object-cover" />
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="rounded-2xl overflow-hidden neon-border flex-1">
-              <Image src="/images/ng-blueprint-detailed.jpg" alt="NarcoGuard NG engineering blueprint with cross-section views and dimensions" width={600} height={338} className="w-full h-full object-cover" />
+        <section className="mb-8 rounded-2xl border border-red-500/30 bg-red-500/5 p-5" data-testid="modular-auto-injector">
+          <div className="grid gap-4 lg:grid-cols-[1fr_.8fr]">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-red-300">Rev 5 research module</p>
+              <h2 className="mt-1 text-2xl font-bold">Modular auto-injector research pod</h2>
+              <p className="mt-3 text-sm text-muted-foreground">
+                The medication system is being treated as a separate removable module, not part of the sealed base watch. The base NG46/NG40 remains useful for sensing research, alerts, communications, Hero Network access, and safety functions without a drug-delivery pod attached.
+              </p>
+              <p className="mt-3 text-sm text-muted-foreground">
+                The pod would require its own isolation boundary, cartridge/service interface, interlocks, status sensing, clinical requirements, pharmaceutical partnership, human-factors work, and FDA combination-product pathway before any human-use claim.
+              </p>
+              <p className="mt-3 font-semibold text-red-200">
+                No NarcoGuard watch currently injects naloxone. Dose, delivery mechanism, activation logic, cartridge, and clinical performance are not finalized.
+              </p>
             </div>
-            <div className="rounded-2xl overflow-hidden neon-border flex-1">
-              <Image src="/images/ng-watch-hero.jpg" alt="NarcoGuard NG watch on wrist showing vital signs display" width={600} height={338} className="w-full h-full object-cover" />
+            <div className="rounded-xl border border-border/60 bg-background/40 p-4">
+              <h3 className="font-semibold">Module rules</h3>
+              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
+                {WATCH_REV5_MODULES.find((module) => module.id === "auto-injector-module")?.designRules.map((rule) => <li key={rule}>{rule}</li>)}
+              </ul>
             </div>
           </div>
+        </section>
+
+        {/* Rev 5 blueprint + module summary */}
+        <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <HolographicCard className="p-6" glowIntensity="high">
+            <h2 className="text-xl font-bold mb-4">Rev 5 blueprint — {variant.label}</h2>
+            <Image
+              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg" : "/images/ng40-rev5-blueprint.svg"}
+              alt={`${variant.label} Rev 5 concept blueprint`}
+              width={1200}
+              height={800}
+              priority
+              className="w-full h-auto rounded-xl border border-border/60"
+            />
+            <p className="mt-2 text-xs text-muted-foreground">Concept engineering visual only. Supplier CAD, routed PCB, tolerance, RF, thermal, ingress, and physical validation remain open.</p>
+          </HolographicCard>
+          <HolographicCard className="p-6" glowIntensity="high">
+            <h2 className="text-xl font-bold mb-4">Rev 5 power, privacy & modular additions</h2>
+            <div className="grid gap-3">
+              {WATCH_REV5_MODULES.filter((item) => item.sizes.includes(variantId === "46" ? "NG46" : "NG40")).map((item) => (
+                <div key={item.id} className="rounded-lg border border-border/60 bg-background/40 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-semibold">{item.label}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-primary">{item.feasibility}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{item.purpose}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-4 rounded-lg border border-primary/30 p-3 text-xs text-muted-foreground">
+              Primary storage: {REV5_POWER_ARCHITECTURE.primaryStorage}. Primary charging: {REV5_POWER_ARCHITECTURE.primaryCharging}. {REV5_POWER_ARCHITECTURE.rule}
+            </div>
+          </HolographicCard>
         </section>
 
         {/* Investor-facing engineering summary */}
@@ -185,7 +228,7 @@ export default function NGWatchPage() {
                   Callouts correspond to the conceptual diagram and the candidate supplier BOM below.
                 </p>
               </div>
-              <span className="text-xs font-mono rounded-md border border-primary/40 px-3 py-2 whitespace-nowrap">CONCEPT REV 4.2</span>
+              <span className="text-xs font-mono rounded-md border border-primary/40 px-3 py-2 whitespace-nowrap">CONCEPT REV 5</span>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-2">
@@ -258,8 +301,8 @@ export default function NGWatchPage() {
         <section className="mb-8 p-6 rounded-2xl neon-border bg-linear-to-r from-green-500/20 via-primary/10 to-green-500/20">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-balance">Up to {PROTOTYPE_UNITS} Prototypes for Field Evaluation</h2>
-              <p className="text-muted-foreground mt-1">Each {variant.label} costs <span className="text-green-400 font-bold">${totalWithNaloxone.toFixed(2)}</span> in the current candidate BOM model. Total planning goal: <span className="text-green-400 font-bold">${FUNDING_GOAL.toLocaleString("en-US")}</span> (sized on the 46 mm estimate)</p>
+              <h2 className="text-2xl font-bold text-balance">Fund Rev 5 Engineering & Validation</h2>
+              <p className="text-muted-foreground mt-1">Current planning goal: <span className="text-green-400 font-bold">${FUNDING_GOAL.toLocaleString("en-US")}</span>. This supports CAD, electronics, RF, power, reliability, safety, human-factors, regulatory, and prototype work; it is not a preorder or fixed-watch-count promise.</p>
             </div>
             <div className="flex gap-3">
               <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
@@ -289,7 +332,7 @@ export default function NGWatchPage() {
           {/* Interactive Blueprint - DEFAULT TAB */}
           <TabsContent value="blueprint">
             <HolographicCard className="p-6" glowIntensity="medium">
-              <h2 className="text-xl font-bold mb-2 text-center">Engineering Drawing — {variant.label} Rev 4.2</h2>
+              <h2 className="text-xl font-bold mb-2 text-center">Engineering Drawing — {variant.label} Rev 5</h2>
               <EngineeringDrawing key={variantId} selected={selectedComponent} onSelect={setSelectedComponent} geometry={variant.geometry} components={variant.components} modelName={`NARCOGUARD ${variant.label.toUpperCase()}`} drawingNumber={variant.drawingNumber} />
 
               {selectedComponent && (
@@ -401,11 +444,11 @@ export default function NGWatchPage() {
                       <span className="font-mono">${naloxoneRefill.toFixed(2)}</span>
                     </div>
                     <div className="border-t border-primary/30 pt-2 flex justify-between font-bold text-lg">
-                      <span>Complete Unit</span>
+                      <span>Candidate HW + research-pod placeholder</span>
                       <span className="font-mono text-green-500">${totalWithNaloxone.toFixed(2)}</span>
                     </div>
                     <div className="p-3 bg-green-500/10 rounded-lg text-center">
-                      <p className="text-xs text-muted-foreground">Planning goal for up to {PROTOTYPE_UNITS} prototypes (46 mm estimate)</p>
+                      <p className="text-xs text-muted-foreground">Rev 5 development-and-validation planning target — not tied to a fixed prototype count</p>
                       <p className="text-xl font-bold text-green-400">${FUNDING_GOAL.toLocaleString("en-US")}</p>
                     </div>
                   </div>
@@ -490,12 +533,12 @@ export default function NGWatchPage() {
                 </div>
 
                 <div className="mt-6 p-4 rounded-lg bg-background/30">
-                  <h4 className="font-bold mb-2">Funding Goal: up to {PROTOTYPE_UNITS} Prototypes for a Broome County Pilot</h4>
-                  <div className="flex items-center justify-between">
-                    <span>{PROTOTYPE_UNITS} units x ${PROTOTYPE_UNIT_COST.toFixed(2)} (46 mm estimate)</span>
-                    <span className="text-2xl font-bold text-green-500">${FUNDING_GOAL.toLocaleString("en-US")}</span>
+                  <h4 className="font-bold mb-2">Rev 5 Development & Validation Goal</h4>
+                  <div className="flex items-center justify-between gap-4">
+                    <span>CAD, PCB/electronics, RF, power, reliability, safety, human factors, regulatory work, and prototype iterations</span>
+                    <span className="shrink-0 text-2xl font-bold text-green-500">${FUNDING_GOAL.toLocaleString("en-US")}</span>
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground">A {variant.label} build is estimated at ${totalWithNaloxone.toFixed(2)}; a mix of both sizes builds about the same number of prototypes.</p>
+                  <p className="mt-2 text-xs text-muted-foreground">This is a planning budget, not a supplier quote, preorder, or promise to produce a fixed number of watches. Candidate BOM figures remain engineering estimates until vendor quotes and physical builds exist.</p>
                   <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer" className="block mt-4">
                     <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold" size="lg">
                       <DollarSign className="w-5 h-5 mr-2" />

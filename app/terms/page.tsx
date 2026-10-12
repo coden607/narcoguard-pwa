@@ -3,7 +3,7 @@ export default function TermsOfService() {
     <div className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-4xl font-bold text-center">NarcoGuard Terms of Service</h1>
-        <p className="text-sm text-muted-foreground text-center">Last Updated: October 5, 2026</p>
+        <p className="text-sm text-muted-foreground text-center">Last Updated: October 11, 2026</p>
 
         <div className="space-y-6 text-sm">
           <section>
@@ -59,11 +59,22 @@ export default function TermsOfService() {
           </section>
 
           <section>
+            <h2 className="text-2xl font-semibold mb-3">5a. Community</h2>
+            <p className="text-muted-foreground">
+              Community profiles, posts, connection requests and direct messages are optional social features and are not emergency dispatch.
+              Users must not post another person&apos;s private health information, recovery status or exact location without permission, harass
+              others, impersonate responders, or use the Community to arrange unsafe or illegal transactions. NarcoGuard may restrict abusive
+              accounts and users can block other community members.
+            </p>
+          </section>
+
+          <section>
             <h2 className="text-2xl font-semibold mb-3">6. Data Collection & Privacy</h2>
             <p className="text-muted-foreground">
-              Most App data stays in your browser. Location is used only when you choose a nearby search, chats with
-              Angel AI are sent to an AI provider only after you agree, and Bluetooth readings stay on your screen. See
-              the Privacy Policy for details.
+              Many planning and device-reading features stay in your browser, but account, Hero/resource-network, push-notification and
+              Community features use server-side storage as described in the Privacy Policy. Location is used only when you choose a nearby
+              search, Hero/resource request, availability session or resource alert. Angel AI messages are sent to an AI provider only after
+              you agree, and Bluetooth readings stay on your screen. See the Privacy Policy for details.
             </p>
           </section>
 
