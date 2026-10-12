@@ -7,7 +7,9 @@ import {
   activeLearnedEvents,
   learnedEventLabel,
   learnedNeedSuggestions,
+  neuralNeedHorizonForecasts,
   neuralPatternScore,
+  transitionChains,
   transitionInsights,
 } from "@/lib/adaptive-guardian"
 import { NEEDS, type CheckIn, type GuardianState, type Need } from "@/lib/guardian-stability"
@@ -60,6 +62,18 @@ export function AdaptiveGuardianPanel({
     [state.adaptiveLearningEnabled, state.patternAlertsEnabled, state.alertNeeds, state.entries, today],
   )
   const activeEvents = useMemo(() => activeLearnedEvents(today), [today])
+  const chains = useMemo(
+    () => state.adaptiveLearningEnabled && activeEvents.length > 0
+      ? transitionChains(state.entries, activeEvents, { limit: 6 })
+      : [],
+    [state.adaptiveLearningEnabled, state.entries, activeEvents],
+  )
+  const horizonForecasts = useMemo(
+    () => state.adaptiveLearningEnabled
+      ? neuralNeedHorizonForecasts(state.entries, today, state.alertNeeds).slice(0, 6)
+      : [],
+    [state.adaptiveLearningEnabled, state.entries, state.alertNeeds, today],
+  )
 
   useEffect(() => {
     if (!state.patternAlertsEnabled || suggestions.length === 0) return
@@ -169,6 +183,20 @@ export function AdaptiveGuardianPanel({
             </ul>}
       </div>
 
+      <div className="rounded-lg border p-4 space-y-3" data-testid="need-chain-forecasting">
+        <h3 className="font-semibold">Longer personal need chains</h3>
+        {chains.length === 0 ? <p className="text-sm text-muted-foreground">
+          No 2–3 step chain starting with today’s recorded signals has enough comparable history yet. Each chain needs at least 5 comparable starts and at least 2 observed complete sequences.
+        </p> : <ul className="space-y-2 text-sm">
+          {chains.map((chain) => <li key={chain.events.join("->")} className="rounded border p-3">
+            <strong>{chain.events.map(learnedEventLabel).join(" → ")}</strong>
+            <span className="block text-muted-foreground">
+              This complete {chain.steps}-step sequence was recorded {chain.observed} of {chain.comparable} comparable times ({chain.percent}%). This is descriptive history, not causation or a prediction that the sequence will repeat.
+            </span>
+          </li>)}
+        </ul>}
+      </div>
+
       {suggestions.length > 0 && <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4 space-y-2">
         <h3 className="font-semibold">Early resource suggestions from your own patterns</h3>
         {suggestions.map((row) => <p key={row.need} className="text-sm">
@@ -188,6 +216,19 @@ export function AdaptiveGuardianPanel({
           <p className="text-xs text-muted-foreground">Current voluntary labels: {neural.labeledDays} days ({neural.positiveDays} return-to-use, {neural.negativeDays} no-return-to-use).</p>
         </> : null}
         <p className="text-xs text-muted-foreground">The neural outputs are intentionally not displayed as “chance of relapse.” They are not clinically calibrated. The local models automatically relearn from the voluntary history stored on this device, and they never contact a Hero, friend, clinician, or emergency service by themselves.</p>
+        <div className="mt-3 border-t pt-3">
+          <h4 className="font-medium">2–3 check-in need horizon scores</h4>
+          {horizonForecasts.length === 0 ? <p className="mt-1 text-xs text-muted-foreground">
+            Abstaining for now. Each need/horizon requires at least 20 answered training pairs, including at least 4 times the need appeared and 8 times it did not.
+          </p> : <ul className="mt-2 space-y-2 text-sm">
+            {horizonForecasts.map((forecast) => <li key={forecast.need + "-" + forecast.horizon} className="rounded border p-2">
+              <strong>{names[forecast.need]}</strong> · {forecast.horizon} recorded check-ins ahead · {forecast.score}/100 pattern score
+              <span className="block text-xs text-muted-foreground">
+                Trained from {forecast.trainingPairs} comparable pairs ({forecast.positivePairs} need-help, {forecast.negativePairs} not need-help). Not a calibrated probability.
+              </span>
+            </li>)}
+          </ul>}
+        </div>
       </div>
 
       {activeEvents.length > 0 && <p className="text-xs text-muted-foreground">Current voluntary signals used for local matching: {activeEvents.map(learnedEventLabel).join("; ")}.</p>}
