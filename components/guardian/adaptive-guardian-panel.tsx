@@ -7,6 +7,7 @@ import {
   activeLearnedEvents,
   learnedEventLabel,
   learnedNeedSuggestions,
+  interventionOutcomeInsights,
   neuralNeedHorizonForecasts,
   neuralPatternScore,
   transitionChains,
@@ -73,6 +74,12 @@ export function AdaptiveGuardianPanel({
       ? neuralNeedHorizonForecasts(state.entries, today, state.alertNeeds).slice(0, 6)
       : [],
     [state.adaptiveLearningEnabled, state.entries, state.alertNeeds, today],
+  )
+  const interventionOutcomes = useMemo(
+    () => state.adaptiveLearningEnabled
+      ? interventionOutcomeInsights(state.entries, state.plan, { limit: 8 })
+      : [],
+    [state.adaptiveLearningEnabled, state.entries, state.plan],
   )
 
   useEffect(() => {
@@ -192,6 +199,20 @@ export function AdaptiveGuardianPanel({
             <strong>{chain.events.map(learnedEventLabel).join(" → ")}</strong>
             <span className="block text-muted-foreground">
               This complete {chain.steps}-step sequence was recorded {chain.observed} of {chain.comparable} comparable times ({chain.percent}%). This is descriptive history, not causation or a prediction that the sequence will repeat.
+            </span>
+          </li>)}
+        </ul>}
+      </div>
+
+      <div className="rounded-lg border p-4 space-y-3" data-testid="intervention-outcome-learning">
+        <h3 className="font-semibold">What tended to happen after plans you completed</h3>
+        {interventionOutcomes.length === 0 ? <p className="text-sm text-muted-foreground">
+          Not enough comparable completed plans yet. NarcoGuard waits for at least 3 completed plans with the same linked need and title, each followed by a later check-in where that need was explicitly answered.
+        </p> : <ul className="space-y-2 text-sm">
+          {interventionOutcomes.map((row) => <li key={row.need + "-" + row.intervention.toLocaleLowerCase()} className="rounded border p-3">
+            <strong>{row.intervention}</strong> · {names[row.need]}
+            <span className="block text-muted-foreground">
+              On the first later check-in where you answered this need, it was marked met after {row.met} of {row.comparable} completed plans ({row.percent}%). This is a personal historical association, not evidence that the plan or resource caused the outcome.
             </span>
           </li>)}
         </ul>}
