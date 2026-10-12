@@ -272,6 +272,7 @@ export async function GET(request: Request) {
       status: item.status ?? "accepted",
       meetingNote: item.meeting_note ?? null,
       location: openHeroLocation(item.location_ciphertext, process.env.HERO_CERT_SECRET ?? ""),
+      contact: item.kind === "resource" ? openHeroContact(item.contact_ciphertext, process.env.HERO_CERT_SECRET ?? "") : null,
     })),
   })
 }
