@@ -1,4 +1,4 @@
-import { NEEDS, type CheckIn, type Need } from "./guardian-stability"
+import { NEEDS, type CheckIn, type Need, type PlanItem } from "./guardian-stability"
 
 export type LearnedEvent =
   | `need:${Need}`
@@ -455,4 +455,70 @@ export function neuralNeedHorizonForecasts(
   }
 
   return forecasts.sort((a, b) => b.score - a.score || a.horizon - b.horizon || b.trainingPairs - a.trainingPairs)
+}
+
+
+export type InterventionOutcomeInsight = {
+  intervention: string
+  need: Need
+  met: number
+  comparable: number
+  percent: number
+}
+
+/**
+ * Describes what happened after completed, user-created plan items.
+ * For each completed plan with a linked need, only the first later check-in
+ * that explicitly answers that need is counted. Unknown answers are skipped.
+ * This is association-only; it does not infer that the plan caused the outcome.
+ */
+export function interventionOutcomeInsights(
+  entries: readonly CheckIn[],
+  plan: readonly PlanItem[],
+  {
+    minComparable = 3,
+    limit = 12,
+  }: {
+    minComparable?: number
+    limit?: number
+  } = {},
+): InterventionOutcomeInsight[] {
+  const ordered = uniqueSorted(entries)
+  const groups = new Map<string, {
+    intervention: string
+    need: Need
+    met: number
+    comparable: number
+  }>()
+
+  for (const item of plan) {
+    if (!item.done || !item.need) continue
+    const intervention = item.title.trim()
+    if (!intervention) continue
+    const outcome = ordered.find((entry) =>
+      entry.date > item.date && entry.needs[item.need as Need] !== undefined
+    )
+    if (!outcome) continue
+
+    const need = item.need
+    const key = `${need}:${intervention.toLocaleLowerCase()}`
+    const group = groups.get(key) ?? {
+      intervention,
+      need,
+      met: 0,
+      comparable: 0,
+    }
+    group.comparable++
+    if (outcome.needs[need] === "met") group.met++
+    groups.set(key, group)
+  }
+
+  return [...groups.values()]
+    .filter((row) => row.comparable >= minComparable)
+    .map((row) => ({
+      ...row,
+      percent: Math.round(100 * row.met / row.comparable),
+    }))
+    .sort((a, b) => b.percent - a.percent || b.comparable - a.comparable || a.intervention.localeCompare(b.intervention))
+    .slice(0, Math.max(1, limit))
 }
