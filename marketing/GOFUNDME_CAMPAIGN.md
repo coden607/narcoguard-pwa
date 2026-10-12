@@ -2,6 +2,31 @@
 
 Paste-ready campaign draft updated for the current NarcoGuard app and Rev 5 NG46 / NG40 wearable concept.
 
+## Publish these links prominently
+
+# **LIVE APP — https://narcoguard.app**
+
+# **WATCH SPECS + BLUEPRINTS — https://narcoguard.app/watch**
+
+# **GOFUNDME — https://gofund.me/9acf270ea**
+
+Repeat them near the bottom of the campaign so donors can verify the live app and current engineering work.
+
+## Rev 5 campaign image set — upload in this order
+
+1. Campaign cover with **NarcoGuard.app** visible.
+2. Full campaign infographic with **NarcoGuard.app** visible.
+3. Rev 5 family engineering/spec sheet.
+4. NG46 rugged engineering sheet.
+5. NG40 elegant rose-gold/titanium engineering sheet.
+6. Dual blueprint sheet.
+7. Exploded component/CAD-style view.
+8. Hero Network/resource concept visual.
+
+Every generated watch image must be labeled **concept**, **engineering visual**, or equivalent. Do not present generated people, responders, watches, maps, or hardware as documentary evidence of a deployed medical device or active responder coverage.
+
+---
+
 ## Recommended title
 
 **Help Build NarcoGuard: Free Recovery Help + Safer Wearable R&D**

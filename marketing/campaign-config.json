@@ -19,7 +19,7 @@
     "contingency": 5000
   },
   "links": {
-    "gofundme": "TO_BE_CREATED_OR_REPLACED",
+    "gofundme": "https://gofund.me/9acf270ea",
     "app": "https://narcoguard.app",
     "demo": "https://narcoguard.app",
     "watch": "https://narcoguard.app/watch",
@@ -35,7 +35,11 @@
     "tagline": "Help build NarcoGuard: free recovery help now, responsible wearable R&D next",
     "mission": "Free person-led overdose prevention and recovery support, plus transparent wearable research",
     "callToAction": "Support Rev 5 prototype engineering, validation, and continued free access to NarcoGuard",
-    "truthBoundary": "The app is live; the watch is a research concept and not a validated medical device."
+    "truthBoundary": "The app is live; the watch is a research concept and not a validated medical device.",
+    "primaryLinks": {
+      "app": "https://narcoguard.app",
+      "fund": "https://gofund.me/9acf270ea"
+    }
   },
   "rev5": {
     "sizes": [
