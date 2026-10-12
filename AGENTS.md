@@ -23,12 +23,18 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 
 ## Continuity OS Routing
 
-- Canonical orchestration source: `https://github.com/coden607/continuity-os`.
-- Route discrete classification/gating decisions through Continuity OS Jev semantics; use deterministic code when a rule is exact.
+- **All substantive NarcoGuard agent work routes through the canonical Continuity OS first:** `https://github.com/coden607/continuity-os`.
+- Use Continuity OS as the control plane for task classification, model/tier selection, Jev decision gates, interruption routing, token-spend discipline, guardrails, STATE/EVENT memory handling, and software-factory orchestration when applicable.
+- Domain implementation remains in this repository; do not vendor or fork the full Continuity OS into NarcoGuard.
+- Before acting, classify the task through Continuity OS routing semantics. Use deterministic code for exact rules, Jev for repeated/discrete judgment gates, and an LLM only for reasoning/generation work.
 - Route mid-task interruptions through the canonical `route-interrupts` skill: steering folds into the active task, side questions resume afterward, new tasks queue visibly, and only explicit stop/redirect messages halt work.
-- Apply `compress-token-spend` on substantive runs: search/read narrowly, keep context minimal, and use the cheapest capable tier from Continuity OS `config/orchestration/models.yaml`.
-- Keep Jev as a decision layer only; LLM/code still performs reasoning, implementation, and verification.
-- Do not vendor or fork the whole Continuity OS into NarcoGuard. Reference the canonical repository so routing policy remains centralized.
+- Apply `compress-token-spend` on every substantive run: search/read narrowly, minimize context, reuse stable prompts, and choose the cheapest capable tier from Continuity OS `config/orchestration/models.yaml`.
+- Use Continuity OS guardrails before destructive, irreversible, secret-bearing, production, payment, or external-send actions; repository/system approval rules still take precedence.
+- Use Continuity OS STATE/EVENT memory discipline for durable project facts and append-only events.
+- Use Continuity OS factory/worktree flow for autonomous multi-file implementation when that flow is available; exact-head CI and repository release rules remain mandatory.
+- Jev is a decision layer only. It does not draft code, prose, or explanations.
+- If Continuity OS is unavailable, fail over to the equivalent local NarcoGuard rules and report that routing fallback; do not silently bypass the control plane.
+
 
 ## Working Style
 
