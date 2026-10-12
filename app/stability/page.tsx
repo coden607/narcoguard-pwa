@@ -16,6 +16,7 @@ import { anticipateResourceNeeds, questionsForUnknowns } from "@/lib/proactive-r
 import { CalmingAudio } from "@/components/calming-audio"
 import { MealLogSection } from "@/components/guardian/meal-log-section"
 import { MaslowResourceAutomation } from "@/components/guardian/maslow-resource-automation"
+import { PredictedResourceWatchPanel } from "@/components/resources/predicted-resource-watch-panel"
 import { notifyGuardianChange, useGuardianState, useLocalDate } from "@/lib/hooks/use-guardian-state"
 
 const names: Record<Need, string> = {
@@ -65,6 +66,7 @@ export default function StabilityPage() {
   const learnedNeeds = learnedSuggestions.map((cue) => cue.need)
   const neuralForecasts = state.adaptiveLearningEnabled ? neuralNeedForecasts(state.entries, today, state.alertNeeds) : []
   const neuralNeeds = neuralForecasts.filter((forecast) => forecast.score >= 65).map((forecast) => forecast.need)
+  const predictedWatchNeeds = [...new Set([...learnedNeeds, ...neuralNeeds])]
   const resourceNeeds = [...new Set([...needsHelp, ...suggested, ...proactiveNeeds, ...learnedNeeds, ...neuralNeeds])]
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
 
@@ -156,6 +158,7 @@ export default function StabilityPage() {
           <span className="block text-xs text-muted-foreground">Learned from {forecast.trainingPairs} comparable transitions ({forecast.positivePairs} where this need appeared, {forecast.negativePairs} where it did not). {forecast.score >= 65 ? "NarcoGuard is preloading matching resources below." : "Below the early-sourcing threshold for now."}</span>
         </li>)}</ul>
       </section>}
+      <PredictedResourceWatchPanel predictedNeeds={predictedWatchNeeds} />
       {proactive.length > 0 && <section className="border rounded-xl p-5 space-y-4" aria-live="polite">
         <h2 className="text-xl font-semibold">Plan ahead before a need becomes urgent</h2>
         <p className="text-sm text-muted-foreground">These cues use only information you chose to record. NarcoGuard can search early, but it does not turn missing logs into facts.</p>
