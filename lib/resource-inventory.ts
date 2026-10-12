@@ -11,6 +11,7 @@ export type KnownResource = {
   firstSeenAt: string
   lastSeenAt: string
   lastLookupAt: string
+  lastReturned: boolean
 }
 
 type StoredInventory = {
@@ -63,6 +64,7 @@ export function readKnownResources(storage: SimpleStorage): KnownResource[] {
         firstSeenAt: row.firstSeenAt,
         lastSeenAt: row.lastSeenAt,
         lastLookupAt: row.lastLookupAt,
+        lastReturned: row.lastReturned !== false,
       }]
     }).slice(-RESOURCE_INVENTORY_MAX)
   } catch {
@@ -79,7 +81,7 @@ export function rememberKnownResources(
   if (!/^\d{5}$/.test(zip) || !validIso(fetchedAt)) return readKnownResources(storage)
 
   const current = readKnownResources(storage)
-  const byKey = new Map(current.map((row) => [row.key, row]))
+  const byKey = new Map(current.map((row) => [row.key, row.zip === zip ? { ...row, lastLookupAt: fetchedAt, lastReturned: false } : row]))
   for (const resource of resources) {
     const safe = sanitizeResource(resource)
     if (!safe) continue
@@ -92,6 +94,7 @@ export function rememberKnownResources(
       firstSeenAt: previous?.firstSeenAt ?? fetchedAt,
       lastSeenAt: fetchedAt,
       lastLookupAt: fetchedAt,
+      lastReturned: true,
     })
   }
 
