@@ -63,6 +63,24 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <nav className="desktop-nav" aria-label="Primary navigation">{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined} className={cn("nav-link", isActive(href) && "is-active")}><Icon aria-hidden="true" />{label}</Link>)}</nav>
       <div className="header-actions"><InstallButton /><button className="menu-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-nav" aria-label="Toggle navigation">{open ? <X /> : <Menu />}</button></div>
     </div><nav id="mobile-nav" className={cn("mobile-nav", open && "is-open")} aria-label="Mobile navigation" aria-hidden={!open}>{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} tabIndex={open ? 0 : -1} aria-current={isActive(href) ? "page" : undefined} onClick={() => setOpen(false)} className={cn("nav-link", isActive(href) && "is-active")}><Icon aria-hidden="true" />{label}</Link>)}</nav></header>
+    <div className="mx-auto w-full max-w-7xl px-4 pt-4">
+      <div className="grid gap-3 rounded-2xl border border-primary/30 bg-background/85 p-4 shadow-2xl backdrop-blur md:grid-cols-2">
+        <a
+          href="https://narcoguard.app"
+          className="flex min-h-20 items-center justify-center rounded-xl border border-primary/40 bg-primary/10 px-4 text-center font-orbitron text-2xl font-black tracking-wide text-primary hover:bg-primary/20 sm:text-3xl"
+        >
+          NARCOGUARD.APP
+        </a>
+        <a
+          href="https://gofund.me/9acf270ea"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex min-h-20 items-center justify-center rounded-xl bg-green-500 px-4 text-center font-orbitron text-2xl font-black tracking-wide text-black shadow-[0_0_36px_rgba(34,197,94,0.35)] hover:bg-green-400 sm:text-3xl"
+        >
+          SUPPORT ON GOFUNDME
+        </a>
+      </div>
+    </div>
     <main id="main-content" className="site-main">
       {pathname !== "/" && <BackButton />}
       {children}
