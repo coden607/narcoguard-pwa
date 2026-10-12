@@ -81,6 +81,21 @@ export const WATCH_REV5_MODULES: readonly Rev5Module[] = [
     ],
   },
   {
+    id: "auto-injector-module",
+    label: "Modular auto-injector research pod",
+    feasibility: "experimental",
+    sizes: ["NG46", "NG40"],
+    purpose: "A physically separate, removable research pod for future clinically validated drug-delivery studies; the base watch remains functional without it.",
+    candidatePart: "Drug-device combination-product research module (TBD)",
+    designRules: [
+      "Must remain mechanically and electrically isolated from the base watch until explicitly armed in a validated research workflow.",
+      "Must use a separate service/replacement boundary so the watch can operate without the medication pod.",
+      "Cartridge, delivery mechanism, dose, activation logic, and human-factors requirements are not finalized.",
+      "No automatic drug-delivery claim until clinical, pharmaceutical, mechanical, regulatory, and human-factors validation is complete.",
+      "The current watch does not inject naloxone and must not be relied on for treatment.",
+    ],
+  },
+  {
     id: "camera",
     label: "Privacy-controlled camera",
     feasibility: "medium",
