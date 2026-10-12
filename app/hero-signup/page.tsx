@@ -104,8 +104,10 @@ export default function HeroSignup() {
             )}
             {note && <p className="text-sm" role="status">{note} {note.startsWith("Sign in") && <Link href="/auth" className="underline text-primary">Sign in</Link>}</p>}
             <p className="text-sm text-muted-foreground">
-              Nearby help requests are not live. Before they can be, they need a separate safety and privacy review, your explicit opt-in, a per-session naloxone-readiness check, and a way to pause or leave at any time.
-              Heroes never replace 911.
+              {status?.nearbyRequests
+                ? "Nearby Hero/resource requests are enabled in the network infrastructure. Every Hero still chooses when to go available and what they can offer; NarcoGuard does not guarantee that anyone is currently nearby."
+                : "Nearby Hero/resource requests are not enabled in this environment yet."}
+              {" "}Emergency-ready mode requires explicit opt-in, a current certificate, naloxone-on-call attestation, and the ability to pause or leave at any time. Heroes never replace 911.
             </p>
           </section>
         </HolographicCard>
