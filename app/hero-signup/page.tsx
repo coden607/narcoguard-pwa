@@ -58,10 +58,18 @@ export default function HeroSignup() {
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="text-center space-y-4">
+        <div id="hero-setup" className="text-center space-y-4 scroll-mt-24">
           <Shield className="w-20 h-20 mx-auto text-primary pulse-glow" aria-hidden="true" />
           <h1 className="text-4xl font-bold glow-text">Become a Hero</h1>
-          <p className="text-lg text-muted-foreground">Volunteers who know what to do in an overdose. Every Hero passes the test below with a perfect score.</p>
+          <p className="text-lg text-muted-foreground">We need trained Heroes. Setup is simple: learn the response steps, pass the certification test, enroll, then choose when you are available and what practical help you can offer.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg">
+              <a href="#hero-certification">Start streamlined Hero setup</a>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/auth">Sign in first</Link>
+            </Button>
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -82,7 +90,7 @@ export default function HeroSignup() {
           </HolographicCard>
         </div>
 
-        <HolographicCard className="p-6 sm:p-8">
+        <HolographicCard id="hero-certification" className="p-6 sm:p-8 scroll-mt-24">
           <CertificationTest onCertified={setFresh} />
         </HolographicCard>
 
