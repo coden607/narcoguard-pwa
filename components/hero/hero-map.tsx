@@ -11,6 +11,7 @@ type MapCell = {
   lon: number
   emergencyHeroes: number
   totalHeroes: number
+  practicalHelpers: number
   resources: HeroResourceKind[]
 }
 
@@ -18,6 +19,8 @@ type MapResponse = {
   live?: boolean
   online?: number
   nearby?: number
+  practicalOnline?: number
+  practicalNearby?: number
   cells?: MapCell[]
   note?: string
   reason?: string
@@ -100,7 +103,10 @@ export function HeroMap() {
       ctx.fill()
       ctx.fillStyle = "#ffffff"
       ctx.font = "11px monospace"
-      ctx.fillText(`${cell.totalHeroes} Hero${cell.totalHeroes === 1 ? "" : "es"}`, x + 13, y - 3)
+      const primaryLabel = cell.totalHeroes > 0
+        ? `${cell.totalHeroes} certified Hero${cell.totalHeroes === 1 ? "" : "es"}`
+        : `${cell.practicalHelpers} practical helper${cell.practicalHelpers === 1 ? "" : "s"}`
+      ctx.fillText(primaryLabel, x + 13, y - 3)
       if (index < 6 && cell.resources.length > 0) ctx.fillText(cell.resources.slice(0,2).map((r)=>HERO_RESOURCE_LABELS[r]).join(", "), x + 13, y + 12)
     })
   }, [cells, userLocation])
@@ -111,7 +117,7 @@ export function HeroMap() {
         <canvas ref={canvasRef} width={800} height={600} className="w-full h-auto min-h-72" aria-label="Coarse Hero resource availability map" />
         <div className="absolute top-4 right-4 glass p-3 rounded-lg space-y-2 max-w-56">
           <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-primary" /><span className="text-xs">You</span></div>
-          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-xs">Community-resource Hero area</span></div>
+          <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-green-500" /><span className="text-xs">Practical/resource help area</span></div>
           <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500" /><span className="text-xs">Emergency-ready Hero area</span></div>
         </div>
         <div className="absolute bottom-4 left-4 glass p-3 rounded-full"><Navigation className="w-6 h-6 text-primary" /></div>
@@ -126,29 +132,39 @@ export function HeroMap() {
       {locationNote && <p className="text-xs text-muted-foreground" role="status">{locationNote}</p>}
       {!data.live && data.reason && <p className="text-xs text-amber-200">{data.reason}</p>}
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="glass p-3 rounded-lg text-center">
           <Users className="w-5 h-5 mx-auto mb-1 text-primary" />
           <p className="text-lg font-bold">{data.online ?? "—"}</p>
-          <p className="text-xs text-muted-foreground">Available network-wide</p>
+          <p className="text-xs text-muted-foreground">Certified Heroes available</p>
         </div>
         <div className="glass p-3 rounded-lg text-center">
           <MapPin className="w-5 h-5 mx-auto mb-1 text-secondary" />
           <p className="text-lg font-bold">{data.nearby ?? "—"}</p>
-          <p className="text-xs text-muted-foreground">Nearby in coarse areas</p>
+          <p className="text-xs text-muted-foreground">Certified Heroes nearby</p>
+        </div>
+        <div className="glass p-3 rounded-lg text-center">
+          <Users className="w-5 h-5 mx-auto mb-1 text-primary" />
+          <p className="text-lg font-bold">{data.practicalOnline ?? "—"}</p>
+          <p className="text-xs text-muted-foreground">Practical helpers offering</p>
+        </div>
+        <div className="glass p-3 rounded-lg text-center">
+          <MapPin className="w-5 h-5 mx-auto mb-1 text-secondary" />
+          <p className="text-lg font-bold">{data.practicalNearby ?? "—"}</p>
+          <p className="text-xs text-muted-foreground">Practical helpers nearby</p>
         </div>
       </div>
 
       {cells.length > 0 && <div className="space-y-2" data-testid="hero-map-resources">
         <h4 className="font-semibold">Resources currently offered nearby</h4>
         {cells.map((cell) => <div key={cell.cell} className="border rounded p-3 text-sm">
-          <strong>{cell.totalHeroes} available Hero{cell.totalHeroes === 1 ? "" : "es"} in this approximate area</strong>
+          <strong>{cell.totalHeroes} certified Hero{cell.totalHeroes === 1 ? "" : "es"} · {cell.practicalHelpers} practical helper{cell.practicalHelpers === 1 ? "" : "s"} in this approximate area</strong>
           {cell.emergencyHeroes > 0 && <span className="block text-red-300">{cell.emergencyHeroes} emergency-ready</span>}
           <span className="block text-muted-foreground">{cell.resources.length ? cell.resources.map((resource)=>HERO_RESOURCE_LABELS[resource]).join(" · ") : "Emergency assistance only"}</span>
         </div>)}
       </div>}
 
-      <p className="text-xs text-muted-foreground">Markers are approximate area centers, not volunteer homes or exact positions. Availability can change at any time and is not guaranteed.</p>
+      <p className="text-xs text-muted-foreground">Markers are approximate area centers, not volunteer homes or exact positions. Practical-help offers are separate from emergency Hero certification. Availability can change at any time and is not guaranteed.</p>
     </div>
   )
 }
