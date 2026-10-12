@@ -68,6 +68,16 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Appointment-area resource planning</h2>
+            <p>
+              If you add a 5-digit ZIP to an upcoming appointment or plan and attach a need, NarcoGuard can use that ZIP to look up public resources near the appointment area and compare their listed hours with the appointment time. This uses only the location text you entered. It does not track your background location or calculate your travel route.
+            </p>
+            <p>
+              “Near the appointment ZIP” does not mean a resource is on your route, open, available, eligible, affordable, or guaranteed. Listed hours remain attributed to their public source and NarcoGuard keeps unsupported or missing timing information as unknown.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="text-2xl font-semibold text-foreground">Adaptive Guardian learning</h2>
             <p>
               Adaptive Guardian is optional and local-first. When you enable it, your Guardian check-ins can include an optional
