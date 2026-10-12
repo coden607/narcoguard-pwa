@@ -1,4 +1,4 @@
-const CACHE_NAME = "narcoguard-shell-v5";
+const CACHE_NAME = "narcoguard-shell-v6";
 const APP_SHELL = [
   "/",
   "/offline.html",
@@ -67,13 +67,13 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   event.waitUntil(
-    self.registration.showNotification("NarcoGuard Hero request", {
-      body: "A new nearby request may match your current Hero availability. Open NarcoGuard to review it.",
+    self.registration.showNotification("NarcoGuard update", {
+      body: "A nearby help request, resource match, or community update may be available. Open NarcoGuard to review it.",
       icon: "/icon-192.png",
       badge: "/icon-192.png",
-      tag: "narcoguard-hero-request",
+      tag: "narcoguard-update",
       renotify: true,
-      data: { url: "/hero-signup" },
+      data: { url: "/help" },
     })
   );
 });
