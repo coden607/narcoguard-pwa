@@ -14,6 +14,7 @@
     "dev": "next dev",
     "lint": "eslint .",
     "typecheck": "next typegen && tsc --noEmit",
+    "test": "npm run test:signals && npm run test:vitals && npm run test:guardian && npm run test:features",
     "test:e2e": "npm run build && playwright test",
     "test:pwa": "node scripts/run-pwa-tests.js",
     "verify": "npm run validate:agent-skills && npm run lint && npm run validate:production && npm run validate:env && npm run typecheck && npm run validate:supabase && npm run validate:claims && npm run test:signals && npm run test:vitals && npm run test:guardian && npm run test:constitution && npm run test:features && npm run validate:watch-design && npm run audit:deps && npm run build && npm run test:pwa",
