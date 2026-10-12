@@ -186,3 +186,67 @@ export function parseOpeningHours(raw: string | undefined | null, now?: Date): P
   }
   return { display: humanize(rules, raw), openNow: now ? isOpenNow(rules, now) : null }
 }
+
+
+export type OpeningWindow = {
+  date: string
+  dayLabel: string
+  start: string
+  end: string
+  crossesMidnight: boolean
+}
+
+/**
+ * Expand supported opening_hours rules into upcoming local calendar windows.
+ * Returns [] for unsupported/malformed expressions rather than guessing.
+ */
+export function upcomingOpeningWindows(
+  raw: string | undefined | null,
+  from = new Date(),
+  daysAhead = 7,
+): OpeningWindow[] {
+  if (!raw || daysAhead <= 0) return []
+  const text = raw.trim()
+  if (text === "24/7") {
+    return Array.from({ length: Math.min(daysAhead, 14) }, (_, offset) => {
+      const date = new Date(from)
+      date.setHours(0, 0, 0, 0)
+      date.setDate(date.getDate() + offset)
+      return {
+        date: date.toISOString().slice(0, 10),
+        dayLabel: DAY_NAMES[date.getDay()],
+        start: "12 AM",
+        end: "12 AM",
+        crossesMidnight: true,
+      }
+    })
+  }
+
+  const rules: HoursRule[] = []
+  for (const piece of text.split(";")) {
+    const rule = parseRule(piece.trim())
+    if (!rule) return []
+    rules.push(rule)
+  }
+
+  const out: OpeningWindow[] = []
+  for (let offset = 0; offset < Math.min(daysAhead, 14); offset++) {
+    const date = new Date(from)
+    date.setHours(0, 0, 0, 0)
+    date.setDate(date.getDate() + offset)
+    const day = date.getDay()
+    for (const rule of rules) {
+      if (!rule.days.has(day)) continue
+      for (const range of rule.ranges) {
+        out.push({
+          date: date.toISOString().slice(0, 10),
+          dayLabel: DAY_NAMES[day],
+          start: humanizeMinutes(range.start),
+          end: humanizeMinutes(range.end),
+          crossesMidnight: range.end <= range.start,
+        })
+      }
+    }
+  }
+  return out
+}
