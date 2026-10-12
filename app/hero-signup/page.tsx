@@ -9,6 +9,7 @@ import { Award, BookOpen, Heart, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { CertificationTest, HERO_CERTIFICATE_KEY } from "@/components/hero/certification-test"
 import { HeroAvailabilityPanel } from "@/components/hero/hero-availability-panel"
+import { PracticalHelpOfferPanel } from "@/components/hero/practical-help-offer-panel"
 
 type Status = { enrollment: boolean; certification: boolean; nearbyRequests: boolean }
 
@@ -120,6 +121,10 @@ export default function HeroSignup() {
               {" "}Emergency-ready mode requires explicit opt-in, a current certificate, naloxone-on-call attestation, and the ability to pause or leave at any time. Heroes never replace 911.
             </p>
           </section>
+        </HolographicCard>
+
+        <HolographicCard className="p-6 sm:p-8">
+          <PracticalHelpOfferPanel />
         </HolographicCard>
 
         <HolographicCard className="p-6 sm:p-8">

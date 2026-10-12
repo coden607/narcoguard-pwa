@@ -16,8 +16,8 @@ test.describe("PWA production flow", () => {
     expect(manifest.display).toBe("standalone")
     expect(manifest.icons).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ src: "/icon-192.png", sizes: "192x192" }),
-        expect.objectContaining({ src: "/icon-512.png", sizes: "512x512" }),
+        expect.objectContaining({ src: "/icon-192.png?v=9", sizes: "192x192" }),
+        expect.objectContaining({ src: "/icon-512.png?v=9", sizes: "512x512" }),
       ]),
     )
 

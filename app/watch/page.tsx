@@ -59,7 +59,7 @@ const VARIANTS = {
 } as const
 type VariantId = keyof typeof VARIANTS
 
-const { assemblyLabor, qualityTesting, complianceTesting, packaging, naloxoneRefill } = UNIT_COSTS
+const { assemblyLabor, qualityTesting, complianceTesting, packaging } = UNIT_COSTS
 
 export default function NGWatchPage() {
   const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
@@ -71,7 +71,6 @@ export default function NGWatchPage() {
   const totals = bomTotals(billOfMaterials)
   const componentBOMTotal = totals.components
   const totalPerUnit = totals.hardware
-  const totalWithNaloxone = totals.complete
   const coreMinimumLayerMarginMm2 = Math.min(...variant.calc.coreLayerMarginsMm2)
   const idealizedRuntimeHours = variant.calc.idealizedRuntimeHours
   const caseMm = variant.model.caseDiameterMm
@@ -188,7 +187,7 @@ export default function NGWatchPage() {
           <HolographicCard className="p-6" glowIntensity="high">
             <h2 className="text-xl font-bold mb-4">Rev 5 blueprint — {variant.label}</h2>
             <Image
-              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg" : "/images/ng40-rev5-blueprint.svg"}
+              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-12" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-12"}
               alt={`${variant.label} Rev 5 concept blueprint`}
               width={1200}
               height={800}
@@ -438,13 +437,8 @@ export default function NGWatchPage() {
                       <span>Hardware Total</span>
                       <span className="font-mono text-primary">${totalPerUnit.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-muted-foreground">
-                      <span>+ Naloxone cartridge allowance (dose to be set by clinicians)</span>
-                      <span className="font-mono">${naloxoneRefill.toFixed(2)}</span>
-                    </div>
-                    <div className="border-t border-primary/30 pt-2 flex justify-between font-bold text-lg">
-                      <span>Candidate HW + research-pod placeholder</span>
-                      <span className="font-mono text-green-500">${totalWithNaloxone.toFixed(2)}</span>
+                    <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-xs text-muted-foreground">
+                      The removable auto-injector research pod is not included in this hardware estimate. It is unquoted, not functional, and requires separate clinical, pharmaceutical, human-factors, regulatory, and supplier work.
                     </div>
                     <div className="p-3 bg-green-500/10 rounded-lg text-center">
                       <p className="text-xs text-muted-foreground">Rev 5 development-and-validation planning target — not tied to a fixed prototype count</p>
@@ -525,9 +519,9 @@ export default function NGWatchPage() {
                     <p className="text-xl font-bold font-mono">${packaging.toFixed(2)}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-primary/20 neon-border">
-                    <p className="text-xs text-muted-foreground">Per Unit Total</p>
-                    <p className="text-xl font-bold font-mono text-green-500">${totalWithNaloxone.toFixed(2)}</p>
-                    <p className="text-[10px] text-muted-foreground">incl. naloxone</p>
+                    <p className="text-xs text-muted-foreground">Candidate hardware estimate</p>
+                    <p className="text-xl font-bold font-mono text-green-500">${totalPerUnit.toFixed(2)}</p>
+                    <p className="text-[10px] text-muted-foreground">excludes the unquoted auto-injector research pod and any drug product</p>
                   </div>
                 </div>
 

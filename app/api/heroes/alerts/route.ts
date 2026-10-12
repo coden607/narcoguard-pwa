@@ -14,6 +14,7 @@ import {
   type HeroRequest,
   type HeroResourceKind,
 } from "@/lib/hero-alerts"
+import { cleanHeroContact, openHeroContact, sealHeroContact } from "@/lib/hero-handoff"
 import { cleanMeetingNote, openHeroLocation, sealHeroLocation } from "@/lib/hero-location"
 import { heroCanRelease, type HeroRequestStatus } from "@/lib/hero-lifecycle"
 import { sendEmptyWebPush, vapidConfigured } from "@/lib/hero-push"
@@ -58,6 +59,7 @@ type RequestRow = {
   request_token_hash?: string | null
   location_ciphertext?: string | null
   meeting_note?: string | null
+  contact_ciphertext?: string | null
 }
 type CertificationRow = { expires_at: string; enrolled: boolean }
 
@@ -216,7 +218,7 @@ export async function GET(request: Request) {
   const [row] = mine.ok ? ((await mine.json()) as AvailabilityRow[]) : []
 
   const acceptedResponse = await heroServerRest(
-    `hero_requests?select=id,cell,created_at,expires_at,kind,resource_kind,status,accepted_by,accepted_at,en_route_at,arrived_at,completed_at,location_ciphertext,meeting_note&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=in.(accepted,en_route,arrived)&expires_at=gt.${new Date().toISOString()}`,
+    `hero_requests?select=id,cell,created_at,expires_at,kind,resource_kind,status,accepted_by,accepted_at,en_route_at,arrived_at,completed_at,location_ciphertext,meeting_note,contact_ciphertext&accepted_by=eq.${encodeURIComponent(auth.user.id)}&status=in.(accepted,en_route,arrived)&expires_at=gt.${new Date().toISOString()}`,
   ).catch(() => null)
   const acceptedRows = acceptedResponse?.ok ? ((await acceptedResponse.json()) as RequestRow[]) : []
 
@@ -235,6 +237,7 @@ export async function GET(request: Request) {
         status: item.status ?? "accepted",
         meetingNote: item.meeting_note ?? null,
         location: openHeroLocation(item.location_ciphertext, process.env.HERO_CERT_SECRET ?? ""),
+        contact: item.kind === "resource" ? openHeroContact(item.contact_ciphertext, process.env.HERO_CERT_SECRET ?? "") : null,
       })),
     })
   }
@@ -269,6 +272,7 @@ export async function GET(request: Request) {
       status: item.status ?? "accepted",
       meetingNote: item.meeting_note ?? null,
       location: openHeroLocation(item.location_ciphertext, process.env.HERO_CERT_SECRET ?? ""),
+      contact: item.kind === "resource" ? openHeroContact(item.contact_ciphertext, process.env.HERO_CERT_SECRET ?? "") : null,
     })),
   })
 }
@@ -290,6 +294,9 @@ export async function POST(request: Request) {
 
     const shareExact = body.shareExact === true
     const meetingNote = cleanMeetingNote(body.meetingNote)
+    const shareContact = prepared.request.kind === "resource" && body.shareContact === true
+    const contact = shareContact ? cleanHeroContact({ method: body.contactMethod, value: body.contactValue }) : null
+    if (shareContact && !contact) return json({ error: "Choose a valid contact method and contact value, or turn off contact sharing." }, 400)
     if (prepared.request.kind === "resource" && prepared.request.resourceKind === "other" && !meetingNote) {
       return json({ error: "Describe the practical help you need in the private handoff note." }, 400)
     }
@@ -303,6 +310,8 @@ export async function POST(request: Request) {
       ? sealHeroLocation({ lat: body.lat, lon: body.lon }, process.env.HERO_CERT_SECRET ?? "")
       : null
     if (shareExact && !locationCiphertext) return json({ error: "Could not protect the location handoff." }, 503)
+    const contactCiphertext = contact ? sealHeroContact(contact, process.env.HERO_CERT_SECRET ?? "") : null
+    if (contact && !contactCiphertext) return json({ error: "Could not protect the contact handoff." }, 503)
 
     const requestToken = newRequestToken()
     const saved = await heroServerRest("hero_requests", {
@@ -318,6 +327,7 @@ export async function POST(request: Request) {
         request_token_hash: tokenHash(requestToken),
         location_ciphertext: locationCiphertext,
         meeting_note: meetingNote,
+        contact_ciphertext: contactCiphertext,
       }),
     }).catch(() => null)
     if (!saved?.ok) return json({ error: prepared.request.kind === "emergency" ? "The request could not be sent. Stay with 911." : "The resource request could not be posted." }, 503)
@@ -346,7 +356,7 @@ export async function POST(request: Request) {
     if (row.status === "completed") return json({ error: "A completed request cannot be cancelled." }, 409)
     const saved = await heroServerRest(
       `hero_requests?id=eq.${encodeURIComponent(body.requestId)}&request_token_hash=eq.${tokenHash(body.requestToken)}`,
-      { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ status: "cancelled", location_ciphertext: null, meeting_note: null }) },
+      { method: "PATCH", headers: { Prefer: "return=minimal" }, body: JSON.stringify({ status: "cancelled", location_ciphertext: null, meeting_note: null, contact_ciphertext: null }) },
     ).catch(() => null)
     return saved?.ok ? json({ cancelled: true }) : json({ error: "Could not cancel the request." }, 503)
   }
@@ -463,9 +473,12 @@ export async function POST(request: Request) {
     if (body.action === "en-route") patch.en_route_at = now
     if (body.action === "arrive") patch.arrived_at = now
     if (body.action === "complete") {
-      patch.completed_at = now
-      patch.location_ciphertext = null
-      patch.meeting_note = null
+      Object.assign(patch, {
+        completed_at: now,
+        location_ciphertext: null,
+        meeting_note: null,
+        contact_ciphertext: null,
+      })
     }
 
     const saved = await heroServerRest(
