@@ -4,19 +4,22 @@ export const GUARDIAN_STORAGE_KEY = "narcoguard_guardian_stability_v2"
 export const NEEDS = ["food", "water", "sleep", "hygiene", "laundry", "safePlace", "connection", "treatment"] as const
 export type Need = typeof NEEDS[number]
 export type NeedStatus = "met" | "needs-help"
+export const REWARD_CATEGORIES = ["checkins", "meals", "needs", "plans"] as const
+export type RewardCategory = typeof REWARD_CATEGORIES[number]
 export interface CheckIn { date: string; needs: Partial<Record<Need, NeedStatus>>; sleepHours?: number; mood?: "low" | "okay" | "good"; craving?: "none" | "some" | "strong"; isolated?: boolean; meals?: Meal[]; returnToUse?: boolean }
 export interface PlanItem { id: string; date: string; title: string; done: boolean; kind?: "task" | "appointment"; time?: string; location?: string; need?: Need }
 export interface GuardianState {
   enabled: boolean; paused: boolean; postalCode: string; supportPhone: string; goals: string[]; entries: CheckIn[]; plan: PlanItem[]
   escalationEnabled: boolean; escalationThreshold: number
   adaptiveLearningEnabled: boolean; patternAlertsEnabled: boolean; alertNeeds: Need[]; rewardEnabled: boolean
+  rewardCategories: RewardCategory[]; rewardMilestoneStep: number
 }
 export interface GuardianStorage { getItem(key: string): string | null; setItem(key: string, value: string): void; removeItem(key: string): void }
 export interface PatternInsight { trigger: Need; companion: Need; observed: number; answered: number; percent: number }
 export interface EarlyWarning { level: "steady" | "check-in" | "support"; signals: Need[]; sleepSignal: boolean; score: number; reasons: string[] }
 
 export function defaultGuardianState(): GuardianState {
-  return { enabled: false, paused: false, postalCode: "", supportPhone: "", goals: [], entries: [], plan: [], escalationEnabled: false, escalationThreshold: 3, adaptiveLearningEnabled: false, patternAlertsEnabled: false, alertNeeds: [], rewardEnabled: false }
+  return { enabled: false, paused: false, postalCode: "", supportPhone: "", goals: [], entries: [], plan: [], escalationEnabled: false, escalationThreshold: 3, adaptiveLearningEnabled: false, patternAlertsEnabled: false, alertNeeds: [], rewardEnabled: false, rewardCategories: [...REWARD_CATEGORIES], rewardMilestoneStep: 50 }
 }
 const isDate = (value: unknown): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
 
@@ -55,6 +58,8 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
       patternAlertsEnabled: value.patternAlertsEnabled === true,
       alertNeeds: Array.isArray(value.alertNeeds) ? value.alertNeeds.filter((need: unknown): need is Need => NEEDS.includes(need as Need)).slice(0, NEEDS.length) : [],
       rewardEnabled: value.rewardEnabled === true,
+      rewardCategories: Array.isArray(value.rewardCategories) ? value.rewardCategories.filter((category: unknown): category is RewardCategory => REWARD_CATEGORIES.includes(category as RewardCategory)).slice(0, REWARD_CATEGORIES.length) : [...REWARD_CATEGORIES],
+      rewardMilestoneStep: [25, 50, 100, 250].includes(Number(value.rewardMilestoneStep)) ? Number(value.rewardMilestoneStep) : 50,
     }
   } catch { return defaultGuardianState() }
 }
