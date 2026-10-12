@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { HERO_RESOURCE_KINDS, HERO_RESOURCE_LABELS, type HeroResourceKind } from "@/lib/hero-alerts"
-import { HERO_CONTACT_METHODS, type HeroContactMethod } from "@/lib/hero-handoff"
+import { HERO_CONTACT_METHODS, HERO_RESOURCE_KINDS, HERO_RESOURCE_LABELS, type HeroContactMethod, type HeroResourceKind } from "@/lib/hero-alerts"
 import { requesterStatusText, type HeroRequestStatus } from "@/lib/hero-lifecycle"
 
 type TrackedRequest = { id: string; token: string; kind: "emergency" | "resource"; resourceKind?: HeroResourceKind }

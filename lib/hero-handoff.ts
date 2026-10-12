@@ -1,12 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto"
-
-export const HERO_CONTACT_METHODS = ["phone", "text", "email", "community-handle"] as const
-export type HeroContactMethod = (typeof HERO_CONTACT_METHODS)[number]
-
-export interface HeroContactHandoff {
-  method: HeroContactMethod
-  value: string
-}
+import { HERO_CONTACT_METHODS, type HeroContactHandoff, type HeroContactMethod } from "./hero-alerts"
 
 const keyFor = (secret: string) =>
   createHash("sha256").update("narcoguard:hero-contact:v1:").update(secret).digest()

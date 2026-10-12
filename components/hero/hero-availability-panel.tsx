@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { HERO_RESOURCE_KINDS, HERO_RESOURCE_LABELS, type HeroResourceKind } from "@/lib/hero-alerts"
-import type { HeroContactHandoff } from "@/lib/hero-handoff"
+import type { HeroContactHandoff } from "@/lib/hero-alerts"
 import type { HeroRequestStatus } from "@/lib/hero-lifecycle"
 
 type HeroRequest = {
