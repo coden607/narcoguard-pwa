@@ -84,6 +84,16 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Predicted-need background watches</h2>
+            <p>
+              Predicted-need background watches are optional and require a separate user action. When enabled, NarcoGuard
+              sends only supported practical resource categories and a coarse nearby area to the server for a 24-hour watch.
+              The local neural history, pattern scores, and underlying check-ins are not uploaded by this feature. Watches
+              expire automatically and do not silently turn unsupported predicted needs into a different Hero-help category.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="text-2xl font-semibold text-foreground">Momentum rewards</h2>
             <p>
               Momentum rewards are optional and calculated locally from actions you control, such as voluntary check-ins,
