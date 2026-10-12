@@ -21,8 +21,9 @@ export async function POST(request: Request) {
 
   if (body.action === "unsubscribe") {
     if (!isAllowedPushEndpoint(body.endpoint)) return json({ error: "Invalid push subscription." }, 400)
+    const endpoint = body.endpoint as string
     await Promise.all([
-      userRest(auth.accessToken, `user_push_subscriptions?auth_user_id=eq.${encodeURIComponent(auth.user.id)}&endpoint=eq.${encodeURIComponent(body.endpoint)}`, {
+      userRest(auth.accessToken, `user_push_subscriptions?auth_user_id=eq.${encodeURIComponent(auth.user.id)}&endpoint=eq.${encodeURIComponent(endpoint)}`, {
         method: "DELETE", headers: { Prefer: "return=minimal" },
       }),
       userRest(auth.accessToken, `resource_watch_subscriptions?auth_user_id=eq.${encodeURIComponent(auth.user.id)}`, {
@@ -35,6 +36,7 @@ export async function POST(request: Request) {
   if (body.action !== "subscribe") return json({ error: "Unknown action." }, 400)
   if (!vapidConfigured(process.env)) return json({ error: "Push notifications are not configured yet." }, 503)
   if (!isAllowedPushEndpoint(body.endpoint)) return json({ error: "Invalid push subscription." }, 400)
+  const endpoint = body.endpoint as string
   if (!isHeroResourceKind(body.resourceKind)) return json({ error: "Choose a resource." }, 400)
   const cell = typeof body.lat === "number" && typeof body.lon === "number" ? cellOf(body.lat, body.lon) : null
   if (!cell) return json({ error: "Approximate location is required for nearby alerts." }, 400)
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
     headers: { Prefer: "resolution=merge-duplicates,return=minimal" },
     body: JSON.stringify({
       auth_user_id: auth.user.id,
-      endpoint: body.endpoint,
+      endpoint,
       enabled: true,
       updated_at: new Date().toISOString(),
     }),
