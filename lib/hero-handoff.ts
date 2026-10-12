@@ -54,7 +54,7 @@ export function openHeroContact(value: string | null | undefined, secret: string
       decipher.update(Buffer.from(encryptedText, "base64url")),
       decipher.final(),
     ]).toString("utf8")
-    return cleanHeroContact(JSON.parse(plaintext) as { method?: unknown; value?: unknown })
+    const parsed = JSON.parse(plaintext) as { method?: unknown; value?: unknown }\n    return cleanHeroContact({ method: parsed.method, value: parsed.value })
   } catch {
     return null
   }
