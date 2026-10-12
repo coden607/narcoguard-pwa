@@ -8,6 +8,7 @@ import { RESOURCE_LABELS, type NearbyResource, type ResourceKind } from "@/lib/r
 import { cardSummary } from "@/lib/resource-display"
 import { inventoryFreshness, knownResourcesFor, readKnownResources, rememberKnownResources, type KnownResource } from "@/lib/resource-inventory"
 import { detectResourceChanges, readResourceChangeWatches, setResourceChangeWatch, type ResourceChange } from "@/lib/resource-change-watch"
+import { activeResourceVerification, readResourceVerifications, saveResourceVerification, verificationLabel, type ResourceVerification, type ResourceVerificationMethod, type ResourceVerificationStatus } from "@/lib/resource-verification"
 import {
   defaultResourcePreferences,
   explainResource,
@@ -53,6 +54,9 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
   const [refreshTick, setRefreshTick] = useState(0)
   const [watchedKeys, setWatchedKeys] = useState<string[]>([])
   const [resourceChanges, setResourceChanges] = useState<ResourceChange[]>([])
+  const [verifications, setVerifications] = useState<ResourceVerification[]>([])
+  const [verificationMethods, setVerificationMethods] = useState<Record<string, ResourceVerificationMethod>>({})
+  const [verificationNotes, setVerificationNotes] = useState<Record<string, string>>({})
   const data = request.zip === zip ? request.data ?? null : null
   const error = request.zip === zip ? request.error ?? "" : ""
   const loading = Boolean(zip) && request.zip !== zip
@@ -66,6 +70,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
       setFeedback(readResourceFeedback(window.localStorage))
       setInventory(readKnownResources(window.localStorage))
       setWatchedKeys(readResourceChangeWatches(window.localStorage))
+      setVerifications(readResourceVerifications(window.localStorage))
     }, 0)
     return () => window.clearTimeout(timer)
   }, [])
@@ -133,6 +138,14 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
     const key = resourceKey(resource)
     const enabled = !watchedKeys.includes(key)
     setWatchedKeys(setResourceChangeWatch(window.localStorage, key, enabled))
+  }
+
+  const recordVerification = (resource: NearbyResource, status: ResourceVerificationStatus) => {
+    const key = resourceKey(resource)
+    const defaultMethod: ResourceVerificationMethod = resource.phone ? "phone" : resource.website ? "website" : "other"
+    const method = verificationMethods[key] ?? defaultMethod
+    const note = verificationNotes[key] ?? ""
+    setVerifications(saveResourceVerification(window.localStorage, resource, status, method, note))
   }
 
   if (needs.length === 0) return null
@@ -219,6 +232,9 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
                       {lookup.results.slice(0, 3).map((resource, optionIndex) => {
                         const summary = cardSummary(resource, new Date())
                         const detail = [summary.hours, summary.freshness, summary.wheelchair, summary.services].filter((line): line is string => line !== null).join(" · ")
+                        const key = resourceKey(resource)
+                        const verification = activeResourceVerification(verifications, resource)
+                        const verificationMethod = verificationMethods[key] ?? (resource.phone ? "phone" : resource.website ? "website" : "other")
                         return (
                         <li key={resourceKey(resource)} className="rounded border p-3">
                           <strong>{["Option A", "Option B", "Option C"][optionIndex] ?? "Option"}: {resource.name}</strong>
@@ -238,6 +254,31 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
                               {watchedKeys.includes(resourceKey(resource)) ? "Stop watching changes" : "Watch listing changes"}
                             </button>
                           </div>
+                          <details className="mt-2 rounded border p-2 text-xs">
+                            <summary className="cursor-pointer font-medium">Record a verification I made</summary>
+                            <p className="mt-2 text-muted-foreground">Keep this separate from directory data. “Open / answering” does not promise a meal, bed, appointment, eligibility, stock, or price unless you explicitly confirmed that detail yourself.</p>
+                            <label className="mt-2 block">How I checked
+                              <select className="ml-2 rounded border bg-background p-1" value={verificationMethod} onChange={(event)=>setVerificationMethods((current)=>({ ...current, [key]: event.target.value as ResourceVerificationMethod }))}>
+                                <option value="phone">Phone</option>
+                                <option value="website">Website</option>
+                                <option value="in-person">In person</option>
+                                <option value="other">Other</option>
+                              </select>
+                            </label>
+                            <label className="mt-2 block">Optional note
+                              <input className="mt-1 block w-full rounded border bg-background p-1" maxLength={240} value={verificationNotes[key] ?? ""} onChange={(event)=>setVerificationNotes((current)=>({ ...current, [key]: event.target.value }))} placeholder="Example: answering calls; pantry hours confirmed for today" />
+                            </label>
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              <button type="button" className="border rounded px-2 py-1" onClick={()=>recordVerification(resource,"confirmed-open")}>I confirmed open / answering</button>
+                              <button type="button" className="border rounded px-2 py-1" onClick={()=>recordVerification(resource,"confirmed-closed")}>I confirmed closed</button>
+                              <button type="button" className="border rounded px-2 py-1" onClick={()=>recordVerification(resource,"could-not-confirm")}>Couldn’t confirm</button>
+                            </div>
+                          </details>
+                          {verification && <div className="mt-2 rounded border border-primary/25 p-2 text-xs" data-testid="resource-verification">
+                            <strong>{verificationLabel(verification)}.</strong>
+                            <span className="block text-muted-foreground">Method: {verification.method} · checked {new Date(verification.verifiedAt).toLocaleString()} · expires {new Date(verification.expiresAt).toLocaleString()}.</span>
+                            {verification.note && <span className="block">{verification.note}</span>}
+                          </div>}
                         </li>
                         )
                       })}
