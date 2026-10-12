@@ -426,11 +426,11 @@ export default function NGWatchPage() {
                       <span className="font-mono">${naloxoneRefill.toFixed(2)}</span>
                     </div>
                     <div className="border-t border-primary/30 pt-2 flex justify-between font-bold text-lg">
-                      <span>Complete Unit</span>
+                      <span>Candidate HW + research-pod placeholder</span>
                       <span className="font-mono text-green-500">${totalWithNaloxone.toFixed(2)}</span>
                     </div>
                     <div className="p-3 bg-green-500/10 rounded-lg text-center">
-                      <p className="text-xs text-muted-foreground">Planning goal for up to {PROTOTYPE_UNITS} prototypes (46 mm estimate)</p>
+                      <p className="text-xs text-muted-foreground">Rev 5 development-and-validation planning target — not tied to a fixed prototype count</p>
                       <p className="text-xl font-bold text-green-400">${FUNDING_GOAL.toLocaleString("en-US")}</p>
                     </div>
                   </div>
@@ -515,12 +515,12 @@ export default function NGWatchPage() {
                 </div>
 
                 <div className="mt-6 p-4 rounded-lg bg-background/30">
-                  <h4 className="font-bold mb-2">Funding Goal: up to {PROTOTYPE_UNITS} Prototypes for a Broome County Pilot</h4>
-                  <div className="flex items-center justify-between">
-                    <span>{PROTOTYPE_UNITS} units x ${PROTOTYPE_UNIT_COST.toFixed(2)} (46 mm estimate)</span>
-                    <span className="text-2xl font-bold text-green-500">${FUNDING_GOAL.toLocaleString("en-US")}</span>
+                  <h4 className="font-bold mb-2">Rev 5 Development & Validation Goal</h4>
+                  <div className="flex items-center justify-between gap-4">
+                    <span>CAD, PCB/electronics, RF, power, reliability, safety, human factors, regulatory work, and prototype iterations</span>
+                    <span className="shrink-0 text-2xl font-bold text-green-500">${FUNDING_GOAL.toLocaleString("en-US")}</span>
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground">A {variant.label} build is estimated at ${totalWithNaloxone.toFixed(2)}; a mix of both sizes builds about the same number of prototypes.</p>
+                  <p className="mt-2 text-xs text-muted-foreground">This is a planning budget, not a supplier quote, preorder, or promise to produce a fixed number of watches. Candidate BOM figures remain engineering estimates until vendor quotes and physical builds exist.</p>
                   <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer" className="block mt-4">
                     <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold" size="lg">
                       <DollarSign className="w-5 h-5 mr-2" />
