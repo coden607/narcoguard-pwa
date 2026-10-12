@@ -21,6 +21,16 @@ const requiredTables = [
   "activity_log",
   "legal_agreements",
   "emergency_contacts",
+  "hero_certifications",
+  "hero_availability",
+  "hero_requests",
+  "hero_push_subscriptions",
+  "user_push_subscriptions",
+  "resource_watch_subscriptions",
+  "community_profiles",
+  "community_connections",
+  "community_posts",
+  "community_messages",
 ]
 
 const requiredChecks = [
@@ -34,11 +44,17 @@ const requiredChecks = [
   ["contact ownership index", /create index if not exists emergency_contacts_user_idx/i],
   ["agreement ownership index", /create index if not exists legal_agreements_user_idx/i],
   ["service-only donations", /Donations and activity logs contain administrative/i],
+  ["hero certification RLS", /alter table public\.hero_certifications enable row level security/i],
+  ["hero availability RLS", /alter table public\.hero_availability enable row level security/i],
+  ["hero request RLS", /alter table public\.hero_requests enable row level security/i],
+  ["hero push RLS", /alter table public\.hero_push_subscriptions enable row level security/i],
+  ["community profile RLS", /alter table public\.community_profiles enable row level security/i],
+  ["resource watch RLS", /alter table public\.resource_watch_subscriptions enable row level security/i],
 ]
 
 const failures = []
 for (const table of requiredTables) {
-  if (!new RegExp(`create table if not exists ${table}\\b`, "i").test(migrations)) {
+  if (!new RegExp(`create table if not exists (?:public\\.)?${table}\\b`, "i").test(migrations)) {
     failures.push(`missing table definition: ${table}`)
   }
 }
