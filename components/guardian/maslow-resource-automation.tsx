@@ -7,6 +7,7 @@ import { MASLOW_LEVELS, resourceKindsForNeeds } from "@/lib/maslow-resources"
 import { RESOURCE_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 import { cardSummary } from "@/lib/resource-display"
 import { inventoryFreshness, knownResourcesFor, readKnownResources, rememberKnownResources, type KnownResource } from "@/lib/resource-inventory"
+import { detectResourceChanges, readResourceChangeWatches, setResourceChangeWatch, type ResourceChange } from "@/lib/resource-change-watch"
 import {
   defaultResourcePreferences,
   explainResource,
@@ -50,6 +51,8 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
   const [feedback, setFeedback] = useState<ResourceFeedback[]>([])
   const [inventory, setInventory] = useState<KnownResource[]>([])
   const [refreshTick, setRefreshTick] = useState(0)
+  const [watchedKeys, setWatchedKeys] = useState<string[]>([])
+  const [resourceChanges, setResourceChanges] = useState<ResourceChange[]>([])
   const data = request.zip === zip ? request.data ?? null : null
   const error = request.zip === zip ? request.error ?? "" : ""
   const loading = Boolean(zip) && request.zip !== zip
@@ -62,6 +65,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
       setPreferences(readResourcePreferences(window.localStorage))
       setFeedback(readResourceFeedback(window.localStorage))
       setInventory(readKnownResources(window.localStorage))
+      setWatchedKeys(readResourceChangeWatches(window.localStorage))
     }, 0)
     return () => window.clearTimeout(timer)
   }, [])
@@ -80,7 +84,18 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
         setRequest({ zip, data: body })
         const seen = Object.values(body.kinds).flatMap((lookup) => lookup.results)
         const fetchedAt = body.fetchedAt || new Date().toISOString()
+        const previous = readKnownResources(window.localStorage)
+        const watched = readResourceChangeWatches(window.localStorage)
+        const changes = detectResourceChanges({ previous, latest: seen, watchedKeys: watched, zip, fetchedAt })
+        setResourceChanges(changes)
         setInventory(rememberKnownResources(window.localStorage, zip, seen, fetchedAt))
+        if (changes.length > 0 && "Notification" in window && Notification.permission === "granted" && "serviceWorker" in navigator) {
+          void navigator.serviceWorker.ready.then((registration) => registration.showNotification("NarcoGuard resource update", {
+            body: "A resource you chose to watch changed in public-directory data. Open NarcoGuard to review.",
+            tag: "narcoguard-resource-change",
+            data: { url: "/stability" },
+          })).catch(() => undefined)
+        }
       })
       .catch((cause: unknown) => {
         if (!controller.signal.aborted) setRequest({ zip, error: cause instanceof Error ? cause.message : "Resource lookup is unavailable." })
@@ -112,6 +127,12 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
     const row = { key: resourceKey(resource), value, updatedAt: new Date().toISOString() }
     saveResourceFeedback(window.localStorage, row)
     setFeedback(readResourceFeedback(window.localStorage))
+  }
+
+  const toggleResourceWatch = (resource: NearbyResource) => {
+    const key = resourceKey(resource)
+    const enabled = !watchedKeys.includes(key)
+    setWatchedKeys(setResourceChangeWatch(window.localStorage, key, enabled))
   }
 
   if (needs.length === 0) return null
@@ -157,6 +178,11 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
         </div>
         {error && <p className="text-sm">Live lookup failed: {error} Previously known resources remain available below with freshness labels; directory links remain available too.</p>}
         {data?.message && <p className="text-sm">{data.message}</p>}
+        {resourceChanges.length > 0 && <div className="rounded border border-primary/30 p-3" role="status" data-testid="resource-change-alerts">
+          <p className="font-medium">Watched resource updates</p>
+          <ul className="mt-2 space-y-1 text-sm">{resourceChanges.map((change, index) => <li key={change.key + "-" + change.type + "-" + index}>{change.message}</li>)}</ul>
+          <p className="mt-2 text-xs text-muted-foreground">These alerts describe changes in public-directory results, not confirmed provider availability. Call or check the provider before relying on the listing.</p>
+        </div>}
         {knownForCurrentNeeds.length > 0 && <div className="rounded border p-3">
           <p className="font-medium">Known resource inventory</p>
           <p className="text-xs text-muted-foreground">NarcoGuard remembers resources previously returned for this ZIP in this browser and rechecks public sources every 15 minutes while this screen is open. “Open now” comes only from parseable listed hours; anything else stays unknown.</p>
@@ -208,6 +234,9 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
                           </span>
                           <div className="flex flex-wrap gap-2 mt-2 text-xs" aria-label={`Feedback for ${resource.name}`}>
                             {([["worked","Worked"],["closed","Closed"],["too-far","Too far"],["not-for-me","Not for me"]] as const).map(([value,label])=><button key={value} type="button" className="border rounded px-2 py-1" onClick={()=>recordFeedback(resource,value)}>{label}</button>)}
+                            <button type="button" className="border rounded px-2 py-1" onClick={()=>toggleResourceWatch(resource)}>
+                              {watchedKeys.includes(resourceKey(resource)) ? "Stop watching changes" : "Watch listing changes"}
+                            </button>
                           </div>
                         </li>
                         )

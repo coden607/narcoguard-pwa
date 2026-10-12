@@ -84,6 +84,17 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Watched resource listing changes</h2>
+            <p>
+              You can locally mark a resource listing to watch for public-directory changes while the resource screen is being refreshed.
+              NarcoGuard compares listed hours and contact details and can note when a watched place is returned again, is not returned in
+              the latest lookup, or becomes stale. Not being returned is never treated as proof that a provider closed or became unavailable.
+              Watch choices and detailed changes stay in this browser. If notification permission is already granted, the lock-screen notice
+              is generic and asks you to open NarcoGuard to review the details.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="text-2xl font-semibold text-foreground">Predicted-need background watches</h2>
             <p>
               Predicted-need background watches are optional and require a separate user action. When enabled, NarcoGuard
