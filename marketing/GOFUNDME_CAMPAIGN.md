@@ -14,6 +14,29 @@ These should be large, clickable links in the published campaign description and
 
 ---
 
+## Rev 5 campaign image set — upload in this order
+
+1. **Campaign hero** — NarcoGuard mission, NG46 + NG40, Hero network, app callout.
+2. **Full campaign infographic** — app + watch + Hero network + large reciprocal links.
+3. **Rev 5 family engineering spec** — both watches, dimensions, BOM/spec overview.
+4. **NG46 rugged engineering sheet** — rugged titanium edition, orthographic + exploded views.
+5. **NG40 elegant rose-gold/titanium engineering sheet** — premium women’s-fit edition, band included.
+6. **Dual blueprint sheet** — NG46 + NG40 dimensions and engineering layouts.
+7. **Exploded component view** — internal stack / CAD-style component diagram.
+8. **Hero network visual** — resource map / responder concept.
+
+**Image truth boundary:** every watch/engineering visual must be labeled as a concept or engineering visualization. Do not present any render as a photographed finished medical device. Supplier CAD, routed PCB, RF/antenna, thermal, battery, ingress/drop, harvesting bench, and clinical/regulatory validation remain in progress.
+
+**Repeat these large clickable links near the top and bottom of the published campaign:**
+
+# **NARCOGUARD.APP — https://narcoguard.app**
+
+# **WATCH SPECS & BLUEPRINTS — https://narcoguard.app/watch**
+
+# **GOFUNDME — https://gofund.me/9acf270ea**
+
+---
+
 ## Recommended title
 
 **Help Build NarcoGuard: Free Recovery Help + Safer Wearable R&D**
