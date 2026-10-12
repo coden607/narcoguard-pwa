@@ -18,6 +18,8 @@ import { MealLogSection } from "@/components/guardian/meal-log-section"
 import { MaslowResourceAutomation } from "@/components/guardian/maslow-resource-automation"
 import { PredictedResourceWatchPanel } from "@/components/resources/predicted-resource-watch-panel"
 import { notifyGuardianChange, useGuardianState, useLocalDate } from "@/lib/hooks/use-guardian-state"
+import { nextRouteAwarePlan } from "@/lib/route-aware-planning"
+import { RouteAwareResourcePlanner } from "@/components/guardian/route-aware-resource-planner"
 
 const names: Record<Need, string> = {
   food: "Food", water: "Water", sleep: "Sleep", hygiene: "Shower / hygiene",
@@ -69,6 +71,7 @@ export default function StabilityPage() {
   const predictedWatchNeeds = [...new Set([...learnedNeeds, ...neuralNeeds])]
   const resourceNeeds = [...new Set([...needsHelp, ...suggested, ...proactiveNeeds, ...learnedNeeds, ...neuralNeeds])]
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
+  const routeAwarePlan = nextRouteAwarePlan(state.plan, { date: now, time: clockTime })
 
   const updateCheckIn = (need: Need, status: NeedStatus | undefined) => {
     const needs = { ...today.needs }
@@ -133,12 +136,12 @@ export default function StabilityPage() {
         </form>
 
         <ul className="space-y-2">{state.goals.map((item, index) => <li key={`${index}-${item}`} className="flex justify-between gap-2">{item}<button disabled={state.paused} className="underline" onClick={() => update({ ...state, goals: state.goals.filter((_, i) => i !== index) })}>Remove</button></li>)}</ul>
-        <p className="text-sm text-muted-foreground">Plan a task or an appointment. NarcoGuard does not book, confirm, or change appointments; verify details with the provider.</p>
+        <p className="text-sm text-muted-foreground">Plan a task or an appointment. NarcoGuard does not book, confirm, or change appointments; verify details with the provider. Include a 5-digit ZIP in the location if you want NarcoGuard to preload resources near that appointment without tracking your route.</p>
         <form className="grid gap-2 sm:grid-cols-2" onSubmit={(event) => { event.preventDefault(); if (planTitle.trim()) { update({ ...state, plan: [...state.plan, { id: crypto.randomUUID(), date: planDate || localDate(1), title: planTitle.trim().slice(0, 160), done: false, kind: planTime ? "appointment" : "task", ...(planTime ? { time: planTime } : {}), ...(planLocation.trim() ? { location: planLocation.trim().slice(0, 160) } : {}), ...(planNeed ? { need: planNeed } : {}) }] }); setPlanTitle(""); setPlanDate(""); setPlanTime(""); setPlanLocation(""); setPlanNeed("") } }}>
           <input aria-label="Task or appointment" disabled={state.paused} maxLength={160} className="bg-background border rounded p-2 sm:col-span-2" placeholder="Task or appointment name" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} />
           <label className="text-sm">Date<input aria-label="Plan date" disabled={state.paused} type="date" min={now} className="block bg-background border rounded p-2 w-full" value={planDate || localDate(1)} onChange={(event) => setPlanDate(event.target.value)} /></label>
           <label className="text-sm">Time (optional; adding one makes it an appointment)<input aria-label="Plan time" disabled={state.paused} type="time" className="block bg-background border rounded p-2 w-full" value={planTime} onChange={(event) => setPlanTime(event.target.value)} /></label>
-          <label className="text-sm">Location or call details (optional)<input aria-label="Plan location" disabled={state.paused} maxLength={160} className="block bg-background border rounded p-2 w-full" value={planLocation} onChange={(event) => setPlanLocation(event.target.value)} /></label>
+          <label className="text-sm">Location or ZIP / call details (optional)<input aria-label="Plan location" disabled={state.paused} maxLength={160} className="block bg-background border rounded p-2 w-full" value={planLocation} onChange={(event) => setPlanLocation(event.target.value)} /></label>
           <label className="text-sm">Need this supports (optional)<select aria-label="Plan need" disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={planNeed} onChange={(event) => setPlanNeed(event.target.value as Need | "")}><option value="">Choose a need</option>{NEEDS.map((need) => <option key={need} value={need}>{names[need]}</option>)}</select></label>
           <Button disabled={state.paused} type="submit" className="sm:col-span-2">Add to plan</Button>
         </form>
@@ -196,7 +199,8 @@ export default function StabilityPage() {
         </label>
         {state.postalCode && !normalizePostalCode(state.postalCode) && <p className="text-sm">Enter a five-digit US ZIP code, or leave it blank.</p>}
         {needsHelp.length === 0 && <p className="text-muted-foreground">Mark a need above to see relevant starting points.</p>}
-        <MaslowResourceAutomation needs={resourceNeeds} postalCode={state.postalCode} />
+        <RouteAwareResourcePlanner plan={routeAwarePlan} />
+      <MaslowResourceAutomation needs={resourceNeeds} postalCode={state.postalCode} />
         {needsHelp.map((need) => <div key={need} className="space-y-2"><h3 className="font-semibold">{names[need]}</h3>{resourcesForNeed(need, normalizePostalCode(state.postalCode)).map((link) => <p key={link.url}><a href={link.url} target="_blank" rel="noopener noreferrer" className="underline text-primary">{link.title} ↗</a><span className="block text-sm text-muted-foreground">{link.description}</span></p>)}</div>)}
       </section>
       <section className="border rounded-xl p-5 space-y-3">
