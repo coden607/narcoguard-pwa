@@ -3,11 +3,45 @@ import { cookies } from "next/headers"
 const ACCESS_COOKIE = "ng_access_token"
 const REFRESH_COOKIE = "ng_refresh_token"
 
+export type SupabaseUser = { id: string; email?: string; user_metadata?: Record<string, unknown> }
+
 type SupabaseSession = {
   access_token: string
   refresh_token: string
   expires_in?: number
-  user?: { id: string; email?: string; user_metadata?: Record<string, unknown> }
+  user?: SupabaseUser
+}
+
+export type AuthFailure = {
+  code?: string
+  message: string
+  status: number
+}
+
+export type AuthAttempt = {
+  session: SupabaseSession | null
+  user: SupabaseUser | null
+  error: AuthFailure | null
+}
+
+async function parseAuthAttempt(response: Response): Promise<AuthAttempt> {
+  const body = await response.json().catch(() => ({})) as Record<string, unknown>
+  if (!response.ok) {
+    return {
+      session: null,
+      user: null,
+      error: {
+        code: typeof body.error_code === "string" ? body.error_code : typeof body.code === "string" ? body.code : undefined,
+        message: typeof body.msg === "string" ? body.msg : typeof body.message === "string" ? body.message : "Authentication failed",
+        status: response.status,
+      },
+    }
+  }
+  const accessToken = typeof body.access_token === "string" ? body.access_token : undefined
+  const refreshToken = typeof body.refresh_token === "string" ? body.refresh_token : undefined
+  const user = body.user && typeof body.user === "object" ? body.user as SupabaseUser : null
+  const session = accessToken && refreshToken ? body as unknown as SupabaseSession : null
+  return { session, user: session?.user ?? user, error: null }
 }
 
 function getSupabaseConfig() {
@@ -25,16 +59,30 @@ async function supabaseRequest(path: string, init: RequestInit = {}) {
   return fetch(`${url}${path}`, { ...init, headers, cache: "no-store" })
 }
 
-export async function signIn(email: string, password: string) {
-  const response = await supabaseRequest("/auth/v1/token?grant_type=password", { method: "POST", body: JSON.stringify({ email, password }) })
-  if (!response.ok) return null
-  return (await response.json()) as SupabaseSession
+export async function signIn(email: string, password: string): Promise<AuthAttempt> {
+  const response = await supabaseRequest("/auth/v1/token?grant_type=password", {
+    method: "POST",
+    body: JSON.stringify({ email, password }),
+  })
+  return parseAuthAttempt(response)
 }
 
-export async function signUp(email: string, password: string, displayName: string) {
-  const response = await supabaseRequest("/auth/v1/signup", { method: "POST", body: JSON.stringify({ email, password, data: { display_name: displayName } }) })
-  if (!response.ok) return null
-  return (await response.json()) as SupabaseSession
+export async function signUp(email: string, password: string, displayName: string): Promise<AuthAttempt> {
+  const response = await supabaseRequest("/auth/v1/signup", {
+    method: "POST",
+    body: JSON.stringify({ email, password, data: { display_name: displayName } }),
+  })
+  return parseAuthAttempt(response)
+}
+
+export async function resendSignup(email: string): Promise<AuthFailure | null> {
+  const response = await supabaseRequest("/auth/v1/resend", {
+    method: "POST",
+    body: JSON.stringify({ type: "signup", email }),
+  })
+  if (response.ok) return null
+  const attempt = await parseAuthAttempt(response)
+  return attempt.error
 }
 
 /** Completes Google sign-in: trades the one-time code plus this browser's verifier for a session. */
