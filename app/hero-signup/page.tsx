@@ -90,9 +90,11 @@ export default function HeroSignup() {
           </HolographicCard>
         </div>
 
-        <HolographicCard id="hero-certification" className="p-6 sm:p-8 scroll-mt-24">
-          <CertificationTest onCertified={setFresh} />
-        </HolographicCard>
+        <div id="hero-certification" className="scroll-mt-24">
+          <HolographicCard className="p-6 sm:p-8">
+            <CertificationTest onCertified={setFresh} />
+          </HolographicCard>
+        </div>
 
         <HolographicCard className="p-6 sm:p-8">
           <section className="space-y-3" data-testid="hero-enroll">
