@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "design": "NarcoGuard NG Rev 5",
+  "concept_gates": {
+    "cadquery_envelope_fit": "pass",
+    "pcb_projection_boundary": "pass",
+    "pairwise_component_envelope_collision": "pass",
+    "core_z_stack": "pass",
+    "dfm_rule_integrity": "pass"
+  },
+  "release_gates": {
+    "supplier_step_iges_replacement": "blocked",
+    "routed_pcb_drc_erc": "blocked",
+    "rigid_flex_bend_and_connector_validation": "blocked",
+    "battery_swelling_vendor_clearance": "blocked",
+    "antenna_em_simulation_and_matching": "blocked",
+    "gnss_cellular_wifi_coexistence": "blocked",
+    "thermal_fea_skin_contact": "blocked",
+    "qi_coil_efficiency_and_heating": "blocked",
+    "camera_shutter_ingress": "blocked",
+    "crown_generator_torque_energy_bench": "blocked",
+    "rotor_shock_bearing_energy_bench": "blocked",
+    "solar_teg_harvest_bench": "blocked",
+    "drop_vibration_sweat_ingress": "blocked",
+    "battery_iec62133_un38_3_evidence": "blocked",
+    "human_factors_and_clinical_validation": "blocked"
+  },
+  "release_ready": false,
+  "rule": "Never claim all simulations passed, manufacturing ready, waterproof, self-powered, or medically validated until every applicable release gate has traceable evidence."
+}

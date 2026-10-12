@@ -1,6 +1,15 @@
 import cadquery as cq
 import math
 
+# Manufacturer-backed packages. Dimensions in mm.
+MANUFACTURER_PACKAGES = {
+    "nrf5340_aqfn94": (7.00, 7.00, 0.85),
+    "lsm6dso32x_lga14": (2.50, 3.00, 0.86),
+    "bmp390_lga10": (2.00, 2.00, 0.75),
+    "max86178_wlp": (2.77, 2.57, 0.60),
+    "mlx90632_qfn": (3.00, 3.00, 1.00),
+}
+
 MODELS = {
     "NG46": {"diameter":46.0,"thickness":13.8,"board_d":39.9,"display":36.8,"battery":(28.0,22.0,5.0),"optical":12.0,"qi":(18.0,30.0),"camera":(6.0,6.0,3.6),"strap":22.0},
     "NG40": {"diameter":40.0,"thickness":12.2,"board_d":34.2,"display":30.5,"battery":(24.0,19.0,4.2),"optical":10.0,"qi":(15.0,25.0),"camera":(5.2,5.2,3.2),"strap":20.0},
@@ -50,6 +59,8 @@ def build(name):
           "sdx35_rf":box(12,12,1.0,7,4.5,pcb_z-1.2),
           "emmc":box(11.5,13,0.7,-6,4.2,pcb_z-0.85),
         }
+    parts["max86178"]=box(*MANUFACTURER_PACKAGES["max86178_wlp"],-2.1,0,0.72)
+    parts["mlx90632"]=box(*MANUFACTURER_PACKAGES["mlx90632_qfn"],2.2,0,0.72)
     parts.update(comps)
     return parts
 
@@ -68,6 +79,9 @@ def validate(name,parts):
             b=parts[b_name].val().BoundingBox()
             if min(a.xmax,b.xmax)>max(a.xmin,b.xmin) and min(a.ymax,b.ymax)>max(a.ymin,b.ymin) and min(a.zmax,b.zmax)>max(a.zmin,b.zmin):
                 failures.append(f"{a_name} collides with {b_name}")
+    zmax=max(parts[k].val().BoundingBox().zmax for k in ["case_back","battery","pcb","display"]+comp_names)
+    if zmax>MODELS[name]["thickness"]:
+        failures.append(f"core stack {zmax:.2f} exceeds case {MODELS[name]['thickness']:.2f}")
     return failures
 
 if __name__=="__main__":
