@@ -12,6 +12,7 @@ import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engi
 import { learnedNeedSuggestions, neuralNeedForecasts } from "@/lib/adaptive-guardian"
 import { AdaptiveGuardianPanel } from "@/components/guardian/adaptive-guardian-panel"
 import { GuardianRewardsPanel } from "@/components/guardian/guardian-rewards-panel"
+import { GuardianAchievementJournal } from "@/components/guardian/guardian-achievement-journal"
 import { InterventionOutcomePanel } from "@/components/guardian/intervention-outcome-panel"
 import { anticipateResourceNeeds, questionsForUnknowns } from "@/lib/proactive-resource-needs"
 import { CalmingAudio } from "@/components/calming-audio"
@@ -122,6 +123,7 @@ export default function StabilityPage() {
       </section>
       <AdaptiveGuardianPanel state={state} today={today} onChange={update} />
       <GuardianRewardsPanel state={state} onChange={update} />
+      <GuardianAchievementJournal state={state} onChange={update} today={now} />
       <MealLogSection
         today={today}
         entries={state.entries}
