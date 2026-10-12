@@ -2,6 +2,18 @@
 
 Paste-ready campaign draft updated for the current NarcoGuard app and Rev 5 NG46 / NG40 wearable concept.
 
+## Put these links at the very top of the live GoFundMe
+
+# **USE NARCOGUARD FREE: https://narcoguard.app**
+
+# **WATCH THE REV 5 PROJECT: https://narcoguard.app/watch**
+
+# **SHARE THIS FUNDRAISER: https://gofund.me/9acf270ea**
+
+These should be large, clickable links in the published campaign description and repeated near the final call to action so donors can verify the live app and engineering work before contributing.
+
+---
+
 ## Recommended title
 
 **Help Build NarcoGuard: Free Recovery Help + Safer Wearable R&D**
@@ -240,6 +252,11 @@ The parts list, engineering notes and software are published through the NarcoGu
 The campaign will not call NarcoGuard FDA approved, medically validated, waterproof, self-powered or capable of detecting/reversing overdose unless independent evidence supports those claims.
 
 ## How you can help
+
+# **LIVE APP: https://narcoguard.app**
+
+# **GOFUNDME: https://gofund.me/9acf270ea**
+
 
 **Donate:** support prototype development and testing.
 
