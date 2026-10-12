@@ -145,7 +145,7 @@ const platformRules = {
 }
 
 function zonedDateParts(date = new Date()) {
-  const timeZone = config.social.timezone || "UTC"
+  const timeZone = config.social?.timezone || "UTC"
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -188,7 +188,7 @@ function trimText(text, maxLength) {
 }
 
 function pickHashtags(theme, count) {
-  const merged = [...theme.hashtags, ...config.social.hashtags.primary, ...config.social.hashtags.secondary]
+  const merged = [...theme.hashtags, ...(config.social?.hashtags?.primary || []), ...(config.social?.hashtags?.secondary || [])]
   const unique = Array.from(new Set(merged.map((tag) => tag.replace(/^#/, ""))))
   return unique.slice(0, count).map((tag) => `#${tag}`).join(" ")
 }
