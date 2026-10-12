@@ -24,7 +24,7 @@ export function nextRouteAwarePlan(
       item.need !== undefined &&
       (item.date > now.date || (item.date === now.date && item.time >= now.time)),
     )
-    .sort((a, b) => \`\${a.date}T\${a.time}\`.localeCompare(\`\${b.date}T\${b.time}\`))[0] ?? null
+    .sort((a, b) => (a.date + "T" + a.time).localeCompare(b.date + "T" + b.time))[0] ?? null
 }
 
 function appointmentDate(plan: PlanItem): Date | null {
