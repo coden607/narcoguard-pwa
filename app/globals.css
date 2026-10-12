@@ -445,8 +445,8 @@ input:focus,textarea:focus,select:focus { border-color: rgba(103,232,249,.7) !im
   .site-main { padding-bottom: 1rem; }
   .site-footer { flex-direction: row; justify-content: space-between; text-align: left; }
 }
-/* Eight links need about 1200px; narrower screens use the menu button. */
-@media (min-width: 1200px) {
+/* Ten links plus install controls need a wide desktop; narrower screens use the menu button. */
+@media (min-width: 1440px) {
   .desktop-nav { display: flex; }
   .menu-button,.mobile-nav { display: none; }
 }
