@@ -50,7 +50,7 @@ test("adaptive learning choices and voluntary return-to-use labels survive the l
     enabled: true,
     adaptiveLearningEnabled: true,
     patternAlertsEnabled: true,
-    alertNeeds: ["food", "hygiene"] as const,
+    alertNeeds: ["food", "hygiene"] as ("food" | "hygiene")[],
     entries: [{ date: "2026-10-12", needs: { food: "needs-help" as const }, returnToUse: false }],
   }
   saveGuardianState(store, enabled)
