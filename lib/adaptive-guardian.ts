@@ -231,3 +231,92 @@ export function learnedNeedSuggestions(
     .filter((row) => allowed.size === 0 || allowed.has(row.need))
     .filter((row, index, all) => all.findIndex((candidate) => candidate.need === row.need) === index)
 }
+
+
+export type NeuralNeedForecast = {
+  need: Need
+  status: "ready"
+  score: number
+  trainingPairs: number
+  positivePairs: number
+  negativePairs: number
+  note: string
+}
+
+function trainBinaryNeedModel(pairs: { x: number[]; target: number }[], today: CheckIn, seedOffset: number): number {
+  const w1 = Array.from({ length: HIDDEN }, (_, h) => Array.from({ length: FEATURES }, (_, i) => seeded(seedOffset + h * FEATURES + i)))
+  const b1 = Array.from({ length: HIDDEN }, (_, h) => seeded(seedOffset + 200 + h))
+  const w2 = Array.from({ length: HIDDEN }, (_, h) => seeded(seedOffset + 300 + h))
+  let b2 = seeded(seedOffset + 400)
+  const learningRate = 0.03
+
+  for (let epoch = 0; epoch < 140; epoch++) {
+    for (const pair of pairs) {
+      const hidden = w1.map((row, h) => tanh(row.reduce((sum, weight, i) => sum + weight * pair.x[i], b1[h])))
+      const output = sigmoid(hidden.reduce((sum, value, h) => sum + value * w2[h], b2))
+      const delta2 = output - pair.target
+      const priorW2 = [...w2]
+      for (let h = 0; h < HIDDEN; h++) w2[h] -= learningRate * delta2 * hidden[h]
+      b2 -= learningRate * delta2
+      for (let h = 0; h < HIDDEN; h++) {
+        const delta1 = delta2 * priorW2[h] * (1 - hidden[h] * hidden[h])
+        for (let i = 0; i < FEATURES; i++) w1[h][i] -= learningRate * delta1 * pair.x[i]
+        b1[h] -= learningRate * delta1
+      }
+    }
+  }
+
+  const x = featureVector(today)
+  const hidden = w1.map((row, h) => tanh(row.reduce((sum, weight, i) => sum + weight * x[i], b1[h])))
+  return Math.round(sigmoid(hidden.reduce((sum, value, h) => sum + value * w2[h], b2)) * 100)
+}
+
+/**
+ * Experimental next-check-in need forecasters.
+ * Each need gets its own small local network trained only on consecutive voluntary check-ins
+ * where the next check-in explicitly answered that need. Scores are pattern scores, not calibrated probabilities.
+ */
+export function neuralNeedForecasts(
+  entries: readonly CheckIn[],
+  today: CheckIn,
+  selectedNeeds: readonly Need[] = [],
+  {
+    minPairs = 20,
+    minPositive = 4,
+    minNegative = 8,
+  }: { minPairs?: number; minPositive?: number; minNegative?: number } = {},
+): NeuralNeedForecast[] {
+  const ordered = uniqueSorted(entries)
+  const allowed = new Set(selectedNeeds)
+  const forecasts: NeuralNeedForecast[] = []
+
+  NEEDS.forEach((need, needIndex) => {
+    if (allowed.size > 0 && !allowed.has(need)) return
+
+    const pairs: { x: number[]; target: number }[] = []
+    for (let index = 0; index < ordered.length - 1; index++) {
+      const next = ordered[index + 1].needs[need]
+      if (next === undefined) continue
+      pairs.push({
+        x: featureVector(ordered[index]),
+        target: next === "needs-help" ? 1 : 0,
+      })
+    }
+
+    const positivePairs = pairs.filter((pair) => pair.target === 1).length
+    const negativePairs = pairs.length - positivePairs
+    if (pairs.length < minPairs || positivePairs < minPositive || negativePairs < minNegative) return
+
+    forecasts.push({
+      need,
+      status: "ready",
+      score: trainBinaryNeedModel(pairs, today, 1000 + needIndex * 500),
+      trainingPairs: pairs.length,
+      positivePairs,
+      negativePairs,
+      note: "Experimental local next-check-in pattern score. It is not a calibrated probability and does not prove that this need will occur.",
+    })
+  })
+
+  return forecasts.sort((a, b) => b.score - a.score || b.trainingPairs - a.trainingPairs)
+}
