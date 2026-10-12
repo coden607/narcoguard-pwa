@@ -71,15 +71,24 @@ export default function PrivacyPolicy() {
             <h2 className="text-2xl font-semibold text-foreground">Adaptive Guardian learning</h2>
             <p>
               Adaptive Guardian is optional and local-first. When you enable it, your Guardian check-ins can include an optional
-              return-to-use outcome label. NarcoGuard can calculate descriptive next-check-in transition rates and train a small
-              experimental neural model in this browser from the entries you voluntarily recorded.
+              return-to-use outcome label. NarcoGuard can calculate descriptive next-check-in transition rates and train small
+              experimental neural models in this browser from the entries you voluntarily recorded. Those models can relearn when your local history changes and may preload Maslow-organized resource categories before you explicitly mark a need.
             </p>
             <p>
               The adaptive history and model are not uploaded by this feature. Unknown answers stay unknown, the neural layer
               abstains until it has enough labeled examples, and its output is a personal pattern score rather than a clinically
-              calibrated relapse probability. Pattern notifications use generic text and do not automatically contact Heroes,
+              calibrated relapse probability. Neural need scores are not calibrated probabilities. Pattern notifications use generic text and do not automatically contact Heroes,
               friends, clinicians, employers or emergency services. Pausing or erasing Guardian data also stops or erases this
               learning history on this device.
+            </p>
+          </section>
+
+          <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Momentum rewards</h2>
+            <p>
+              Momentum rewards are optional and calculated locally from actions you control, such as voluntary check-ins,
+              meal logs and completed plan steps. They have no cash value, use no streak penalties, and do not award or
+              remove points based on abstinence, return-to-use outcomes, or a neural pattern score.
             </p>
           </section>
 
