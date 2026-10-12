@@ -10,7 +10,7 @@ const ignoredRuntimeVariables = new Set([
   "OASAS_EMAIL", "STAP_EMAIL", "GOFUNDME_URL",
   "GITHUB_EVENT_PATH", "GITHUB_EVENT_NAME", "GITHUB_REPOSITORY", "GITHUB_ACTOR",
   // Set by the Vercel platform on every build and runtime; never configured by hand.
-  "VERCEL", "VERCEL_ENV",
+  "VERCEL", "VERCEL_ENV", "VERCEL_GIT_COMMIT_SHA", "VERCEL_DEPLOYMENT_ID",
 ])
 
 const variableNames = (contents) => new Set(
