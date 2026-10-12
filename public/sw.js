@@ -1,16 +1,17 @@
-const CACHE_NAME = "narcoguard-shell-v8";
+const CACHE_NAME = "narcoguard-shell-v9";
 const APP_SHELL = [
   "/",
   "/offline.html",
   "/safer-use",
   "/help",
   "/watch",
+  "/fund",
   "/ar",
   "/manifest.webmanifest",
-  "/icon-192.png",
-  "/icon-512.png",
+  "/icon-192.png?v=9",
+  "/icon-512.png?v=9",
   "/apple-touch-icon.png",
-  "/icon-maskable-512.png",
+  "/icon-maskable-512.png?v=9",
   "/images/narcoguard-icon-256.jpeg",
   "/images/narcoguard-logo-96.webp",
   "/images/ng46-rev5-blueprint.svg",
