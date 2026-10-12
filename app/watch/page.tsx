@@ -28,7 +28,7 @@ import { WATCH_COMPONENTS, WATCH_COMPONENTS_40 } from "@/lib/watch-components"
 import { GEOMETRY_40, GEOMETRY_46 } from "@/lib/watch-geometry"
 import { BOM_40, BOM_46, UNIT_COSTS, bomTotals } from "@/lib/watch-bom"
 import { FUNDING_GOAL } from "@/lib/funding-goal"
-import { WATCH_REV5_MODULES } from "@/lib/watch-rev5"
+import { REV5_POWER_ARCHITECTURE, WATCH_REV5_MODULES } from "@/lib/watch-rev5"
 import { EngineeringDrawing } from "@/components/watch/engineering-drawing"
 import { Watch3D } from "@/components/watch/watch-3d"
 import { OwnerLock } from "@/components/watch/owner-lock"
@@ -37,8 +37,8 @@ import { OwnerLock } from "@/components/watch/owner-lock"
 // confirmation. This is a research concept, not a manufacturing-ready or medical-device BOM.
 const VARIANTS = {
   "46": {
-    label: "NG 46 mm",
-    fit: "Larger wrists",
+    label: "NG46 Rugged",
+    fit: "Larger / rugged fit",
     model: watchDesignModel,
     calc: watchDesignCalculations,
     geometry: GEOMETRY_46,
@@ -47,8 +47,8 @@ const VARIANTS = {
     drawingNumber: "NG-CON-001",
   },
   "40": {
-    label: "NG 40 mm",
-    fit: "Women's fit, smaller wrists",
+    label: "NG40 Elegant",
+    fit: "Smaller-wrist / refined fit",
     model: watchDesignModel40,
     calc: watchDesignCalculations40,
     geometry: GEOMETRY_40,
@@ -184,19 +184,37 @@ export default function NGWatchPage() {
           </div>
         </section>
 
-        {/* Hero Product Showcase with New Images */}
-        <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <div className="lg:col-span-2 rounded-2xl overflow-hidden neon-border">
-            <Image src="/images/ng-modular-exploded.jpg" alt="NarcoGuard NG concept exploded view showing candidate modular components" width={1200} height={675} priority className="w-full h-auto object-cover" />
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="rounded-2xl overflow-hidden neon-border flex-1">
-              <Image src="/images/ng-blueprint-detailed.jpg" alt="NarcoGuard NG engineering blueprint with cross-section views and dimensions" width={600} height={338} className="w-full h-full object-cover" />
+        {/* Rev 5 blueprint + module summary */}
+        <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <HolographicCard className="p-6" glowIntensity="high">
+            <h2 className="text-xl font-bold mb-4">Rev 5 blueprint — {variant.label}</h2>
+            <Image
+              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg" : "/images/ng40-rev5-blueprint.svg"}
+              alt={`${variant.label} Rev 5 concept blueprint`}
+              width={1200}
+              height={800}
+              priority
+              className="w-full h-auto rounded-xl border border-border/60"
+            />
+            <p className="mt-2 text-xs text-muted-foreground">Concept engineering visual only. Supplier CAD, routed PCB, tolerance, RF, thermal, ingress, and physical validation remain open.</p>
+          </HolographicCard>
+          <HolographicCard className="p-6" glowIntensity="high">
+            <h2 className="text-xl font-bold mb-4">Rev 5 power, privacy & modular additions</h2>
+            <div className="grid gap-3">
+              {WATCH_REV5_MODULES.filter((item) => item.sizes.includes(variantId === "46" ? "NG46" : "NG40")).map((item) => (
+                <div key={item.id} className="rounded-lg border border-border/60 bg-background/40 p-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="font-semibold">{item.label}</span>
+                    <span className="text-[10px] uppercase tracking-wide text-primary">{item.feasibility}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">{item.purpose}</p>
+                </div>
+              ))}
             </div>
-            <div className="rounded-2xl overflow-hidden neon-border flex-1">
-              <Image src="/images/ng-watch-hero.jpg" alt="NarcoGuard NG watch on wrist showing vital signs display" width={600} height={338} className="w-full h-full object-cover" />
+            <div className="mt-4 rounded-lg border border-primary/30 p-3 text-xs text-muted-foreground">
+              Primary storage: {REV5_POWER_ARCHITECTURE.primaryStorage}. Primary charging: {REV5_POWER_ARCHITECTURE.primaryCharging}. {REV5_POWER_ARCHITECTURE.rule}
             </div>
-          </div>
+          </HolographicCard>
         </section>
 
         {/* Investor-facing engineering summary */}
