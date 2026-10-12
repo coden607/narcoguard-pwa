@@ -12,6 +12,8 @@ import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engi
 import { learnedNeedSuggestions, neuralNeedForecasts } from "@/lib/adaptive-guardian"
 import { AdaptiveGuardianPanel } from "@/components/guardian/adaptive-guardian-panel"
 import { GuardianRewardsPanel } from "@/components/guardian/guardian-rewards-panel"
+import { GuardianAchievementJournal } from "@/components/guardian/guardian-achievement-journal"
+import { InterventionOutcomePanel } from "@/components/guardian/intervention-outcome-panel"
 import { anticipateResourceNeeds, questionsForUnknowns } from "@/lib/proactive-resource-needs"
 import { CalmingAudio } from "@/components/calming-audio"
 import { MealLogSection } from "@/components/guardian/meal-log-section"
@@ -121,6 +123,7 @@ export default function StabilityPage() {
       </section>
       <AdaptiveGuardianPanel state={state} today={today} onChange={update} />
       <GuardianRewardsPanel state={state} onChange={update} />
+      <GuardianAchievementJournal state={state} onChange={update} today={now} />
       <MealLogSection
         today={today}
         entries={state.entries}
@@ -136,7 +139,7 @@ export default function StabilityPage() {
         </form>
 
         <ul className="space-y-2">{state.goals.map((item, index) => <li key={`${index}-${item}`} className="flex justify-between gap-2">{item}<button disabled={state.paused} className="underline" onClick={() => update({ ...state, goals: state.goals.filter((_, i) => i !== index) })}>Remove</button></li>)}</ul>
-        <p className="text-sm text-muted-foreground">Plan a task or an appointment. NarcoGuard does not book, confirm, or change appointments; verify details with the provider. Include a 5-digit ZIP in the location if you want NarcoGuard to preload resources near that appointment without tracking your route.</p>
+        <p className="text-sm text-muted-foreground">Plan a task or an appointment. NarcoGuard does not book, confirm, or change appointments; verify details with the provider. Include a 5-digit ZIP in the location if you want NarcoGuard to preload resources near that appointment without tracking your route. If you tag a plan with the need it supports and later mark it complete, NarcoGuard can locally learn descriptive next-check-in outcome patterns after enough comparable examples.</p>
         <form className="grid gap-2 sm:grid-cols-2" onSubmit={(event) => { event.preventDefault(); if (planTitle.trim()) { update({ ...state, plan: [...state.plan, { id: crypto.randomUUID(), date: planDate || localDate(1), title: planTitle.trim().slice(0, 160), done: false, kind: planTime ? "appointment" : "task", ...(planTime ? { time: planTime } : {}), ...(planLocation.trim() ? { location: planLocation.trim().slice(0, 160) } : {}), ...(planNeed ? { need: planNeed } : {}) }] }); setPlanTitle(""); setPlanDate(""); setPlanTime(""); setPlanLocation(""); setPlanNeed("") } }}>
           <input aria-label="Task or appointment" disabled={state.paused} maxLength={160} className="bg-background border rounded p-2 sm:col-span-2" placeholder="Task or appointment name" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} />
           <label className="text-sm">Date<input aria-label="Plan date" disabled={state.paused} type="date" min={now} className="block bg-background border rounded p-2 w-full" value={planDate || localDate(1)} onChange={(event) => setPlanDate(event.target.value)} /></label>
@@ -152,6 +155,7 @@ export default function StabilityPage() {
           <button disabled={state.paused} className="underline ml-auto" onClick={() => update({ ...state, plan: state.plan.filter((candidate) => candidate.id !== item.id) })}>Remove</button>
         </li>)}</ul>
       </section>
+      <InterventionOutcomePanel state={state} />
       {neuralForecasts.length > 0 && <section className="border rounded-xl p-5 space-y-4" aria-live="polite" data-testid="neural-maslow-forecast">
         <h2 className="text-xl font-semibold">Neural Maslow forecast</h2>
         <p className="text-sm text-muted-foreground">These experimental local models learn which needs tended to appear on your next recorded check-in after combinations like missed meals, isolation, low mood, sleep loss, or other needs. Scores are pattern scores, not probabilities or diagnoses.</p>

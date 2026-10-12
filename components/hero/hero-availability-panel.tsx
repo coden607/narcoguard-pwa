@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { HERO_RESOURCE_KINDS, HERO_RESOURCE_LABELS, type HeroResourceKind } from "@/lib/hero-alerts"
+import type { HeroContactHandoff } from "@/lib/hero-alerts"
 import type { HeroRequestStatus } from "@/lib/hero-lifecycle"
 
 type HeroRequest = {
@@ -13,6 +14,7 @@ type HeroRequest = {
   status?: HeroRequestStatus
   meetingNote?: string | null
   location?: { lat: number; lon: number } | null
+  contact?: HeroContactHandoff | null
 }
 
 type HeroStatus = {
@@ -261,13 +263,22 @@ export function HeroAvailabilityPanel() {
             <p className="text-sm"><strong>{lifecycleLabel(request.status)}</strong></p>
             <p className="text-sm">{request.text}</p>
             {request.meetingNote && <p className="text-sm"><strong>Meeting point:</strong> {request.meetingNote}</p>}
+            {request.contact && <div className="rounded border p-2 text-sm">
+              <strong>Requester-approved contact:</strong>{" "}
+              {request.contact.method === "phone" || request.contact.method === "text"
+                ? <a className="underline text-primary" href={`${request.contact.method === "text" ? "sms" : "tel"}:${request.contact.value.replace(/[^+0-9]/g, "")}`}>{request.contact.value}</a>
+                : request.contact.method === "email"
+                  ? <a className="underline text-primary" href={`mailto:${request.contact.value}`}>{request.contact.value}</a>
+                  : <span>@{request.contact.value}</span>}
+              <span className="block text-xs text-muted-foreground">Shared only for this accepted practical request. It is not pulled from the requester&apos;s profile.</span>
+            </div>}
             {request.location && <a
               className="inline-block underline text-primary text-sm"
               href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(request.location.lat + "," + request.location.lon)}`}
               target="_blank"
               rel="noopener noreferrer"
             >Open requester-shared location ↗</a>}
-            <p className="text-xs text-muted-foreground">Only the accepted Hero receives an exact location when the requester explicitly opted in. For an emergency, keep 911 involved and follow EMS instructions.</p>
+            <p className="text-xs text-muted-foreground">Only the accepted Hero receives an exact location or contact method when the requester explicitly opted in. No unrelated profile details are included. For an emergency, keep 911 involved and follow EMS instructions.</p>
             <div className="flex flex-wrap gap-2">
               {request.status === "accepted" && <Button size="sm" onClick={() => void action({ action: "en-route", requestId: request.id })} disabled={busy}>I&apos;m on my way</Button>}
               {request.status === "en_route" && <Button size="sm" onClick={() => void action({ action: "arrive", requestId: request.id })} disabled={busy}>I&apos;ve arrived</Button>}

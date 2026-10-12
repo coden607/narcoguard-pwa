@@ -4,6 +4,13 @@ import type { HeroRequestStatus } from "@/lib/hero-lifecycle"
 // Exact coordinates are converted immediately into a coarse ~5 km cell; exact location is never stored here.
 
 export const CELL_DEGREES = 0.05
+export const HERO_CONTACT_METHODS = ["phone", "text", "email", "community-handle"] as const
+export type HeroContactMethod = (typeof HERO_CONTACT_METHODS)[number]
+
+export interface HeroContactHandoff {
+  method: HeroContactMethod
+  value: string
+}
 export const REQUEST_TTL_MS = 30 * 60 * 1000
 export const RESOURCE_REQUEST_TTL_MS = 2 * 60 * 60 * 1000
 export const MAX_AVAILABILITY_MS = 8 * 60 * 60 * 1000
