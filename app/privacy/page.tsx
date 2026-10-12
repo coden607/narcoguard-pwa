@@ -84,6 +84,17 @@ export default function PrivacyPolicy() {
           </section>
 
           <section className="space-y-3">
+            <h2 className="text-2xl font-semibold text-foreground">Resource verification records</h2>
+            <p>
+              If you choose to record that you called, checked a website, visited, or otherwise tried to verify a resource,
+              NarcoGuard stores that verification only in this browser. The record includes the resource, method, status,
+              optional note, verification time, and an automatic expiration time. A user-entered verification is always shown
+              separately from public-directory data and does not guarantee a meal, bed, appointment, eligibility, stock, or price
+              unless you explicitly confirmed that detail yourself.
+            </p>
+          </section>
+
+          <section className="space-y-3">
             <h2 className="text-2xl font-semibold text-foreground">Watched resource listing changes</h2>
             <p>
               You can locally mark a resource listing to watch for public-directory changes while the resource screen is being refreshed.
