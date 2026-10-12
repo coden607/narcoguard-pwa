@@ -9,14 +9,14 @@ export interface PlanItem { id: string; date: string; title: string; done: boole
 export interface GuardianState {
   enabled: boolean; paused: boolean; postalCode: string; supportPhone: string; goals: string[]; entries: CheckIn[]; plan: PlanItem[]
   escalationEnabled: boolean; escalationThreshold: number
-  adaptiveLearningEnabled: boolean; patternAlertsEnabled: boolean; alertNeeds: Need[]
+  adaptiveLearningEnabled: boolean; patternAlertsEnabled: boolean; alertNeeds: Need[]; rewardEnabled: boolean
 }
 export interface GuardianStorage { getItem(key: string): string | null; setItem(key: string, value: string): void; removeItem(key: string): void }
 export interface PatternInsight { trigger: Need; companion: Need; observed: number; answered: number; percent: number }
 export interface EarlyWarning { level: "steady" | "check-in" | "support"; signals: Need[]; sleepSignal: boolean; score: number; reasons: string[] }
 
 export function defaultGuardianState(): GuardianState {
-  return { enabled: false, paused: false, postalCode: "", supportPhone: "", goals: [], entries: [], plan: [], escalationEnabled: false, escalationThreshold: 3, adaptiveLearningEnabled: false, patternAlertsEnabled: false, alertNeeds: [] }
+  return { enabled: false, paused: false, postalCode: "", supportPhone: "", goals: [], entries: [], plan: [], escalationEnabled: false, escalationThreshold: 3, adaptiveLearningEnabled: false, patternAlertsEnabled: false, alertNeeds: [], rewardEnabled: false }
 }
 const isDate = (value: unknown): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
 
@@ -54,6 +54,7 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
       adaptiveLearningEnabled: value.adaptiveLearningEnabled === true,
       patternAlertsEnabled: value.patternAlertsEnabled === true,
       alertNeeds: Array.isArray(value.alertNeeds) ? value.alertNeeds.filter((need: unknown): need is Need => NEEDS.includes(need as Need)).slice(0, NEEDS.length) : [],
+      rewardEnabled: value.rewardEnabled === true,
     }
   } catch { return defaultGuardianState() }
 }

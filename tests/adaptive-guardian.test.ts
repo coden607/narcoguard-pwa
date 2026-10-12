@@ -4,6 +4,7 @@ import {
   findTransition,
   learnedNeedSuggestions,
   neuralPatternScore,
+  neuralNeedForecasts,
   transitionInsights,
 } from "../lib/adaptive-guardian"
 import type { CheckIn } from "../lib/guardian-stability"
@@ -94,4 +95,36 @@ test("transition output never infers unknown return-to-use labels", () => {
     needs: { food: index % 2 === 0 ? "needs-help" : "met" },
   }))
   assert.equal(transitionInsights(entries).some((row) => row.to === "return-to-use"), false)
+})
+
+
+test("neural need forecasters learn next-check-in Maslow needs from local history", () => {
+  const entries: CheckIn[] = []
+  for (let index = 0; index < 48; index++) {
+    const date = new Date(Date.UTC(2026, 0, 1 + index))
+    entries.push({
+      date: date.toISOString().slice(0, 10),
+      needs: {
+        food: index % 2 === 0 ? "needs-help" : "met",
+        hygiene: index % 4 === 1 ? "needs-help" : "met",
+        connection: index % 3 === 0 ? "needs-help" : "met",
+      },
+      isolated: index % 3 === 0,
+      sleepHours: index % 5 === 0 ? 4 : 7,
+      meals: index % 2 === 0 ? [] : undefined,
+    })
+  }
+  const forecasts = neuralNeedForecasts(entries, {
+    date: "2026-03-01",
+    needs: { food: "needs-help" },
+    isolated: true,
+    sleepHours: 4,
+    meals: [],
+  }, [], { minPairs: 20, minPositive: 4, minNegative: 8 })
+
+  assert.ok(forecasts.length > 0)
+  for (const forecast of forecasts) {
+    assert.ok(forecast.score >= 0 && forecast.score <= 100)
+    assert.match(forecast.note, /not a calibrated probability/i)
+  }
 })

@@ -60,3 +60,10 @@ test("adaptive learning choices and voluntary return-to-use labels survive the l
   assert.deepEqual(saved.alertNeeds, ["food", "hygiene"])
   assert.equal(saved.entries[0].returnToUse, false)
 })
+
+
+test("local momentum rewards preference survives the Guardian schema", () => {
+  const store = storage()
+  saveGuardianState(store, { ...defaultGuardianState(), enabled: true, rewardEnabled: true })
+  assert.equal(readGuardianState(store).rewardEnabled, true)
+})
