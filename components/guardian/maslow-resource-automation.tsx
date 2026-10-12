@@ -6,6 +6,7 @@ import { normalizePostalCode } from "@/lib/guardian-resources"
 import { MASLOW_LEVELS, resourceKindsForNeeds } from "@/lib/maslow-resources"
 import { RESOURCE_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 import { cardSummary } from "@/lib/resource-display"
+import { inventoryFreshness, knownResourcesFor, readKnownResources, rememberKnownResources, type KnownResource } from "@/lib/resource-inventory"
 import {
   defaultResourcePreferences,
   explainResource,
@@ -47,16 +48,20 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
   const [request, setRequest] = useState<{ zip: string; data?: NeedsLookup; error?: string }>({ zip: "" })
   const [preferences, setPreferences] = useState<ResourcePreferences>(defaultResourcePreferences())
   const [feedback, setFeedback] = useState<ResourceFeedback[]>([])
+  const [inventory, setInventory] = useState<KnownResource[]>([])
+  const [refreshTick, setRefreshTick] = useState(0)
   const data = request.zip === zip ? request.data ?? null : null
   const error = request.zip === zip ? request.error ?? "" : ""
   const loading = Boolean(zip) && request.zip !== zip
   const allKinds = [...new Set(MASLOW_LEVELS.flatMap((level) => level.kinds as readonly ResourceKind[]))]
   const otherKinds = allKinds.filter((kind) => !kinds.includes(kind))
+  const knownForCurrentNeeds = knownResourcesFor(inventory, zip, kinds)
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       setPreferences(readResourcePreferences(window.localStorage))
       setFeedback(readResourceFeedback(window.localStorage))
+      setInventory(readKnownResources(window.localStorage))
     }, 0)
     return () => window.clearTimeout(timer)
   }, [])
@@ -71,12 +76,22 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
         return body as NeedsLookup
       })
       .then((body) => {
-        if (!controller.signal.aborted) setRequest({ zip, data: body })
+        if (controller.signal.aborted) return
+        setRequest({ zip, data: body })
+        const seen = Object.values(body.kinds).flatMap((lookup) => lookup.results)
+        const fetchedAt = body.fetchedAt || new Date().toISOString()
+        setInventory(rememberKnownResources(window.localStorage, zip, seen, fetchedAt))
       })
       .catch((cause: unknown) => {
         if (!controller.signal.aborted) setRequest({ zip, error: cause instanceof Error ? cause.message : "Resource lookup is unavailable." })
       })
     return () => controller.abort()
+  }, [zip, refreshTick])
+
+  useEffect(() => {
+    if (!zip) return
+    const timer = window.setInterval(() => setRefreshTick((value) => value + 1), 15 * 60_000)
+    return () => window.clearInterval(timer)
   }, [zip])
 
   const ranked = useMemo(() => {
@@ -136,9 +151,26 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
           </label>
         </div>
         <p className="text-xs text-muted-foreground">Preferences and “worked / closed / too far / not for me” feedback stay in this browser and only affect your ranking.</p>
-        {loading && <p className="text-sm">Checking nearby public directories…</p>}
-        {error && <p className="text-sm">Live lookup failed: {error} Directory links remain available below.</p>}
+        <div className="flex flex-wrap gap-2 items-center">
+          {loading && <p className="text-sm">Checking nearby public directories…</p>}
+          <button type="button" className="text-sm underline text-primary" onClick={() => setRefreshTick((value) => value + 1)} disabled={loading}>Refresh known availability</button>
+        </div>
+        {error && <p className="text-sm">Live lookup failed: {error} Previously known resources remain available below with freshness labels; directory links remain available too.</p>}
         {data?.message && <p className="text-sm">{data.message}</p>}
+        {knownForCurrentNeeds.length > 0 && <div className="rounded border p-3">
+          <p className="font-medium">Known resource inventory</p>
+          <p className="text-xs text-muted-foreground">NarcoGuard remembers resources previously returned for this ZIP in this browser and rechecks public sources every 15 minutes while this screen is open. “Open now” comes only from parseable listed hours; anything else stays unknown.</p>
+          <ul className="mt-2 space-y-1 text-sm">
+            {knownForCurrentNeeds.slice(0, 8).map((row) => {
+              const summary = cardSummary(row.resource, new Date())
+              const freshness = inventoryFreshness(row.lastSeenAt)
+              return <li key={"known-" + row.key}>
+                <strong>{row.resource.name}</strong> · {RESOURCE_LABELS[row.resource.kind]} · {summary.chip.label}
+                <span className="text-muted-foreground"> · last seen {new Date(row.lastSeenAt).toLocaleString()} · {freshness === "fresh" ? "fresh lookup" : freshness === "aging" ? "aging lookup" : "stale — refresh recommended"}</span>
+              </li>
+            })}
+          </ul>
+        </div>}
       </div>
 
       {ranked && MASLOW_LEVELS.map((level) => {
