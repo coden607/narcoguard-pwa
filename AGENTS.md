@@ -12,6 +12,14 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 - npm with Node 24 (see `.nvmrc`, `engines`, and `packageManager`)
 - Playwright for browser and PWA tests
 
+## Shared Skills — Required
+
+- Canonical skill source: `https://github.com/coden607/skills.git`.
+- At the start of every substantive agent run, execute `npm run setup:agent-skills` (or `bash scripts/bootstrap-agent-skills.sh`) before selecting skills.
+- Load only the smallest relevant skill set for the task; do not preload the full repository into context.
+- The pinned commit in `.agent-skills/manifest.json` is the reproducible source of truth. Update that pin deliberately when adopting newer skills.
+- `npm run validate:agent-skills` must remain green in CI; never replace the coden607 source with an unrelated skill repository.
+
 ## Working Style
 
 - Work autonomously on safe, in-scope implementation and verification steps.
