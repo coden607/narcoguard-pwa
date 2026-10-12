@@ -117,8 +117,7 @@ export default function NGWatchPage() {
             <div>
               <h2 id="size-heading" className="text-lg font-bold">Choose a size</h2>
               <p className="text-sm text-muted-foreground">
-                Both sizes run the same safety functions: SOS, emergency call, overdose steps and the alarm. The 40 mm is the women&apos;s fit,
-                sized for smaller wrists with a smaller case, display and battery; anyone can wear either size.
+                Both sizes run the same safety functions: SOS, emergency call, overdose steps and the alarm. The 40 mm is the smaller-wrist refined fit, sized with a smaller case, display and battery; anyone can wear either size.
               </p>
             </div>
             <div className="flex shrink-0 gap-2" role="group" aria-label="Watch size">
@@ -155,7 +154,7 @@ export default function NGWatchPage() {
             ))}
           </dl>
           <figure className="mt-4">
-            <Image src="/images/ng-sizes-render.jpg" alt="To-scale renders of the NG 46 mm and the NG 40 mm women's fit, side by side" width={1600} height={900} sizes="(min-width: 1280px) 1200px, 100vw" className="w-full h-auto rounded-xl border border-border/60" />
+            <Image src="/images/ng-sizes-render.jpg" alt="To-scale renders of the NG 46 mm and NG 40 mm smaller-wrist refined fit, side by side" width={1600} height={900} sizes="(min-width: 1280px) 1200px, 100vw" className="w-full h-auto rounded-xl border border-border/60" />
             <figcaption className="mt-1 text-xs text-muted-foreground">Rendered from the same geometry as the drawing and 3D model, with the same camera for both sizes. Concept renders, not photos.</figcaption>
           </figure>
         </section>
