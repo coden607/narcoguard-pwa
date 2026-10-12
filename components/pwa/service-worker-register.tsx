@@ -30,7 +30,6 @@ export function ServiceWorkerRegister() {
         icon: "/icon-192.png",
         badge: "/icon-192.png",
         tag: "narcoguard-app-update",
-        renotify: true,
         data: { url: "/?update=1" },
       })
     }
