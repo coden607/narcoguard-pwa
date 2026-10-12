@@ -188,7 +188,7 @@ export default function NGWatchPage() {
           <HolographicCard className="p-6" glowIntensity="high">
             <h2 className="text-xl font-bold mb-4">Rev 5 blueprint — {variant.label}</h2>
             <Image
-              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg" : "/images/ng40-rev5-blueprint.svg"}
+              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-12" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-12"}
               alt={`${variant.label} Rev 5 concept blueprint`}
               width={1200}
               height={800}

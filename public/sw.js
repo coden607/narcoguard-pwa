@@ -1,9 +1,10 @@
-const CACHE_NAME = "narcoguard-shell-v7";
+const CACHE_NAME = "narcoguard-shell-v8";
 const APP_SHELL = [
   "/",
   "/offline.html",
   "/safer-use",
   "/help",
+  "/watch",
   "/ar",
   "/manifest.webmanifest",
   "/icon-192.png",
@@ -12,6 +13,8 @@ const APP_SHELL = [
   "/icon-maskable-512.png",
   "/images/narcoguard-icon-256.jpeg",
   "/images/narcoguard-logo-96.webp",
+  "/images/ng46-rev5-blueprint.svg",
+  "/images/ng40-rev5-blueprint.svg",
 ];
 
 self.addEventListener("install", (event) => {

@@ -30,5 +30,5 @@ test("deployment version endpoint is dynamic and non-cacheable", () => {
 
 test("service-worker shell version is bumped for the update notice release", () => {
   const sw = read("public/sw.js")
-  assert.match(sw, /narcoguard-shell-v7/)
+  assert.match(sw, /narcoguard-shell-v8/)
 })
