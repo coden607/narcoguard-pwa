@@ -114,6 +114,11 @@ export default function HeroSignup() {
 
         <HolographicCard className="p-6 sm:p-8">
           <HeroAvailabilityPanel />
+          <div className="mt-5 rounded-lg border p-4 text-sm">
+            <strong>Optional community connection</strong>
+            <p className="mt-1 text-muted-foreground">Heroes and other signed-in users can connect by handle in NarcoGuard Community when both people want ongoing contact. A help request never automatically reveals a profile, recovery status, or exact location.</p>
+            <Link href="/community" className="mt-2 inline-block underline text-primary">Open NarcoGuard Community</Link>
+          </div>
         </HolographicCard>
 
         <HolographicCard className="p-6">
