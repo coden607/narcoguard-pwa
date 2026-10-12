@@ -65,7 +65,7 @@ test.describe("PWA production flow", () => {
     expect(new Set(samples).size, `transform changed over time: ${samples.join(" | ")}`).toBe(1)
   })
 
-  test("the fundraising goal on the dashboard matches the watch parts estimate", async ({ page }) => {
+  test("the fundraising goal stays consistent across dashboard and Rev 5 watch plan", async ({ page }) => {
     await page.goto("/watch")
     const estimate = page.getByText("Total planning goal:", { exact: false })
     const watchGoal = Number((await estimate.innerText()).match(/Total planning goal: \$([\d,.]+)/)![1].replace(/,/g, ""))
@@ -73,7 +73,7 @@ test.describe("PWA production flow", () => {
     await page.getByRole("button", { name: "Skip Setup (Demo Mode)" }).click()
     await page.getByRole("button", { name: "Continue to Demo Mode" }).click()
     const goal = page.getByText(/^Goal: \$/)
-    await expect(goal).toContainText("prototype builds")
+    await expect(goal).toContainText("Rev 5 engineering")
     const dashboardGoal = Number((await goal.innerText()).match(/\$([\d,]+)/)![1].replace(/,/g, ""))
     expect(Math.round(watchGoal)).toBe(dashboardGoal)
   })
@@ -948,8 +948,8 @@ test.describe("Watch blueprint", () => {
     const sizes = page.getByRole("group", { name: "Watch size" })
     // A tap before hydration is lost, so retry until the page has hydrated and the size is selected.
     await expect(async () => {
-      await sizes.getByRole("button", { name: /NG 40 mm/ }).click()
-      await expect(sizes.getByRole("button", { name: /NG 40 mm/ })).toHaveAttribute("aria-pressed", "true", { timeout: 1_000 })
+      await sizes.getByRole("button", { name: /NG40 Elegant/ }).click()
+      await expect(sizes.getByRole("button", { name: /NG40 Elegant/ })).toHaveAttribute("aria-pressed", "true", { timeout: 1_000 })
     }).toPass({ timeout: 15_000 })
     const summary = page.getByTestId("watch-size")
     await expect(summary).toContainText("40 × 12.2 mm")
@@ -965,7 +965,7 @@ test.describe("Watch blueprint", () => {
     await expect(page.getByText("300 mAh Li-ion polymer cell (certified)")).toBeVisible()
     await expect(page.getByText("NG-STRAP-LSR-20MM")).toBeVisible()
     await expect(page.getByText("Prototype Cost Summary - NG 40 mm")).toBeVisible()
-    await sizes.getByRole("button", { name: /NG 46 mm/ }).click()
+    await sizes.getByRole("button", { name: /NG46 Rugged/ }).click()
     await expect(page.getByText("500 mAh Li-ion polymer cell (certified)")).toBeVisible()
   })
 
