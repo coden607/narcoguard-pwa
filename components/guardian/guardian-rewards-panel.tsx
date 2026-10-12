@@ -2,7 +2,7 @@
 
 import { Sparkles, Trophy } from "lucide-react"
 import { guardianRewardSummary } from "@/lib/guardian-rewards"
-import type { GuardianState } from "@/lib/guardian-stability"
+import { REWARD_CATEGORIES, type GuardianState, type RewardCategory } from "@/lib/guardian-stability"
 
 export function GuardianRewardsPanel({
   state,
@@ -13,6 +13,13 @@ export function GuardianRewardsPanel({
 }) {
   const summary = guardianRewardSummary(state)
   const remaining = Math.max(0, summary.nextMilestone - summary.points)
+  const labels: Record<RewardCategory, string> = { checkins: "Voluntary check-ins", meals: "Meal logs", needs: "Answering stability needs", plans: "Completed plan steps" }
+  const toggleCategory = (category: RewardCategory) => onChange({
+    ...state,
+    rewardCategories: state.rewardCategories.includes(category)
+      ? state.rewardCategories.filter((item) => item !== category)
+      : [...state.rewardCategories, category],
+  })
 
   return <section className="rounded-xl border border-primary/25 p-5 space-y-4" data-testid="guardian-rewards">
     <div className="flex items-start gap-3">
@@ -38,7 +45,30 @@ export function GuardianRewardsPanel({
       </span>
     </label>
 
-    {state.rewardEnabled && <div className="grid gap-3 sm:grid-cols-3">
+    {state.rewardEnabled && <>
+      <div className="rounded-lg border p-4 space-y-3" data-testid="reward-personalization">
+        <h3 className="font-semibold">Choose what feels rewarding</h3>
+        <p className="text-sm text-muted-foreground">Only selected action categories contribute points. Turning a category off never removes or penalizes a real-world accomplishment.</p>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {REWARD_CATEGORIES.map((category) => <label key={category} className="flex items-center gap-2 rounded border p-2 text-sm">
+            <input type="checkbox" disabled={state.paused} checked={state.rewardCategories.includes(category)} onChange={() => toggleCategory(category)} />
+            {labels[category]}
+          </label>)}
+        </div>
+        <label className="block text-sm">Local milestone spacing
+          <select
+            aria-label="Reward milestone spacing"
+            disabled={state.paused}
+            className="mt-1 block rounded border bg-background p-2"
+            value={state.rewardMilestoneStep}
+            onChange={(event) => onChange({ ...state, rewardMilestoneStep: Number(event.target.value) })}
+          >
+            {[25, 50, 100, 250].map((value) => <option key={value} value={value}>{value} points</option>)}
+          </select>
+        </label>
+        <p className="text-xs text-muted-foreground">No streaks, missed-day penalties, loss framing, or escalating pressure are used.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-3">
       <div className="rounded-lg border p-4">
         <p className="text-3xl font-bold">{summary.points}</p>
         <p className="text-sm text-muted-foreground">Momentum points</p>
@@ -63,6 +93,7 @@ export function GuardianRewardsPanel({
           </p>
         </div>
       </div>
-    </div>}
+      </div>
+    </>}
   </section>
 }
