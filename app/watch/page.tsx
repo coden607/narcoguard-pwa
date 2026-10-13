@@ -484,7 +484,7 @@ export default function NGWatchPage() {
               {billOfMaterials.map((category, catIndex) => {
                 const CategoryIcon = BOM_ICONS[catIndex] ?? Package
                 return (
-                <HolographicCard key={category.category} className="p-6" data-testid="rev5-bom-category">
+                <HolographicCard key={category.category} className="p-6">
                   <div className="mb-4 flex items-start gap-3">
                     <div className="rounded-xl border border-primary/30 bg-primary/10 p-2.5">
                       <CategoryIcon className="h-6 w-6 text-primary" aria-hidden="true" />
