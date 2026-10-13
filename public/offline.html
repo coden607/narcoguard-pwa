@@ -69,6 +69,13 @@
     .steps h2 { color: #00d9ff; margin-top: 0; }
     .steps li { margin-bottom: .75rem; line-height: 1.5; }
     .small { font-size: .85rem; opacity: .8; margin-bottom: 0; }
+    .resources { text-align: left; margin-top: 1.5rem; }
+    .resources h2 { color: #00d9ff; }
+    .resource { background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.16); border-radius: 12px; padding: 1rem; margin: .75rem 0; }
+    .resource strong { display: block; }
+    .resource .meta { font-size: .82rem; opacity: .8; margin-top: .35rem; }
+    .resource a { color: #7de9ff; word-break: break-word; }
+    .stale-warning { border-left: 4px solid #f5b942; padding-left: .75rem; }
   </style>
 </head>
 <body>
@@ -86,6 +93,14 @@
       <a class="call" href="tel:211">Call 211</a>
     </nav>
 
+    <section class="resources" aria-labelledby="offline-resources">
+      <h2 id="offline-resources">Saved resources from recent lookups</h2>
+      <p class="small stale-warning">These are saved from earlier public-directory lookups on this device. They may be stale, closed, moved, or unavailable. Listed hours are historical directory data, not a claim that a place is open now. Call or verify before relying on a listing.</p>
+      <div id="offline-resource-list">
+        <p class="small">No saved resource pack is available on this device yet.</p>
+      </div>
+    </section>
+
     <section class="steps" aria-labelledby="od-steps">
       <h2 id="od-steps">Someone won't wake up?</h2>
       <ol>
@@ -101,5 +116,94 @@
 
     <button onclick="window.location.reload()">Try Again</button>
   </div>
+  <script>
+    (() => {
+      const KEY = "narcoguard_offline_resource_pack_v1";
+      const list = document.getElementById("offline-resource-list");
+      if (!list) return;
+
+      const text = (tag, value, className) => {
+        const el = document.createElement(tag);
+        el.textContent = value;
+        if (className) el.className = className;
+        return el;
+      };
+
+      const safeLink = (href, label) => {
+        try {
+          const url = new URL(href, window.location.origin);
+          if (!["http:", "https:", "tel:"].includes(url.protocol)) return null;
+          const a = document.createElement("a");
+          a.href = url.href;
+          a.textContent = label;
+          if (url.protocol === "http:" || url.protocol === "https:") {
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+          }
+          return a;
+        } catch {
+          return null;
+        }
+      };
+
+      const ageLabel = (iso) => {
+        const time = Date.parse(iso);
+        const age = Date.now() - time;
+        if (!Number.isFinite(age) || age < 0) return "age unknown";
+        const minutes = Math.floor(age / 60000);
+        if (minutes < 60) return Math.max(1, minutes) + " min old";
+        const hours = Math.floor(minutes / 60);
+        if (hours < 48) return hours + " hr old";
+        return Math.floor(hours / 24) + " days old";
+      };
+
+      try {
+        const pack = JSON.parse(localStorage.getItem(KEY) || "null");
+        if (!pack || pack.version !== 1 || !Array.isArray(pack.resources) || pack.resources.length === 0) return;
+
+        list.replaceChildren();
+        pack.resources.slice(0, 24).forEach((row) => {
+          if (!row || typeof row.name !== "string" || typeof row.lastSeenAt !== "string") return;
+          const card = document.createElement("article");
+          card.className = "resource";
+          card.appendChild(text("strong", row.name.slice(0, 180)));
+
+          const tags = [];
+          if (typeof row.kind === "string") tags.push(row.kind);
+          if (typeof row.zip === "string") tags.push("ZIP " + row.zip);
+          tags.push("last seen " + ageLabel(row.lastSeenAt));
+          if (row.workedBefore === true) tags.push("you marked this as worked before");
+          card.appendChild(text("div", tags.join(" · "), "meta"));
+
+          if (typeof row.address === "string" && row.address.trim()) card.appendChild(text("div", row.address.slice(0, 240)));
+          if (typeof row.phone === "string" && row.phone.trim()) {
+            const phone = row.phone.slice(0, 60);
+            const link = safeLink("tel:" + phone.replace(/[^+0-9]/g, ""), phone);
+            if (link) card.appendChild(link);
+          }
+          if (typeof row.hours === "string" && row.hours.trim()) {
+            card.appendChild(text("div", "Listed hours when last seen: " + row.hours.slice(0, 120), "meta"));
+          }
+          if (typeof row.website === "string" && row.website.trim()) {
+            const link = safeLink(row.website.slice(0, 400), "Saved website");
+            if (link) {
+              card.appendChild(document.createElement("br"));
+              card.appendChild(link);
+            }
+          }
+          if (typeof row.source === "string" && row.source.trim()) {
+            card.appendChild(text("div", "Source: " + row.source.slice(0, 180), "meta"));
+          }
+          list.appendChild(card);
+        });
+
+        if (!list.children.length) {
+          list.appendChild(text("p", "No valid saved resources are available on this device yet.", "small"));
+        }
+      } catch {
+        // Corrupt or unavailable local data must never block the offline safety page.
+      }
+    })();
+  </script>
 </body>
 </html>
