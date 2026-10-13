@@ -138,8 +138,7 @@ export default function NGWatchPage() {
                   <span className="font-bold">{VARIANTS[id].label}</span>
                   <span className="text-[11px] font-normal">{VARIANTS[id].fit}</span>
                 </Button>
-                )
-              })}
+              ))}
             </div>
           </div>
           <dl className="mt-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-5">
