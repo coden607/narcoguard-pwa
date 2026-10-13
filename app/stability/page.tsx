@@ -14,6 +14,7 @@ import { AdaptiveGuardianPanel } from "@/components/guardian/adaptive-guardian-p
 import { GuardianRewardsPanel } from "@/components/guardian/guardian-rewards-panel"
 import { GuardianAchievementJournal } from "@/components/guardian/guardian-achievement-journal"
 import { GuardianPreparednessPlan } from "@/components/guardian/guardian-preparedness-plan"
+import { GuardianGentlePrompts } from "@/components/guardian/guardian-gentle-prompts"
 import { InterventionOutcomePanel } from "@/components/guardian/intervention-outcome-panel"
 import { anticipateResourceNeeds, questionsForUnknowns } from "@/lib/proactive-resource-needs"
 import { CalmingAudio } from "@/components/calming-audio"
@@ -123,6 +124,7 @@ export default function StabilityPage() {
         </label>
       </section>
       <GuardianPreparednessPlan state={state} onChange={update} />
+      <GuardianGentlePrompts state={state} today={today} now={{ date: now, time: clockTime }} onChange={update} />
       <AdaptiveGuardianPanel state={state} today={today} onChange={update} />
       <GuardianRewardsPanel state={state} onChange={update} />
       <GuardianAchievementJournal state={state} onChange={update} today={now} />
