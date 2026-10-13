@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
 import { HolographicCard } from "@/components/effects/holographic-card"
@@ -69,6 +69,19 @@ export default function NGWatchPage() {
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null)
   const [variantId, setVariantId] = useState<VariantId>("46")
   const [activeTab, setActiveTab] = useState("blueprint")
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const activateTab = (tab: string) => {
+    setActiveTab(tab)
+    requestAnimationFrame(() => {
+      const tabs = tabsRef.current
+      if (!tabs) return
+      tabs.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      })
+      tabs.focus({ preventScroll: true })
+    })
+  }
   const variant = VARIANTS[variantId]
   const billOfMaterials = variant.bom
   const totals = bomTotals(billOfMaterials)
@@ -178,9 +191,9 @@ export default function NGWatchPage() {
               Current Rev 5 engineering blueprints. Earlier lifestyle and size renders are no longer used as the primary watch visual.
             </figcaption>
             <div className="mt-3 grid gap-2 sm:grid-cols-3">
-              <Button type="button" variant="outline" onClick={() => setActiveTab("blueprint")}>Blueprint layout</Button>
-              <Button type="button" variant="outline" onClick={() => setActiveTab("3d-view")}>Interactive 3D view</Button>
-              <Button type="button" variant="outline" onClick={() => setActiveTab("bom")}>Rev 5 BOM layout</Button>
+              <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Blueprint layout</Button>
+              <Button type="button" variant="outline" onClick={() => activateTab("3d-view")}>Interactive 3D view</Button>
+              <Button type="button" variant="outline" onClick={() => activateTab("bom")}>Rev 5 BOM layout</Button>
             </div>
           </figure>
         </section>
@@ -345,6 +358,7 @@ export default function NGWatchPage() {
           </div>
         </section>
 
+        <div ref={tabsRef} tabIndex={-1} className="scroll-mt-4 outline-none">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-8">
           <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-5 glass neon-border">
             <TabsTrigger value="blueprint">Blueprint</TabsTrigger>
@@ -724,6 +738,7 @@ export default function NGWatchPage() {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   )
