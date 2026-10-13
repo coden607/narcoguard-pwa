@@ -50,5 +50,6 @@ Execution rule: implement and validate **one feature at a time**. Each feature m
 - Feature 18: **complete and merged**
 - Feature 19: **complete and merged**
 - Feature 20: **complete and merged**
-- Feature 21: **next**
-- Features 21–25: queued in this order
+- Feature 21: **complete and merged**
+- Feature 22: **next**
+- Features 22–25: queued in this order
