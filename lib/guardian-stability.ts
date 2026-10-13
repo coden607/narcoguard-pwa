@@ -10,8 +10,10 @@ export interface CheckIn { date: string; needs: Partial<Record<Need, NeedStatus>
 export interface PlanItem { id: string; date: string; title: string; done: boolean; kind?: "task" | "appointment"; time?: string; location?: string; need?: Need }
 export type JournalEntryKind = "win" | "resource"
 export interface JournalEntry { id: string; date: string; title: string; kind: JournalEntryKind }
+export const PREPAREDNESS_ITEMS = ["naloxone", "power", "transit", "food", "hygiene", "medications-appointments", "support-person"] as const
+export type PreparednessItem = typeof PREPAREDNESS_ITEMS[number]
 export interface GuardianState {
-  enabled: boolean; paused: boolean; postalCode: string; supportPhone: string; goals: string[]; entries: CheckIn[]; plan: PlanItem[]; journal: JournalEntry[]
+  enabled: boolean; paused: boolean; postalCode: string; supportPhone: string; goals: string[]; entries: CheckIn[]; plan: PlanItem[]; journal: JournalEntry[]; preparedness: PreparednessItem[]
   escalationEnabled: boolean; escalationThreshold: number
   adaptiveLearningEnabled: boolean; patternAlertsEnabled: boolean; alertNeeds: Need[]; rewardEnabled: boolean
   rewardCategories: RewardCategory[]; rewardMilestoneStep: number
@@ -21,7 +23,7 @@ export interface PatternInsight { trigger: Need; companion: Need; observed: numb
 export interface EarlyWarning { level: "steady" | "check-in" | "support"; signals: Need[]; sleepSignal: boolean; score: number; reasons: string[] }
 
 export function defaultGuardianState(): GuardianState {
-  return { enabled: false, paused: false, postalCode: "", supportPhone: "", goals: [], entries: [], plan: [], journal: [], escalationEnabled: false, escalationThreshold: 3, adaptiveLearningEnabled: false, patternAlertsEnabled: false, alertNeeds: [], rewardEnabled: false, rewardCategories: [...REWARD_CATEGORIES], rewardMilestoneStep: 50 }
+  return { enabled: false, paused: false, postalCode: "", supportPhone: "", goals: [], entries: [], plan: [], journal: [], preparedness: [], escalationEnabled: false, escalationThreshold: 3, adaptiveLearningEnabled: false, patternAlertsEnabled: false, alertNeeds: [], rewardEnabled: false, rewardCategories: [...REWARD_CATEGORIES], rewardMilestoneStep: 50 }
 }
 const isDate = (value: unknown): value is string => typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
 
@@ -55,6 +57,7 @@ export function readGuardianState(storage: GuardianStorage): GuardianState {
       entries,
       plan: value.plan.filter((i: unknown) => i && typeof i === "object" && isDate((i as PlanItem).date) && typeof (i as PlanItem).title === "string" && typeof (i as PlanItem).id === "string").slice(-100).map((i: PlanItem) => ({ id: i.id.slice(0,80), date:i.date, title:i.title.slice(0,160), done:i.done===true, ...(i.kind === "appointment" || i.kind === "task" ? { kind: i.kind } : {}), ...(typeof i.time === "string" && /^\d{2}:\d{2}$/.test(i.time) ? { time: i.time } : {}), ...(typeof i.location === "string" ? { location: i.location.slice(0,160) } : {}), ...(NEEDS.includes(i.need as Need) ? { need: i.need as Need } : {}) })),
       journal: Array.isArray(value.journal) ? value.journal.filter((item: unknown) => item && typeof item === "object" && typeof (item as JournalEntry).id === "string" && isDate((item as JournalEntry).date) && typeof (item as JournalEntry).title === "string" && ((item as JournalEntry).kind === "win" || (item as JournalEntry).kind === "resource")).slice(-100).map((item: JournalEntry) => ({ id: item.id.slice(0,80), date: item.date, title: item.title.slice(0,160), kind: item.kind })) : [],
+      preparedness: Array.isArray(value.preparedness) ? [...new Set(value.preparedness.filter((item: unknown): item is PreparednessItem => PREPAREDNESS_ITEMS.includes(item as PreparednessItem)))].slice(0, PREPAREDNESS_ITEMS.length) : [],
       escalationEnabled: value.escalationEnabled === true,
       escalationThreshold: typeof value.escalationThreshold === "number" && value.escalationThreshold >= 2 && value.escalationThreshold <= 6 ? Math.round(value.escalationThreshold) : 3,
       adaptiveLearningEnabled: value.adaptiveLearningEnabled === true,
