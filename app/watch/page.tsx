@@ -549,7 +549,8 @@ export default function NGWatchPage() {
                     </span>
                   </div>
                 </HolographicCard>
-              ))}
+                )
+              })}
 
               {/* Grand Total */}
               <HolographicCard className="p-6 bg-linear-to-r from-green-500/20 to-primary/20" glowIntensity="high">
