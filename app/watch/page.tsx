@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
 import { HolographicCard } from "@/components/effects/holographic-card"
@@ -61,11 +61,27 @@ type VariantId = keyof typeof VARIANTS
 
 const { assemblyLabor, qualityTesting, complianceTesting, packaging } = UNIT_COSTS
 
+const BOM_ICONS = [Cpu, Heart, Wifi, Battery, Smartphone, Syringe, Cog, Shield, Watch] as const
+
 export default function NGWatchPage() {
   const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null)
   const [variantId, setVariantId] = useState<VariantId>("46")
+  const [activeTab, setActiveTab] = useState("blueprint")
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const activateTab = (tab: string) => {
+    setActiveTab(tab)
+    requestAnimationFrame(() => {
+      const tabs = tabsRef.current
+      if (!tabs) return
+      tabs.scrollIntoView({
+        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
+        block: "start",
+      })
+      tabs.focus({ preventScroll: true })
+    })
+  }
   const variant = VARIANTS[variantId]
   const billOfMaterials = variant.bom
   const totals = bomTotals(billOfMaterials)
@@ -152,9 +168,33 @@ export default function NGWatchPage() {
               </div>
             ))}
           </dl>
-          <figure className="mt-4">
-            <Image src="/images/ng-sizes-render.jpg" alt="To-scale renders of the NG 46 mm and NG 40 mm smaller-wrist refined fit, side by side" width={1600} height={900} sizes="(min-width: 1280px) 1200px, 100vw" className="w-full h-auto rounded-xl border border-border/60" />
-            <figcaption className="mt-1 text-xs text-muted-foreground">Rendered from the same geometry as the drawing and 3D model, with the same camera for both sizes. Concept renders, not photos.</figcaption>
+          <figure className="mt-4" data-testid="rev5-primary-visuals">
+            <div className="grid gap-3 lg:grid-cols-2">
+              <Image
+                src="/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13"
+                alt="NarcoGuard NG46 Rev 5 engineering blueprint"
+                width={1200}
+                height={800}
+                priority
+                className="w-full h-auto rounded-xl border border-border/60 bg-background"
+              />
+              <Image
+                src="/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13"
+                alt="NarcoGuard NG40 Rev 5 engineering blueprint"
+                width={1200}
+                height={800}
+                priority
+                className="w-full h-auto rounded-xl border border-border/60 bg-background"
+              />
+            </div>
+            <figcaption className="mt-2 text-xs text-muted-foreground">
+              Current Rev 5 engineering blueprints. Earlier lifestyle and size renders are no longer used as the primary watch visual.
+            </figcaption>
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Blueprint layout</Button>
+              <Button type="button" variant="outline" onClick={() => activateTab("3d-view")}>Interactive 3D view</Button>
+              <Button type="button" variant="outline" onClick={() => activateTab("bom")}>Rev 5 BOM layout</Button>
+            </div>
           </figure>
         </section>
 
@@ -187,7 +227,7 @@ export default function NGWatchPage() {
           <HolographicCard className="p-6" glowIntensity="high">
             <h2 className="text-xl font-bold mb-4">Rev 5 blueprint — {variant.label}</h2>
             <Image
-              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-12" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-12"}
+              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13"}
               alt={`${variant.label} Rev 5 concept blueprint`}
               width={1200}
               height={800}
@@ -318,7 +358,8 @@ export default function NGWatchPage() {
           </div>
         </section>
 
-        <Tabs defaultValue="blueprint" className="gap-8">
+        <div ref={tabsRef} tabIndex={-1} className="scroll-mt-4 outline-none">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-8">
           <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-5 glass neon-border">
             <TabsTrigger value="blueprint">Blueprint</TabsTrigger>
             <TabsTrigger value="3d-view">3D View</TabsTrigger>
@@ -453,14 +494,40 @@ export default function NGWatchPage() {
           {/* Bill of Materials */}
           <TabsContent value="bom">
             <div className="space-y-6">
-              {billOfMaterials.map((category, catIndex) => (
-                <HolographicCard key={catIndex} className="p-6">
-                  <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
-                    <Package className="w-5 h-5 text-primary" />
-                    {category.category}
-                  </h3>
-                  <p className="text-xs text-muted-foreground mb-4">{category.description}</p>
-                  <div className="overflow-x-auto">
+              {billOfMaterials.map((category, catIndex) => {
+                const CategoryIcon = BOM_ICONS[catIndex] ?? Package
+                return (
+                <HolographicCard key={category.category} className="p-6">
+                  <div className="mb-4 flex items-start gap-3">
+                    <div className="rounded-xl border border-primary/30 bg-primary/10 p-2.5">
+                      <CategoryIcon className="h-6 w-6 text-primary" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-primary">Rev 5 subsystem {catIndex + 1}</p>
+                      <h3 className="text-lg font-bold">{category.category}</h3>
+                      <p className="mt-1 text-xs text-muted-foreground">{category.description}</p>
+                    </div>
+                  </div>
+                  <div className="grid gap-2 md:hidden">
+                    {category.items.map((item, i) => (
+                      <div key={item.partNumber + i} className="rounded-xl border border-border/60 bg-background/40 p-3">
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-xs font-bold text-primary">{i + 1}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold">{item.name}</p>
+                            <p className="break-all font-mono text-[11px] text-primary">{item.partNumber}</p>
+                            <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+                              <span>{item.supplier}</span>
+                              <span>Qty {item.quantity}</span>
+                              <span className="font-mono font-bold">${item.unitPrice.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="hidden overflow-x-auto md:block">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-primary/30">
@@ -495,7 +562,8 @@ export default function NGWatchPage() {
                     </span>
                   </div>
                 </HolographicCard>
-              ))}
+                )
+              })}
 
               {/* Grand Total */}
               <HolographicCard className="p-6 bg-linear-to-r from-green-500/20 to-primary/20" glowIntensity="high">
@@ -597,7 +665,7 @@ export default function NGWatchPage() {
                   specs: [
                     ["Battery", `${variant.model.nominalBatteryCapacityMah}mAh Li-ion polymer, IEC 62133-2 / UN38.3 certified cell required`],
                     ["Battery Life", "Unknown until measured; cellular watches typically need daily charging"],
-                    ["Energy harvesting", "Removed: wrist harvesters cannot power a cellular watch"],
+                    ["Energy harvesting", "Rev 5 research: crown generator, photovoltaic ring, thermoelectric path and automatic rotor feed an isolated reserve; none is claimed to continuously power the cellular watch"],
                     ["Wireless Charging", variantId === "40" ? "Qi (TI BQ51013B) with a smaller receive coil" : "Qi (TI BQ51013B, 5W)"],
                     ["Charging boundary", "No external USB-C port; sealed Qi charging target"],
                     ["Low-battery mode", "Target: keep alarms and SOS working; duration to be measured"],
@@ -670,6 +738,7 @@ export default function NGWatchPage() {
             </div>
           </TabsContent>
         </Tabs>
+        </div>
       </div>
     </div>
   )
