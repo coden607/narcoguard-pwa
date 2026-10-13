@@ -27,10 +27,10 @@ test("public Rev 5 BOM removes stale Rev 4 and injector-specific public claims",
   assert.doesNotMatch(bom, /plunger/i)
 })
 
-test("installed PWA refreshes Support and icon URLs with shell v9", () => {
+test("installed PWA refreshes Support and icon URLs with shell v10", () => {
   const sw = read("public/sw.js")
   const manifest = read("app/manifest.ts")
-  assert.match(sw, /narcoguard-shell-v9/)
+  assert.match(sw, /narcoguard-shell-v10/)
   assert.match(sw, /"\/fund"/)
   assert.match(sw, /icon-192\.png\?v=9/)
   assert.match(manifest, /icon-192\.png\?v=9/)

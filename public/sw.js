@@ -1,4 +1,4 @@
-const CACHE_NAME = "narcoguard-shell-v9";
+const CACHE_NAME = "narcoguard-shell-v10";
 const APP_SHELL = [
   "/",
   "/offline.html",

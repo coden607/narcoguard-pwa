@@ -9,7 +9,7 @@ test("installed PWA refresh includes the Rev 5 watch route and blueprint assets"
   assert.match(sw, /"\/watch"/)
   assert.match(sw, /ng46-rev5-blueprint\.svg/)
   assert.match(sw, /ng40-rev5-blueprint\.svg/)
-  assert.match(sw, /narcoguard-shell-v9/)
+  assert.match(sw, /narcoguard-shell-v10/)
   assert.match(watch, /ng46-rev5-blueprint\.svg\?rev=5-2026-10-12/)
   assert.match(watch, /ng40-rev5-blueprint\.svg\?rev=5-2026-10-12/)
 })

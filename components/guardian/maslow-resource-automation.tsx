@@ -8,6 +8,7 @@ import { RESOURCE_LABELS, type NearbyResource, type ResourceKind } from "@/lib/r
 import { cardSummary } from "@/lib/resource-display"
 import { upcomingOpeningWindows } from "@/lib/opening-hours"
 import { inventoryFreshness, knownResourcesFor, readKnownResources, rememberKnownResources, type KnownResource } from "@/lib/resource-inventory"
+import { saveOfflineResourcePack } from "@/lib/offline-resource-pack"
 import { detectResourceChanges, readResourceChangeWatches, setResourceChangeWatch, type ResourceChange } from "@/lib/resource-change-watch"
 import { activeResourceVerification, readResourceVerifications, saveResourceVerification, verificationLabel, type ResourceVerification, type ResourceVerificationMethod, type ResourceVerificationStatus } from "@/lib/resource-verification"
 import {
@@ -69,7 +70,8 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
     const timer = window.setTimeout(() => {
       setPreferences(readResourcePreferences(window.localStorage))
       setFeedback(readResourceFeedback(window.localStorage))
-      setInventory(readKnownResources(window.localStorage))
+      const known = readKnownResources(window.localStorage)
+      setInventory(known)
       setWatchedKeys(readResourceChangeWatches(window.localStorage))
       setVerifications(readResourceVerifications(window.localStorage))
     }, 0)
@@ -94,7 +96,9 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
         const watched = readResourceChangeWatches(window.localStorage)
         const changes = detectResourceChanges({ previous, latest: seen, watchedKeys: watched, zip, fetchedAt })
         setResourceChanges(changes)
-        setInventory(rememberKnownResources(window.localStorage, zip, seen, fetchedAt))
+        const nextInventory = rememberKnownResources(window.localStorage, zip, seen, fetchedAt)
+        setInventory(nextInventory)
+        saveOfflineResourcePack(window.localStorage, nextInventory, readResourceFeedback(window.localStorage), fetchedAt)
         if (changes.length > 0 && "Notification" in window && Notification.permission === "granted" && "serviceWorker" in navigator) {
           void navigator.serviceWorker.ready.then((registration) => registration.showNotification("NarcoGuard resource update", {
             body: "A resource you chose to watch changed in public-directory data. Open NarcoGuard to review.",
@@ -132,7 +136,9 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
   const recordFeedback = (resource: NearbyResource, value: ResourceFeedbackValue) => {
     const row = { key: resourceKey(resource), value, updatedAt: new Date().toISOString() }
     saveResourceFeedback(window.localStorage, row)
-    setFeedback(readResourceFeedback(window.localStorage))
+    const nextFeedback = readResourceFeedback(window.localStorage)
+    setFeedback(nextFeedback)
+    saveOfflineResourcePack(window.localStorage, readKnownResources(window.localStorage), nextFeedback)
   }
 
   const toggleResourceWatch = (resource: NearbyResource) => {
