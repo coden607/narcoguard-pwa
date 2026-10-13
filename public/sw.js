@@ -16,6 +16,8 @@ const APP_SHELL = [
   "/images/narcoguard-logo-96.webp",
   "/images/ng46-rev5-blueprint.svg",
   "/images/ng40-rev5-blueprint.svg",
+  "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13",
+  "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13",
 ];
 
 self.addEventListener("install", (event) => {
