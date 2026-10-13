@@ -18,7 +18,7 @@ const makeKnown = (index: number, lastSeenAt: string): KnownResource => ({
   resource: {
     name: `Resource ${index}`,
     kind: "food",
-    source: "Public directory",
+    source: "OpenStreetMap contributors",
     address: "100 Main St",
     phone: "6075551212",
     hours: "Mo-Fr 09:00-17:00",
