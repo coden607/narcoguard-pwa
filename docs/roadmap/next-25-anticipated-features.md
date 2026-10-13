@@ -1,4 +1,4 @@
-# NarcoGuard — Next 25 Anticipated Features
+# NarcoGuard — Anticipated Feature Roadmap
 
 Execution rule: implement and validate **one feature at a time**. Each feature must preserve privacy, explicit consent, uncertainty, accessibility, offline safety, and emergency-path isolation. A later item may move earlier only for a verified blocker or safety dependency.
 
@@ -51,5 +51,61 @@ Execution rule: implement and validate **one feature at a time**. Each feature m
 - Feature 19: **complete and merged**
 - Feature 20: **complete and merged**
 - Feature 21: **complete and merged**
-- Feature 22: **next**
-- Features 22–25: queued in this order
+- Feature 22: **complete and merged**
+- Feature 23: **next**
+- Features 23–25: queued in this order
+
+## Anticipated features 26–75 (planning horizon)
+
+Same rules apply: privacy, explicit consent, uncertainty, accessibility, offline safety, emergency-path isolation. No clinical claims.
+
+26. **Medication and appointment reminder anchors** — record clinician-prescribed times and places; local reminders only, no adherence scoring.
+27. **Travel-mode resource planning** — temporarily rank resources for a destination ZIP with an automatic return-home switch and expiry.
+28. **Naloxone kit location journal** — user-recorded where each kit lives (bag, glovebox, friend's house) with freshness dates; local only.
+29. **Document and ID vault** — encrypted storage for ID, insurance, and clinic cards with emergency-contact release rules.
+30. **Crisis plan versioning** — user-authored crisis plan with version history and rollback; shareable read-only to the support circle.
+31. **Recovery meeting finder** — public meeting schedules with verification status and lightweight "changed" feedback; never claims attendance.
+32. **Peer support matching (opt-in)** — mutual-consent introduction cards between users with shared self-described goals; no direct messaging until both opt in.
+33. **Sponsor bridge** — reuse support-circle scopes so a sponsor or mentor sees safe check-ins and plan follow-through only.
+34. **Volunteer driver windows** — organizations publish bounded ride windows; requests mediated through the moderation and trust framework.
+35. **Multi-language resource labels** — crowd-contributed translations of resource names and kinds with moderation; source language always shown.
+36. **Accessibility ratings for resources** — wheelchair access, quiet space, pets allowed; user-contributed with provenance.
+37. **Provider claim-your-listing** — verified providers can claim and correct their own listing; corrections keep provenance visible.
+38. **Hours-accuracy voting** — "as listed / different / unknown" lightweight signals feeding the resource change watch.
+39. **Resource duplicate merge tooling** — moderator-side merge with preserved provenance and undo.
+40. **Moderation appeals** — submitters and reporters can appeal decisions; appeals enter the same auditable queue.
+41. **Organization trust badges** — verified organization accounts with explicit badge scope and expiry; no service endorsement.
+42. **Printable emergency sheet** — one-page sheet of emergency card, contacts, crisis plan, and kit locations for fridge or glovebox.
+43. **Lock-screen emergency widget** — OS widget surfacing emergency card actions without opening the app; works offline.
+44. **App PIN with emergency-path bypass** — optional app lock where the emergency screen stays reachable without the PIN.
+45. **Data export and deletion receipts** — full local data export (JSON/PDF) and verified deletion with an auditable receipt.
+46. **Low-bandwidth mode** — text-only resource views, skip images and maps, cache-first loading.
+47. **SMS fallback check-ins** — opt-in SMS "I'm safe" publishing for the support circle when data service is unavailable.
+48. **Voice-note journaling** — encrypted local voice notes attached to the achievement journal; any transcription is explicit opt-in.
+49. **Seasonal pattern review** — quarterly on-device summary of stability patterns with abstention when evidence is thin; user-deletable.
+50. **Supply forecasting** — bounded estimate of when a user-logged consumable may run out, with uncertainty shown and no auto-purchasing.
+51. **Budget-aware supply and resource ranking** — extend cost signals (free only, sliding scale) to the supply exchange and recommendations.
+52. **Local safety notices** — opt-in, manually curated public safety notices near known resources with source links and timestamps.
+53. **Shelter-bed availability signals** — display machine-readable bed counts where providers publish them; never invent availability.
+54. **Transit assistance tracker** — log which fare-assistance programs were applied to, their status, and renewal dates.
+55. **ID replacement checklist** — guided local checklist for replacing lost identification with office hours and required documents.
+56. **Clinic intake preparation** — user-authored notes on what to bring and say at specific clinics, with a day-before reminder.
+57. **Response practice mode** — step-by-step response drills with a training timer; labeled as training, not medical advice.
+58. **Support-circle drill sharing** — share a simple response drill checklist with approved contacts so they know the plan.
+59. **Watch critical-alert audit** — hardware-button and escalation-path audit for Apple Watch and Wear OS flows.
+60. **Offline map tiles for known resources** — cached map region around home and saved places, bounded size with stale labels.
+61. **Home-screen gentle prompt widget** — next planned action or follow-through item, glanceable; no streaks and no guilt copy.
+62. **Alert accessibility profiles** — distinct tones and vibration patterns for emergency versus gentle nudges, WCAG-minded.
+63. **Screen-reader audit pass** — automated plus manual accessibility audit of resource and guardian flows with tracked findings.
+64. **Reduced-motion mode** — disable animations and transitions across guardian and watch surfaces.
+65. **Large-text and high-contrast themes** — theme integration that also follows system accessibility settings.
+66. **Ephemeral resource presence** — opt-in, coarse "ask me about this resource today" signals at resource level only; k-anonymized and auto-expiring.
+67. **Organization needs board** — organizations post bounded volunteer and supply needs discoverable locally under moderation.
+68. **Kit assembly checklist builder** — user-configurable kit contents with local inventory counts and freshness dates.
+69. **Power preparedness** — phone and watch battery thresholds enter the preparedness checklist with offline charging reminders.
+70. **Local data dashboard** — show what each feature stores, its size, and one-tap prune; extends deletion and export work.
+71. **Progressive onboarding** — set scopes, notification categories, and accessibility preferences up front without dark patterns.
+72. **Recovery-friendly job connector** — public, verified listings from partner organizations under the moderation framework; no application tracking claims.
+73. **Legal-aid connector** — public legal-aid resources (records, housing) using the same verification and freshness framework.
+74. **Offline drill scheduler** — scheduled local drills for response and evacuation walk-throughs, logged to the achievement journal.
+75. **Roadmap voting (opt-in)** — anonymous, k-anonymized feature-priority signals feeding this roadmap; pairs with Feature 25 telemetry.
