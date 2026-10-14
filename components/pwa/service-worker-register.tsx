@@ -57,7 +57,7 @@ export function ServiceWorkerRegister() {
       }
     }
 
-    navigator.serviceWorker.register("/sw.js", { scope: "/" }).then((registration) => {
+    navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).then((registration) => {
       if (disposed) return
       registrationRef = registration
 
