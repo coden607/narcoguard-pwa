@@ -470,12 +470,12 @@ export default function NGWatchPage() {
                 <div className="mt-4 rounded-xl border border-border/60 bg-background/40 p-4">
                   <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Selected-size package structure</p>
                   <ul className="mt-2 space-y-1 font-mono text-xs text-muted-foreground">
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/*-assembly.step</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/*-exploded.step</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/parts/*.step + *.stl</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/profiles/*.dxf</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/*-tolerance-gdt.csv</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/*-manifest.json</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/[variant]-assembly.step</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/[variant]-exploded.step</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/parts/[part].step + [part].stl</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/profiles/[profile].dxf</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-tolerance-gdt.csv</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-manifest.json</li>
                   </ul>
                 </div>
               </HolographicCard>
