@@ -17,7 +17,8 @@ test("installed PWA refresh includes the current Rev 5 watch visuals, fabricatio
 
   assert.match(watch, /ng46-rev5-blueprint\.svg\?rev=5-2026-10-14/)
   assert.match(watch, /ng40-rev5-blueprint\.svg\?rev=5-2026-10-14/)
-  for (const stale of [
+  assert.match(watch, /data-testid="rev5-concept-visual-gallery"/)
+  for (const concept of [
     "ng-watch-hero.jpg",
     "ng-blueprint.jpg",
     "ng-blueprint-detailed.jpg",
@@ -26,8 +27,9 @@ test("installed PWA refresh includes the current Rev 5 watch visuals, fabricatio
     "ng-sizes-render.jpg",
     "watch-on-wrist-lifestyle.jpg",
   ]) {
-    assert.doesNotMatch(watch, new RegExp(stale.replace(".", "\\.")), stale)
+    assert.match(watch, new RegExp(concept.replace(".", "\\.")), concept)
   }
+  assert.match(watch, /Concept artwork — use the Blueprint, 3D, CAD, BOM, and PCBWay sections for current engineering status/)
 
   assert.match(drawing, /Rev 5 concept engineering drawing/)
   assert.doesNotMatch(drawing, /Rev 4(?:\.2)? concept engineering drawing/)
