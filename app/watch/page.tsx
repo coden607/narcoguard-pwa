@@ -459,7 +459,7 @@ export default function NGWatchPage() {
                     ["Assemblies", "Complete + exploded STEP/STL"],
                     ["Individual solids", "Per-part STEP/STL for enclosure, PCB, power, sensors and component envelopes"],
                     ["2D profiles", "PCB, case-back and sensor-window DXF outlines"],
-                    ["Tolerance / GD&T plan", "Nominals, target tolerances, inspection method and open supplier dependencies"],
+                    ["Tolerance / GD&T plan", "Generated drawing sheet + CSV with provisional datums, nominals, target tolerances, inspection methods and open supplier dependencies"],
                   ].map(([title, detail]) => (
                     <div key={title} className="rounded-xl border border-border/60 bg-background/40 p-4">
                       <p className="font-semibold">{title}</p>
