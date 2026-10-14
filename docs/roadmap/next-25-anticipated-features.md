@@ -112,3 +112,78 @@ Same rules apply: privacy, explicit consent, uncertainty, accessibility, offline
 73. **Legal-aid connector** — public legal-aid resources (records, housing) using the same verification and freshness framework.
 74. **Offline drill scheduler** — scheduled local drills for response and evacuation walk-throughs, logged to the achievement journal.
 75. **Roadmap voting (opt-in)** — anonymous, k-anonymized feature-priority signals feeding this roadmap; pairs with Feature 25 telemetry.
+76. **Refusal-safe practice mode** — scripted simulation walks with scripted risk outcomes so drills never touch live detection thresholds.
+77. **Needs-trend honesty chart** — weekly sparkline of detected vs self-reported needs, with the uncertainty envelope always drawn.
+78. **Resource visit log (local)** — private, on-device log of sites contacted with outcome tags; feeds follow-up reminders without leaving the device.
+79. **Check-in geofence options** — optional arrival confirmation using coarse geofence regions, never raw coordinate storage.
+80. **Circle availability windows** — trusted contacts publish quiet hours so nudges and requests only land inside agreed windows.
+81. **Supply board expiry** — listings auto-close after a configurable TTL with a "still available?" owner nudge before expiry.
+82. **Moderator appeal window** — moderated users see the standing rule, the action, and a one-time appeal path with the same audit trail.
+83. **Emergency card translations** — community-reviewed translations of the emergency card into the top locally requested languages.
+84. **Offline map tiles** — bounding-box tile packs for the drill and evacuation walk-through features, with explicit storage cost.
+85. **Watch battery drill mode** — drills that specifically rehearse the low-battery escalation path end to end.
+86. **Resource wheelchair detail expansion** — capture entrance, restroom, and parking access notes as separate verified fields.
+87. **Shelter bed-count skepticism label** — public bed counts displayed with source age and a standing "call first" rule.
+88. **Anonymous peer reassurance** — k-anonymized "others completed this step today" counts on drills and plan milestones.
+89. **Notification budget** — a daily cap per category with overflow queued visibly instead of silently dropped or spammed.
+90. **Data diet mode** — one toggle that trims retention windows, map detail, and telemetry to the minimum across all features.
+91. **Home-screen risk glance** — a widget-sized summary of readiness score, next drill, and supply expirations; no predictions.
+92. **Plan handoff packet** — a portable, printable summary of the preparedness plan for case managers, with consent-gated contact info.
+93. **Local policy explainer** — plain-language explainers of Good Samaritan and 911 immunity for the user's state, with source links.
+94. **Resource outage reporting** — one-tap "this site is closed" reports flowing into the moderation queue with photo-optional evidence.
+95. **Supply request board** — the inverse of the supply board: posted needs that owners can claim, same lifecycle and moderation.
+96. **Check-in streak honesty** — streaks that pause rather than break during declared low-capacity periods, by explicit user declaration only.
+97. **Audio calm-down tool** — short, locally stored audio grounding exercises; no streaming, no analytics.
+98. **Reader-mode resource pages** — high-contrast, large-type rendering of resource details for low-vision and crisis states.
+99. **Multi-language needs vocabulary** — the needs taxonomy translated so non-English self-reports map to the same learner labels.
+100. **Trusted-device management** — named devices with per-device sign-out, visible in one list; pairs with Feature 8 sessions.
+101. **Resource cost transparency** — track and display typical cost bands (free, low, sliding) as verified fields, never guesses.
+102. **Drill difficulty adaptation** — drills shorten or extend based on the last completed drill's self-reported difficulty, capped and reversible.
+103. **Offline first-run packet** — a static, bundled explanation of the app's safety posture readable before any account exists.
+104. **Supply board moderation presets** — one-tap moderator actions (escalate, warn, close) with reason codes wired to Feature 15's audit trail.
+105. **Weekly readiness digest (email-opt)** — a plain-text weekly summary of drills, check-ins, and expiring supplies; off by default.
+106. **Transportation rehearsal** — drills for reading transit routes to a chosen resource under time pressure, fully offline.
+107. **Resource photo verification** — volunteer-verified exterior photos with moderation review, replacing stale directory images.
+108. **Quiet-hours-aware notifications** — the notification pipeline respects per-category quiet hours before dispatch.
+109. **Plan duplication for families** — fork a trusted contact's plan template with their explicit share consent.
+110. **Moderator workload visibility** — aggregate open-queue counts for moderators so staffing decisions are data-informed.
+111. **Crisis-language detection opt-in** — local, on-device scan of user's own journal notes for crisis phrases offering resources, never uploaded.
+112. **Supply kind expansion pass** — community-proposed new supply kinds through the same provenance and moderation gates.
+113. **Drill completion certificates** — shareable, non-identifying completion records for programs that require proof of practice.
+114. **Resource comparison view** — side-by-side comparison of two sites across verified fields with the uncertainty column kept visible.
+115. **Low-storage resilience** — graceful degradation ordering: what gets pruned first, shown to the user before it happens.
+116. **Check-in location label picker** — choose from saved labels instead of typing, reducing accidental precision leaks.
+117. **Weekly plan review nudge** — a single weekly prompt to re-read and adjust the preparedness plan; snoozable, never forced.
+118. **Abstention reason follow-up (opt-in)** — optional one-tap reason capture when abstaining, feeding Feature 25 counters only.
+119. **Emergency-contact rehearsal** — scripted practice call/text flows to a chosen contact so the real moment is not the first run.
+120. **Resource notes (private)** — user-private annotations on resource records stored on-device only.
+121. **Moderation SLA display** — public queue-health indicator (median time-to-review) with no individual moderator identity.
+122. **Supply handoff confirmation** — both parties confirm a handoff happened; unconfirmed claims auto-release after the TTL.
+123. **Seasonal checklist rotation** — the preparedness checklist rotates seasonal hazards (heat, cold, storms) by local alert state.
+124. **Screen-reader drill mode** — drills validated against screen-reader flows with an explicit pass/fail checklist in CI.
+125. **Local referral code of conduct** — a visible, versioned conduct text governing supply board and peer interactions, acknowledged at first use.
+126. **Notification mirroring opt-in** — mirror high-severity notifications to a second device the user owns, with per-device toggles.
+127. **Resource data provenance page** — per-source freshness and coverage report, including known gaps, linked from resource details.
+128. **Plan milestones** — split the preparedness plan into ordered milestones with small, completable steps and honest effort estimates.
+129. **Offline glossary** — plain-language definitions of every clinical term the app surfaces, bundled for offline use.
+130. **Supply board saved searches** — local saved filters with optional notification when a matching listing appears.
+131. **Moderator shadow mode** — new moderators act in shadow (recommend-only) for their first N reviews; agreement tracked.
+132. **Check-in mood tag** — optional one-tap mood tag on check-ins, stored locally, never transmitted.
+133. **Resource event feed** — public events (naloxone trainings, outreach tables) as time-boxed, source-attributed records.
+134. **Data export scheduling** — recurring encrypted exports to user-chosen storage on a schedule the user sets.
+135. **App-locked quick actions** — configurable lock-screen actions (call contact, show emergency card) that work under duress quickly.
+136. **Verification expiry sweep** — verified fields that age out on a schedule, returning to "unverified" until re-confirmed.
+137. **Peer drill invite** — invite a trusted contact to complete the same drill on their device; completion shared only as yes/no.
+138. **Language detection for resources** — tag resources offering non-English service; stored as a verified field.
+139. **Notification batching window** — user-set windows where non-urgent notifications collapse into one digest dispatch.
+140. **Moderation queue triage sort** — order the queue by severity, report count, and source reliability instead of arrival order.
+141. **Readiness plan export variants** — clinician, family, and emergency-room variants of the plan export with different field subsets.
+142. **Supply board location radius** — expand matching beyond ZIP equality to a coarse radius label (same neighborhood), still no coordinates stored.
+143. **Drill interruption recovery** — drills resume cleanly after app restarts mid-drill without double-counting steps.
+144. **Watchlist watch-dog** — alert the user when a watched resource's data changes materially (hours, phone, status).
+145. **Anonymous completion heatmap** — k-anonymized aggregate drill completion by day of week to help programs schedule trainings.
+146. **Resource multilingual feedback** — feedback on resources accepted in any language, translated client-side, moderated centrally.
+147. **Account-less guest mode** — a bounded guest session for one-off resource lookups with clear upgrade prompts, no persistence tricks.
+148. **Supply handoff safety script** — a short, scripted safety checklist shown to both parties before marking a handoff complete.
+149. **Plan seasonal review** — a twice-yearly full-plan review prompt with a diff view of what changed since last review.
+150. **Community roadmap digest** — a periodic, public summary of shipped features and queue depth, generated from the repo itself.
