@@ -765,7 +765,7 @@ export default function NGWatchPage() {
                   specs: [
                     ["Case", "Grade 5 Titanium (Ti-6Al-4V) + PVD"],
                     ["Back", "Zirconia ceramic with sensor windows"],
-                    ["Dimensions", `Target ${caseMm}mm case, about ${variant.model.caseThicknessMm}mm thick (CAD pending)`],
+                    ["Dimensions", `Target ${caseMm}mm case, about ${variant.model.caseThicknessMm}mm thick (Rev 5 concept CAD generated; physical validation pending)`],
                     ["Weight", "Unknown until a prototype is built"],
                     ["Water Rating", "Target IP68/ISO 22810; qualification unverified"],
                     ["Temp Range", "Target -20C to +55C (untested)"],
