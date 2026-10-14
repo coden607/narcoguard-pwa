@@ -28,7 +28,22 @@ test("deployment version endpoint is dynamic and non-cacheable", () => {
   assert.match(route, /no-store/)
 })
 
-test("service-worker shell version is bumped for the update notice release", () => {
+test("service-worker shell version is bumped for the watch visual refresh", () => {
   const sw = read("public/sw.js")
-  assert.match(sw, /narcoguard-shell-v10/)
+  assert.match(sw, /narcoguard-shell-v11/)
+})
+
+
+test("service-worker registrations bypass HTTP cache so installed PWAs see new shells", () => {
+  const component = read("components/pwa/service-worker-register.tsx")
+  const layout = read("app/layout.tsx")
+  assert.match(component, /updateViaCache: "none"/)
+  assert.match(layout, /updateViaCache: "none"/)
+})
+
+test("Rev 5 watch blueprint cache entries match the current visual release", () => {
+  const sw = read("public/sw.js")
+  assert.match(sw, /ng46-rev5-blueprint\.svg\?rev=5-2026-10-14/)
+  assert.match(sw, /ng40-rev5-blueprint\.svg\?rev=5-2026-10-14/)
+  assert.doesNotMatch(sw, /rev=5-2026-10-13/)
 })

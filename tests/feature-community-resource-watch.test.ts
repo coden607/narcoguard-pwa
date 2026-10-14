@@ -8,7 +8,7 @@ test("resource watches include showers and generic push updates", async () => {
   const register = await readFile(new URL("../components/pwa/service-worker-register.tsx", import.meta.url), "utf8")
   assert.match(alerts, /"shower"/)
   assert.match(alerts, /Shower \/ hygiene access/)
-  assert.match(sw, /narcoguard-shell-v10/)
+  assert.match(sw, /narcoguard-shell-v11/)
   assert.match(sw, /resource match/)
   assert.match(register, /registration\.update\(\)/)
 })
