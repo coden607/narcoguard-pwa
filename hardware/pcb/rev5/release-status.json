@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "revision": "Rev 5",
+  "status": "engineering candidate; not fabrication released",
+  "automated_gates": {
+    "pcbway_published_capability_fit": "pending-ci",
+    "impedance_feasibility_model": "pending-ci",
+    "safety_core_lumped_thermal_model": "pending-ci",
+    "safety_core_power_model": "pending-ci",
+    "quote_review_package_generation": "pending-ci"
+  },
+  "fabrication_release": {
+    "gerbers_nc_drill": "blocked",
+    "routed_pcb_drc_erc": "blocked",
+    "vendor_compute_rf_interface": "blocked",
+    "final_impedance_stackup": "blocked",
+    "antenna_em_matching": "blocked",
+    "full_system_thermal_si_pi": "blocked",
+    "physical_prototype_validation": "blocked"
+  },
+  "rule": "Simulation and PCBWay capability fit do not substitute for a validated electrical netlist, vendor reference design, DRC/ERC, RF/thermal/SI/PI signoff or physical prototype testing."
+}
