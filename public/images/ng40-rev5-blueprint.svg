@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="t d">
-<title id="t">NarcoGuard NG40 Rev 5 blueprint</title><desc id="d">Concept engineering blueprint showing front, side, back and internal layout for the 40 millimeter elegant smaller-wrist edition.</desc>
+<title id="t">NarcoGuard NG40 Rev 5 blueprint</title><desc id="d">Rev 5 engineering blueprint showing the NG40 exterior, internal plan, safety/core electronics, and current PCBWay engineering boundary.</desc>
 <rect width="1200" height="800" fill="#120d10"/><g stroke="#e8b7a7" fill="none" stroke-width="2">
 <circle cx="250" cy="260" r="160"/><circle cx="250" cy="260" r="122"/><circle cx="250" cy="260" r="50"/><path d="M90 245 Q250 220 410 245 L410 275 Q250 300 90 275 Z"/>
 <line x1="90" y1="60" x2="410" y2="60"/><line x1="90" y1="50" x2="90" y2="70"/><line x1="410" y1="50" x2="410" y2="70"/>
@@ -16,9 +16,9 @@
 <text x="575" y="380" font-size="16">W5+ Gen 2 + nRF5340 + SDX35/eSIM</text>
 <text x="575" y="405" font-size="16">MAX86178 sensor stack • 10 mm optical window</text>
 <text x="575" y="430" font-size="16">Qi primary charging • emergency reserve</text>
-<text x="575" y="455" font-size="16">crown generator / solar / TEG research</text>
-<text x="575" y="480" font-size="16">rotor + camera optional if DFM gates fail</text>
+<text x="575" y="455" font-size="16">8-layer HDI safety/core carrier • PCBWay review candidate</text>
+<text x="575" y="480" font-size="16">W5+/X35 compute/RF kept behind vendor-approved interface</text>
 <text x="810" y="500" font-size="14">RF zone</text><text x="695" y="497" font-size="14">SoC</text><text x="625" y="500" font-size="14">MCU</text>
 <text x="700" y="570" font-size="14">10 mm optical window</text><text x="640" y="680" font-size="14">rotor envelope — high packaging risk</text>
-<text x="40" y="760" font-size="13" fill="#d7aaa0">CONCEPT ONLY — supplier CAD, routed PCB, tolerances, antenna and thermal validation still required.</text></g>
+<text x="40" y="742" font-size="13" fill="#d7aaa0">REV 5 ENGINEERING — fabrication CAD + PCBWay constraints/simulations are current.</text><text x="40" y="762" font-size="13" fill="#d7aaa0">GERBER/NC DRILL RELEASE BLOCKED — final netlist, vendor RF interface, stackup and physical validation still required.</text></g>
 </svg>
