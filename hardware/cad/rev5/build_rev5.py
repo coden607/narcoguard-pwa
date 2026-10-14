@@ -136,6 +136,40 @@ def write_tolerance_table(name, output_dir):
             writer.writerow([feature,datum,values[value_key],tol,status,method,note])
     return path
 
+def write_gdt_svg(name, output_dir):
+    p=MODELS[name]
+    qi_outer=p["qi"][1]
+    battery=f'{p["battery"][0]} × {p["battery"][1]} × {p["battery"][2]}'
+    path=output_dir/f"{name.lower()}-rev5-gdt-plan.svg"
+    svg=f'''<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <rect width="1400" height="900" fill="#0b0f14"/>
+  <g fill="none" stroke="#8be9fd" stroke-width="2">
+    <circle cx="360" cy="360" r="230"/>
+    <circle cx="360" cy="360" r="{p["board_d"]/p["diameter"]*230:.2f}"/>
+    <line x1="130" y1="360" x2="590" y2="360"/>
+    <line x1="360" y1="130" x2="360" y2="590"/>
+  </g>
+  <g fill="#e6edf3" font-family="ui-monospace, monospace">
+    <text x="70" y="70" font-size="32" font-weight="700">NARCOGUARD {name} — REV 5 GD&amp;T / TOLERANCE PLAN</text>
+    <text x="70" y="110" font-size="18">CONCEPT DRAWING — NOT RELEASED FOR TOOLING</text>
+    <text x="700" y="190" font-size="22">DATUM A: CASE BACK SEALING PLANE</text>
+    <text x="700" y="230" font-size="22">DATUM B: CASE CENTER AXIS</text>
+    <text x="700" y="270" font-size="22">DATUM C: CROWN / 3-O'CLOCK ORIENTATION</text>
+    <text x="700" y="330" font-size="20">CASE OD: Ø{p["diameter"]:.2f} mm ±0.10</text>
+    <text x="700" y="370" font-size="20">TOTAL THICKNESS: {p["thickness"]:.2f} mm ±0.15</text>
+    <text x="700" y="410" font-size="20">PCB OD: Ø{p["board_d"]:.2f} mm ±0.10</text>
+    <text x="700" y="450" font-size="20">DISPLAY POCKET: Ø{p["display"]:.2f} mm +0.20/+0.35 CLR</text>
+    <text x="700" y="490" font-size="20">SENSOR WINDOW: Ø{p["optical"]:.2f} mm +0.10/+0.20 CLR</text>
+    <text x="700" y="530" font-size="20">QI COIL OD: Ø{qi_outer:.2f} mm ±0.20</text>
+    <text x="700" y="570" font-size="20">BATTERY ENVELOPE: {battery} mm +0.50 EACH SIDE</text>
+    <text x="70" y="690" font-size="18">FINAL POSITION/PROFILE/RUNOUT CONTROLS REQUIRE SUPPLIER CAD, GASKET, PCB STACKUP AND PROCESS CAPABILITY.</text>
+    <text x="70" y="725" font-size="18">RF, THERMAL, INGRESS, MATERIAL FINISH AND PHYSICAL INSPECTION EVIDENCE REMAIN OPEN.</text>
+    <text x="70" y="790" font-size="18">Generated from hardware/cad/rev5/build_rev5.py</text>
+  </g>
+</svg>'''
+    path.write_text(svg,encoding="utf-8")
+    return path
+
 def export_fabrication_package(name, parts, output_dir):
     variant_dir=output_dir/name.lower()
     part_dir=variant_dir/"parts"
@@ -168,6 +202,7 @@ def export_fabrication_package(name, parts, output_dir):
 
     export_profiles(name,variant_dir)
     tolerance_path=write_tolerance_table(name,variant_dir)
+    gdt_path=write_gdt_svg(name,variant_dir)
     payload={
         "schema":1,
         "variant":name,
@@ -175,6 +210,7 @@ def export_fabrication_package(name, parts, output_dir):
         "assembly_step":str((assembly_dir/f"{name.lower()}-rev5-assembly.step").relative_to(output_dir)),
         "exploded_step":str((assembly_dir/f"{name.lower()}-rev5-exploded.step").relative_to(output_dir)),
         "tolerance_table":str(tolerance_path.relative_to(output_dir)),
+        "gdt_plan":str(gdt_path.relative_to(output_dir)),
         "parts":manifest,
         "release_ready":False,
         "release_blockers":[
@@ -225,7 +261,7 @@ if __name__=="__main__":
         print(f"{name}: PASS envelope fit")
         if not args.validate_only:
             package_index["variants"].append(export_fabrication_package(name,parts,output_dir))
-            print(f"{name}: exported assembly, exploded, per-part STEP/STL, DXF profiles and tolerance table")
+            print(f"{name}: exported assembly, exploded, per-part STEP/STL, DXF profiles, tolerance table and GD&T plan")
 
     if not args.validate_only:
         (output_dir/"rev5-package-index.json").write_text(json.dumps(package_index,indent=2),encoding="utf-8")
