@@ -56,7 +56,8 @@ Execution rule: implement and validate **one feature at a time**. Each feature m
 - Feature 24: **complete and merged**
 - Feature 25: **complete and merged**
 - Features 1–25: **all merged. The original roadmap is fully shipped.**
-- Feature 26: **next**
+- Feature 26: **complete and merged**
+- Features 26–150: anticipated; Feature 27 **next**
 
 ## Anticipated features 26–75 (planning horizon)
 
