@@ -45,7 +45,7 @@ The Rev 5 CAD build now emits a structured package for **both NG46 and NG40** un
 - exploded assembly STEP + STL;
 - per-part STEP + STL for enclosure, battery, PCB, display, sensor window, Qi coil, and component envelopes;
 - PCB, case-back, and sensor-window DXF profiles;
-- a tolerance/GD&T planning CSV with nominal dimensions, inspection method, and status;
+- a tolerance/GD&T planning CSV with nominal dimensions, inspection method, and status;\n- a generated per-size GD&T/tolerance planning SVG with provisional datum references and release warnings;
 - a JSON manifest with bounding boxes, candidate processes/materials, and explicit release blockers;
 - a top-level package index covering both variants.
 
