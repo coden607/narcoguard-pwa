@@ -53,8 +53,8 @@ Execution rule: implement and validate **one feature at a time**. Each feature m
 - Feature 21: **complete and merged**
 - Feature 22: **complete and merged**
 - Feature 23: **complete and merged**
-- Feature 24: **next**
-- Features 24–25: queued in this order
+- Feature 24: **complete and merged**
+- Feature 25: **next**
 
 ## Anticipated features 26–75 (planning horizon)
 
