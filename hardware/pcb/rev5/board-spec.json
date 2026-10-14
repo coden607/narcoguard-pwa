@@ -1,0 +1,66 @@
+{
+  "revision": "Rev 5",
+  "status": "fabrication-review candidate; not released for production",
+  "architecture": "split safety/core carrier + proprietary compute/RF module boundary",
+  "variants": {
+    "NG46": {
+      "board_diameter_mm": 39.9,
+      "max_component_height_mm": 2.1,
+      "target_board_thickness_mm": 0.8
+    },
+    "NG40": {
+      "board_diameter_mm": 34.2,
+      "max_component_height_mm": 2,
+      "target_board_thickness_mm": 0.8
+    }
+  },
+  "stackup": {
+    "layers": 8,
+    "build": "HDI 1+6+1 candidate",
+    "copper_oz_outer": 0.5,
+    "copper_oz_inner": 0.5,
+    "layer_order": [
+      "F.Cu",
+      "GND1",
+      "SIG1",
+      "PWR",
+      "PWR2",
+      "SIG2",
+      "GND2",
+      "B.Cu"
+    ],
+    "note": "Final dielectric/copper construction must be impedance-solved by PCBWay before fabrication."
+  },
+  "design_rules": {
+    "default_trace_mm": 0.1,
+    "default_space_mm": 0.1,
+    "fine_trace_mm": 0.08,
+    "fine_space_mm": 0.08,
+    "mech_via_drill_mm": 0.2,
+    "mech_via_diameter_mm": 0.45,
+    "laser_via_drill_mm": 0.1,
+    "laser_via_diameter_mm": 0.25,
+    "edge_clearance_mm": 0.25,
+    "via_to_edge_mm": 0.3,
+    "bga_pitch_floor_mm": 0.4
+  },
+  "module_boundaries": {
+    "public_core": [
+      "nRF5340",
+      "MAX86178",
+      "LSM6DSO32X",
+      "BMP390",
+      "MLX90632",
+      "BQ25619",
+      "BQ51013B",
+      "ST4SIM",
+      "connectors"
+    ],
+    "proprietary_vendor_module": [
+      "Snapdragon W5+ Gen 2",
+      "SDX35/5G RF front end",
+      "LPDDR/eMMC high-speed reference routing"
+    ],
+    "reason": "Production W5+/X35 package pin maps, DDR topology, PMIC/RF reference layout and carrier-certified RF details are not established in the repository."
+  }
+}
