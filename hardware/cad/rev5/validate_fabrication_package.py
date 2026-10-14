@@ -36,6 +36,12 @@ for variant in index["variants"]:
         assert len(item["bbox_mm"])==3
         assert all(value>0 for value in item["bbox_mm"])
 
+    gdt=DIST/variant["gdt_plan"]
+    assert gdt.exists()
+    gdt_text=gdt.read_text(encoding="utf-8")
+    assert "NOT RELEASED FOR TOOLING" in gdt_text
+    assert "DATUM A" in gdt_text and "DATUM B" in gdt_text and "DATUM C" in gdt_text
+
     tolerance=DIST/variant["tolerance_table"]
     with tolerance.open(newline="",encoding="utf-8") as handle:
         rows=list(csv.DictReader(handle))
