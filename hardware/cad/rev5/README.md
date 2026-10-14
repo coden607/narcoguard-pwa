@@ -16,3 +16,22 @@ The NG40 required two placement corrections discovered by CAD: the 12×12 mm RF 
 This is **not manufacturing-ready CAD**. Snapdragon W5+ Gen 2 / SDX35 integration still uses design envelopes until supplier mechanical CAD is locked. PCB routing, flex, screws, adhesives, gasket compression, battery swelling, thermal paths, antenna keep-outs/matching, camera-shutter sealing, crown-generator mechanics and regulatory testing remain open.
 
 Replace every placeholder envelope with vendor STEP/IGES geometry before DFM.
+
+## Generated CAD package
+
+`build_rev5.py` now exports concept CAD for both watch sizes after the envelope/interference checks pass:
+
+- `dist/ng46-rev5-concept.step`
+- `dist/ng46-rev5-concept.stl`
+- `dist/ng40-rev5-concept.step`
+- `dist/ng40-rev5-concept.stl`
+
+Run:
+
+```bash
+python hardware/cad/rev5/build_rev5.py
+```
+
+Use `--validate-only` when exports are not needed. GitHub Actions publishes the generated STEP/STL files as the `narcoguard-rev5-cad-<sha>` artifact on each CAD workflow run.
+
+These are **concept engineering exports**, not production tooling files. Supplier CAD, routed PCB data, GD&T/tolerance stack, antenna/RF signoff, thermal/ingress validation, drug-device engineering, and physical prototype evidence remain required before manufacturing or medical-use claims.
