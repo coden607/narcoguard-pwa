@@ -475,6 +475,7 @@ export default function NGWatchPage() {
                     <li>{variantId === "46" ? "ng46" : "ng40"}/parts/[part].step + [part].stl</li>
                     <li>{variantId === "46" ? "ng46" : "ng40"}/profiles/[profile].dxf</li>
                     <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-tolerance-gdt.csv</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-gdt-plan.svg</li>
                     <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-manifest.json</li>
                   </ul>
                 </div>
