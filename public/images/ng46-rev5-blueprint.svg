@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" role="img" aria-labelledby="t d">
-<title id="t">NarcoGuard NG46 Rev 5 blueprint</title><desc id="d">Concept engineering blueprint showing front, side, back and internal layout for the 46 millimeter rugged edition.</desc>
+<title id="t">NarcoGuard NG46 Rev 5 blueprint</title><desc id="d">Rev 5 engineering blueprint showing the NG46 exterior, internal plan, safety/core electronics, and current PCBWay engineering boundary.</desc>
 <rect width="1200" height="800" fill="#061018"/><g stroke="#38f2b1" fill="none" stroke-width="2">
 <circle cx="250" cy="260" r="184"/><circle cx="250" cy="260" r="147"/><circle cx="250" cy="260" r="60"/><rect x="66" y="245" width="368" height="30" rx="8"/>
 <line x1="66" y1="50" x2="434" y2="50"/><line x1="66" y1="40" x2="66" y2="60"/><line x1="434" y1="40" x2="434" y2="60"/>
@@ -16,9 +16,9 @@
 <text x="575" y="380" font-size="16">SDX35 5G RedCap + ST4SIM eSIM</text>
 <text x="575" y="405" font-size="16">MAX86178 PPG / ECG / BioZ sensor stack</text>
 <text x="575" y="430" font-size="16">Qi primary charging • emergency reserve</text>
-<text x="575" y="455" font-size="16">solar ring • TEG • crown generator • rotor (research)</text>
-<text x="575" y="480" font-size="16">camera + mechanical privacy shutter (research)</text>
+<text x="575" y="455" font-size="16">8-layer HDI safety/core carrier • PCBWay review candidate</text>
+<text x="575" y="480" font-size="16">W5+/X35 compute/RF kept behind vendor-approved interface</text>
 <text x="828" y="495" font-size="14">RF zone</text><text x="685" y="492" font-size="14">SoC</text><text x="608" y="492" font-size="14">MCU</text>
 <text x="705" y="570" font-size="14">12 mm optical window</text><text x="638" y="690" font-size="14">annular rotor envelope</text>
-<text x="40" y="760" font-size="13" fill="#9adcc7">CONCEPT ONLY — supplier CAD, routed PCB, tolerances, antenna and thermal validation still required.</text></g>
+<text x="40" y="742" font-size="13" fill="#9adcc7">REV 5 ENGINEERING — fabrication CAD + PCBWay constraints/simulations are current.</text><text x="40" y="762" font-size="13" fill="#9adcc7">GERBER/NC DRILL RELEASE BLOCKED — final netlist, vendor RF interface, stackup and physical validation still required.</text></g>
 </svg>
