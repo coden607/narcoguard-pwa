@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
 
-test("installed PWA refresh includes the Rev 5 watch route and fabrication CAD surface", () => {
+test("installed PWA refresh includes the Rev 5 watch route, fabrication CAD, and PCBWay engineering surface", () => {
   const sw = readFileSync("public/sw.js", "utf8")
   const watch = readFileSync("app/watch/page.tsx", "utf8")
 
@@ -26,4 +26,7 @@ test("installed PWA refresh includes the Rev 5 watch route and fabrication CAD s
   assert.match(watch, /tolerance-gdt\.csv/)
   assert.match(watch, /gdt-plan\.svg/)
   assert.match(watch, /manifest\.json/)
+  assert.match(watch, /PCBWay engineering package/)
+  assert.match(watch, /watch-pcb\.yml/)
+  assert.match(watch, /Gerber\/NC-drill release remains blocked/)
 })

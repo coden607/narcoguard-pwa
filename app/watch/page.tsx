@@ -488,6 +488,33 @@ export default function NGWatchPage() {
                   <p>The GD&amp;T/tolerance CSV is a planning surface, not a released drawing. Supplier CAD, routed PCB data, final datum scheme/tolerance stack, RF/antenna signoff, thermal/ingress validation, and physical prototype inspection remain required before tooling release.</p>
                   <p>The medication/auto-injector research pod remains outside this manufacturing package and is not represented as a validated drug-delivery mechanism.</p>
                 </div>
+                <div className="mt-5 rounded-xl border border-primary/30 bg-primary/5 p-4">
+                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">PCBWay engineering package</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Rev 5 now includes an 8-layer HDI safety/core carrier specification, placement and routing constraints, PCBWay capability checks, impedance/thermal/power feasibility models, and a generated BOM/placement/fabrication review package.
+                  </p>
+                  <p className="mt-2 text-xs text-amber-300">
+                    Gerber/NC-drill release remains blocked until the validated electrical netlist, final PCBWay impedance stackup, and vendor-approved W5+/X35 compute/RF interface are available. No proprietary DDR/RF pinout is invented.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <a
+                      href="https://github.com/coden607/narcoguard-pwa/actions/workflows/watch-pcb.yml"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
+                    >
+                      Open PCB engineering artifacts <ExternalLink className="ml-1 h-4 w-4" />
+                    </a>
+                    <a
+                      href="https://github.com/coden607/narcoguard-pwa/blob/main/hardware/pcb/rev5/README.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
+                    >
+                      Inspect PCBWay package <ExternalLink className="ml-1 h-4 w-4" />
+                    </a>
+                  </div>
+                </div>
                 <a
                   href="https://github.com/coden607/narcoguard-pwa/blob/main/hardware/cad/rev5/build_rev5.py"
                   target="_blank"

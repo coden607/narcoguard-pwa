@@ -1,0 +1,25 @@
+{
+  "source": "PCBWay official capabilities pages; reviewed 2026-10-14",
+  "urls": [
+    "https://www.pcbway.com/advanced-pcb-capabilities.html",
+    "https://www.pcbway.com/hdi-pcb.html",
+    "https://www.pcbway.com/capabilities.html",
+    "https://www.pcbway.com/helpcenter/ordering_parameter_instruction/What_is_Impedance_Control_.html"
+  ],
+  "advanced": {
+    "min_trace_mm": 0.065,
+    "min_spacing_mm": 0.065,
+    "min_mech_drill_mm": 0.15,
+    "min_laser_via_mm": 0.1,
+    "min_bga_pitch_mm": 0.4,
+    "max_layers": 60
+  },
+  "standard": {
+    "min_trace_mm": 0.1,
+    "min_spacing_mm": 0.1
+  },
+  "impedance": {
+    "tolerance_percent": 10,
+    "min_dielectric_mm": 0.05
+  }
+}
