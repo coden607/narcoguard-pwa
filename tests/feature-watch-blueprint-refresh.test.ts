@@ -2,7 +2,7 @@ import { strict as assert } from "node:assert"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
 
-test("installed PWA refresh includes the Rev 5 watch route and blueprint assets", () => {
+test("installed PWA refresh includes the Rev 5 watch route and fabrication CAD surface", () => {
   const sw = readFileSync("public/sw.js", "utf8")
   const watch = readFileSync("app/watch/page.tsx", "utf8")
 
@@ -18,6 +18,11 @@ test("installed PWA refresh includes the Rev 5 watch route and blueprint assets"
   assert.match(watch, /Rev 5 research: crown generator/)
   assert.match(watch, /STEP \/ STL CAD package/)
   assert.match(watch, /narcoguard-rev5-cad/)
-  assert.match(watch, /ng46-rev5-concept\.step/)
-  assert.match(watch, /ng40-rev5-concept\.stl/)
+  assert.match(watch, /Rev 5 Fabrication CAD/)
+  assert.match(watch, /Complete \+ exploded STEP\/STL/)
+  assert.match(watch, /assemblies\/\*-assembly\.step/)
+  assert.match(watch, /assemblies\/\*-exploded\.step/)
+  assert.match(watch, /profiles\/\*\.dxf/)
+  assert.match(watch, /tolerance-gdt\.csv/)
+  assert.match(watch, /manifest\.json/)
 })
