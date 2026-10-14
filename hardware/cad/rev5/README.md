@@ -35,3 +35,31 @@ python hardware/cad/rev5/build_rev5.py
 Use `--validate-only` when exports are not needed. GitHub Actions publishes the generated STEP/STL files as the `narcoguard-rev5-cad-<sha>` artifact on each CAD workflow run.
 
 These are **concept engineering exports**, not production tooling files. Supplier CAD, routed PCB data, GD&T/tolerance stack, antenna/RF signoff, thermal/ingress validation, drug-device engineering, and physical prototype evidence remain required before manufacturing or medical-use claims.
+
+
+## Fabrication-oriented package
+
+The Rev 5 CAD build now emits a structured package for **both NG46 and NG40** under `dist/<variant>/`:
+
+- complete assembly STEP + STL;
+- exploded assembly STEP + STL;
+- per-part STEP + STL for enclosure, battery, PCB, display, sensor window, Qi coil, and component envelopes;
+- PCB, case-back, and sensor-window DXF profiles;
+- a tolerance/GD&T planning CSV with nominal dimensions, inspection method, and status;
+- a JSON manifest with bounding boxes, candidate processes/materials, and explicit release blockers;
+- a top-level package index covering both variants.
+
+The package is intentionally labeled **fabrication-oriented concept CAD**, not manufacturing release CAD. It is useful for mechanical review, supplier conversations, fit checks, rapid prototyping, and downstream CAD refinement. It must not be treated as tooling-ready until supplier drawings, routed PCB data, final GD&T/tolerance stack, RF/antenna signoff, thermal/ingress validation, and physical inspection evidence are complete.
+
+The medication/auto-injector research pod remains outside the manufacturing release boundary and requires separate drug-device, clinical, pharmaceutical, human-factors, and regulatory engineering.
+
+### Build and validate
+
+```bash
+python hardware/cad/rev5/build_rev5.py
+python hardware/cad/rev5/validate_dfm.py
+python hardware/cad/rev5/validate_fabrication_package.py
+python hardware/cad/rev5/validate_release.py
+```
+
+The GitHub **Watch CAD Validation** workflow publishes the complete generated tree as a versioned `narcoguard-rev5-cad-<sha>` artifact after these checks pass.
