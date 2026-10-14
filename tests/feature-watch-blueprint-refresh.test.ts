@@ -13,11 +13,15 @@ test("installed PWA refresh includes the current Rev 5 watch visuals, fabricatio
   assert.match(sw, /"\/watch"/)
   assert.match(sw, /ng46-rev5-blueprint\.svg/)
   assert.match(sw, /ng40-rev5-blueprint\.svg/)
-  assert.match(sw, /narcoguard-shell-v11/)
+  assert.match(sw, /narcoguard-shell-v12/)
 
   assert.match(watch, /ng46-rev5-blueprint\.svg\?rev=5-2026-10-14/)
   assert.match(watch, /ng40-rev5-blueprint\.svg\?rev=5-2026-10-14/)
   assert.match(watch, /data-testid="rev5-concept-visual-gallery"/)
+  assert.match(watch, /ng-blueprint-detailed\.jpg\?rev=visual-2026-10-14/)
+  assert.match(watch, /ng-exploded-view\.jpg\?rev=visual-2026-10-14/)
+  assert.match(watch, /ng-modular-exploded\.jpg\?rev=visual-2026-10-14/)
+  assert.match(watch, /Primary visual direction:/)
   for (const concept of [
     "ng-watch-hero.jpg",
     "ng-blueprint.jpg",

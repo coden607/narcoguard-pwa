@@ -171,29 +171,37 @@ export default function NGWatchPage() {
             ))}
           </dl>
           <figure className="mt-4" data-testid="rev5-primary-visuals">
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="overflow-hidden rounded-2xl border border-primary/30 bg-background/40">
               <Image
-                src="/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14"
-                alt="NarcoGuard NG46 Rev 5 engineering blueprint"
-                width={1200}
-                height={800}
+                src="/images/ng-blueprint-detailed.jpg?rev=visual-2026-10-14"
+                alt="NarcoGuard Rev 5 NG46 and NG40 detailed concept blueprint board"
+                width={1600}
+                height={2000}
                 priority
-                className="w-full h-auto rounded-xl border border-border/60 bg-background"
-              />
-              <Image
-                src="/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14"
-                alt="NarcoGuard NG40 Rev 5 engineering blueprint"
-                width={1200}
-                height={800}
-                priority
-                className="w-full h-auto rounded-xl border border-border/60 bg-background"
+                className="h-auto w-full"
               />
             </div>
-            <figcaption className="mt-2 text-xs text-muted-foreground">
-              Current Rev 5 engineering blueprints, synchronized with the fabrication CAD and PCBWay engineering package. Original lifestyle, exploded, and presentation artwork is available below in the Concept Visuals gallery.
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              <Image
+                src="/images/ng-exploded-view.jpg?rev=visual-2026-10-14"
+                alt="NarcoGuard Rev 5 exploded engineering concept"
+                width={1200}
+                height={1500}
+                className="h-auto w-full rounded-xl border border-border/60 bg-background"
+              />
+              <Image
+                src="/images/ng-modular-exploded.jpg?rev=visual-2026-10-14"
+                alt="NarcoGuard Rev 5 modular watch family engineering concept"
+                width={1200}
+                height={1500}
+                className="h-auto w-full rounded-xl border border-border/60 bg-background"
+              />
+            </div>
+            <figcaption className="mt-3 rounded-xl border border-amber-400/30 bg-amber-400/5 p-3 text-xs text-muted-foreground">
+              <strong className="text-foreground">Primary visual direction:</strong> these richer Rev 5 boards show the intended NG46/NG40 form, exploded stack, component language, and presentation quality. Some embedded labels were created earlier in the concept phase; use the current Blueprint, 3D, CAD, BOM, and PCBWay sections below for authoritative engineering status.
             </figcaption>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Blueprint layout</Button>
+              <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Current engineering blueprint</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("3d-view")}>Interactive 3D view</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("bom")}>Rev 5 BOM layout</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("cad")}>STEP / STL CAD package</Button>
@@ -216,13 +224,10 @@ export default function NGWatchPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[
-              ["/images/ng-blueprint-detailed.jpg", "NG46 / NG40 dimensional blueprint board"],
-              ["/images/ng-exploded-view.jpg", "Rev 5 exploded engineering concept"],
-              ["/images/ng-modular-exploded.jpg", "Rev 5 family and modular component board"],
-              ["/images/ng-watch-hero.jpg", "NG46 / NG40 Hero Network concept"],
-              ["/images/ng-blueprint.jpg", "Original NarcoGuard watch blueprint concept"],
-              ["/images/watch-on-wrist-lifestyle.jpg", "Wearable lifestyle concept"],
-              ["/images/ng-sizes-render.jpg", "Original NG46 / NG40 size and form study"],
+              ["/images/ng-watch-hero.jpg?rev=visual-2026-10-14", "NG46 / NG40 Hero Network concept"],
+              ["/images/ng-blueprint.jpg?rev=visual-2026-10-14", "Original NarcoGuard watch blueprint concept"],
+              ["/images/watch-on-wrist-lifestyle.jpg?rev=visual-2026-10-14", "Wearable lifestyle concept"],
+              ["/images/ng-sizes-render.jpg?rev=visual-2026-10-14", "Original NG46 / NG40 size and form study"],
             ].map(([src, label]) => (
               <figure key={src} className="overflow-hidden rounded-2xl border border-border/60 bg-background/35">
                 <Image
