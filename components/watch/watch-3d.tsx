@@ -123,7 +123,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
       renderer.toneMappingExposure = 1.05
       renderer.outputColorSpace = THREE.SRGBColorSpace
       renderer.domElement.setAttribute("role", "img")
-      renderer.domElement.setAttribute("aria-label", `3D model of the NarcoGuard NG ${geometry.model.caseDiameterMm} mm concept watch. Drag to rotate, pinch or scroll to zoom.`)
+      renderer.domElement.setAttribute("aria-label", `Rev 5 3D model of the NarcoGuard NG ${geometry.model.caseDiameterMm} mm concept watch. Drag to rotate, pinch or scroll to zoom.`)
       renderer.domElement.style.touchAction = "none"
       mount.appendChild(renderer.domElement)
 
