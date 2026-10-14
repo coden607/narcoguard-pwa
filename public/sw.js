@@ -1,4 +1,4 @@
-const CACHE_NAME = "narcoguard-shell-v11";
+const CACHE_NAME = "narcoguard-shell-v12";
 const APP_SHELL = [
   "/",
   "/offline.html",
@@ -18,6 +18,9 @@ const APP_SHELL = [
   "/images/ng40-rev5-blueprint.svg",
   "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14",
   "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14",
+  "/images/ng-blueprint-detailed.jpg?rev=visual-2026-10-14",
+  "/images/ng-exploded-view.jpg?rev=visual-2026-10-14",
+  "/images/ng-modular-exploded.jpg?rev=visual-2026-10-14",
 ];
 
 self.addEventListener("install", (event) => {
