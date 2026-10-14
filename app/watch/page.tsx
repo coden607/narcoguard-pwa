@@ -190,7 +190,7 @@ export default function NGWatchPage() {
               />
             </div>
             <figcaption className="mt-2 text-xs text-muted-foreground">
-              Current Rev 5 engineering blueprints, synchronized with the fabrication CAD and PCBWay engineering package. Earlier lifestyle, exploded-photo, and size-render artwork is not used on the watch engineering surface.
+              Current Rev 5 engineering blueprints, synchronized with the fabrication CAD and PCBWay engineering package. Original lifestyle, exploded, and presentation artwork is available below in the Concept Visuals gallery.
             </figcaption>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Blueprint layout</Button>
@@ -199,6 +199,46 @@ export default function NGWatchPage() {
               <Button type="button" variant="outline" onClick={() => activateTab("cad")}>STEP / STL CAD package</Button>
             </div>
           </figure>
+        </section>
+
+        <section className="mb-8" data-testid="rev5-concept-visual-gallery">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-primary">Rev 5 concept visuals</p>
+              <h2 className="mt-1 text-2xl font-bold">Original watch design boards</h2>
+              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+                These are the richer visual design boards from the Rev 5 concept phase: product renders, exploded views, dimensional layouts, Hero Network scenes, and presentation boards. They are shown for design direction; embedded marketing/spec text can be older than the current engineering package.
+              </p>
+            </div>
+            <Button type="button" variant="outline" onClick={() => activateTab("cad")}>
+              Open current engineering CAD
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[
+              ["/images/ng-blueprint-detailed.jpg", "NG46 / NG40 dimensional blueprint board"],
+              ["/images/ng-exploded-view.jpg", "Rev 5 exploded engineering concept"],
+              ["/images/ng-modular-exploded.jpg", "Rev 5 family and modular component board"],
+              ["/images/ng-watch-hero.jpg", "NG46 / NG40 Hero Network concept"],
+              ["/images/ng-blueprint.jpg", "Original NarcoGuard watch blueprint concept"],
+              ["/images/watch-on-wrist-lifestyle.jpg", "Wearable lifestyle concept"],
+              ["/images/ng-sizes-render.jpg", "Original NG46 / NG40 size and form study"],
+            ].map(([src, label]) => (
+              <figure key={src} className="overflow-hidden rounded-2xl border border-border/60 bg-background/35">
+                <Image
+                  src={src}
+                  alt={label}
+                  width={1200}
+                  height={1500}
+                  className="h-auto w-full"
+                />
+                <figcaption className="border-t border-border/50 p-3 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">{label}</span>
+                  <span className="mt-1 block">Concept artwork — use the Blueprint, 3D, CAD, BOM, and PCBWay sections for current engineering status.</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </section>
 
         <section className="mb-8 rounded-2xl border border-red-500/30 bg-red-500/5 p-5" data-testid="modular-auto-injector">
