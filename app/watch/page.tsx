@@ -173,7 +173,7 @@ export default function NGWatchPage() {
           <figure className="mt-4" data-testid="rev5-primary-visuals">
             <div className="grid gap-3 lg:grid-cols-2">
               <Image
-                src="/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13"
+                src="/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14"
                 alt="NarcoGuard NG46 Rev 5 engineering blueprint"
                 width={1200}
                 height={800}
@@ -181,7 +181,7 @@ export default function NGWatchPage() {
                 className="w-full h-auto rounded-xl border border-border/60 bg-background"
               />
               <Image
-                src="/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13"
+                src="/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14"
                 alt="NarcoGuard NG40 Rev 5 engineering blueprint"
                 width={1200}
                 height={800}
@@ -190,7 +190,7 @@ export default function NGWatchPage() {
               />
             </div>
             <figcaption className="mt-2 text-xs text-muted-foreground">
-              Current Rev 5 engineering blueprints. Earlier lifestyle and size renders are no longer used as the primary watch visual.
+              Current Rev 5 engineering blueprints, synchronized with the fabrication CAD and PCBWay engineering package. Earlier lifestyle, exploded-photo, and size-render artwork is not used on the watch engineering surface.
             </figcaption>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Blueprint layout</Button>
@@ -230,7 +230,7 @@ export default function NGWatchPage() {
           <HolographicCard className="p-6" glowIntensity="high">
             <h2 className="text-xl font-bold mb-4">Rev 5 blueprint — {variant.label}</h2>
             <Image
-              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13"}
+              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14"}
               alt={`${variant.label} Rev 5 concept blueprint`}
               width={1200}
               height={800}
@@ -435,7 +435,7 @@ export default function NGWatchPage() {
                 </p>
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   <a
-                    href={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13"}
+                    href={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14"}
                     download
                     className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
                   >

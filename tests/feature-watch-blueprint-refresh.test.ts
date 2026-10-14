@@ -2,17 +2,45 @@ import { strict as assert } from "node:assert"
 import { readFileSync } from "node:fs"
 import { test } from "node:test"
 
-test("installed PWA refresh includes the Rev 5 watch route, fabrication CAD, and PCBWay engineering surface", () => {
+test("installed PWA refresh includes the current Rev 5 watch visuals, fabrication CAD, and PCBWay engineering surface", () => {
   const sw = readFileSync("public/sw.js", "utf8")
   const watch = readFileSync("app/watch/page.tsx", "utf8")
+  const drawing = readFileSync("components/watch/engineering-drawing.tsx", "utf8")
+  const model3d = readFileSync("components/watch/watch-3d.tsx", "utf8")
+  const ng46 = readFileSync("public/images/ng46-rev5-blueprint.svg", "utf8")
+  const ng40 = readFileSync("public/images/ng40-rev5-blueprint.svg", "utf8")
 
   assert.match(sw, /"\/watch"/)
   assert.match(sw, /ng46-rev5-blueprint\.svg/)
   assert.match(sw, /ng40-rev5-blueprint\.svg/)
   assert.match(sw, /narcoguard-shell-v10/)
-  assert.match(watch, /ng46-rev5-blueprint\.svg\?rev=5-2026-10-13/)
-  assert.match(watch, /ng40-rev5-blueprint\.svg\?rev=5-2026-10-13/)
-  assert.doesNotMatch(watch, /ng-sizes-render\.jpg/)
+
+  assert.match(watch, /ng46-rev5-blueprint\.svg\?rev=5-2026-10-14/)
+  assert.match(watch, /ng40-rev5-blueprint\.svg\?rev=5-2026-10-14/)
+  for (const stale of [
+    "ng-watch-hero.jpg",
+    "ng-blueprint.jpg",
+    "ng-blueprint-detailed.jpg",
+    "ng-exploded-view.jpg",
+    "ng-modular-exploded.jpg",
+    "ng-sizes-render.jpg",
+    "watch-on-wrist-lifestyle.jpg",
+  ]) {
+    assert.doesNotMatch(watch, new RegExp(stale.replace(".", "\\.")), stale)
+  }
+
+  assert.match(drawing, /Rev 5 concept engineering drawing/)
+  assert.doesNotMatch(drawing, /Rev 4(?:\.2)? concept engineering drawing/)
+  assert.match(model3d, /Rev 5 3D model/)
+
+  for (const blueprint of [ng46, ng40]) {
+    assert.match(blueprint, /8-layer HDI safety\/core carrier/)
+    assert.match(blueprint, /PCBWay review candidate/)
+    assert.match(blueprint, /W5\+\/X35 compute\/RF kept behind vendor-approved interface/)
+    assert.match(blueprint, /GERBER\/NC DRILL RELEASE BLOCKED/)
+    assert.doesNotMatch(blueprint, /supplier CAD, routed PCB, tolerances, antenna and thermal validation still required/)
+  }
+
   assert.match(watch, /BOM_ICONS/)
   assert.match(watch, /Interactive 3D view/)
   assert.match(watch, /Rev 5 research: crown generator/)
