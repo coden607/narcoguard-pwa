@@ -8,6 +8,7 @@ import { LocateFixed, Mic, MicOff, Send, Sparkles, Volume2, VolumeX } from "luci
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { coarsen } from "@/lib/resource-finder"
 import { spokenResourceSummary, type AngelResources } from "@/lib/angel-resources"
 import { useVoice } from "@/lib/hooks/use-voice"
@@ -302,7 +303,84 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
 
       {available && consented && (
         <>
-          <div className="flex-1 space-y-3 overflow-y-auto max-h-96" aria-live="polite" aria-label="Conversation with Angel">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
+            <div className="flex flex-wrap gap-2">
+              {SUGGESTIONS.map((suggestion) => (
+                <Button key={suggestion} type="button" size="sm" variant="outline" disabled={busy} onClick={() => void send(suggestion).then((answer) => { if (answer && readAloud) void voice.speak(answer) })}>{suggestion}</Button>
+              ))}
+            </div>
+            <Button type="button" variant="ghost" size="sm" onClick={() => { messagesRef.current = []; setMessages([]) }} disabled={messages.length === 0}>Clear conversation</Button>
+          </div>
+
+          <div className="space-y-3 rounded-xl border border-border/60 bg-background/20 p-3">
+            {voiceEnabled && (voice.sttSupported || voice.ttsSupported) && (
+              <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Voice">
+                {voice.sttSupported && (
+                  <Button type="button" variant={voice.listening && !handsFree ? "default" : "outline"} disabled={busy || handsFree} onClick={voice.listening ? voice.stopListening : startTalking}>
+                    {voice.listening && !handsFree ? <MicOff className="w-4 h-4 mr-2" aria-hidden="true" /> : <Mic className="w-4 h-4 mr-2" aria-hidden="true" />}
+                    {voice.listening && !handsFree ? "Stop" : "Talk"}
+                  </Button>
+                )}
+                {voice.sttSupported && voice.ttsSupported && (
+                  <Button type="button" variant={handsFree ? "default" : "outline"} aria-pressed={handsFree} onClick={toggleHandsFree}>
+                    {handsFree ? "End hands-free" : "Hands-free conversation"}
+                  </Button>
+                )}
+                {voice.ttsSupported && (
+                  <Button type="button" variant="outline" aria-pressed={readAloud} onClick={() => { if (readAloud) voice.cancelSpeech(); else voice.primeSpeech(); setReadAloud(!readAloud) }}>
+                    {readAloud ? <Volume2 className="w-4 h-4 mr-2" aria-hidden="true" /> : <VolumeX className="w-4 h-4 mr-2" aria-hidden="true" />}
+                    {readAloud ? "Reading replies aloud" : "Read replies aloud"}
+                  </Button>
+                )}
+                <p className="w-full text-sm text-muted-foreground" role="status" aria-live="polite">
+                  {voice.listening ? (voice.interim ? `Hearing: ${voice.interim}` : "Listening…") : voice.speaking ? "Angel is speaking…" : voiceNote ?? (handsFree ? "Hands-free is on." : "")}
+                </p>
+              </div>
+            )}
+            {!voiceEnabled && <p className="text-xs text-muted-foreground">Voice controls are off in setup preferences. Text chat still works.</p>}
+
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" checked={usePlanningContext} onChange={(event) => setUsePlanningContext(event.target.checked)} />
+              <span><strong>Use my local planning context for this chat.</strong> Angel may receive my top goal, constraints, upcoming schedule, enabled routines, transport choices, and resource preferences. Journal text and my personal crisis-plan text are never included. Nothing is sent unless I turn this on.</span>
+            </label>
+
+            <div className="flex flex-wrap items-center gap-2 text-sm" role="group" aria-label="Search location">
+              <Input aria-label="ZIP code for searches (optional)" inputMode="numeric" maxLength={5} value={zip} onChange={(event) => setZip(event.target.value.replace(/\D/g, ""))} placeholder="ZIP (optional)" className="w-32" />
+              {location ? (
+                <>
+                  <span data-testid="angel-location-on">Searching near you (location rounded to about 1 km).</span>
+                  <Button type="button" variant="ghost" size="sm" onClick={forgetLocation}>Stop using my location</Button>
+                </>
+              ) : (
+                <Button type="button" variant="outline" size="sm" disabled={locating || busy} onClick={() => void shareLocation().then(() => {
+                  const pending = locationRef.current ? pendingSearch() : undefined
+                  if (pending) void send(pending).then((answer) => { if (answer && readAloud) void voice.speak(answer) })
+                })}>
+                  <LocateFixed className="w-4 h-4 mr-2" aria-hidden="true" />{locating ? "Finding your location…" : "Use my location"}
+                </Button>
+              )}
+              {locationNote && <span className="text-muted-foreground" role="status">{locationNote}</span>}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" data-testid="angel-remember-place">
+              <label className="inline-flex min-h-11 items-center gap-2">
+                <input type="checkbox" checked={rememberPlace} onChange={(event) => toggleRemember(event.target.checked)} />
+                Remember my ZIP or approximate location on this phone
+              </label>
+              {(zip || location) && (
+                <Button type="button" variant="ghost" size="sm" onClick={forgetLocation} data-testid="angel-forget-place">Forget where I am</Button>
+              )}
+            </div>
+          </div>
+
+          {error && <p className="text-sm" role="status">{error}</p>}
+
+          <div
+            className="flex-1 space-y-3 overflow-y-auto min-h-64 max-h-[55vh] rounded-xl border border-border/60 bg-background/30 p-3 sm:p-4"
+            aria-live="polite"
+            aria-label="Conversation with Angel"
+            data-testid="angel-chat-history"
+          >
             {messages.length === 0 && <p className="text-sm text-muted-foreground">Hi, I&apos;m Angel. I can help you find nearby help or plan a next step toward a goal. What would help right now?</p>}
             {messages.map((message) => (
               <div key={message.id} className={message.role === "user" ? "flex justify-end" : "space-y-2"}>
@@ -310,7 +388,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
                   <p key={notice} className="rounded-lg border border-destructive bg-destructive/10 p-3 text-sm font-semibold" role="alert">{notice}</p>
                 ))}
                 {message.content && (
-                  <p className={`max-w-[85%] whitespace-pre-wrap rounded-lg p-3 text-sm ${message.role === "user" ? "bg-primary text-primary-foreground" : "glass"}`}>{message.content}</p>
+                  <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl p-3 text-sm ${message.role === "user" ? "bg-primary text-primary-foreground" : "glass"}`}>{message.content}</p>
                 )}
                 {message.resources && (
                   <div className="space-y-3 text-sm" data-testid="angel-resources">
@@ -346,72 +424,34 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
             {busy && <p className="text-sm text-muted-foreground" role="status">Angel is thinking…</p>}
             <div ref={endRef} />
           </div>
-          {error && <p className="text-sm" role="status">{error}</p>}
-          <div className="flex flex-wrap gap-2">
-            {SUGGESTIONS.map((suggestion) => (
-              <Button key={suggestion} type="button" size="sm" variant="outline" disabled={busy} onClick={() => void send(suggestion).then((answer) => { if (answer && readAloud) void voice.speak(answer) })}>{suggestion}</Button>
-            ))}
-          </div>
-          {voiceEnabled && (voice.sttSupported || voice.ttsSupported) && (
-            <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Voice">
-              {voice.sttSupported && (
-                <Button type="button" variant={voice.listening && !handsFree ? "default" : "outline"} disabled={busy || handsFree} onClick={voice.listening ? voice.stopListening : startTalking}>
-                  {voice.listening && !handsFree ? <MicOff className="w-4 h-4 mr-2" aria-hidden="true" /> : <Mic className="w-4 h-4 mr-2" aria-hidden="true" />}
-                  {voice.listening && !handsFree ? "Stop" : "Talk"}
-                </Button>
-              )}
-              {voice.sttSupported && voice.ttsSupported && (
-                <Button type="button" variant={handsFree ? "default" : "outline"} aria-pressed={handsFree} onClick={toggleHandsFree}>
-                  {handsFree ? "End hands-free" : "Hands-free conversation"}
-                </Button>
-              )}
-              {voice.ttsSupported && (
-                <Button type="button" variant="outline" aria-pressed={readAloud} onClick={() => { if (readAloud) voice.cancelSpeech(); else voice.primeSpeech(); setReadAloud(!readAloud) }}>
-                  {readAloud ? <Volume2 className="w-4 h-4 mr-2" aria-hidden="true" /> : <VolumeX className="w-4 h-4 mr-2" aria-hidden="true" />}
-                  {readAloud ? "Reading replies aloud" : "Read replies aloud"}
-                </Button>
-              )}
-              <p className="w-full text-sm text-muted-foreground" role="status" aria-live="polite">
-                {voice.listening ? (voice.interim ? `Hearing: ${voice.interim}` : "Listening…") : voice.speaking ? "Angel is speaking…" : voiceNote ?? (handsFree ? "Hands-free is on." : "")}
-              </p>
-            </div>
-          )}
-          {!voiceEnabled && <p className="text-xs text-muted-foreground">Voice controls are off in setup preferences. Text chat still works.</p>}
-          <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
-            <input type="checkbox" checked={usePlanningContext} onChange={(event) => setUsePlanningContext(event.target.checked)} />
-            <span><strong>Use my local planning context for this chat.</strong> Angel may receive my top goal, constraints, upcoming schedule, enabled routines, transport choices, and resource preferences. Journal text and my personal crisis-plan text are never included. Nothing is sent unless I turn this on.</span>
-          </label>
-          <form className="flex flex-col sm:flex-row gap-2" onSubmit={(event) => { event.preventDefault(); void send(input).then((answer) => { if (answer && readAloud) void voice.speak(answer) }) }}>
-            <Input aria-label="Message Angel" maxLength={2000} value={input} onChange={(event) => setInput(event.target.value)} placeholder="Type a message" className="flex-1" />
-            <Input aria-label="ZIP code for searches (optional)" inputMode="numeric" maxLength={5} value={zip} onChange={(event) => setZip(event.target.value.replace(/\D/g, ""))} placeholder="ZIP (optional)" className="sm:w-32" />
-            <Button type="submit" disabled={busy || !input.trim()} aria-label="Send message"><Send className="w-4 h-4" aria-hidden="true" /></Button>
-          </form>
-          <div className="flex flex-wrap items-center gap-2 text-sm" role="group" aria-label="Search location">
-            {location ? (
-              <>
-                <span data-testid="angel-location-on">Searching near you (location rounded to about 1 km).</span>
-                <Button type="button" variant="ghost" size="sm" onClick={forgetLocation}>Stop using my location</Button>
-              </>
-            ) : (
-              <Button type="button" variant="outline" size="sm" disabled={locating || busy} onClick={() => void shareLocation().then(() => {
-                const pending = locationRef.current ? pendingSearch() : undefined
-                if (pending) void send(pending).then((answer) => { if (answer && readAloud) void voice.speak(answer) })
-              })}>
-                <LocateFixed className="w-4 h-4 mr-2" aria-hidden="true" />{locating ? "Finding your location…" : "Use my location"}
+
+          <form
+            className="sticky bottom-2 z-10 rounded-2xl border border-border/70 bg-background/95 p-2 shadow-lg backdrop-blur"
+            data-testid="angel-composer"
+            onSubmit={(event) => { event.preventDefault(); void send(input).then((answer) => { if (answer && readAloud) void voice.speak(answer) }) }}
+          >
+            <div className="flex items-end gap-2">
+              <Textarea
+                aria-label="Message Angel"
+                maxLength={2000}
+                value={input}
+                onChange={(event) => setInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault()
+                    if (!busy && input.trim()) event.currentTarget.form?.requestSubmit()
+                  }
+                }}
+                placeholder="Message Angel…"
+                rows={2}
+                className="min-h-12 max-h-36 resize-none border-0 bg-transparent shadow-none focus-visible:ring-0"
+              />
+              <Button type="submit" disabled={busy || !input.trim()} aria-label="Send message" size="icon">
+                <Send className="w-4 h-4" aria-hidden="true" />
               </Button>
-            )}
-            {locationNote && <span className="text-muted-foreground" role="status">{locationNote}</span>}
-          </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground" data-testid="angel-remember-place">
-            <label className="inline-flex min-h-11 items-center gap-2">
-              <input type="checkbox" checked={rememberPlace} onChange={(event) => toggleRemember(event.target.checked)} />
-              Remember my ZIP or approximate location on this phone, so I only enter it once
-            </label>
-            {(zip || location) && (
-              <Button type="button" variant="ghost" size="sm" onClick={forgetLocation} data-testid="angel-forget-place">Forget where I am</Button>
-            )}
-          </div>
-          <Button type="button" variant="ghost" size="sm" className="self-start" onClick={() => setMessages([])}>Clear conversation</Button>
+            </div>
+            <p className="px-2 pt-1 text-[11px] text-muted-foreground">Enter to send · Shift+Enter for a new line</p>
+          </form>
         </>
       )}
     </HolographicCard>
