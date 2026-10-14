@@ -31,6 +31,13 @@ jobs:
         run: python hardware/cad/rev5/validate_dfm.py
       - name: Run concept simulation gate
         run: python hardware/cad/rev5/validate_release.py
+      - name: Publish generated Rev 5 CAD package
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcoguard-rev5-cad-${{ github.sha }}
+          path: hardware/cad/rev5/dist/*
+          if-no-files-found: error
+          retention-days: 30
       - name: Prove release gate fails closed
         run: |
           if python hardware/cad/rev5/validate_release.py --release; then

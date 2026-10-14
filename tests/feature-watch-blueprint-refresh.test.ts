@@ -16,4 +16,8 @@ test("installed PWA refresh includes the Rev 5 watch route and blueprint assets"
   assert.match(watch, /BOM_ICONS/)
   assert.match(watch, /Interactive 3D view/)
   assert.match(watch, /Rev 5 research: crown generator/)
+  assert.match(watch, /STEP \/ STL CAD package/)
+  assert.match(watch, /narcoguard-rev5-cad/)
+  assert.match(watch, /ng46-rev5-concept\.step/)
+  assert.match(watch, /ng40-rev5-concept\.stl/)
 })

@@ -22,6 +22,8 @@ import {
   Cog,
   Satellite,
   Lock,
+  Download,
+  Boxes,
 } from "lucide-react"
 import { watchDesignCalculations, watchDesignCalculations40, watchDesignModel, watchDesignModel40 } from "@/lib/watch-design"
 import { WATCH_COMPONENTS, WATCH_COMPONENTS_40 } from "@/lib/watch-components"
@@ -190,10 +192,11 @@ export default function NGWatchPage() {
             <figcaption className="mt-2 text-xs text-muted-foreground">
               Current Rev 5 engineering blueprints. Earlier lifestyle and size renders are no longer used as the primary watch visual.
             </figcaption>
-            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Blueprint layout</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("3d-view")}>Interactive 3D view</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("bom")}>Rev 5 BOM layout</Button>
+              <Button type="button" variant="outline" onClick={() => activateTab("cad")}>STEP / STL CAD package</Button>
             </div>
           </figure>
         </section>
@@ -360,9 +363,10 @@ export default function NGWatchPage() {
 
         <div ref={tabsRef} tabIndex={-1} className="scroll-mt-4 outline-none">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-8">
-          <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-5 glass neon-border">
+          <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 glass neon-border">
             <TabsTrigger value="blueprint">Blueprint</TabsTrigger>
             <TabsTrigger value="3d-view">3D View</TabsTrigger>
+            <TabsTrigger value="cad">CAD Package</TabsTrigger>
             <TabsTrigger value="bom">Bill of Materials</TabsTrigger>
             <TabsTrigger value="specs">Full Specifications</TabsTrigger>
             <TabsTrigger value="owner-lock">Owner Lock</TabsTrigger>
@@ -416,6 +420,67 @@ export default function NGWatchPage() {
                 </div>
               </div>
             </HolographicCard>
+          </TabsContent>
+
+          {/* Generated CAD package */}
+          <TabsContent value="cad">
+            <div className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
+              <HolographicCard className="p-6" glowIntensity="high">
+                <h2 className="text-xl font-bold flex items-center gap-2">
+                  <Boxes className="h-5 w-5 text-primary" />
+                  Rev 5 CAD Package — {variant.label}
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  The same parametric Rev 5 envelope used by the engineering checks now generates STEP and STL concept files for NG46 and NG40. The package is rebuilt in GitHub Actions after CAD changes so the downloadable files stay tied to a reviewed commit.
+                </p>
+                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                  <a
+                    href={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13"}
+                    download
+                    className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+                  >
+                    <Download className="h-5 w-5 text-primary" />
+                    <p className="mt-2 font-semibold">Download Rev 5 blueprint</p>
+                    <p className="text-xs text-muted-foreground">SVG engineering drawing for the selected size.</p>
+                  </a>
+                  <a
+                    href="https://github.com/coden607/narcoguard-pwa/actions/workflows/watch-cad.yml"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+                  >
+                    <Download className="h-5 w-5 text-primary" />
+                    <p className="mt-2 font-semibold">Download generated STEP / STL</p>
+                    <p className="text-xs text-muted-foreground">Open the latest successful Watch CAD Validation run and download the narcoguard-rev5-cad artifact.</p>
+                  </a>
+                </div>
+                <div className="mt-4 rounded-xl border border-border/60 bg-background/40 p-4">
+                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Generated files</p>
+                  <ul className="mt-2 space-y-1 font-mono text-xs text-muted-foreground">
+                    <li>ng46-rev5-concept.step</li>
+                    <li>ng46-rev5-concept.stl</li>
+                    <li>ng40-rev5-concept.step</li>
+                    <li>ng40-rev5-concept.stl</li>
+                  </ul>
+                </div>
+              </HolographicCard>
+              <HolographicCard className="p-6">
+                <h3 className="font-bold text-lg">CAD provenance & limits</h3>
+                <div className="mt-3 space-y-3 text-sm text-muted-foreground">
+                  <p>Source geometry is versioned at <span className="font-mono text-primary">hardware/cad/rev5/build_rev5.py</span> and checked against the Rev 5 envelope/interference and DFM gates.</p>
+                  <p>STEP is the editable solid-exchange format; STL is the mesh export for visualization and prototype workflows.</p>
+                  <p>These are concept engineering exports, not production tooling. Supplier CAD, routed PCB, GD&amp;T/tolerance stack, RF/antenna signoff, thermal/ingress validation, and physical prototype evidence remain open.</p>
+                </div>
+                <a
+                  href="https://github.com/coden607/narcoguard-pwa/blob/main/hardware/cad/rev5/build_rev5.py"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-5 inline-flex items-center text-sm font-semibold text-primary hover:underline"
+                >
+                  Inspect the parametric CAD source <ExternalLink className="ml-1 h-4 w-4" />
+                </a>
+              </HolographicCard>
+            </div>
           </TabsContent>
 
           {/* 3D Interactive View */}
@@ -700,7 +765,7 @@ export default function NGWatchPage() {
                   specs: [
                     ["Case", "Grade 5 Titanium (Ti-6Al-4V) + PVD"],
                     ["Back", "Zirconia ceramic with sensor windows"],
-                    ["Dimensions", `Target ${caseMm}mm case, about ${variant.model.caseThicknessMm}mm thick (CAD pending)`],
+                    ["Dimensions", `Target ${caseMm}mm case, about ${variant.model.caseThicknessMm}mm thick (Rev 5 concept CAD generated; physical validation pending)`],
                     ["Weight", "Unknown until a prototype is built"],
                     ["Water Rating", "Target IP68/ISO 22810; qualification unverified"],
                     ["Temp Range", "Target -20C to +55C (untested)"],
