@@ -1,5 +1,7 @@
+import argparse
 import cadquery as cq
 import math
+from pathlib import Path
 
 # Manufacturer-backed packages. Dimensions in mm.
 MANUFACTURER_PACKAGES = {
@@ -64,6 +66,26 @@ def build(name):
     parts.update(comps)
     return parts
 
+def compound(parts):
+    return cq.Compound.makeCompound([part.val() for part in parts.values()])
+
+def export_cad(name, parts, output_dir):
+    output_dir.mkdir(parents=True, exist_ok=True)
+    model = compound(parts)
+    stem = name.lower() + "-rev5-concept"
+    step_path = output_dir / f"{stem}.step"
+    stl_path = output_dir / f"{stem}.stl"
+    cq.exporters.export(model, str(step_path), exportType="STEP")
+    cq.exporters.export(
+        model,
+        str(stl_path),
+        exportType="STL",
+        tolerance=0.08,
+        angularTolerance=0.15,
+        opt={"ascii": True},
+    )
+    return step_path, stl_path
+
 def validate(name,parts):
     radius=MODELS[name]["board_d"]/2
     failures=[]
@@ -85,8 +107,22 @@ def validate(name,parts):
     return failures
 
 if __name__=="__main__":
+    parser = argparse.ArgumentParser(description="Validate and export NarcoGuard Rev 5 concept CAD")
+    parser.add_argument(
+        "--output-dir",
+        default=str(Path(__file__).parent / "dist"),
+        help="Directory for generated STEP/STL concept exports",
+    )
+    parser.add_argument("--validate-only", action="store_true", help="Run fit checks without writing CAD exports")
+    args = parser.parse_args()
+    output_dir = Path(args.output_dir)
+
     for name in MODELS:
-        failures=validate(name,build(name))
+        parts = build(name)
+        failures=validate(name,parts)
         if failures:
             raise SystemExit(f"{name}: " + "; ".join(failures))
         print(f"{name}: PASS envelope fit")
+        if not args.validate_only:
+            step_path, stl_path = export_cad(name, parts, output_dir)
+            print(f"{name}: exported {step_path} and {stl_path}")
