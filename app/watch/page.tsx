@@ -428,10 +428,10 @@ export default function NGWatchPage() {
               <HolographicCard className="p-6" glowIntensity="high">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <Boxes className="h-5 w-5 text-primary" />
-                  Rev 5 CAD Package — {variant.label}
+                  Rev 5 Fabrication CAD — {variant.label}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  The same parametric Rev 5 envelope used by the engineering checks now generates STEP and STL concept files for NG46 and NG40. The package is rebuilt in GitHub Actions after CAD changes so the downloadable files stay tied to a reviewed commit.
+                  The same parametric Rev 5 geometry used by the fit and DFM gates now generates a fabrication-oriented package for both NG46 and NG40. Every package is rebuilt in GitHub Actions so its solids, exploded assembly, profiles, and tolerance data remain tied to a reviewed commit.
                 </p>
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   <a
@@ -450,26 +450,43 @@ export default function NGWatchPage() {
                     className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
                   >
                     <Download className="h-5 w-5 text-primary" />
-                    <p className="mt-2 font-semibold">Download generated STEP / STL</p>
-                    <p className="text-xs text-muted-foreground">Open the latest successful Watch CAD Validation run and download the narcoguard-rev5-cad artifact.</p>
+                    <p className="mt-2 font-semibold">Download full fabrication package</p>
+                    <p className="text-xs text-muted-foreground">Open the latest successful Watch CAD Validation run and download the versioned narcoguard-rev5-cad artifact.</p>
                   </a>
                 </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {[
+                    ["Assemblies", "Complete + exploded STEP/STL"],
+                    ["Individual solids", "Per-part STEP/STL for enclosure, PCB, power, sensors and component envelopes"],
+                    ["2D profiles", "PCB, case-back and sensor-window DXF outlines"],
+                    ["Tolerance / GD&T plan", "Generated drawing sheet + CSV with provisional datums, nominals, target tolerances, inspection methods and open supplier dependencies"],
+                  ].map(([title, detail]) => (
+                    <div key={title} className="rounded-xl border border-border/60 bg-background/40 p-4">
+                      <p className="font-semibold">{title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+                    </div>
+                  ))}
+                </div>
                 <div className="mt-4 rounded-xl border border-border/60 bg-background/40 p-4">
-                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Generated files</p>
+                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Selected-size package structure</p>
                   <ul className="mt-2 space-y-1 font-mono text-xs text-muted-foreground">
-                    <li>ng46-rev5-concept.step</li>
-                    <li>ng46-rev5-concept.stl</li>
-                    <li>ng40-rev5-concept.step</li>
-                    <li>ng40-rev5-concept.stl</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/[variant]-assembly.step</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/[variant]-exploded.step</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/parts/[part].step + [part].stl</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/profiles/[profile].dxf</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-tolerance-gdt.csv</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-gdt-plan.svg</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-manifest.json</li>
                   </ul>
                 </div>
               </HolographicCard>
               <HolographicCard className="p-6">
-                <h3 className="font-bold text-lg">CAD provenance & limits</h3>
+                <h3 className="font-bold text-lg">CAD provenance & release boundary</h3>
                 <div className="mt-3 space-y-3 text-sm text-muted-foreground">
-                  <p>Source geometry is versioned at <span className="font-mono text-primary">hardware/cad/rev5/build_rev5.py</span> and checked against the Rev 5 envelope/interference and DFM gates.</p>
-                  <p>STEP is the editable solid-exchange format; STL is the mesh export for visualization and prototype workflows.</p>
-                  <p>These are concept engineering exports, not production tooling. Supplier CAD, routed PCB, GD&amp;T/tolerance stack, RF/antenna signoff, thermal/ingress validation, and physical prototype evidence remain open.</p>
+                  <p>Source geometry is versioned at <span className="font-mono text-primary">hardware/cad/rev5/build_rev5.py</span> and checked against envelope/interference, DFM, package-content, and fail-closed release gates.</p>
+                  <p>STEP is the editable solid-exchange format, STL supports prototype/visualization workflows, and DXF carries selected 2D fabrication profiles.</p>
+                  <p>The GD&amp;T/tolerance CSV is a planning surface, not a released drawing. Supplier CAD, routed PCB data, final datum scheme/tolerance stack, RF/antenna signoff, thermal/ingress validation, and physical prototype inspection remain required before tooling release.</p>
+                  <p>The medication/auto-injector research pod remains outside this manufacturing package and is not represented as a validated drug-delivery mechanism.</p>
                 </div>
                 <a
                   href="https://github.com/coden607/narcoguard-pwa/blob/main/hardware/cad/rev5/build_rev5.py"
