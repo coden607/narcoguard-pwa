@@ -1,6 +1,6 @@
-const CACHE_NAME = "narcoguard-shell-v13";
+const CACHE_NAME = "narcoguard-shell-v14";
 const APP_SHELL = [
-  "/images/ng-titanium-3d.png",
+  "/images/ng-titanium-3d.png?rev=complete-2026-10-15",
   "/",
   "/offline.html",
   "/safer-use",

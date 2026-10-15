@@ -173,14 +173,16 @@ export default function NGWatchPage() {
           <figure className="mt-4" data-testid="rev5-primary-visuals">
             <div className="overflow-hidden rounded-2xl border border-primary/30 bg-background/40">
               <Image
-                src="/images/ng-titanium-3d.png"
+                src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
                 alt="NarcoGuard NG46 rugged titanium and NG40 pink rose-titanium concepts with metal link bracelets, front, side, rear and exploded views"
                 width={1536}
                 height={1024}
                 priority
-                className="h-auto w-full"
+                sizes="(min-width: 1152px) 1100px, 100vw"
+                className="block h-auto w-full object-contain"
               />
             </div>
+            <a href="/images/ng-titanium-3d.png?rev=complete-2026-10-15" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4">Open full-size watch blueprint</a>
             <div className="mt-3 grid gap-3 lg:grid-cols-2">
               <Image
                 src="/images/ng-exploded-view.jpg?rev=visual-2026-10-14"
@@ -229,7 +231,7 @@ export default function NGWatchPage() {
               ["/images/ng-blueprint-detailed.jpg?rev=visual-2026-10-14", "Original detailed engineering concept"],
               ["/images/ng-sizes-render.jpg?rev=visual-2026-10-14", "Original NG46 / NG40 size and form study"],
               ["/images/watch-on-wrist-lifestyle.jpg?rev=visual-2026-10-14", "Wearable lifestyle concept"],
-              ["/images/ng-titanium-3d.png", "NG46 titanium / NG40 pink rose-titanium 3D concept"],
+              ["/images/ng-titanium-3d.png?rev=complete-2026-10-15", "NG46 titanium / NG40 pink rose-titanium 3D concept"],
             ].map(([src, label]) => (
               <figure key={src} className="overflow-hidden rounded-2xl border border-border/60 bg-background/35">
                 <Image

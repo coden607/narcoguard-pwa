@@ -72,7 +72,7 @@ export default function FundPage() {
               <div className="md:col-span-2 rounded-2xl overflow-hidden border border-primary/30">
                 <div className="grid gap-3 p-3">
                   <Image
-                    src="/images/ng-titanium-3d.png"
+                    src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
                     alt="NarcoGuard titanium and pink rose-titanium 3D watch concepts"
                     width={1200}
                     height={800}
@@ -197,7 +197,7 @@ export default function FundPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div className="rounded-xl overflow-hidden border border-primary/20">
                 <Image
-                  src="/images/ng-titanium-3d.png"
+                  src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
                   alt="NarcoGuard NG46 Rev 5 concept blueprint"
                   width={1200}
                   height={800}
@@ -315,7 +315,7 @@ export default function FundPage() {
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng-titanium-3d.png"
+                src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
                 alt="NarcoGuard NG46 Rev 5 engineering blueprint"
                 width={1200}
                 height={800}
@@ -324,7 +324,7 @@ export default function FundPage() {
             </div>
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng-titanium-3d.png"
+                src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
                 alt="NarcoGuard NG40 Rev 5 engineering blueprint"
                 width={1200}
                 height={800}
