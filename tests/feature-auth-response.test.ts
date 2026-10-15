@@ -18,3 +18,14 @@ test('confirmation-required signup recognizes the raw Auth user response', async
     assert.equal((await signIn('test@example.org', 'wrong')).error?.code, 'invalid_credentials')
   } finally { globalThis.fetch = original; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_ANON_KEY }
 })
+
+test('a profile service outage does not turn a valid login into an auth failure', async () => {
+  const { ensureProfile } = await import('../lib/supabase-auth')
+  const original = globalThis.fetch
+  process.env.SUPABASE_URL = 'https://example.supabase.co'
+  process.env.SUPABASE_ANON_KEY = 'test-key'
+  try {
+    globalThis.fetch = async () => { throw new Error('Profile service unavailable') }
+    await assert.doesNotReject(ensureProfile({ access_token: 'access', refresh_token: 'refresh', user: { id: 'user-1', email: 'test@example.org' } }, 'Test'))
+  } finally { globalThis.fetch = original; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_ANON_KEY }
+})
