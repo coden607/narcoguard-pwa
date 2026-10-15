@@ -30,7 +30,7 @@ test("deployment version endpoint is dynamic and non-cacheable", () => {
 
 test("service-worker shell version is bumped for the watch visual refresh", () => {
   const sw = read("public/sw.js")
-  assert.match(sw, /narcoguard-shell-v12/)
+  assert.match(sw, /narcoguard-shell-v13/)
 })
 
 
