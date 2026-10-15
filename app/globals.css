@@ -457,6 +457,8 @@ input:focus,textarea:focus,select:focus { border-color: rgba(103,232,249,.7) !im
   .menu-button,.mobile-nav { display: none; }
 }
 @media (max-width: 639px) {
+  [data-slot="button"], [data-slot="tabs-trigger"] { min-width: 0; max-width: 100%; height: auto; min-height: 2.5rem; white-space: normal; }
+  [data-slot="tabs-content"] { min-width: 0; }
   .container { padding-left: 1rem; padding-right: 1rem; }
   .vibrant-card { border-radius: 1rem; }
   .vibrant-card.p-8,.vibrant-card.p-6 { padding: 1.15rem; }

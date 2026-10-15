@@ -226,6 +226,8 @@ export default function NGWatchPage() {
             {[
               ["/images/ng-watch-hero.jpg?rev=visual-2026-10-14", "NG46 / NG40 Hero Network concept"],
               ["/images/ng-blueprint.jpg?rev=visual-2026-10-14", "Original NarcoGuard watch blueprint concept"],
+              ["/images/ng-blueprint-detailed.jpg?rev=visual-2026-10-14", "Original detailed engineering concept"],
+              ["/images/ng-sizes-render.jpg?rev=visual-2026-10-14", "Original NG46 / NG40 size and form study"],
               ["/images/watch-on-wrist-lifestyle.jpg?rev=visual-2026-10-14", "Wearable lifestyle concept"],
               ["/images/ng-titanium-3d.png", "NG46 titanium / NG40 pink rose-titanium 3D concept"],
             ].map(([src, label]) => (
