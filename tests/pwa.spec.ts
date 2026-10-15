@@ -104,3 +104,16 @@ test.describe("PWA production flow", () => {
     await expect(page.getByRole("button", { name: "Enable my private planner" })).toBeVisible()
   })
 })
+
+test('watch, account and support reflow on narrow zoomed displays', async ({ page }) => {
+  await page.setViewportSize({ width: 280, height: 720 })
+  for (const path of ['/auth', '/account', '/watch', '/fund']) {
+    await page.goto(path)
+    const width = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, page: document.documentElement.scrollWidth }))
+    expect(width.page, `${path} should fit the viewport`).toBeLessThanOrEqual(width.viewport + 1)
+    await expect(page.getByRole('button', { name: 'Toggle navigation' })).toBeInViewport()
+  }
+  const image = page.locator('img[src*="ng-titanium-3d"]').first()
+  await expect(image).toBeVisible()
+  await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
+})

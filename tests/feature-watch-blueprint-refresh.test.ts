@@ -13,7 +13,7 @@ test("installed PWA refresh includes the current Rev 5 watch visuals, fabricatio
   assert.match(sw, /"\/watch"/)
   assert.match(sw, /ng46-rev5-blueprint\.svg/)
   assert.match(sw, /ng40-rev5-blueprint\.svg/)
-  assert.match(sw, /narcoguard-shell-v12/)
+  assert.match(sw, /narcoguard-shell-v13/)
 
   assert.match(watch, /ng46-rev5-blueprint\.svg\?rev=5-2026-10-14/)
   assert.match(watch, /ng40-rev5-blueprint\.svg\?rev=5-2026-10-14/)

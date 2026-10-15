@@ -39,7 +39,9 @@ async function parseAuthAttempt(response: Response): Promise<AuthAttempt> {
   }
   const accessToken = typeof body.access_token === "string" ? body.access_token : undefined
   const refreshToken = typeof body.refresh_token === "string" ? body.refresh_token : undefined
-  const user = body.user && typeof body.user === "object" ? body.user as SupabaseUser : null
+  // GoTrue returns the user itself when signup requires email confirmation.
+  const user = body.user && typeof body.user === "object" ? body.user as SupabaseUser
+    : typeof body.id === "string" ? body as SupabaseUser : null
   const session = accessToken && refreshToken ? body as unknown as SupabaseSession : null
   return { session, user: session?.user ?? user, error: null }
 }
@@ -176,5 +178,10 @@ export async function clearSession() {
 export async function ensureProfile(session: SupabaseSession, displayName: string) {
   if (!session.user?.id || !session.user.email) return
   const { url, key } = getSupabaseConfig()
-  await fetch(`${url}/rest/v1/users`, { method: "POST", headers: { apikey: key, Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ auth_user_id: session.user.id, display_name: displayName, email: session.user.email, role: "user" }), cache: "no-store" })
+  // This optional profile must not invalidate an already authenticated session.
+  try {
+    await fetch(`${url}/rest/v1/users`, { method: "POST", headers: { apikey: key, Authorization: `Bearer ${session.access_token}`, "Content-Type": "application/json", Prefer: "return=minimal" }, body: JSON.stringify({ auth_user_id: session.user.id, display_name: displayName, email: session.user.email, role: "user" }), cache: "no-store", signal: AbortSignal.timeout(5000) })
+  } catch {
+    // Authentication remains valid; profile-backed features can report their own availability.
+  }
 }

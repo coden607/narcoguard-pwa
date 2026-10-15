@@ -150,7 +150,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    min-width: 320px;
+    min-width: 0;
     min-height: 100vh;
     background:
       radial-gradient(circle at 12% 12%, hsl(267 88% 60% / .16), transparent 32rem),
@@ -163,6 +163,12 @@
   ::selection { background: hsl(186 100% 50% / .3); color: white; }
   h1, h2, h3 { text-wrap: balance; }
   p { text-wrap: pretty; }
+  main, section, article, figure { min-width: 0; }
+  h1, h2, h3, p, a, button { overflow-wrap: anywhere; }
+  input, textarea, select { max-width: 100%; }
+  @media (max-width: 639px) {
+    input, textarea, select { font-size: max(1rem, 16px); }
+  }
   a, button, input, textarea, select { -webkit-tap-highlight-color: transparent; }
 }
 
@@ -385,7 +391,7 @@
   backdrop-filter: blur(24px) saturate(160%);
   box-shadow: 0 12px 42px -28px rgba(34,211,238,.75);
 }
-.site-header-inner { width: min(100% - 2rem, 90rem); height: 4.75rem; margin-inline: auto; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+.site-header-inner { width: min(100% - 2rem, 90rem); min-height: 4.75rem; height: auto; padding-block: .5rem; margin-inline: auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem; }
 .brand { display: inline-flex; align-items: center; gap: .7rem; color: white; text-decoration: none; }
 .brand-mark { display: block; flex: none; width: 2.75rem; height: 2.75rem; border-radius: .9rem; overflow: hidden; box-shadow: 0 8px 30px -10px #22d3ee; }
 .brand-mark img { width: 100%; height: 100%; object-fit: cover; }
@@ -451,6 +457,8 @@ input:focus,textarea:focus,select:focus { border-color: rgba(103,232,249,.7) !im
   .menu-button,.mobile-nav { display: none; }
 }
 @media (max-width: 639px) {
+  [data-slot="button"], [data-slot="tabs-trigger"] { min-width: 0; max-width: 100%; height: auto; min-height: 2.5rem; white-space: normal; }
+  [data-slot="tabs-content"] { min-width: 0; }
   .container { padding-left: 1rem; padding-right: 1rem; }
   .vibrant-card { border-radius: 1rem; }
   .vibrant-card.p-8,.vibrant-card.p-6 { padding: 1.15rem; }
