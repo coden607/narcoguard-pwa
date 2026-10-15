@@ -117,3 +117,20 @@ test('watch, account and support reflow on narrow zoomed displays', async ({ pag
   await expect(image).toBeVisible()
   await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
 })
+
+test('the complete primary watch board retains its full aspect ratio on iPhone widths', async ({ page }) => {
+  for (const width of [280, 390]) {
+    await page.setViewportSize({ width, height: 844 })
+    await page.goto('/watch')
+    const board = page.getByTestId('rev5-primary-visuals').locator('img').first()
+    await expect(board).toBeVisible()
+    const dimensions = await board.evaluate((img: HTMLImageElement) => ({
+      width: img.getBoundingClientRect().width,
+      height: img.getBoundingClientRect().height,
+      parentHeight: img.parentElement!.getBoundingClientRect().height,
+    }))
+    expect(dimensions.height / dimensions.width).toBeCloseTo(1024 / 1536, 2)
+    expect(dimensions.parentHeight).toBeGreaterThanOrEqual(dimensions.height)
+    await expect(page.getByRole('link', { name: 'Open full-size watch blueprint' })).toHaveAttribute('href', /rev=complete-2026-10-15/)
+  }
+})

@@ -5,6 +5,7 @@ import { RotateCcw, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { BufferGeometry, Material, Mesh, MeshStandardMaterial, WebGLRenderer } from "three"
 import { GEOMETRY_46, type WatchGeometry } from "@/lib/watch-geometry"
+import { watchCameraDistance } from "@/lib/watch-framing"
 
 // Realistic 3D model of the NG concept, built from the same millimetre geometry as the engineering
 // drawing. three.js loads only when this component mounts (the 3D tab), so other pages stay light.
@@ -322,6 +323,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
       watch.add(caseMid, lugs, crownGroup, backGroup, batteryMesh, boardGroup, displayGroup, crystal, podGroup, strapGroup)
       scene.add(watch, shadow)
 
+      let fitView = () => {}
       const applyExplode = (t: number) => {
         backGroup.position.y = -16 * t
         batteryMesh.position.y = battery.z + battery.h / 2 - 7 * t
@@ -331,6 +333,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
         crownGroup.position.x = 9 * t
         podGroup.position.z = 16 * t
         strapGroup.visible = t < 0.05
+        fitView()
       }
       applyExplode(0)
 
@@ -370,6 +373,17 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
       renderer.domElement.addEventListener("pointerdown", onPointerDown)
       renderer.domElement.addEventListener("pointerup", onPointerUp)
 
+      fitView = () => {
+        const bounds = new THREE.Box3().setFromObject(watch).getBoundingSphere(new THREE.Sphere())
+        const direction = camera.position.clone().sub(controls.target).normalize()
+        const distance = watchCameraDistance(bounds.radius, camera.aspect, camera.fov)
+        controls.target.copy(bounds.center)
+        camera.position.copy(bounds.center).addScaledVector(direction, distance)
+        controls.maxDistance = Math.max(260, distance * 3)
+        camera.far = Math.max(1000, distance * 5)
+        camera.updateProjectionMatrix()
+        controls.update()
+      }
       const resize = () => {
         const width = mount.clientWidth
         const height = mount.clientHeight
@@ -378,6 +392,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
         renderer.domElement.style.height = "100%"
         camera.aspect = width / Math.max(height, 1)
         camera.updateProjectionMatrix()
+        fitView()
       }
       const resizeObserver = new ResizeObserver(resize)
       resizeObserver.observe(mount)
@@ -399,7 +414,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
         resetView: () => {
           camera.position.copy(home)
           controls.target.set(0, 3, 6)
-          controls.update()
+          fitView()
         },
       }
       const current = controlsRef.current

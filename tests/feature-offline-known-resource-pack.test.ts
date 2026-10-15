@@ -83,6 +83,6 @@ test("Feature 16 refreshes the pack from known inventory and feedback", () => {
   assert.match(component, /saveOfflineResourcePack/)
   assert.match(component, /nextInventory/)
   assert.match(component, /nextFeedback/)
-  assert.match(worker, /narcoguard-shell-v13/)
+  assert.match(worker, /narcoguard-shell-v14/)
   assert.match(worker, /\/offline\.html/)
 })
