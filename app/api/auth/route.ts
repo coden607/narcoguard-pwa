@@ -33,6 +33,10 @@ function authErrorResponse(error: AuthFailure | null) {
   const code = error?.code ?? ""
   const message = (error?.message ?? "").toLowerCase()
 
+  if (code === "email_address_invalid" || code === "email_address_not_authorized") {
+    return NextResponse.json({ error: "Check your email address for typos, including the part after @.", code }, { status: 400 })
+  }
+
   if (code === "email_not_confirmed" || message.includes("email not confirmed")) {
     return NextResponse.json({ error: "Confirm your email before signing in.", code: "email_not_confirmed" }, { status: 403 })
   }

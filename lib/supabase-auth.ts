@@ -39,7 +39,9 @@ async function parseAuthAttempt(response: Response): Promise<AuthAttempt> {
   }
   const accessToken = typeof body.access_token === "string" ? body.access_token : undefined
   const refreshToken = typeof body.refresh_token === "string" ? body.refresh_token : undefined
-  const user = body.user && typeof body.user === "object" ? body.user as SupabaseUser : null
+  // GoTrue returns the user itself when signup requires email confirmation.
+  const user = body.user && typeof body.user === "object" ? body.user as SupabaseUser
+    : typeof body.id === "string" ? body as SupabaseUser : null
   const session = accessToken && refreshToken ? body as unknown as SupabaseSession : null
   return { session, user: session?.user ?? user, error: null }
 }
