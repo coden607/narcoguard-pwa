@@ -17,6 +17,11 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      - name: Gitleaks Scan
+        uses: zricethezav/gitleaks-action@v1.6.0
+        with:
+          config_path: .gitleaks.toml
+          exit_code: 1
       - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
@@ -76,9 +81,3 @@ jobs:
         run: npx --yes wait-on@8.0.3 http://127.0.0.1:3000/
       - name: Run Lighthouse assertions
         run: npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.js
-
-    - name: Gitleaks Scan
-      uses: zricethezav/gitleaks-action@v1.6.0
-      with:
-        config_path: .gitleaks.toml
-        exit_code: 1

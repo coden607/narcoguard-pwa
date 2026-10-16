@@ -37,9 +37,3 @@ jobs:
             echo "Release gate unexpectedly passed without all evidence" >&2
             exit 1
           fi
-
-    - name: Gitleaks Scan
-      uses: zricethezav/gitleaks-action@v1.6.0
-      with:
-        config_path: .gitleaks.toml
-        exit_code: 1

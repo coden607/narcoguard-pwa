@@ -50,9 +50,3 @@ jobs:
       - env:
           GH_TOKEN: ${{ github.token }}
         run: gh pr edit ${{ github.event.pull_request.number }} -R ${{ github.repository }} --remove-label factory:validated || true
-
-    - name: Gitleaks Scan
-      uses: zricethezav/gitleaks-action@v1.6.0
-      with:
-        config_path: .gitleaks.toml
-        exit_code: 1

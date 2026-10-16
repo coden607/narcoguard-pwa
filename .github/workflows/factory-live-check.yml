@@ -76,9 +76,3 @@ jobs:
           OPEN=$(gh issue list --label factory-live-check --state open --json number --jq ".[0].number // empty")
           if [ -n "$OPEN" ]; then gh issue edit "$OPEN" --add-label "$LABELS"; gh issue comment "$OPEN" --body-file body.md; exit 0; fi
           gh issue create --title "Live check failed after ${SHA:0:7}" --label "$LABELS" --body-file body.md
-
-    - name: Gitleaks Scan
-      uses: zricethezav/gitleaks-action@v1.6.0
-      with:
-        config_path: .gitleaks.toml
-        exit_code: 1

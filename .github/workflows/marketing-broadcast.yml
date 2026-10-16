@@ -36,9 +36,3 @@ jobs:
           name: marketing-bundle
           path: marketing/posts/
           retention-days: 14
-
-    - name: Gitleaks Scan
-      uses: zricethezav/gitleaks-action@v1.6.0
-      with:
-        config_path: .gitleaks.toml
-        exit_code: 1
