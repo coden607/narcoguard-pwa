@@ -1,0 +1,158 @@
+"use client"
+
+import { useEffect, useState, useSyncExternalStore } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { HolographicCard } from "@/components/effects/holographic-card"
+import { GlowButton } from "@/components/effects/glow-button"
+import { Award, BookOpen, Heart, Shield } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { CertificationTest, HERO_CERTIFICATE_KEY } from "@/components/hero/certification-test"
+import { HeroAvailabilityPanel } from "@/components/hero/hero-availability-panel"
+import { PracticalHelpOfferPanel } from "@/components/hero/practical-help-offer-panel"
+
+type Status = { enrollment: boolean; certification: boolean; nearbyRequests: boolean }
+
+const noSubscription = () => () => undefined
+const storedCertificate = () => {
+  try {
+    return localStorage.getItem(HERO_CERTIFICATE_KEY)
+  } catch {
+    return null
+  }
+}
+
+export default function HeroSignup() {
+  const router = useRouter()
+  const saved = useSyncExternalStore(noSubscription, storedCertificate, () => null)
+  const [fresh, setFresh] = useState<string | null>(null)
+  const certificate = fresh ?? saved
+  const [status, setStatus] = useState<Status | null>(null)
+  const [note, setNote] = useState<string>()
+  const [busy, setBusy] = useState(false)
+  const [naloxoneOnCall, setNaloxoneOnCall] = useState(false)
+
+  useEffect(() => {
+    let cancelled = false
+    fetch("/api/heroes", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((body: Status) => { if (!cancelled) setStatus(body) })
+      .catch(() => { if (!cancelled) setStatus({ enrollment: false, certification: false, nearbyRequests: false }) })
+    return () => { cancelled = true }
+  }, [])
+
+  const enroll = async () => {
+    setBusy(true)
+    setNote(undefined)
+    try {
+      const response = await fetch("/api/heroes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ certificate, naloxoneOnCall }) })
+      const body = (await response.json()) as { enrolled?: boolean; error?: string }
+      if (response.status === 401) setNote("Sign in first, then come back to enroll.")
+      else setNote(body.enrolled ? "You are enrolled in the Hero Network." : (body.error ?? "Enrollment failed."))
+    } catch {
+      setNote("Could not reach NarcoGuard. Check your connection.")
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-background px-4 py-8 sm:p-6">
+      <div className="max-w-4xl mx-auto space-y-8">
+        <div id="hero-setup" className="text-center space-y-4 scroll-mt-24">
+          <Shield className="w-20 h-20 mx-auto text-primary pulse-glow" aria-hidden="true" />
+          <h1 className="text-4xl font-bold glow-text">Become a Hero</h1>
+          <p className="text-lg text-muted-foreground">We need trained Heroes. A lifesaving emergency Hero must earn certification: learn the overdose-response steps, pass the certification test at 100%, enroll with the current certificate, carry naloxone while on call, then explicitly choose emergency responder mode.</p>
+          <div className="flex flex-wrap justify-center gap-3">
+            <Button asChild size="lg">
+              <a href="#hero-certification">Start certification</a>
+            </Button>
+            <Button asChild variant="outline" size="lg">
+              <Link href="/auth">Sign in first</Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-6">
+          <HolographicCard className="p-6 text-center">
+            <Heart className="w-12 h-12 mx-auto mb-4 text-red-500" aria-hidden="true" />
+            <h2 className="font-bold mb-2">1. Learn the steps</h2>
+            <p className="text-sm text-muted-foreground">Recognize an overdose, give naloxone, support breathing, stay safe.</p>
+          </HolographicCard>
+          <HolographicCard className="p-6 text-center">
+            <Award className="w-12 h-12 mx-auto mb-4 text-yellow-500" aria-hidden="true" />
+            <h2 className="font-bold mb-2">2. Pass at 100%</h2>
+            <p className="text-sm text-muted-foreground">A random 12-question test in lockdown mode. Every answer must be right.</p>
+          </HolographicCard>
+          <HolographicCard className="p-6 text-center">
+            <Shield className="w-12 h-12 mx-auto mb-4 text-blue-500" aria-hidden="true" />
+            <h2 className="font-bold mb-2">3. Earn Hero status</h2>
+            <p className="text-sm text-muted-foreground">After a perfect score, link the earned certificate to your account. The certificate must remain current.</p>
+          </HolographicCard>
+        </div>
+
+        <div id="hero-certification" className="scroll-mt-24">
+          <HolographicCard className="p-6 sm:p-8">
+            <CertificationTest onCertified={setFresh} />
+          </HolographicCard>
+        </div>
+
+        <HolographicCard className="p-6 sm:p-8">
+          <section className="space-y-3" data-testid="hero-enroll">
+            <h2 className="text-xl font-bold">Enroll as a Hero</h2>
+            {!certificate ? (
+              <p className="text-sm text-muted-foreground">Pass the test first. Enrollment needs a certificate from a perfect score.</p>
+            ) : status && !status.enrollment ? (
+              <p className="text-sm text-muted-foreground">You have a certificate on this device. Enrollment is not switched on yet; it will use your certificate once it is.</p>
+            ) : (
+              <>
+                <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
+                  <input type="checkbox" checked={naloxoneOnCall} onChange={(event) => setNaloxoneOnCall(event.target.checked)} />
+                  <span>I confirm that whenever I choose to be available/on call as a Hero, I will carry naloxone that I know how to use and will pause availability if I do not have it. This is a self-attestation, not NarcoGuard verification.</span>
+                </label>
+                <Button type="button" onClick={enroll} disabled={busy || !status || !naloxoneOnCall}>{busy ? "Enrolling…" : "Enroll with my certificate"}</Button>
+              </>
+            )}
+            {note && <p className="text-sm" role="status">{note} {note.startsWith("Sign in") && <Link href="/auth" className="underline text-primary">Sign in</Link>}</p>}
+            <p className="text-sm text-muted-foreground">
+              {status?.nearbyRequests
+                ? "Nearby Hero/resource requests are enabled in the network infrastructure. Every Hero still chooses when to go available and what they can offer; NarcoGuard does not guarantee that anyone is currently nearby."
+                : "Nearby Hero/resource requests are not enabled in this environment yet."}
+              {" "}Emergency-ready mode requires explicit opt-in, a current certificate, naloxone-on-call attestation, and the ability to pause or leave at any time. Heroes never replace 911.
+            </p>
+          </section>
+        </HolographicCard>
+
+        <HolographicCard className="p-6 sm:p-8">
+          <PracticalHelpOfferPanel />
+        </HolographicCard>
+
+        <HolographicCard className="p-6 sm:p-8">
+          <HeroAvailabilityPanel />
+          <div className="mt-5 rounded-lg border p-4 text-sm">
+            <strong>Optional community connection</strong>
+            <p className="mt-1 text-muted-foreground">Heroes and other signed-in users can connect by handle in NarcoGuard Community when both people want ongoing contact. A help request never automatically reveals a profile, recovery status, or exact location.</p>
+            <Link href="/community" className="mt-2 inline-block underline text-primary">Open NarcoGuard Community</Link>
+          </div>
+        </HolographicCard>
+
+        <HolographicCard className="p-6">
+          <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+            <BookOpen className="w-6 h-6" aria-hidden="true" />
+            Study before the test
+          </h2>
+          <ul className="list-disc pl-6 space-y-2 text-sm text-muted-foreground">
+            <li>Signs of an opioid overdose and how to check breathing</li>
+            <li>Giving nasal naloxone, and when to give a second dose</li>
+            <li>Rescue breaths, CPR and the recovery position</li>
+            <li>Your safety, the person&apos;s privacy, and what happens after naloxone</li>
+          </ul>
+          <p className="mt-3 text-sm text-muted-foreground">Hands-on CPR and naloxone classes from a local health department or the Red Cross are strongly recommended.</p>
+          <GlowButton onClick={() => router.push("/ar")} variant="outline" className="w-full mt-4">
+            Preview Training Modules
+          </GlowButton>
+        </HolographicCard>
+      </div>
+    </div>
+  )
+}

@@ -1,0 +1,60 @@
+{
+  "campaign": {
+    "name": "NarcoGuard Rev 5 Development",
+    "goal": 75000,
+    "goalType": "development-and-validation-planning-target",
+    "fixedWatchCount": null,
+    "location": "Broome County, NY",
+    "organization": "Broome Estates LLC",
+    "founder": "Stephen Blanford",
+    "note": "Goal is a planning budget, not a supplier quote or promise to manufacture a fixed number of watches."
+  },
+  "budget": {
+    "mechanicalCadEnclosureSeals": 15000,
+    "ng46Ng40PrototypeElectronicsAndAssembly": 20000,
+    "benchFixturesHarvestingReliability": 10000,
+    "rfCellularGnssAntennaIntegration": 10000,
+    "safetyClinicalHumanFactorsRegulatory": 10000,
+    "freeAppHeroHostingSecurityAccessibility": 5000,
+    "contingency": 5000
+  },
+  "links": {
+    "gofundme": "https://gofund.me/9acf270ea",
+    "app": "https://narcoguard.app",
+    "demo": "https://narcoguard.app",
+    "watch": "https://narcoguard.app/watch",
+    "github": "https://github.com/coden607/narcoguard-pwa"
+  },
+  "contact": {
+    "email": "narcoguard607@gmail.com",
+    "organization": "Broome Estates LLC",
+    "founder": "Stephen Blanford",
+    "location": "Binghamton, NY"
+  },
+  "messaging": {
+    "tagline": "Help build NarcoGuard: free recovery help now, responsible wearable R&D next",
+    "mission": "Free person-led overdose prevention and recovery support, plus transparent wearable research",
+    "callToAction": "Support Rev 5 prototype engineering, validation, and continued free access to NarcoGuard",
+    "truthBoundary": "The app is live; the watch is a research concept and not a validated medical device.",
+    "primaryLinks": {
+      "app": "https://narcoguard.app",
+      "fund": "https://gofund.me/9acf270ea"
+    }
+  },
+  "rev5": {
+    "sizes": [
+      "NG46",
+      "NG40"
+    ],
+    "energy": [
+      "sealed Qi + Li-ion primary",
+      "manual crown generator research",
+      "segmented solar ring research",
+      "thermoelectric harvesting research",
+      "automatic electrical rotor experimental",
+      "isolated emergency reserve"
+    ],
+    "camera": "off-by-default privacy-controlled camera with mechanical shutter, hardware power gate, and power-linked indicator",
+    "heroNetwork": "community responder/resource architecture that supplements rather than replaces 911"
+  }
+}

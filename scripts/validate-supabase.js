@@ -1,0 +1,74 @@
+const fs = require("node:fs")
+const path = require("node:path")
+
+const migrationDir = path.join(process.cwd(), "supabase", "migrations")
+const migrations = fs
+  .readdirSync(migrationDir)
+  .filter((file) => file.endsWith(".sql"))
+  .sort()
+  .map((file) => fs.readFileSync(path.join(migrationDir, file), "utf8"))
+  .join("\n")
+
+const requiredTables = [
+  "users",
+  "vitals_readings",
+  "emergencies",
+  "heroes",
+  "emergency_responses",
+  "locations",
+  "watches",
+  "donations",
+  "activity_log",
+  "legal_agreements",
+  "emergency_contacts",
+  "hero_certifications",
+  "hero_availability",
+  "hero_requests",
+  "hero_push_subscriptions",
+  "user_push_subscriptions",
+  "resource_watch_subscriptions",
+  "community_profiles",
+  "community_connections",
+  "community_posts",
+  "community_messages",
+]
+
+const requiredChecks = [
+  ["auth identity mapping", /auth_user_id\s+uuid\s+references\s+auth\.users/i],
+  ["ownership helper", /create or replace function\s+public\.current_app_user_id/i],
+  ["users RLS", /alter table public\.users enable row level security/i],
+  ["vitals RLS", /alter table public\.vitals_readings enable row level security/i],
+  ["emergency RLS", /alter table public\.emergencies enable row level security/i],
+  ["response emergency index", /create index if not exists emergency_responses_emergency_idx/i],
+  ["response hero index", /create index if not exists emergency_responses_hero_idx/i],
+  ["contact ownership index", /create index if not exists emergency_contacts_user_idx/i],
+  ["agreement ownership index", /create index if not exists legal_agreements_user_idx/i],
+  ["service-only donations", /Donations and activity logs contain administrative/i],
+  ["hero certification RLS", /alter table public\.hero_certifications enable row level security/i],
+  ["hero availability RLS", /alter table public\.hero_availability enable row level security/i],
+  ["hero request RLS", /alter table public\.hero_requests enable row level security/i],
+  ["hero push RLS", /alter table public\.hero_push_subscriptions enable row level security/i],
+  ["community profile RLS", /alter table public\.community_profiles enable row level security/i],
+  ["resource watch RLS", /alter table public\.resource_watch_subscriptions enable row level security/i],
+]
+
+const failures = []
+for (const table of requiredTables) {
+  if (!new RegExp(`create table if not exists (?:public\\.)?${table}\\b`, "i").test(migrations)) {
+    failures.push(`missing table definition: ${table}`)
+  }
+}
+for (const [name, pattern] of requiredChecks) {
+  if (!pattern.test(migrations)) failures.push(`missing ${name}`)
+}
+
+const policyCount = (migrations.match(/create policy\b/gi) || []).length
+if (policyCount < 18) failures.push(`expected at least 18 explicit RLS policies, found ${policyCount}`)
+
+if (failures.length) {
+  console.error("[supabase] migration validation failed")
+  for (const failure of failures) console.error(`- ${failure}`)
+  process.exit(1)
+}
+
+console.log(`[supabase] migration validation passed (${requiredTables.length} tables, ${policyCount} policies)`)

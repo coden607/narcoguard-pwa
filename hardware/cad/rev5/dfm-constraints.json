@@ -1,0 +1,49 @@
+{
+  "status": "concept-dfm-gates",
+  "units": "mm",
+  "rules": {
+    "battery": {
+      "swelling_clearance_each_side": 0.5,
+      "top_clearance": 0.6,
+      "bottom_clearance": 0.4,
+      "note": "Conservative prototype reserve only. Replace with selected cell vendor swelling and protection-board data."
+    },
+    "gasket": {
+      "radial_seal_land_min": 1.2,
+      "compression_target_percent": [15, 25],
+      "note": "Concept target only; final value depends on selected elastomer cross-section, hardness and groove design."
+    },
+    "camera": {
+      "module_to_case_clearance": 0.5,
+      "shutter_travel_clearance": 0.4,
+      "optical_baffle_wall_min": 0.6,
+      "note": "Final lens stack and shutter mechanism require selected vendor CAD and ingress testing."
+    },
+    "crown_generator": {
+      "radial_keepout": 0.8,
+      "axial_service_clearance": 0.8,
+      "note": "Reserve for shaft, seal, bearing/generator tolerances; final mechanism not selected."
+    },
+    "flex": {
+      "bend_radius_min_multiplier_of_flex_thickness": 6,
+      "routing_channel_width_min": 1.5,
+      "note": "Generic concept gate; final rigid-flex stackup and vendor bend guidance supersede this."
+    },
+    "antenna": {
+      "metal_keepout_required": true,
+      "shared_metal_case_requires_rf_window_or_slot": true,
+      "gnss_cellular_nfc_separate_regions": true,
+      "note": "No fixed millimetre keep-out asserted until the antenna vendor/reference design is selected."
+    },
+    "thermal": {
+      "soc_to_skin_direct_path_forbidden": true,
+      "battery_to_hotspot_direct_contact_forbidden": true,
+      "temperature_validation_required": true,
+      "note": "Thermal simulation and prototype thermocouple testing required before enclosure freeze."
+    }
+  },
+  "variant_notes": {
+    "NG46": "More packaging margin; preferred first target for rotor and crown-generator prototypes.",
+    "NG40": "Higher packaging risk. Rotor and camera may be dropped if DFM or thermal gates fail."
+  }
+}

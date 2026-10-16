@@ -1,0 +1,8 @@
+[
+  { "id": "emergency-911-digit", "file": "components/emergency/emergency-modal.tsx", "find": "href=\"tel:911\"", "replace": "href=\"tel:9110\"", "why": "Call 911 silently dials the wrong number (owner's worst quiet break)" },
+  { "id": "angel-notice-dropped", "file": "lib/angel-ai.ts", "find": "if (EMERGENCY_PATTERN.test(text)) notices.push(EMERGENCY_NOTICE)", "replace": "if (false) notices.push(EMERGENCY_NOTICE)", "why": "Angel stops adding the 911 notice" },
+  { "id": "camera-blocked", "file": "next.config.mjs", "find": "camera=(self)", "replace": "camera=()", "why": "pulse check silently disabled by a header (a real escaped bug)" },
+  { "id": "food-bank-tag-dropped", "file": "lib/resource-finder.ts", "find": "food: { filters: [{ social_facility: \"food_bank\" }, ", "replace": "food: { filters: [", "why": "food banks stop matching" },
+  { "id": "potable-filter-dropped", "file": "lib/resource-finder.ts", "find": "exclude: { ...NOT_PUBLIC, drinking_water: [\"no\"] }", "replace": "exclude: { ...NOT_PUBLIC }", "why": "non-potable fountains listed as drinking water" },
+  { "id": "saved-place-not-saved", "file": "lib/saved-place.ts", "find": "  try { store?.setItem(SAVED_PLACE_KEY, JSON.stringify(value)) } catch { /* storage full or blocked */ }", "replace": "  void value", "why": "ZIP must be re-entered every time (a real escaped bug)" }
+]

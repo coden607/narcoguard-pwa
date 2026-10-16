@@ -1,0 +1,45 @@
+name: Watch CAD Validation
+
+on:
+  pull_request:
+    paths:
+      - "hardware/cad/**"
+      - ".github/workflows/watch-cad.yml"
+  push:
+    branches: [main]
+    paths:
+      - "hardware/cad/**"
+      - ".github/workflows/watch-cad.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  cad:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Install CAD engine
+        run: python -m pip install --disable-pip-version-check "cadquery==2.8.0"
+      - name: Run CadQuery envelope/interference checks
+        run: python hardware/cad/rev5/build_rev5.py
+      - name: Run DFM rule checks
+        run: python hardware/cad/rev5/validate_dfm.py
+      - name: Run concept simulation gate
+        run: python hardware/cad/rev5/validate_release.py
+      - name: Prove release gate fails closed
+        run: |
+          if python hardware/cad/rev5/validate_release.py --release; then
+            echo "Release gate unexpectedly passed without all evidence" >&2
+            exit 1
+          fi
+
+    - name: Gitleaks Scan
+      uses: zricethezav/gitleaks-action@v1.6.0
+      with:
+        config_path: .gitleaks.toml
+        exit_code: 1
