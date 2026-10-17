@@ -134,3 +134,61 @@ test('the complete primary watch board retains its full aspect ratio on iPhone w
     await expect(page.getByRole('link', { name: 'Open full-size watch blueprint' })).toHaveAttribute('href', /rev=complete-2026-10-15/)
   }
 })
+
+test('watch viewer recovers from unavailable WebGL without hiding the complete watch', async ({ page }) => {
+  // Exercise the real renderer's failure path rather than assuming a cloud browser has a GPU.
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+      if (type.startsWith('webgl') || type === 'experimental-webgl') return null
+      return Reflect.apply(original, this, [type, ...args])
+    } as typeof original
+  })
+  await page.setViewportSize({ width: 280, height: 720 })
+  await page.goto('/watch')
+  await page.getByRole('tab', { name: '3D View', exact: true }).click()
+  const viewer = page.getByTestId('watch-3d')
+  await expect(viewer).toHaveAttribute('data-status', 'unsupported')
+  const image = viewer.getByRole('img', { name: 'NG46 titanium and NG40 rose-titanium concept watch board' })
+  await expect(image).toBeVisible()
+  await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBe(1536)
+  const box = await image.boundingBox()
+  expect(box!.height / box!.width).toBeCloseTo(1024 / 1536, 2)
+  await expect(viewer.getByRole('link', { name: 'Open full-size concept watch board' })).toHaveAttribute('href', /rev=complete-2026-10-15/)
+  await expect(viewer.getByRole('slider', { name: 'Exploded view' })).toBeDisabled()
+  await expect(viewer.getByRole('button', { name: 'Auto-rotate', exact: true })).toBeDisabled()
+  await expect(viewer.getByRole('button', { name: 'Reset view', exact: true })).toBeDisabled()
+  await viewer.getByRole('button', { name: 'Retry interactive 3D' }).click()
+  await expect(viewer).toHaveAttribute('data-status', 'unsupported')
+  await expect(image).toBeVisible()
+  await expect(viewer.locator('canvas')).toHaveCount(0)
+  await page.getByRole('button', { name: /NG40 Elegant/ }).click()
+  await expect(viewer).toHaveAttribute('data-case-mm', '40')
+  await expect(viewer).toHaveAttribute('data-status', 'unsupported')
+  await expect(image).toBeVisible()
+  const width = await page.evaluate(() => ({ viewport: document.documentElement.clientWidth, page: document.documentElement.scrollWidth }))
+  expect(width.page).toBeLessThanOrEqual(width.viewport + 1)
+})
+
+test('watch retry cleans up a renderer that failed after attaching its canvas', async ({ page }) => {
+  await page.addInitScript(() => {
+    const original = HTMLCanvasElement.prototype.getContext
+    let failed = false
+    HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string, ...args: unknown[]) {
+      if (type === '2d' && document.querySelector('[data-testid="watch-3d"] canvas') && !failed) {
+        failed = true
+        throw new Error('Simulated watch texture initialization failure')
+      }
+      return Reflect.apply(original, this, [type, ...args])
+    } as typeof original
+  })
+  await page.goto('/watch')
+  await page.getByRole('tab', { name: '3D View', exact: true }).click()
+  const viewer = page.getByTestId('watch-3d')
+  await expect(viewer).toHaveAttribute('data-status', 'unsupported')
+  await expect(viewer.locator('canvas')).toHaveCount(0)
+  await viewer.getByRole('button', { name: 'Retry interactive 3D' }).click()
+  await expect(viewer).toHaveAttribute('data-status', 'ready')
+  await expect(viewer.locator('canvas')).toHaveCount(1)
+  await expect(viewer.getByRole('slider', { name: 'Exploded view' })).toBeEnabled()
+})
