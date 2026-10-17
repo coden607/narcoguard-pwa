@@ -1,5 +1,45 @@
 import { test, expect } from "@playwright/test"
 
+test("a delayed geolocation result cannot restore a globally forgotten place", async ({ page, context }) => {
+  const requests: Record<string, unknown>[] = []
+  await page.addInitScript(() => {
+    localStorage.setItem("narcoguard_saved_place_v1", JSON.stringify({ zip: "13901" }))
+    Object.defineProperty(navigator, "geolocation", {
+      configurable: true,
+      value: { getCurrentPosition: (success: PositionCallback) => {
+        ;(window as unknown as { deliverAngelLocation: () => void }).deliverAngelLocation = () => success({ coords: { latitude: 42.1, longitude: -76.2 } } as GeolocationPosition)
+      } },
+    })
+  })
+  await page.route("**/api/angel", async (route) => {
+    if (route.request().method() === "GET") return route.fulfill({ json: { available: true, provider: "Groq" } })
+    requests.push(route.request().postDataJSON())
+    return route.fulfill({ json: { reply: "We can plan without your location." } })
+  })
+  await page.goto("/angel")
+  await page.getByRole("button", { name: "I understand, talk to Angel" }).click()
+  await page.getByRole("button", { name: "Use my location", exact: true }).click()
+  await expect(page.getByRole("button", { name: "Finding your location…", exact: true })).toBeVisible()
+  await context.setOffline(true)
+  const composer = page.getByRole("textbox", { name: "Message Angel", exact: true })
+  await composer.fill("Plan tomorrow")
+  await page.getByRole("button", { name: "Send message", exact: true }).click()
+  await composer.fill("Keep this new draft")
+  await page.getByTestId("forget-saved-place").click()
+  await expect(page.getByTestId("angel-pending")).toHaveCount(0)
+  await page.evaluate(() => (window as unknown as { deliverAngelLocation: () => void }).deliverAngelLocation())
+  await expect(page.getByTestId("angel-location-on")).toHaveCount(0)
+  await expect(composer).toHaveValue("Plan tomorrow\n\nKeep this new draft")
+  expect(await page.evaluate(() => localStorage.getItem("narcoguard_saved_place_v1"))).toBeNull()
+  await context.setOffline(false)
+  expect(requests).toHaveLength(0)
+  await page.getByRole("button", { name: "Send message", exact: true }).click()
+  await expect(page.getByTestId("angel-chat-history")).toContainText("We can plan without your location.")
+  expect(requests).toHaveLength(1)
+  expect(requests[0]).not.toHaveProperty("location")
+  expect(requests[0]).not.toHaveProperty("zip")
+})
+
 test("Angel keeps an oversized combined draft intact until the person shortens it", async ({ page, context }) => {
   let requests = 0
   await page.route("**/api/angel", async (route) => {

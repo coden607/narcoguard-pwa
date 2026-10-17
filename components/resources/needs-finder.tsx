@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { AccessibilityDetails } from "@/components/resources/accessibility-details"
 import { LocateFixed, Sparkles } from "lucide-react"
@@ -10,7 +10,7 @@ import { QUICK_NEEDS, matchNeeds, orderByMaslow } from "@/lib/need-intent"
 import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 import { cardSummary } from "@/lib/resource-display"
 import { directionsUrl } from "@/lib/safer-use"
-import { forgetPlace, readRememberChoice, readSavedPlace, roundPlace, savePlace } from "@/lib/saved-place"
+import { forgetPlace, PLACE_FORGOTTEN_EVENT, REMEMBER_PLACE_KEY, SAVED_PLACE_KEY, readRememberChoice, readSavedPlace, roundPlace, savePlace } from "@/lib/saved-place"
 import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
 
 interface KindLookup {
@@ -114,6 +114,30 @@ export function NeedsFinder() {
   const [notice, setNotice] = useState<string>()
   const [data, setData] = useState<NeedsResponse>()
   const [feedback, setFeedback] = useState<ResourceFeedback[]>([])
+  const [savedPlace, setSavedPlace] = useState<Origin | null>(null)
+  const locationGeneration = useRef(0)
+
+  useEffect(() => {
+    // Revocation invalidates callbacks already queued by the browser; no location
+    // is carried in the signal and consuming it never writes or rebroadcasts.
+    const revoke = () => {
+      locationGeneration.current += 1
+      setSavedPlace(null)
+      setZip("")
+      setBusy(false)
+    }
+    const storageChanged = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) return
+      if (event.key === null || (event.key === SAVED_PLACE_KEY && event.newValue === null) || (event.key === REMEMBER_PLACE_KEY && event.newValue === "off")) revoke()
+    }
+    window.addEventListener(PLACE_FORGOTTEN_EVENT, revoke)
+    window.addEventListener("storage", storageChanged)
+    return () => {
+      locationGeneration.current += 1
+      window.removeEventListener(PLACE_FORGOTTEN_EVENT, revoke)
+      window.removeEventListener("storage", storageChanged)
+    }
+  }, [])
 
   useEffect(() => {
     const timer = window.setTimeout(() => setFeedback(readResourceFeedback(window.localStorage)), 0)
@@ -170,7 +194,6 @@ export function NeedsFinder() {
   }
 
   // A place remembered on this phone searches straight away, so help shows without asking again.
-  const [savedPlace, setSavedPlace] = useState<Origin | null>(null)
   useEffect(() => {
     const saved = readRememberChoice(window.localStorage) ? readSavedPlace(window.localStorage) : null
     if (!saved) return
@@ -189,9 +212,14 @@ export function NeedsFinder() {
     }
     setBusy(true)
     setNotice(undefined)
+    const generation = ++locationGeneration.current
     navigator.geolocation.getCurrentPosition(
-      (position) => void lookup({ lat: position.coords.latitude, lon: position.coords.longitude }),
+      (position) => {
+        if (generation !== locationGeneration.current) return
+        void lookup({ lat: position.coords.latitude, lon: position.coords.longitude })
+      },
       () => {
+        if (generation !== locationGeneration.current) return
         setBusy(false)
         setNotice("Location permission was not given. Enter a ZIP code instead.")
       },

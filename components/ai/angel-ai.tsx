@@ -62,6 +62,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   // Approximate location for searches, kept in memory only and rounded to about 1 km before it leaves the device.
   const [location, setLocation] = useState<{ lat: number; lon: number } | null>(null)
   const locationRef = useRef<{ lat: number; lon: number } | null>(null)
+  const locationGenerationRef = useRef(0)
   const [locating, setLocating] = useState(false)
   const [locationNote, setLocationNote] = useState<string>()
   // Where to search is remembered on this phone only (rounded), so it is entered once; one tap forgets it.
@@ -71,6 +72,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
 
   useEffect(() => {
     const update = () => setOnline(navigator.onLine)
+    const cancelLocation = () => { locationGenerationRef.current++ }
     update()
     window.addEventListener("online", update)
     window.addEventListener("offline", update)
@@ -79,6 +81,8 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       window.removeEventListener("offline", update)
       requestRef.current?.abort()
       pendingRef.current = null
+      cancelLocation()
+      locationRef.current = null
     }
   }, [])
 
@@ -104,10 +108,12 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   useEffect(() => {
     // Consume revocation without writing storage or rebroadcasting the event.
     const revoke = () => {
+      locationGenerationRef.current++
       invalidatePendingContext()
       locationRef.current = null
       setLocation(null)
       setLocationNote(undefined)
+      setLocating(false)
       setZip("")
       setRememberPlace(readRememberChoice(window.localStorage))
     }
@@ -202,10 +208,12 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
 
   /** Asks the browser for the current position once; resolves with a spoken confirmation. */
   const shareLocation = (): Promise<string> => new Promise((resolve) => {
+    const generation = ++locationGenerationRef.current
     if (!("geolocation" in navigator)) { setLocationNote("This browser can't share a location. Type a ZIP code instead."); resolve("This browser can't share a location. Say or type your ZIP code instead."); return }
     setLocating(true)
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        if (generation !== locationGenerationRef.current) { resolve("Location sharing was cancelled."); return }
         const rounded = { lat: coarsen(position.coords.latitude), lon: coarsen(position.coords.longitude) }
         locationRef.current = rounded
         setLocation(rounded)
@@ -217,6 +225,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         resolve("Got it. I'll search near you.")
       },
       () => {
+        if (generation !== locationGenerationRef.current) { resolve("Location sharing was cancelled."); return }
         setLocating(false)
         setLocationNote("Location was not shared. You can type a ZIP code instead.")
         resolve("Location was not shared. Say or type your ZIP code instead.")
@@ -234,7 +243,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     return answered ? undefined : history[lastAsk].content
   }
 
-  const forgetLocation = () => { invalidatePendingContext(); locationRef.current = null; setLocation(null); setLocationNote(undefined); setZip(""); forgetPlace(window.localStorage) }
+  const forgetLocation = () => { locationGenerationRef.current++; invalidatePendingContext(); locationRef.current = null; setLocation(null); setLocationNote(undefined); setLocating(false); setZip(""); forgetPlace(window.localStorage) }
   const toggleRemember = (remember: boolean) => { setRememberPlace(remember); saveRememberChoice(window.localStorage, remember) }
 
   /** Sends a message and returns what Angel should say back (safety notices first), or null on failure. */

@@ -1,5 +1,37 @@
 import { expect, test } from "@playwright/test"
 
+test("forgetting a saved place rejects a delayed finder location and leaves ZIP search usable", async ({ page }) => {
+  const searches: string[] = []
+  await page.addInitScript(() => {
+    localStorage.setItem("narcoguard_saved_place_v1", JSON.stringify({ zip: "10001" }))
+    Object.defineProperty(navigator.geolocation, "getCurrentPosition", { configurable: true, value: (success: PositionCallback) => {
+      ;(window as unknown as { resolveFinderLocation: () => void }).resolveFinderLocation = () => success({ coords: { latitude: 42.1, longitude: -76.2 } } as GeolocationPosition)
+    } })
+  })
+  await page.route("**/api/resources/understand", (route) => route.fulfill({ json: { available: false } }))
+  await page.route("**/api/resources/needs?*", (route) => {
+    searches.push(new URL(route.request().url()).search)
+    return route.fulfill({ json: { status: "ok", kinds: {} } })
+  })
+  await page.goto("/help")
+  const finder = page.getByTestId("needs-finder")
+  const locate = finder.getByRole("button", { name: "Find everything near me", exact: true })
+  await expect(locate).toBeEnabled()
+  await expect.poll(() => searches.length).toBe(1)
+  await locate.click()
+  await page.getByTestId("forget-saved-place").click()
+  await expect(locate).toBeEnabled()
+  await page.evaluate(() => (window as unknown as { resolveFinderLocation: () => void }).resolveFinderLocation())
+  await expect(finder.getByRole("textbox", { name: "ZIP code", exact: true })).toHaveValue("")
+  expect(await page.evaluate(() => localStorage.getItem("narcoguard_saved_place_v1"))).toBeNull()
+  expect(searches).toHaveLength(1)
+  await finder.getByRole("textbox", { name: "ZIP code", exact: true }).fill("30301")
+  await finder.getByRole("button", { name: "Search", exact: true }).click()
+  await expect.poll(() => searches.length).toBe(2)
+  expect(searches[1]).toBe("?zip=30301")
+  expect(searches.every((query) => !query.includes("lat=") && !query.includes("lon="))).toBe(true)
+})
+
 test("official meeting discovery preserves local provenance, cancellation, and erasure", async ({ page }) => {
   await page.goto("/meetings")
   await expect(page.getByRole("link", { name: "Find meetings with SMART Recovery USA" })).toHaveAttribute("href", "https://meetings.smartrecovery.org/meetings/")
