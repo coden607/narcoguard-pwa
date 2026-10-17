@@ -87,6 +87,25 @@ export async function resendSignup(email: string): Promise<AuthFailure | null> {
   return attempt.error
 }
 
+export async function requestPasswordReset(email: string, redirectTo: string, challenge: string): Promise<AuthFailure | null> {
+  const response = await supabaseRequest(`/auth/v1/recover?redirect_to=${encodeURIComponent(redirectTo)}`, {
+    method: "POST", body: JSON.stringify({ email, code_challenge: challenge, code_challenge_method: "s256" }),
+  })
+  return response.ok ? null : (await parseAuthAttempt(response)).error
+}
+
+export async function updatePassword(accessToken: string, password: string): Promise<AuthFailure | null> {
+  const response = await supabaseRequest('/auth/v1/user', {
+    method: 'PUT', headers: { Authorization: `Bearer ${accessToken}` }, body: JSON.stringify({ password }),
+  })
+  return response.ok ? null : (await parseAuthAttempt(response)).error
+}
+
+/** Revoke the temporary recovery session after the password has changed. */
+export async function revokeRecoverySession(accessToken: string) {
+  await supabaseRequest('/auth/v1/logout?scope=global', { method: 'POST', headers: { Authorization: `Bearer ${accessToken}` } })
+}
+
 /** Completes Google sign-in: trades the one-time code plus this browser's verifier for a session. */
 export async function exchangeCode(authCode: string, codeVerifier: string) {
   const response = await supabaseRequest("/auth/v1/token?grant_type=pkce", { method: "POST", body: JSON.stringify({ auth_code: authCode, code_verifier: codeVerifier }) })
@@ -109,7 +128,10 @@ export async function getAuthContext(): Promise<{ user: { id: string; email?: st
     const response = await supabaseRequest("/auth/v1/user", { headers: { Authorization: `Bearer ${accessToken}` } })
     if (response.ok) return { user: (await response.json()) as { id: string; email?: string }, accessToken }
   }
-  if (!refreshToken) return null
+  if (!refreshToken) {
+    if (accessToken) await clearSession()
+    return null
+  }
   const session = await refreshSession(refreshToken)
   if (!session?.access_token || !session.refresh_token) {
     await clearSession()

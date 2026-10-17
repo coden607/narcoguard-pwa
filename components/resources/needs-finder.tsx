@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import Link from "next/link"
+import { AccessibilityDetails } from "@/components/resources/accessibility-details"
 import { LocateFixed, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { safetyNotices } from "@/lib/angel-ai"
@@ -62,6 +64,7 @@ function ResourceCard({ resource }: { resource: NearbyResource }) {
         )}
       </div>
       <p className="text-xs text-muted-foreground">Source: {resource.source}. Hours, openings and eligibility are not confirmed; call first.</p>
+      <AccessibilityDetails resource={resource} />
     </li>
   )
 }
@@ -200,6 +203,7 @@ export function NeedsFinder() {
     <section className="space-y-4" aria-labelledby="needs-heading" data-testid="needs-finder">
       <div className="space-y-1">
         <h2 id="needs-heading" className="text-xl font-semibold">Find help near me</h2>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm"><Link href="/meetings" className="inline-flex min-h-8 items-center underline text-primary">Find recovery meetings</Link><Link href="/resources/review" className="inline-flex min-h-8 items-center underline text-primary">Resource corrections and review</Link></div>
         <p className="text-sm text-muted-foreground">
           One search covers every level of need, from food, water and shelter to health care, recovery, libraries and job help. Start wherever you need to.
         </p>

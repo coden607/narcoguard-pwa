@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -10,15 +10,26 @@ const UPDATE_NOTICE_KEY = "narcoguard_update_notice_version_v1"
 
 type VersionResponse = { version?: string }
 
-export function ServiceWorkerRegister() {
+export function ServiceWorkerRegister({ initialVersion = "local" }: { initialVersion?: string }) {
   const [updateVersion, setUpdateVersion] = useState<string | null>(null)
+  const [loadedVersion, setLoadedVersion] = useState(initialVersion)
+  const [online, setOnline] = useState<boolean | null>(null)
+  const [checkStatus, setCheckStatus] = useState("")
+  const dirtyRef = useRef(false)
+  const checkRef = useRef<(() => void) | null>(null)
 
   useEffect(() => {
-    if (!("serviceWorker" in navigator)) return
-
-    let timer: number | undefined
     let disposed = false
+    let checking = false
     let registrationRef: ServiceWorkerRegistration | undefined
+    let loaded = initialVersion !== "local" ? initialVersion : null
+    try { loaded ||= window.localStorage.getItem(VERSION_STORAGE_KEY) } catch { /* Storage may be blocked. */ }
+    const markDirty = (event: Event) => {
+      const element = event.target
+      if (element instanceof HTMLElement && (element.matches("input, textarea, select") || element.isContentEditable)) dirtyRef.current = true
+    }
+    document.addEventListener("input", markDirty, true)
+    document.addEventListener("change", markDirty, true)
 
     const pushUpdateNotice = async (registration: ServiceWorkerRegistration, version: string) => {
       if (!("Notification" in window) || Notification.permission !== "granted") return
@@ -34,30 +45,43 @@ export function ServiceWorkerRegister() {
       })
     }
 
-    const checkDeploymentVersion = async (registration: ServiceWorkerRegistration) => {
+    const checkDeploymentVersion = async (registration?: ServiceWorkerRegistration) => {
+      if (checking || disposed) return
+      checking = true
       try {
         const response = await fetch("/api/app-version", { cache: "no-store" })
-        if (!response.ok) return
+        if (!response.ok) throw new Error("Version check unavailable")
         const body = await response.json() as VersionResponse
         const version = body.version?.trim()
-        if (!version || version === "local") return
-
-        const seen = window.localStorage.getItem(VERSION_STORAGE_KEY)
-        if (!seen) {
-          window.localStorage.setItem(VERSION_STORAGE_KEY, version)
-          return
-        }
-
-        if (seen !== version) {
+        if (!version || !/^[a-zA-Z0-9._-]{1,128}$/.test(version) || disposed) return
+        loaded ||= version
+        setLoadedVersion(loaded)
+        try { window.localStorage.setItem(VERSION_STORAGE_KEY, loaded) } catch { /* Visible checks still work without storage. */ }
+        setCheckStatus(loaded === version ? "Up to date" : "Update ready")
+        if (loaded !== version) {
           setUpdateVersion(version)
-          await pushUpdateNotice(registration, version)
+          if (registration) await pushUpdateNotice(registration, version)
+        } else {
+          setUpdateVersion(null)
         }
       } catch {
-        // Update checks are best-effort and must never block the app.
+        if (!disposed) setCheckStatus("Could not check for updates. Try again when online.")
+      } finally {
+        checking = false
       }
     }
 
-    navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).then((registration) => {
+    checkRef.current = () => {
+      if (registrationRef) void registrationRef.update().catch(() => undefined)
+      void checkDeploymentVersion(registrationRef)
+    }
+    const connectivity = () => { setOnline(navigator.onLine); if (navigator.onLine) checkRef.current?.() }
+    window.addEventListener("online", connectivity)
+    window.addEventListener("offline", connectivity)
+    const initialCheck = window.setTimeout(connectivity, 0)
+    const timer = window.setInterval(() => checkRef.current?.(), UPDATE_INTERVAL_MS)
+
+    if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).then((registration) => {
       if (disposed) return
       registrationRef = registration
 
@@ -67,10 +91,6 @@ export function ServiceWorkerRegister() {
 
       // Check immediately on launch and periodically while the app stays open.
       void registration.update().catch(() => undefined)
-      timer = window.setInterval(() => {
-        void registration.update().catch(() => undefined)
-        void checkDeploymentVersion(registration)
-      }, UPDATE_INTERVAL_MS)
 
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing
@@ -88,26 +108,41 @@ export function ServiceWorkerRegister() {
     const onControllerChange = () => {
       if (registrationRef) void checkDeploymentVersion(registrationRef)
     }
-    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange)
+    navigator.serviceWorker?.addEventListener("controllerchange", onControllerChange)
 
     return () => {
       disposed = true
-      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange)
+      checkRef.current = null
+      window.clearTimeout(initialCheck)
+      window.removeEventListener("online", connectivity)
+      window.removeEventListener("offline", connectivity)
+      document.removeEventListener("input", markDirty, true)
+      document.removeEventListener("change", markDirty, true)
+      navigator.serviceWorker?.removeEventListener("controllerchange", onControllerChange)
       if (timer !== undefined) window.clearInterval(timer)
     }
-  }, [])
+  }, [initialVersion])
 
   const reloadIntoUpdate = () => {
+    if (dirtyRef.current && !window.confirm("You may have unsaved changes. Save your work first, or choose OK to reload anyway.")) return
     if (updateVersion) {
-      window.localStorage.setItem(VERSION_STORAGE_KEY, updateVersion)
-      window.localStorage.removeItem(UPDATE_NOTICE_KEY)
+      try {
+        window.localStorage.setItem(VERSION_STORAGE_KEY, updateVersion)
+        window.localStorage.removeItem(UPDATE_NOTICE_KEY)
+      } catch { /* Reload remains user-controlled when storage is unavailable. */ }
     }
     window.location.reload()
   }
 
-  if (!updateVersion) return null
-
   return (
+    <>
+    <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-4 gap-y-2 px-4 py-4 text-xs text-muted-foreground" data-testid="app-build-status">
+      <span title={loadedVersion}>{`Build ${loadedVersion.slice(0, 12)}`}</span>
+      <span role="status" data-testid="app-connectivity-status">{online === null ? "Checking connection" : online ? "Online" : "Offline — network actions need a connection. Unsent messages can be retried manually."}</span>
+      <button type="button" className="min-h-11 underline underline-offset-4" onClick={() => checkRef.current?.()}>Check for updates</button>
+      <span role="status">{checkStatus}</span>
+    </div>
+    {updateVersion && (
     <div
       className="fixed inset-x-3 bottom-3 z-[100] mx-auto max-w-xl rounded-xl border border-primary/40 bg-background/95 p-4 shadow-2xl backdrop-blur"
       role="status"
@@ -118,7 +153,7 @@ export function ServiceWorkerRegister() {
         <div>
           <p className="font-semibold">NarcoGuard update available</p>
           <p className="text-sm text-muted-foreground">
-            This device is running an older app version. Reload to use the latest NarcoGuard updates.
+            {`Build ${updateVersion.slice(0, 12)} is ready. Save your work before reloading.`}
           </p>
         </div>
         <Button type="button" onClick={reloadIntoUpdate} className="shrink-0">
@@ -127,5 +162,7 @@ export function ServiceWorkerRegister() {
         </Button>
       </div>
     </div>
+    )}
+    </>
   )
 }

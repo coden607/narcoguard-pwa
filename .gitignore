@@ -75,3 +75,4 @@ tokens/
 # Dark factory run artifacts
 .factory/runs/
 factory/__pycache__/
+supabase/.temp/
