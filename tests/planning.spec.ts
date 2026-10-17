@@ -113,3 +113,25 @@ test('without Web Locks persistence fails closed while public help stays accessi
   await expect(page.getByLabel('Home ZIP')).toHaveCount(0)
   expect(await page.evaluate(()=>localStorage.getItem('narcoguard_private_planning_v1'))).toBeNull()
 })
+
+test('reminder checkbox responds immediately while its exclusive save is queued',async({page,context})=>{
+  await page.goto('/planning')
+  await page.getByRole('button',{name:'Enable local planning'}).click()
+  const checkbox=page.getByLabel('Enable foreground follow-up reminders')
+  await expect(checkbox).toBeVisible()
+  const controller=await context.newPage();await controller.goto('/help')
+  await controller.evaluate(()=>new Promise<void>(started=>{
+    void navigator.locks.request('narcoguard-private-planning',()=>new Promise<void>(release=>{
+      ;(window as unknown as {releasePlanningLock:()=>void}).releasePlanningLock=release
+      started()
+    }))
+  }))
+  await checkbox.check()
+  await expect(checkbox).toBeChecked()
+  await expect(checkbox).toBeDisabled()
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('narcoguard_private_planning_v1')!).remindersEnabled)).toBe(false)
+  await controller.evaluate(()=> (window as unknown as {releasePlanningLock:()=>void}).releasePlanningLock())
+  await expect(checkbox).toBeEnabled()
+  await expect(checkbox).toBeChecked()
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('narcoguard_private_planning_v1')!).remindersEnabled)).toBe(true)
+})

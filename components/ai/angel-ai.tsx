@@ -1,7 +1,7 @@
 "use client"
 
-import { forgetPlace, readRememberChoice, readSavedPlace, saveRememberChoice, savePlace, zipFromMessage } from "@/lib/saved-place"
-import { useEffect, useRef, useState } from "react"
+import { forgetPlace, PLACE_FORGOTTEN_EVENT, REMEMBER_PLACE_KEY, SAVED_PLACE_KEY, readRememberChoice, readSavedPlace, saveRememberChoice, savePlace, zipFromMessage } from "@/lib/saved-place"
+import { useCallback, useEffect, useRef, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { LocateFixed, Mic, MicOff, Send, Sparkles, Volume2, VolumeX } from "lucide-react"
@@ -82,24 +82,46 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     }
   }, [])
 
-  const cancelPending = () => {
+  const cancelPending = useCallback(() => {
     requestRef.current?.abort()
     requestRef.current = null
     pendingRef.current = null
     setPending(null)
     setBusy(false)
     setError(undefined)
-  }
+  }, [])
 
   // A pending request contains a snapshot of sharing choices. Discard that
   // payload when choices change; the draft can be sent again with fresh consent.
-  const invalidatePendingContext = () => {
+  const invalidatePendingContext = useCallback(() => {
     const turn = pendingRef.current
     if (!turn) return
     cancelPending()
     setInput((draft) => draft.trim() && draft !== turn.content ? `${turn.content}\n\n${draft}` : turn.content)
     setError("Sharing choices changed. The pending request was cancelled. Review your draft and send it again when ready.")
-  }
+  }, [cancelPending])
+
+  useEffect(() => {
+    // Consume revocation without writing storage or rebroadcasting the event.
+    const revoke = () => {
+      invalidatePendingContext()
+      locationRef.current = null
+      setLocation(null)
+      setLocationNote(undefined)
+      setZip("")
+      setRememberPlace(readRememberChoice(window.localStorage))
+    }
+    const storageChanged = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) return
+      if (event.key === null || (event.key === SAVED_PLACE_KEY && event.newValue === null) || (event.key === REMEMBER_PLACE_KEY && event.newValue === "off")) revoke()
+    }
+    window.addEventListener(PLACE_FORGOTTEN_EVENT, revoke)
+    window.addEventListener("storage", storageChanged)
+    return () => {
+      window.removeEventListener(PLACE_FORGOTTEN_EVENT, revoke)
+      window.removeEventListener("storage", storageChanged)
+    }
+  }, [invalidatePendingContext])
 
   const clearConversation = () => {
     cancelPending()

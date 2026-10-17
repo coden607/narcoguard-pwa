@@ -23,12 +23,13 @@ export function PrivatePlanning() {
   const [kind,setKind]=useState<ResourceKind>('food'),[search,setSearch]=useState(false)
   const [lookup,setLookup]=useState<{zip:string;kind:ResourceKind;rows:NearbyResource[];status:string}|null>(null)
   const [busy,setBusy]=useState(false),[searchAttempt,setSearchAttempt]=useState(0)
+  const [reminderDraft,setReminderDraft]=useState<boolean|null>(null)
   const sessionRaw=useRef<string|null>(null)
   const zip=activeZip(state,now)
   const invalidate=useCallback((reason:string)=>{
     sessionRaw.current=null
     setState(defaultPlanning());setEnabled(false);setHome('');setDestination('');setTravelEnd('');setPlan(cleanPlan(null));setInspect(null)
-    setKit({id:'',label:'',checked:'',expiry:''});setFollowLabel('');setFollowTime('');setSearch(false);setLookup(null);setBusy(false);setMessage(reason)
+    setKit({id:'',label:'',checked:'',expiry:''});setFollowLabel('');setFollowTime('');setReminderDraft(null);setSearch(false);setLookup(null);setBusy(false);setMessage(reason)
   },[])
 
   useEffect(()=>{
@@ -236,7 +237,14 @@ export function PrivatePlanning() {
       <section className={panelClass}>
         <h2 className="text-xl font-semibold">Private resource follow-ups</h2>
         <p>Choose a reminder after contacting a resource, or write your own. This does not record attendance or infer whether you received help. Reminders appear here only while this page is open; no background push, messages or system notifications.</p>
-        <label className="flex items-start gap-2"><input type="checkbox" checked={state.remindersEnabled} onChange={e=>update({...state,remindersEnabled:e.target.checked})}/>Enable foreground follow-up reminders</label>
+        <label className="flex items-start gap-2"><input type="checkbox" checked={reminderDraft ?? state.remindersEnabled} disabled={reminderDraft!==null} onChange={async e=>{
+          const checked=e.target.checked
+          // Reflect the native action immediately while the exclusive save waits its turn.
+          // The committed state is unchanged until save succeeds; failure restores it.
+          setReminderDraft(checked)
+          await update({...state,remindersEnabled:checked})
+          setReminderDraft(null)
+        }}/>Enable foreground follow-up reminders</label>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">{(['quietStart','quietEnd'] as const).map(key=><label key={key}>{key==='quietStart' ? 'Quiet hours start (local hour)' : 'Quiet hours end (local hour)'}<input className={inputClass} type="number" min={0} max={23} value={state[key]} onChange={e=>{const hour=Number(e.target.value);if(Number.isInteger(hour) && hour>=0 && hour<=23) update({...state,[key]:hour})}}/></label>)}</div>
         <p className="text-sm">Uses this device’s local timezone. Equal start and end pauses reminders all day. Due reminders wait until quiet hours end.</p>
         <form className="space-y-3" onSubmit={async e=>{e.preventDefault();const dueAt=new Date(followTime).getTime();if(!state.remindersEnabled || !Number.isFinite(dueAt) || dueAt<=Date.now()) {setMessage('Enable reminders and choose a future follow-up time.');return}if(await update({...state,reminders:[...state.reminders,{id:crypto.randomUUID(),label:followLabel,dueAt}].slice(-30)})) {setFollowLabel('');setFollowTime('')}}}>

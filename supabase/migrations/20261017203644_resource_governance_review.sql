@@ -1,4 +1,5 @@
 -- Review operations are service-only RPCs. No client profile role grants authority.
+alter function public.touch_resource_report_updated_at() set search_path = public;
 create table public.resource_reviewers (
   user_id uuid primary key references auth.users(id),
   appointed_at timestamptz not null default now()

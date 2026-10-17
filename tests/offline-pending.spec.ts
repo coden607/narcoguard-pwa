@@ -23,7 +23,7 @@ test("Angel keeps an oversized combined draft intact until the person shortens i
   await expect(composer).toHaveValue(combined)
   await context.setOffline(false)
   await page.getByRole("button", { name: "Send message", exact: true }).click()
-  await expect(page.getByRole("alert")).toContainText("over 2,000 characters")
+  await expect(page.locator("#main-content").getByRole("alert")).toContainText("over 2,000 characters")
   await expect(composer).toHaveValue(combined)
   await expect(page.getByTestId("angel-pending")).toHaveCount(0)
   expect(requests).toBe(0)
@@ -94,7 +94,7 @@ test.describe("Angel transcript touch scrolling", () => {
   })
 })
 
-for (const revoked of ["planning context", "location"] as const) {
+for (const revoked of ["planning context", "location", "global location", "other-tab location"] as const) {
   test(`Angel discards a pending payload when ${revoked} sharing is revoked`, async ({ page, context }) => {
     const requests: Record<string, unknown>[] = []
     await page.addInitScript(() => {
@@ -111,6 +111,8 @@ for (const revoked of ["planning context", "location"] as const) {
     const planning = page.getByRole("checkbox", { name: /Use my local planning context/ })
     await planning.check()
     await expect(page.getByTestId("angel-location-on")).toBeVisible()
+    const otherTab = revoked === "other-tab location" ? await context.newPage() : null
+    if (otherTab) await otherTab.goto("/about")
     await context.setOffline(true)
     const composer = page.getByRole("textbox", { name: "Message Angel", exact: true })
     await composer.fill("Help me plan tomorrow")
@@ -118,8 +120,13 @@ for (const revoked of ["planning context", "location"] as const) {
     await expect(page.getByTestId("angel-pending")).toBeVisible()
     await composer.fill("Also keep my new draft")
     if (revoked === "planning context") await planning.uncheck()
-    else await page.getByRole("button", { name: "Forget where I am", exact: true }).click()
+    else if (revoked === "global location") await page.getByTestId("forget-saved-place").click()
+    else if (otherTab) {
+      await otherTab.evaluate(() => localStorage.removeItem("narcoguard_saved_place_v1"))
+      await otherTab.close()
+    } else await page.getByTestId("angel-forget-place").click()
     await expect(page.getByTestId("angel-pending")).toHaveCount(0)
+    if (revoked !== "planning context") await expect(page.getByTestId("angel-location-on")).toHaveCount(0)
     await expect(composer).toHaveValue("Help me plan tomorrow\n\nAlso keep my new draft")
     await context.setOffline(false)
     expect(requests).toHaveLength(0)
