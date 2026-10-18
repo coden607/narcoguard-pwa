@@ -10,7 +10,7 @@ import { type ContactsState, useEmergencyContacts } from "@/lib/emergency-contac
 import { getUserPreferences, saveUserPreferences, type UserPreferences } from "@/lib/user-preferences"
 import { MIN_PASSPHRASE_LENGTH, openVault, sealVault, type SealedVault } from "@/lib/vault-crypto"
 
-type Account = { available: boolean; authenticated: boolean; user: { email?: string } | null }
+type Account = { available: boolean; authenticated: boolean; user: { email?: string } | null; sessionExpired?: boolean }
 type Backup = { v: 1; savedAt: string; contacts: ContactsState; preferences: UserPreferences }
 
 // The account is optional: every safety feature works without one. Backup carries emergency
@@ -37,8 +37,12 @@ export function AccountPanel() {
 
   useEffect(() => {
     let cancelled = false
-    request<Account>("/api/auth").then(({ ok, data }) => {
+    request<Account>("/api/auth").then(({ ok, status, data }) => {
       if (cancelled) return
+      if (status === 401 || data.sessionExpired) {
+        router.replace("/auth?reason=expired&next=%2Faccount")
+        return
+      }
       setAccount(ok ? data : { available: data.available ?? true, authenticated: false, user: null })
       if (ok && data.authenticated) {
         request<{ vault: { updatedAt: string } | null }>("/api/account/vault").then(({ ok: found, data: vault }) => {
@@ -47,7 +51,7 @@ export function AccountPanel() {
       }
     })
     return () => { cancelled = true }
-  }, [])
+  }, [router])
 
   const run = async (task: () => Promise<string>) => {
     setBusy(true)

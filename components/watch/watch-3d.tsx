@@ -489,8 +489,8 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
         )}
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex flex-1 min-w-48 items-center gap-3 text-sm">
-          <span className="whitespace-nowrap">Exploded view</span>
+        <label className="flex min-w-0 basis-full flex-wrap flex-1 items-center gap-3 text-sm sm:basis-auto">
+          <span>Exploded view</span>
           <input type="range" min={0} max={100} disabled={status !== "ready"} value={Math.round(explode * 100)} onChange={(event) => setExplode(Number(event.target.value) / 100)} className="min-w-0 flex-1 accent-cyan-400" aria-valuetext={`${Math.round(explode * 100)} percent apart`} />
         </label>
         <Button type="button" size="sm" variant="outline" disabled={status !== "ready"} onClick={() => setAutoRotate((on) => !on)} aria-pressed={autoRotate}>

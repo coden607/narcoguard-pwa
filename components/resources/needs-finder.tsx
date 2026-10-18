@@ -1,6 +1,8 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
+import Link from "next/link"
+import { AccessibilityDetails } from "@/components/resources/accessibility-details"
 import { LocateFixed, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { safetyNotices } from "@/lib/angel-ai"
@@ -8,7 +10,7 @@ import { QUICK_NEEDS, matchNeeds, orderByMaslow } from "@/lib/need-intent"
 import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
 import { cardSummary } from "@/lib/resource-display"
 import { directionsUrl } from "@/lib/safer-use"
-import { forgetPlace, readRememberChoice, readSavedPlace, roundPlace, savePlace } from "@/lib/saved-place"
+import { forgetPlace, PLACE_FORGOTTEN_EVENT, REMEMBER_PLACE_KEY, SAVED_PLACE_KEY, readRememberChoice, readSavedPlace, roundPlace, savePlace } from "@/lib/saved-place"
 import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
 
 interface KindLookup {
@@ -62,6 +64,7 @@ function ResourceCard({ resource }: { resource: NearbyResource }) {
         )}
       </div>
       <p className="text-xs text-muted-foreground">Source: {resource.source}. Hours, openings and eligibility are not confirmed; call first.</p>
+      <AccessibilityDetails resource={resource} />
     </li>
   )
 }
@@ -111,6 +114,30 @@ export function NeedsFinder() {
   const [notice, setNotice] = useState<string>()
   const [data, setData] = useState<NeedsResponse>()
   const [feedback, setFeedback] = useState<ResourceFeedback[]>([])
+  const [savedPlace, setSavedPlace] = useState<Origin | null>(null)
+  const locationGeneration = useRef(0)
+
+  useEffect(() => {
+    // Revocation invalidates callbacks already queued by the browser; no location
+    // is carried in the signal and consuming it never writes or rebroadcasts.
+    const revoke = () => {
+      locationGeneration.current += 1
+      setSavedPlace(null)
+      setZip("")
+      setBusy(false)
+    }
+    const storageChanged = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage) return
+      if (event.key === null || (event.key === SAVED_PLACE_KEY && event.newValue === null) || (event.key === REMEMBER_PLACE_KEY && event.newValue === "off")) revoke()
+    }
+    window.addEventListener(PLACE_FORGOTTEN_EVENT, revoke)
+    window.addEventListener("storage", storageChanged)
+    return () => {
+      locationGeneration.current += 1
+      window.removeEventListener(PLACE_FORGOTTEN_EVENT, revoke)
+      window.removeEventListener("storage", storageChanged)
+    }
+  }, [])
 
   useEffect(() => {
     const timer = window.setTimeout(() => setFeedback(readResourceFeedback(window.localStorage)), 0)
@@ -167,7 +194,6 @@ export function NeedsFinder() {
   }
 
   // A place remembered on this phone searches straight away, so help shows without asking again.
-  const [savedPlace, setSavedPlace] = useState<Origin | null>(null)
   useEffect(() => {
     const saved = readRememberChoice(window.localStorage) ? readSavedPlace(window.localStorage) : null
     if (!saved) return
@@ -186,9 +212,14 @@ export function NeedsFinder() {
     }
     setBusy(true)
     setNotice(undefined)
+    const generation = ++locationGeneration.current
     navigator.geolocation.getCurrentPosition(
-      (position) => void lookup({ lat: position.coords.latitude, lon: position.coords.longitude }),
+      (position) => {
+        if (generation !== locationGeneration.current) return
+        void lookup({ lat: position.coords.latitude, lon: position.coords.longitude })
+      },
       () => {
+        if (generation !== locationGeneration.current) return
         setBusy(false)
         setNotice("Location permission was not given. Enter a ZIP code instead.")
       },
@@ -200,6 +231,7 @@ export function NeedsFinder() {
     <section className="space-y-4" aria-labelledby="needs-heading" data-testid="needs-finder">
       <div className="space-y-1">
         <h2 id="needs-heading" className="text-xl font-semibold">Find help near me</h2>
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm"><Link href="/meetings" className="inline-flex min-h-8 items-center underline text-primary">Find recovery meetings</Link><Link href="/resources/review" className="inline-flex min-h-8 items-center underline text-primary">Resource corrections and review</Link></div>
         <p className="text-sm text-muted-foreground">
           One search covers every level of need, from food, water and shelter to health care, recovery, libraries and job help. Start wherever you need to.
         </p>

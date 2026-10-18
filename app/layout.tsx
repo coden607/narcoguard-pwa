@@ -88,7 +88,7 @@ export default function RootLayout({
         <SiteChrome>{children}</SiteChrome>
         {process.env.VERCEL ? <Analytics /> : null}
         <InstallPrompt />
-        <ServiceWorkerRegister />
+        <ServiceWorkerRegister initialVersion={process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID || "local"} />
       </body>
     </html>
   )

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 const links = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/help", label: "Find Help", icon: MapPin },
+  { href: "/planning", label: "My Plans", icon: HeartPulse },
   { href: "/safer-use", label: "Stay Safer", icon: LifeBuoy },
   { href: "/angel", label: "Angel AI", icon: HandHeart },
   { href: "/watch", label: "NG Watch", icon: Watch },

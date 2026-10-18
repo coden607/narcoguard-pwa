@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test"
+import "./accessibility-update.spec"
+import "./auth-recovery.spec"
+import "./planning.spec"
+import "./offline-pending.spec"
+import "./resource-discovery.spec"
+import "./resource-governance.spec"
 
 test.describe("PWA production flow", () => {
   test("serves a valid install manifest and icons", async ({ page, request }) => {

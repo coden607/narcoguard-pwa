@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
 import { z } from "zod"
-import { clearSession, ensureProfile, getSession, isAuthConfigured, isGoogleSignInEnabled, resendSignup, signIn, signUp, storeSession, type AuthFailure } from "@/lib/supabase-auth"
+import { clearSession, ensureProfile, getSession, isAuthConfigured, isGoogleSignInEnabled, resendSignup, requestPasswordReset, signIn, signUp, storeSession, type AuthFailure } from "@/lib/supabase-auth"
+import { AUTH_EMAIL_COOLDOWN_SECONDS, RECOVERY_MAX_AGE_SECONDS, RECOVERY_VERIFIER_COOKIE, recoveryNotice, safeAuthDestination } from "@/lib/auth-recovery"
+import { challengeFor, createVerifier } from "@/lib/oauth-pkce"
 
 const schema = z.object({
-  action: z.enum(["login", "signup", "logout", "resend-signup"]),
+  action: z.enum(["login", "signup", "logout", "resend-signup", "reset-password"]),
+  next: z.string().max(1000).optional(),
   email: z.string().trim().pipe(z.email().max(254)).optional(),
   password: z.string().min(8).max(128).optional(),
   displayName: z.string().trim().min(1).max(80).optional(),
@@ -19,11 +23,14 @@ function isSameOrigin(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   if (!isAuthConfigured()) return NextResponse.json({ available: false, authenticated: false, user: null }, { headers: { "Cache-Control": "private, no-store" } })
   try {
+    const store = await cookies()
+    const hadSession = Boolean(store.get('ng_access_token')?.value || store.get('ng_refresh_token')?.value)
     const user = await getSession()
-    return NextResponse.json({ available: true, google: isGoogleSignInEnabled(), authenticated: Boolean(user), user: user ? { id: user.id, email: user.email } : null })
+    const next = safeAuthDestination(new URL(request.url).searchParams.get('next'))
+    return NextResponse.json({ available: true, google: isGoogleSignInEnabled(), authenticated: Boolean(user), sessionExpired: hadSession && !user, recoveryUrl: `/auth?reason=expired&next=${encodeURIComponent(next)}`, user: user ? { id: user.id, email: user.email } : null }, { headers: { 'Cache-Control': 'private, no-store' } })
   } catch {
     return NextResponse.json({ error: "Authentication service is unavailable" }, { status: 503 })
   }
@@ -66,11 +73,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true })
     }
 
-    if (input.action === "resend-signup") {
+    if (input.action === "resend-signup" || input.action === "reset-password") {
       if (!input.email) return NextResponse.json({ error: "Email is required" }, { status: 400 })
-      const error = await resendSignup(input.email)
-      if (error) return authErrorResponse(error)
-      return NextResponse.json({ success: true, confirmationRequired: true, message: "Confirmation email sent. Check your inbox and spam folder." })
+      const store = await cookies()
+      const cooldownName = 'ng_auth_email_cooldown'
+      const until = Number(store.get(cooldownName)?.value ?? 0)
+      if (until > Date.now()) return NextResponse.json({ error: 'Please wait before requesting another email.', retryAfter: Math.ceil((until - Date.now()) / 1000) }, { status: 429, headers: { 'Retry-After': String(Math.ceil((until - Date.now()) / 1000)), 'Cache-Control': 'private, no-store' } })
+      store.set(cooldownName, String(Date.now() + AUTH_EMAIL_COOLDOWN_SECONDS * 1000), { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: AUTH_EMAIL_COOLDOWN_SECONDS })
+      if (input.action === 'reset-password') {
+        const verifier = createVerifier()
+        store.set(RECOVERY_VERIFIER_COOKIE, verifier, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: RECOVERY_MAX_AGE_SECONDS })
+        await requestPasswordReset(input.email, `${new URL(request.url).origin}/api/auth/recovery`, await challengeFor(verifier))
+      } else { await resendSignup(input.email) }
+      // Provider responses can reveal account state. Keep all accepted addresses indistinguishable.
+      return NextResponse.json({ success: true, confirmationRequired: input.action === 'resend-signup', retryAfter: AUTH_EMAIL_COOLDOWN_SECONDS, message: recoveryNotice(input.action) }, { headers: { 'Cache-Control': 'private, no-store' } })
     }
 
     if (!input.email || !input.password || (input.action === "signup" && !input.displayName)) {
@@ -82,13 +98,16 @@ export async function POST(request: Request) {
       ? await signUp(input.email, input.password, displayName as string)
       : await signIn(input.email, input.password)
 
-    if (attempt.error) return authErrorResponse(attempt.error)
+    if (attempt.error) {
+      if (input.action === 'signup' && (attempt.error.code === 'user_already_exists' || /already (?:registered|exists)/i.test(attempt.error.message))) return NextResponse.json({ success: true, confirmationRequired: true, message: recoveryNotice('resend-signup') }, { status: 202 })
+      return authErrorResponse(attempt.error)
+    }
 
     if (input.action === "signup" && !attempt.session && attempt.user) {
       return NextResponse.json({
         success: true,
         confirmationRequired: true,
-        message: "Account created. Check your email to confirm it, then sign in.",
+        message: recoveryNotice('resend-signup'),
       }, { status: 202 })
     }
 
@@ -97,7 +116,7 @@ export async function POST(request: Request) {
 
     await storeSession(session)
     await ensureProfile(session, displayName ?? session.user?.email?.split("@")[0] ?? "NarcoGuard user")
-    return NextResponse.json({ success: true, confirmationRequired: false, user: session.user ? { id: session.user.id, email: session.user.email } : null })
+    return NextResponse.json({ success: true, confirmationRequired: false, next: safeAuthDestination(input.next), user: session.user ? { id: session.user.id, email: session.user.email } : null })
   } catch (error) {
     if (error instanceof z.ZodError) return NextResponse.json({ error: "Invalid account details" }, { status: 400 })
     return NextResponse.json({ error: "Authentication service is unavailable" }, { status: 503 })
