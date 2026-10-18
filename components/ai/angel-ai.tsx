@@ -125,7 +125,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     return answered ? undefined : history[lastAsk].content
   }
 
-  const forgetLocation = () => { locationRef.current = null; setLocation(null); setLocationNote(undefined); setZip(""); forgetPlace(window.localStorage) }
+  const forgetLocation = () => { locationRef.current = null; setLocation(null); setLocationNote(undefined); setZip(""); forgetPlace(window.localStorage); deactivateTravel(window.localStorage) }
   const toggleRemember = (remember: boolean) => { setRememberPlace(remember); saveRememberChoice(window.localStorage, remember) }
 
   /** Sends a message and returns what Angel should say back (safety notices first), or null on failure. */
@@ -158,7 +158,9 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     // A ZIP said or typed in the message becomes the search area for this and later chats.
     const statedZip = zipFromMessage(content)
     if (statedZip && statedZip !== zip) setZip(statedZip)
-    const searchZip = statedZip ?? zip
+    const travel = readTravel(window.localStorage)
+    const travelZip = travel ? effectiveZip(travel, new Date().toISOString()) : { zip: "", inTravel: false }
+    const searchZip = travelZip.inTravel ? travelZip.zip : (statedZip ?? zip)
     const next: ChatMessage[] = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content }]
     messagesRef.current = next
     setMessages(next)
