@@ -83,6 +83,7 @@ export function activateTravel(
   if (!isValidZip(options.destinationZip)) return { ok: false, error: "destinationZip must be a 5-digit ZIP." }
   if (!isValidZip(options.homeZip)) return { ok: false, error: "homeZip must be a 5-digit ZIP." }
   if (options.destinationZip === options.homeZip) return { ok: false, error: "destination and home ZIP must differ." }
+  if (typeof options.durationMinutes === "number" && !Number.isFinite(options.durationMinutes)) return { ok: false, error: "durationMinutes must be finite." }
   const rawMinutes = typeof options.durationMinutes === "number" ? Math.round(options.durationMinutes) : TRAVEL_DEFAULT_MINUTES
   const minutes = Math.min(TRAVEL_MAX_MINUTES, Math.max(TRAVEL_MIN_MINUTES, rawMinutes))
   const startedMs = Date.parse(now)
