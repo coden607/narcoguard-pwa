@@ -1,0 +1,55 @@
+name: Watch PCB Engineering
+
+on:
+  pull_request:
+    paths:
+      - "hardware/pcb/**"
+      - "hardware/cad/rev5/simulation-status.json"
+      - ".github/workflows/watch-pcb.yml"
+      - "app/watch/page.tsx"
+  push:
+    branches: [main]
+    paths:
+      - "hardware/pcb/**"
+      - "hardware/cad/rev5/simulation-status.json"
+      - ".github/workflows/watch-pcb.yml"
+      - "app/watch/page.tsx"
+
+permissions:
+  contents: read
+
+jobs:
+  pcb:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - name: Run PCB feasibility simulations
+        run: python hardware/pcb/rev5/simulate_pcb.py
+      - name: Validate PCBWay capability envelope
+        run: python hardware/pcb/rev5/validate_pcbway.py
+      - name: Generate PCBWay quote/review package
+        run: python hardware/pcb/rev5/generate_quote_package.py
+      - name: Validate package manifest remains fail-closed
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=Path("hardware/pcb/rev5/dist/pcbway-package-manifest.json")
+          m=json.loads(p.read_text())
+          assert m["gerbers_ready"] is False
+          assert m["nc_drill_ready"] is False
+          assert m["assembly_release_ready"] is False
+          assert len(m["blocked_by"]) >= 4
+          print("PCBWay fabrication release remains correctly blocked")
+          PY
+      - name: Publish PCBWay engineering package
+        uses: actions/upload-artifact@v4
+        with:
+          name: narcoguard-rev5-pcbway-${{ github.sha }}
+          path: hardware/pcb/rev5/dist/**
+          if-no-files-found: error
+          retention-days: 30

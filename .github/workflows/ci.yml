@@ -22,7 +22,20 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - run: npm run setup:agent-skills
+      - name: Install pinned private agent skills
+        env:
+          SKILLS_READ_TOKEN: ${{ secrets.SKILLS_READ_TOKEN }}
+        run: |
+          if [ -z "$SKILLS_READ_TOKEN" ]; then
+            echo "::error::Add SKILLS_READ_TOKEN with Contents read access to coden607/skills."
+            exit 1
+          fi
+          skills_auth="$(printf 'x-access-token:%s' "$SKILLS_READ_TOKEN" | base64 -w0)"
+          echo "::add-mask::$skills_auth"
+          GIT_CONFIG_COUNT=1 \
+          GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+          GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $skills_auth" \
+          npm run setup:agent-skills
       - run: npm run validate:agent-skills
       - run: npm run lint
       - run: npm run validate:production

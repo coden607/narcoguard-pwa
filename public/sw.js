@@ -1,5 +1,6 @@
-const CACHE_NAME = "narcoguard-shell-v10";
+const CACHE_NAME = "narcoguard-shell-v14";
 const APP_SHELL = [
+  "/images/ng-titanium-3d.png?rev=complete-2026-10-15",
   "/",
   "/offline.html",
   "/safer-use",
@@ -16,8 +17,11 @@ const APP_SHELL = [
   "/images/narcoguard-logo-96.webp",
   "/images/ng46-rev5-blueprint.svg",
   "/images/ng40-rev5-blueprint.svg",
-  "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13",
-  "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13",
+  "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14",
+  "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14",
+  "/images/ng-blueprint-detailed.jpg?rev=visual-2026-10-14",
+  "/images/ng-exploded-view.jpg?rev=visual-2026-10-14",
+  "/images/ng-modular-exploded.jpg?rev=visual-2026-10-14",
 ];
 
 self.addEventListener("install", (event) => {

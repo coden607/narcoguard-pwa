@@ -1,10 +1,12 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 import { RotateCcw, Pause, Play } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { BufferGeometry, Material, Mesh, MeshStandardMaterial, WebGLRenderer } from "three"
 import { GEOMETRY_46, type WatchGeometry } from "@/lib/watch-geometry"
+import { watchCameraDistance } from "@/lib/watch-framing"
 
 // Realistic 3D model of the NG concept, built from the same millimetre geometry as the engineering
 // drawing. three.js loads only when this component mounts (the 3D tab), so other pages stay light.
@@ -81,6 +83,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
   const apiRef = useRef<SceneApi | null>(null)
   const onSelectRef = useRef(onSelect)
   const [status, setStatus] = useState<Status>("loading")
+  const [attempt, setAttempt] = useState(0)
   const [explode, setExplode] = useState(0)
   const [autoRotate, setAutoRotate] = useState(true)
   /** Current control values, so a scene rebuilt for another size starts where the controls are. */
@@ -98,7 +101,14 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
     const mount = mountRef.current
     if (!mount) return
     let disposed = false
-    let cleanup = () => {}
+    const cleanupTasks: (() => void)[] = []
+    const cleanup = () => {
+      apiRef.current = null
+      for (const release of cleanupTasks.splice(0).reverse()) release()
+    }
+    // Reset synchronously in the retry handler; reset again when size changes.
+    // The deferred update avoids setting React state during effect setup.
+    const loadingTimer = window.setTimeout(() => { if (!disposed) setStatus("loading") }, 0)
 
     const layer = (id: string) => geometry.LAYERS.find((entry) => entry.id === id)!
     const part = (id: string) => geometry.PARTS.find((entry) => entry.id === id)!
@@ -109,6 +119,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
       const { RoomEnvironment } = await import("three/examples/jsm/environments/RoomEnvironment.js")
       const { RoundedBoxGeometry } = await import("three/examples/jsm/geometries/RoundedBoxGeometry.js")
       if (disposed) return
+      window.clearTimeout(loadingTimer)
 
       let renderer: WebGLRenderer
       try {
@@ -117,25 +128,31 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
         setStatus("unsupported")
         return
       }
+      cleanupTasks.push(() => renderer.dispose(), () => renderer.domElement.remove(), () => renderer.setAnimationLoop(null))
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches
       renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
       renderer.toneMapping = THREE.ACESFilmicToneMapping
       renderer.toneMappingExposure = 1.05
       renderer.outputColorSpace = THREE.SRGBColorSpace
       renderer.domElement.setAttribute("role", "img")
-      renderer.domElement.setAttribute("aria-label", `3D model of the NarcoGuard NG ${geometry.model.caseDiameterMm} mm concept watch. Drag to rotate, pinch or scroll to zoom.`)
+      renderer.domElement.setAttribute("aria-label", `Rev 5 3D model of the NarcoGuard NG ${geometry.model.caseDiameterMm} mm concept watch. Drag to rotate, pinch or scroll to zoom.`)
       renderer.domElement.style.touchAction = "none"
       mount.appendChild(renderer.domElement)
 
       const scene = new THREE.Scene()
       const pmrem = new THREE.PMREMGenerator(renderer)
-      const environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
+      cleanupTasks.push(() => pmrem.dispose())
+      const room = new RoomEnvironment()
+      cleanupTasks.push(() => room.dispose())
+      const environment = pmrem.fromScene(room, 0.04).texture
+      cleanupTasks.push(() => environment.dispose())
       scene.environment = environment
 
       const camera = new THREE.PerspectiveCamera(30, 1, 1, 1000)
       const home = new THREE.Vector3(78, 96, 128)
       camera.position.copy(home)
       const controls = new OrbitControls(camera, renderer.domElement)
+      cleanupTasks.push(() => controls.dispose())
       controls.target.set(0, 3, 6)
       controls.enableDamping = true
       controls.minDistance = 45
@@ -148,7 +165,8 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
       key.position.set(60, 120, 80)
       scene.add(key, new THREE.AmbientLight(0xffffff, 0.15))
 
-      const disposables: { dispose: () => void }[] = [environment, pmrem]
+      const disposables: { dispose: () => void }[] = []
+      cleanupTasks.push(() => { for (const item of disposables) item.dispose() })
       const track = <T extends { dispose: () => void }>(item: T) => (disposables.push(item), item)
 
       const titanium = track(new THREE.MeshPhysicalMaterial({ color: 0xb9bdc4, metalness: 1, roughness: 0.26, clearcoat: 0.3 }))
@@ -322,6 +340,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
       watch.add(caseMid, lugs, crownGroup, backGroup, batteryMesh, boardGroup, displayGroup, crystal, podGroup, strapGroup)
       scene.add(watch, shadow)
 
+      let fitView = () => {}
       const applyExplode = (t: number) => {
         backGroup.position.y = -16 * t
         batteryMesh.position.y = battery.z + battery.h / 2 - 7 * t
@@ -331,6 +350,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
         crownGroup.position.x = 9 * t
         podGroup.position.z = 16 * t
         strapGroup.visible = t < 0.05
+        fitView()
       }
       applyExplode(0)
 
@@ -369,7 +389,22 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
       }
       renderer.domElement.addEventListener("pointerdown", onPointerDown)
       renderer.domElement.addEventListener("pointerup", onPointerUp)
+      cleanupTasks.push(() => {
+        renderer.domElement.removeEventListener("pointerdown", onPointerDown)
+        renderer.domElement.removeEventListener("pointerup", onPointerUp)
+      })
 
+      fitView = () => {
+        const bounds = new THREE.Box3().setFromObject(watch).getBoundingSphere(new THREE.Sphere())
+        const direction = camera.position.clone().sub(controls.target).normalize()
+        const distance = watchCameraDistance(bounds.radius, camera.aspect, camera.fov)
+        controls.target.copy(bounds.center)
+        camera.position.copy(bounds.center).addScaledVector(direction, distance)
+        controls.maxDistance = Math.max(260, distance * 3)
+        camera.far = Math.max(1000, distance * 5)
+        camera.updateProjectionMatrix()
+        controls.update()
+      }
       const resize = () => {
         const width = mount.clientWidth
         const height = mount.clientHeight
@@ -378,13 +413,16 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
         renderer.domElement.style.height = "100%"
         camera.aspect = width / Math.max(height, 1)
         camera.updateProjectionMatrix()
+        fitView()
       }
       const resizeObserver = new ResizeObserver(resize)
+      cleanupTasks.push(() => resizeObserver.disconnect())
       resizeObserver.observe(mount)
       resize()
 
       let visible = true
       const intersection = new IntersectionObserver(([entry]) => (visible = entry.isIntersecting))
+      cleanupTasks.push(() => intersection.disconnect())
       intersection.observe(mount)
       renderer.setAnimationLoop(() => {
         if (!visible || document.hidden) return
@@ -399,7 +437,7 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
         resetView: () => {
           camera.position.copy(home)
           controls.target.set(0, 3, 6)
-          controls.update()
+          fitView()
         },
       }
       const current = controlsRef.current
@@ -408,27 +446,19 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
       controls.autoRotate = current.autoRotate && !reducedMotion
       setStatus("ready")
 
-      cleanup = () => {
-        renderer.setAnimationLoop(null)
-        resizeObserver.disconnect()
-        intersection.disconnect()
-        renderer.domElement.removeEventListener("pointerdown", onPointerDown)
-        renderer.domElement.removeEventListener("pointerup", onPointerUp)
-        controls.dispose()
-        for (const item of disposables) item.dispose()
-        renderer.dispose()
-        renderer.domElement.remove()
-        apiRef.current = null
-      }
     })().catch(() => {
-      if (!disposed) setStatus("unsupported")
+      if (disposed) return
+      window.clearTimeout(loadingTimer)
+      cleanup()
+      setStatus("unsupported")
     })
 
     return () => {
       disposed = true
+      window.clearTimeout(loadingTimer)
       cleanup()
     }
-  }, [geometry])
+  }, [geometry, attempt])
 
   useEffect(() => {
     apiRef.current?.setExplode(explode)
@@ -444,23 +474,29 @@ export function Watch3D({ selected, onSelect, geometry = GEOMETRY_46 }: { select
 
   return (
     <div className="space-y-3" data-testid="watch-3d" data-status={status} data-case-mm={geometry.model.caseDiameterMm}>
-      <div ref={mountRef} className="relative aspect-square w-full overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_50%_35%,#1e293b,#05070b_70%)]">
-        {status === "loading" && <p className="absolute inset-0 grid place-items-center text-sm text-muted-foreground" role="status">Loading 3D model…</p>}
-        {status === "unsupported" && (
-          <p className="absolute inset-0 grid place-items-center p-6 text-center text-sm text-muted-foreground" role="status">
-            3D needs WebGL, which this browser has turned off. The engineering drawing on the Blueprint tab shows the same layout.
-          </p>
+      <div className="relative overflow-hidden rounded-2xl bg-[radial-gradient(circle_at_50%_35%,#1e293b,#05070b_70%)]">
+        <div ref={mountRef} className={status === "ready" ? "aspect-square w-full" : "absolute inset-0 invisible"} />
+        {status !== "ready" && (
+          <figure className="space-y-3 p-3">
+            <Image src="/images/ng-titanium-3d.png?rev=complete-2026-10-15" width={1536} height={1024} sizes="(min-width: 1024px) 50vw, 100vw" className="block h-auto w-full object-contain" alt="NG46 titanium and NG40 rose-titanium concept watch board" />
+            <figcaption className="space-y-2 text-sm text-muted-foreground">
+              <p role="status">{status === "loading" ? "Loading 3D model… Showing the complete concept watch board while you wait." : "Interactive 3D could not load. You can still view the complete concept watch board."}</p>
+              <p>Concept artwork shows both sizes and their intended finish; it is not an export of the engineering model.</p>
+              <a href="/images/ng-titanium-3d.png?rev=complete-2026-10-15" target="_blank" rel="noopener noreferrer" className="inline-block underline underline-offset-4">Open full-size concept watch board</a>
+            </figcaption>
+            {status === "unsupported" && <Button type="button" size="sm" variant="outline" onClick={() => { setStatus("loading"); setAttempt((value) => value + 1) }}>Retry interactive 3D</Button>}
+          </figure>
         )}
       </div>
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex flex-1 min-w-48 items-center gap-3 text-sm">
-          <span className="whitespace-nowrap">Exploded view</span>
-          <input type="range" min={0} max={100} value={Math.round(explode * 100)} onChange={(event) => setExplode(Number(event.target.value) / 100)} className="flex-1 accent-cyan-400" aria-valuetext={`${Math.round(explode * 100)} percent apart`} />
+        <label className="flex min-w-0 basis-full flex-wrap flex-1 items-center gap-3 text-sm sm:basis-auto">
+          <span>Exploded view</span>
+          <input type="range" min={0} max={100} disabled={status !== "ready"} value={Math.round(explode * 100)} onChange={(event) => setExplode(Number(event.target.value) / 100)} className="min-w-0 flex-1 accent-cyan-400" aria-valuetext={`${Math.round(explode * 100)} percent apart`} />
         </label>
-        <Button type="button" size="sm" variant="outline" onClick={() => setAutoRotate((on) => !on)} aria-pressed={autoRotate}>
+        <Button type="button" size="sm" variant="outline" disabled={status !== "ready"} onClick={() => setAutoRotate((on) => !on)} aria-pressed={autoRotate}>
           {autoRotate ? <Pause className="mr-1 h-4 w-4" aria-hidden="true" /> : <Play className="mr-1 h-4 w-4" aria-hidden="true" />}Auto-rotate
         </Button>
-        <Button type="button" size="sm" variant="outline" onClick={() => apiRef.current?.resetView()}>
+        <Button type="button" size="sm" variant="outline" disabled={status !== "ready"} onClick={() => apiRef.current?.resetView()}>
           <RotateCcw className="mr-1 h-4 w-4" aria-hidden="true" />Reset view
         </Button>
       </div>

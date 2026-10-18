@@ -171,34 +171,83 @@ export default function NGWatchPage() {
             ))}
           </dl>
           <figure className="mt-4" data-testid="rev5-primary-visuals">
-            <div className="grid gap-3 lg:grid-cols-2">
+            <div className="overflow-hidden rounded-2xl border border-primary/30 bg-background/40">
               <Image
-                src="/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13"
-                alt="NarcoGuard NG46 Rev 5 engineering blueprint"
-                width={1200}
-                height={800}
+                src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
+                alt="NarcoGuard NG46 rugged titanium and NG40 pink rose-titanium concepts with metal link bracelets, front, side, rear and exploded views"
+                width={1536}
+                height={1024}
                 priority
-                className="w-full h-auto rounded-xl border border-border/60 bg-background"
-              />
-              <Image
-                src="/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13"
-                alt="NarcoGuard NG40 Rev 5 engineering blueprint"
-                width={1200}
-                height={800}
-                priority
-                className="w-full h-auto rounded-xl border border-border/60 bg-background"
+                sizes="(min-width: 1152px) 1100px, 100vw"
+                className="block h-auto w-full object-contain"
               />
             </div>
-            <figcaption className="mt-2 text-xs text-muted-foreground">
-              Current Rev 5 engineering blueprints. Earlier lifestyle and size renders are no longer used as the primary watch visual.
+            <a href="/images/ng-titanium-3d.png?rev=complete-2026-10-15" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4">Open full-size watch blueprint</a>
+            <div className="mt-3 grid gap-3 lg:grid-cols-2">
+              <Image
+                src="/images/ng-exploded-view.jpg?rev=visual-2026-10-14"
+                alt="NarcoGuard Rev 5 exploded engineering concept"
+                width={1200}
+                height={1500}
+                className="h-auto w-full rounded-xl border border-border/60 bg-background"
+              />
+              <Image
+                src="/images/ng-modular-exploded.jpg?rev=visual-2026-10-14"
+                alt="NarcoGuard Rev 5 modular watch family engineering concept"
+                width={1200}
+                height={1500}
+                className="h-auto w-full rounded-xl border border-border/60 bg-background"
+              />
+            </div>
+            <figcaption className="mt-3 rounded-xl border border-amber-400/30 bg-amber-400/5 p-3 text-xs text-muted-foreground">
+              <strong className="text-foreground">Primary visual direction:</strong> rugged titanium NG46 and pink rose-titanium NG40 with metal link bracelets. These generated 3D concept renders show the intended appearance; they are not exports from the downloadable CAD. Internal layout, materials, dimensions, and manufacturing fit remain unverified. Use the Blueprint, 3D, CAD, BOM, and PCBWay sections below for the current engineering package and its limits.
             </figcaption>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Blueprint layout</Button>
+              <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Current engineering blueprint</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("3d-view")}>Interactive 3D view</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("bom")}>Rev 5 BOM layout</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("cad")}>STEP / STL CAD package</Button>
             </div>
           </figure>
+        </section>
+
+        <section className="mb-8" data-testid="rev5-concept-visual-gallery">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <p className="text-xs uppercase tracking-[0.18em] text-primary">Rev 5 concept visuals</p>
+              <h2 className="mt-1 text-2xl font-bold">Original watch design boards</h2>
+              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+                These are the richer visual design boards from the Rev 5 concept phase: product renders, exploded views, dimensional layouts, Hero Network scenes, and presentation boards. They are shown for design direction; embedded marketing/spec text can be older than the current engineering package.
+              </p>
+            </div>
+            <Button type="button" variant="outline" onClick={() => activateTab("cad")}>
+              Open current engineering CAD
+            </Button>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            {[
+              ["/images/ng-watch-hero.jpg?rev=visual-2026-10-14", "NG46 / NG40 Hero Network concept"],
+              ["/images/ng-blueprint.jpg?rev=visual-2026-10-14", "Original NarcoGuard watch blueprint concept"],
+              ["/images/ng-blueprint-detailed.jpg?rev=visual-2026-10-14", "Original detailed engineering concept"],
+              ["/images/ng-sizes-render.jpg?rev=visual-2026-10-14", "Original NG46 / NG40 size and form study"],
+              ["/images/watch-on-wrist-lifestyle.jpg?rev=visual-2026-10-14", "Wearable lifestyle concept"],
+              ["/images/ng-titanium-3d.png?rev=complete-2026-10-15", "NG46 titanium / NG40 pink rose-titanium 3D concept"],
+            ].map(([src, label]) => (
+              <figure key={src} className="overflow-hidden rounded-2xl border border-border/60 bg-background/35">
+                <Image
+                  src={src}
+                  alt={label}
+                  width={1200}
+                  height={1500}
+                  className="h-auto w-full"
+                />
+                <figcaption className="border-t border-border/50 p-3 text-xs text-muted-foreground">
+                  <span className="font-semibold text-foreground">{label}</span>
+                  <span className="mt-1 block">Concept artwork — use the Blueprint, 3D, CAD, BOM, and PCBWay sections for current engineering status.</span>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </section>
 
         <section className="mb-8 rounded-2xl border border-red-500/30 bg-red-500/5 p-5" data-testid="modular-auto-injector">
@@ -230,7 +279,7 @@ export default function NGWatchPage() {
           <HolographicCard className="p-6" glowIntensity="high">
             <h2 className="text-xl font-bold mb-4">Rev 5 blueprint — {variant.label}</h2>
             <Image
-              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13"}
+              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14"}
               alt={`${variant.label} Rev 5 concept blueprint`}
               width={1200}
               height={800}
@@ -428,14 +477,14 @@ export default function NGWatchPage() {
               <HolographicCard className="p-6" glowIntensity="high">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <Boxes className="h-5 w-5 text-primary" />
-                  Rev 5 CAD Package — {variant.label}
+                  Rev 5 Fabrication CAD — {variant.label}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  The same parametric Rev 5 envelope used by the engineering checks now generates STEP and STL concept files for NG46 and NG40. The package is rebuilt in GitHub Actions after CAD changes so the downloadable files stay tied to a reviewed commit.
+                  The same parametric Rev 5 geometry used by the fit and DFM gates now generates a fabrication-oriented package for both NG46 and NG40. Every package is rebuilt in GitHub Actions so its solids, exploded assembly, profiles, and tolerance data remain tied to a reviewed commit.
                 </p>
                 <div className="mt-5 grid gap-3 sm:grid-cols-2">
                   <a
-                    href={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-13" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-13"}
+                    href={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14"}
                     download
                     className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
                   >
@@ -450,26 +499,70 @@ export default function NGWatchPage() {
                     className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
                   >
                     <Download className="h-5 w-5 text-primary" />
-                    <p className="mt-2 font-semibold">Download generated STEP / STL</p>
-                    <p className="text-xs text-muted-foreground">Open the latest successful Watch CAD Validation run and download the narcoguard-rev5-cad artifact.</p>
+                    <p className="mt-2 font-semibold">Download full fabrication package</p>
+                    <p className="text-xs text-muted-foreground">Open the latest successful Watch CAD Validation run and download the versioned narcoguard-rev5-cad artifact.</p>
                   </a>
                 </div>
+                <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                  {[
+                    ["Assemblies", "Complete + exploded STEP/STL"],
+                    ["Individual solids", "Per-part STEP/STL for enclosure, PCB, power, sensors and component envelopes"],
+                    ["2D profiles", "PCB, case-back and sensor-window DXF outlines"],
+                    ["Tolerance / GD&T plan", "Generated drawing sheet + CSV with provisional datums, nominals, target tolerances, inspection methods and open supplier dependencies"],
+                  ].map(([title, detail]) => (
+                    <div key={title} className="rounded-xl border border-border/60 bg-background/40 p-4">
+                      <p className="font-semibold">{title}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+                    </div>
+                  ))}
+                </div>
                 <div className="mt-4 rounded-xl border border-border/60 bg-background/40 p-4">
-                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Generated files</p>
+                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Selected-size package structure</p>
                   <ul className="mt-2 space-y-1 font-mono text-xs text-muted-foreground">
-                    <li>ng46-rev5-concept.step</li>
-                    <li>ng46-rev5-concept.stl</li>
-                    <li>ng40-rev5-concept.step</li>
-                    <li>ng40-rev5-concept.stl</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/[variant]-assembly.step</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/[variant]-exploded.step</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/parts/[part].step + [part].stl</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/profiles/[profile].dxf</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-tolerance-gdt.csv</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-gdt-plan.svg</li>
+                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-manifest.json</li>
                   </ul>
                 </div>
               </HolographicCard>
               <HolographicCard className="p-6">
-                <h3 className="font-bold text-lg">CAD provenance & limits</h3>
+                <h3 className="font-bold text-lg">CAD provenance & release boundary</h3>
                 <div className="mt-3 space-y-3 text-sm text-muted-foreground">
-                  <p>Source geometry is versioned at <span className="font-mono text-primary">hardware/cad/rev5/build_rev5.py</span> and checked against the Rev 5 envelope/interference and DFM gates.</p>
-                  <p>STEP is the editable solid-exchange format; STL is the mesh export for visualization and prototype workflows.</p>
-                  <p>These are concept engineering exports, not production tooling. Supplier CAD, routed PCB, GD&amp;T/tolerance stack, RF/antenna signoff, thermal/ingress validation, and physical prototype evidence remain open.</p>
+                  <p>Source geometry is versioned at <span className="font-mono text-primary">hardware/cad/rev5/build_rev5.py</span> and checked against envelope/interference, DFM, package-content, and fail-closed release gates.</p>
+                  <p>STEP is the editable solid-exchange format, STL supports prototype/visualization workflows, and DXF carries selected 2D fabrication profiles.</p>
+                  <p>The GD&amp;T/tolerance CSV is a planning surface, not a released drawing. Supplier CAD, routed PCB data, final datum scheme/tolerance stack, RF/antenna signoff, thermal/ingress validation, and physical prototype inspection remain required before tooling release.</p>
+                  <p>The medication/auto-injector research pod remains outside this manufacturing package and is not represented as a validated drug-delivery mechanism.</p>
+                </div>
+                <div className="mt-5 rounded-xl border border-primary/30 bg-primary/5 p-4">
+                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">PCBWay engineering package</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    Rev 5 now includes an 8-layer HDI safety/core carrier specification, placement and routing constraints, PCBWay capability checks, impedance/thermal/power feasibility models, and a generated BOM/placement/fabrication review package.
+                  </p>
+                  <p className="mt-2 text-xs text-amber-300">
+                    Gerber/NC-drill release remains blocked until the validated electrical netlist, final PCBWay impedance stackup, and vendor-approved W5+/X35 compute/RF interface are available. No proprietary DDR/RF pinout is invented.
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    <a
+                      href="https://github.com/coden607/narcoguard-pwa/actions/workflows/watch-pcb.yml"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
+                    >
+                      Open PCB engineering artifacts <ExternalLink className="ml-1 h-4 w-4" />
+                    </a>
+                    <a
+                      href="https://github.com/coden607/narcoguard-pwa/blob/main/hardware/pcb/rev5/README.md"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
+                    >
+                      Inspect PCBWay package <ExternalLink className="ml-1 h-4 w-4" />
+                    </a>
+                  </div>
                 </div>
                 <a
                   href="https://github.com/coden607/narcoguard-pwa/blob/main/hardware/cad/rev5/build_rev5.py"

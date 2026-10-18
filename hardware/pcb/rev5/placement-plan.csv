@@ -1,0 +1,12 @@
+ref,block,x_mm,y_mm,side,rotation_deg,status,notes
+U1,nRF5340,-3,12,F,0,candidate,Independent safety MCU
+U2,MAX86178,-2.1,0,B,0,candidate,Analog biosensor AFE near sensor window
+U3,LSM6DSO32X,5,-13,F,0,candidate,IMU near centroid/quiet region
+U4,BMP390,9,-12,F,0,candidate,Pressure sensor with vent path
+U5,MLX90632,2.2,0,B,0,candidate,Thermal sensor near case-back window
+U6,BQ25619,10,8,F,0,candidate,Charger/power path
+U7,BQ51013B,11,3,B,0,candidate,Qi receiver near coil
+U8,ST4SIM,-10,-8,F,0,candidate,eUICC
+J1,VENDOR_COMPUTE_RF,0,8,F,0,boundary,Connector/interface to vendor-approved W5+/X35 module
+J2,DISPLAY,-8,0,F,90,boundary,Display/touch flex connector
+J3,SENSOR_FLEX,0,-10,B,0,boundary,Case-back biosensor flex

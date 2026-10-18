@@ -4,6 +4,8 @@
 
 export const SAVED_PLACE_KEY = "narcoguard_saved_place_v1"
 export const REMEMBER_PLACE_KEY = "narcoguard_remember_place_v1"
+/** Same-tab revocation signal. Contains no location or personal data. */
+export const PLACE_FORGOTTEN_EVENT = "narcoguard-place-forgotten"
 
 export type SavedPlace = { zip: string } | { lat: number; lon: number }
 
@@ -37,6 +39,7 @@ export function savePlace(store: Store | undefined, place: SavedPlace): void {
 
 export function forgetPlace(store: Store | undefined): void {
   try { store?.removeItem(SAVED_PLACE_KEY) } catch { /* nothing to forget */ }
+  if (typeof window !== "undefined") window.dispatchEvent(new Event(PLACE_FORGOTTEN_EVENT))
 }
 
 /** Remembering is on unless the person turned it off. */
@@ -47,8 +50,8 @@ export function readRememberChoice(store: Store | undefined): boolean {
 export function saveRememberChoice(store: Store | undefined, remember: boolean): void {
   try {
     store?.setItem(REMEMBER_PLACE_KEY, remember ? "on" : "off")
-    if (!remember) store?.removeItem(SAVED_PLACE_KEY)
   } catch { /* storage blocked */ }
+  if (!remember) forgetPlace(store)
 }
 
 /** A ZIP the person stated in words ("my zip is 13901", "I'm in 13901", or just "13901"); undefined otherwise. */

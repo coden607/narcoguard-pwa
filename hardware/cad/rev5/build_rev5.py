@@ -1,7 +1,10 @@
 import argparse
-import cadquery as cq
+import csv
+import json
 import math
 from pathlib import Path
+
+import cadquery as cq
 
 # Manufacturer-backed packages. Dimensions in mm.
 MANUFACTURER_PACKAGES = {
@@ -16,6 +19,26 @@ MODELS = {
     "NG46": {"diameter":46.0,"thickness":13.8,"board_d":39.9,"display":36.8,"battery":(28.0,22.0,5.0),"optical":12.0,"qi":(18.0,30.0),"camera":(6.0,6.0,3.6),"strap":22.0},
     "NG40": {"diameter":40.0,"thickness":12.2,"board_d":34.2,"display":30.5,"battery":(24.0,19.0,4.2),"optical":10.0,"qi":(15.0,25.0),"camera":(5.2,5.2,3.2),"strap":20.0},
 }
+
+FABRICATION_PARTS = {
+    "case_shell": {"process": "CNC / prototype additive", "material": "Ti-6Al-4V target", "critical": True},
+    "case_back": {"process": "CNC / ceramic prototype", "material": "zirconia ceramic target", "critical": True},
+    "pcb": {"process": "rigid-flex PCB fabrication", "material": "stackup TBD", "critical": True},
+    "display": {"process": "supplier module", "material": "AMOLED module", "critical": False},
+    "sensor_window": {"process": "optical window fabrication", "material": "optical ceramic/glass TBD", "critical": True},
+    "qi_coil": {"process": "supplier coil / flex", "material": "copper coil", "critical": False},
+    "battery": {"process": "supplier cell", "material": "Li-ion polymer", "critical": True},
+}
+
+TOLERANCE_ROWS = [
+    ("case_outer_diameter", "CASE", "diameter", "±0.10", "concept target", "CMM / caliper", "Supplier capability study required"),
+    ("case_total_thickness", "CASE", "thickness", "±0.15", "concept target", "height gauge", "Includes sealing stack; final GD&T after gasket selection"),
+    ("pcb_outer_diameter", "PCB", "board_d", "±0.10", "concept target", "optical/CMM", "Board house stackup and route tolerance supersede"),
+    ("display_pocket", "DISPLAY", "display", "+0.20 / +0.35 clearance", "concept target", "CMM", "Final supplier drawing required"),
+    ("sensor_window_diameter", "SENSOR", "optical", "+0.10 / +0.20 clearance", "concept target", "CMM", "Seal and adhesive system not frozen"),
+    ("qi_coil_outer_diameter", "POWER", "qi_outer", "±0.20", "concept target", "optical", "Supplier coil drawing required"),
+    ("battery_envelope", "POWER", "battery", "+0.50 each side", "DFM reserve", "CMM", "Replace with selected-cell swelling data"),
+]
 
 def box(w,d,h,x,y,z):
     return cq.Workplane("XY").box(w,d,h,centered=(True,True,False)).translate((x,y,z))
@@ -69,22 +92,138 @@ def build(name):
 def compound(parts):
     return cq.Compound.makeCompound([part.val() for part in parts.values()])
 
-def export_cad(name, parts, output_dir):
-    output_dir.mkdir(parents=True, exist_ok=True)
-    model = compound(parts)
-    stem = name.lower() + "-rev5-concept"
-    step_path = output_dir / f"{stem}.step"
-    stl_path = output_dir / f"{stem}.stl"
-    cq.exporters.export(model, str(step_path), exportType="STEP")
-    cq.exporters.export(
-        model,
-        str(stl_path),
-        exportType="STL",
-        tolerance=0.08,
-        angularTolerance=0.15,
-        opt={"ascii": True},
-    )
-    return step_path, stl_path
+def export_step(shape, path):
+    cq.exporters.export(shape, str(path), exportType="STEP")
+
+def export_stl(shape, path):
+    cq.exporters.export(shape, str(path), exportType="STL", tolerance=0.08, angularTolerance=0.15, opt={"ascii": True})
+
+def exploded(parts):
+    exploded_shapes=[]
+    order=list(parts)
+    for index,key in enumerate(order):
+        gap=index*3.0
+        exploded_shapes.append(parts[key].translate((0,0,gap)).val())
+    return cq.Compound.makeCompound(exploded_shapes)
+
+def export_profiles(name, output_dir):
+    p=MODELS[name]
+    profile_dir=output_dir/"profiles"
+    profile_dir.mkdir(parents=True,exist_ok=True)
+    pcb=cq.Workplane("XY").circle(p["board_d"]/2)
+    case_back=cq.Workplane("XY").circle((p["diameter"]-2.0)/2)
+    sensor=cq.Workplane("XY").circle(p["optical"]/2)
+    cq.exporters.exportDXF(pcb,str(profile_dir/f"{name.lower()}-pcb-outline.dxf"))
+    cq.exporters.exportDXF(case_back,str(profile_dir/f"{name.lower()}-case-back-outline.dxf"))
+    cq.exporters.exportDXF(sensor,str(profile_dir/f"{name.lower()}-sensor-window-outline.dxf"))
+
+def write_tolerance_table(name, output_dir):
+    p=MODELS[name]
+    values={
+        "diameter":p["diameter"],
+        "thickness":p["thickness"],
+        "board_d":p["board_d"],
+        "display":p["display"],
+        "optical":p["optical"],
+        "qi_outer":p["qi"][1],
+        "battery":f'{p["battery"][0]} x {p["battery"][1]} x {p["battery"][2]}',
+    }
+    path=output_dir/f"{name.lower()}-rev5-tolerance-gdt.csv"
+    with path.open("w",newline="",encoding="utf-8") as handle:
+        writer=csv.writer(handle)
+        writer.writerow(["feature_id","datum_system","nominal_mm","tolerance_or_clearance","status","inspection_method","note"])
+        for feature,datum,value_key,tol,status,method,note in TOLERANCE_ROWS:
+            writer.writerow([feature,datum,values[value_key],tol,status,method,note])
+    return path
+
+def write_gdt_svg(name, output_dir):
+    p=MODELS[name]
+    qi_outer=p["qi"][1]
+    battery=f'{p["battery"][0]} × {p["battery"][1]} × {p["battery"][2]}'
+    path=output_dir/f"{name.lower()}-rev5-gdt-plan.svg"
+    svg=f'''<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="900" viewBox="0 0 1400 900">
+  <rect width="1400" height="900" fill="#0b0f14"/>
+  <g fill="none" stroke="#8be9fd" stroke-width="2">
+    <circle cx="360" cy="360" r="230"/>
+    <circle cx="360" cy="360" r="{p["board_d"]/p["diameter"]*230:.2f}"/>
+    <line x1="130" y1="360" x2="590" y2="360"/>
+    <line x1="360" y1="130" x2="360" y2="590"/>
+  </g>
+  <g fill="#e6edf3" font-family="ui-monospace, monospace">
+    <text x="70" y="70" font-size="32" font-weight="700">NARCOGUARD {name} — REV 5 GD&amp;T / TOLERANCE PLAN</text>
+    <text x="70" y="110" font-size="18">CONCEPT DRAWING — NOT RELEASED FOR TOOLING</text>
+    <text x="700" y="190" font-size="22">DATUM A: CASE BACK SEALING PLANE</text>
+    <text x="700" y="230" font-size="22">DATUM B: CASE CENTER AXIS</text>
+    <text x="700" y="270" font-size="22">DATUM C: CROWN / 3-O'CLOCK ORIENTATION</text>
+    <text x="700" y="330" font-size="20">CASE OD: Ø{p["diameter"]:.2f} mm ±0.10</text>
+    <text x="700" y="370" font-size="20">TOTAL THICKNESS: {p["thickness"]:.2f} mm ±0.15</text>
+    <text x="700" y="410" font-size="20">PCB OD: Ø{p["board_d"]:.2f} mm ±0.10</text>
+    <text x="700" y="450" font-size="20">DISPLAY POCKET: Ø{p["display"]:.2f} mm +0.20/+0.35 CLR</text>
+    <text x="700" y="490" font-size="20">SENSOR WINDOW: Ø{p["optical"]:.2f} mm +0.10/+0.20 CLR</text>
+    <text x="700" y="530" font-size="20">QI COIL OD: Ø{qi_outer:.2f} mm ±0.20</text>
+    <text x="700" y="570" font-size="20">BATTERY ENVELOPE: {battery} mm +0.50 EACH SIDE</text>
+    <text x="70" y="690" font-size="18">FINAL POSITION/PROFILE/RUNOUT CONTROLS REQUIRE SUPPLIER CAD, GASKET, PCB STACKUP AND PROCESS CAPABILITY.</text>
+    <text x="70" y="725" font-size="18">RF, THERMAL, INGRESS, MATERIAL FINISH AND PHYSICAL INSPECTION EVIDENCE REMAIN OPEN.</text>
+    <text x="70" y="790" font-size="18">Generated from hardware/cad/rev5/build_rev5.py</text>
+  </g>
+</svg>'''
+    path.write_text(svg,encoding="utf-8")
+    return path
+
+def export_fabrication_package(name, parts, output_dir):
+    variant_dir=output_dir/name.lower()
+    part_dir=variant_dir/"parts"
+    assembly_dir=variant_dir/"assemblies"
+    part_dir.mkdir(parents=True,exist_ok=True)
+    assembly_dir.mkdir(parents=True,exist_ok=True)
+
+    full=compound(parts)
+    export_step(full,assembly_dir/f"{name.lower()}-rev5-assembly.step")
+    export_stl(full,assembly_dir/f"{name.lower()}-rev5-assembly.stl")
+    exp=exploded(parts)
+    export_step(exp,assembly_dir/f"{name.lower()}-rev5-exploded.step")
+    export_stl(exp,assembly_dir/f"{name.lower()}-rev5-exploded.stl")
+
+    manifest=[]
+    for key,part in parts.items():
+        step=part_dir/f"{name.lower()}-{key}.step"
+        stl=part_dir/f"{name.lower()}-{key}.stl"
+        export_step(part,step)
+        export_stl(part,stl)
+        bb=part.val().BoundingBox()
+        meta=FABRICATION_PARTS.get(key,{"process":"supplier/reference package","material":"supplier-defined","critical":False})
+        manifest.append({
+            "part":key,
+            "step":str(step.relative_to(output_dir)),
+            "stl":str(stl.relative_to(output_dir)),
+            "bbox_mm":[round(bb.xlen,3),round(bb.ylen,3),round(bb.zlen,3)],
+            **meta,
+        })
+
+    export_profiles(name,variant_dir)
+    tolerance_path=write_tolerance_table(name,variant_dir)
+    gdt_path=write_gdt_svg(name,variant_dir)
+    payload={
+        "schema":1,
+        "variant":name,
+        "status":"fabrication-oriented concept package",
+        "assembly_step":str((assembly_dir/f"{name.lower()}-rev5-assembly.step").relative_to(output_dir)),
+        "exploded_step":str((assembly_dir/f"{name.lower()}-rev5-exploded.step").relative_to(output_dir)),
+        "tolerance_table":str(tolerance_path.relative_to(output_dir)),
+        "gdt_plan":str(gdt_path.relative_to(output_dir)),
+        "parts":manifest,
+        "release_ready":False,
+        "release_blockers":[
+            "supplier CAD and routed PCB data",
+            "final GD&T and tolerance stack",
+            "RF/antenna signoff",
+            "thermal/ingress validation",
+            "physical prototype inspection",
+            "drug-device engineering remains separate and unvalidated",
+        ],
+    }
+    (variant_dir/f"{name.lower()}-rev5-manifest.json").write_text(json.dumps(payload,indent=2),encoding="utf-8")
+    return payload
 
 def validate(name,parts):
     radius=MODELS[name]["board_d"]/2
@@ -107,22 +246,23 @@ def validate(name,parts):
     return failures
 
 if __name__=="__main__":
-    parser = argparse.ArgumentParser(description="Validate and export NarcoGuard Rev 5 concept CAD")
-    parser.add_argument(
-        "--output-dir",
-        default=str(Path(__file__).parent / "dist"),
-        help="Directory for generated STEP/STL concept exports",
-    )
-    parser.add_argument("--validate-only", action="store_true", help="Run fit checks without writing CAD exports")
-    args = parser.parse_args()
-    output_dir = Path(args.output_dir)
+    parser=argparse.ArgumentParser(description="Validate and export NarcoGuard Rev 5 fabrication-oriented concept CAD")
+    parser.add_argument("--output-dir",default=str(Path(__file__).parent/"dist"),help="Directory for generated CAD exports")
+    parser.add_argument("--validate-only",action="store_true",help="Run fit checks without writing CAD exports")
+    args=parser.parse_args()
+    output_dir=Path(args.output_dir)
 
+    package_index={"schema":1,"revision":"Rev 5","variants":[],"release_ready":False}
     for name in MODELS:
-        parts = build(name)
+        parts=build(name)
         failures=validate(name,parts)
         if failures:
-            raise SystemExit(f"{name}: " + "; ".join(failures))
+            raise SystemExit(f"{name}: "+"; ".join(failures))
         print(f"{name}: PASS envelope fit")
         if not args.validate_only:
-            step_path, stl_path = export_cad(name, parts, output_dir)
-            print(f"{name}: exported {step_path} and {stl_path}")
+            package_index["variants"].append(export_fabrication_package(name,parts,output_dir))
+            print(f"{name}: exported assembly, exploded, per-part STEP/STL, DXF profiles, tolerance table and GD&T plan")
+
+    if not args.validate_only:
+        (output_dir/"rev5-package-index.json").write_text(json.dumps(package_index,indent=2),encoding="utf-8")
+        print(f"Fabrication-oriented package index: {output_dir/'rev5-package-index.json'}")

@@ -4,10 +4,10 @@ import { test } from "node:test"
 
 const read = (path: string) => readFileSync(path, "utf8")
 
-test("fundraising surfaces use current Rev 5 blueprint visuals and copy", () => {
+test("fundraising surfaces use approved titanium 3D visuals and bounded copy", () => {
   const fund = read("app/fund/page.tsx")
-  assert.match(fund, /ng46-rev5-blueprint\.svg\?rev=5-2026-10-12/)
-  assert.match(fund, /ng40-rev5-blueprint\.svg\?rev=5-2026-10-12/)
+  assert.match(fund, /ng-titanium-3d\.png/)
+  assert.match(fund, /manufacturing CAD and internal fit remain unverified/)
   assert.doesNotMatch(fund, /ng-sizes-render\.jpg/)
   assert.doesNotMatch(fund, /watch-on-wrist-lifestyle\.jpg/)
   assert.doesNotMatch(fund, /ng-watch-hero\.jpg/)
@@ -27,10 +27,10 @@ test("public Rev 5 BOM removes stale Rev 4 and injector-specific public claims",
   assert.doesNotMatch(bom, /plunger/i)
 })
 
-test("installed PWA refreshes Support and icon URLs with shell v10", () => {
+test("installed PWA refreshes Support and icon URLs with shell v14", () => {
   const sw = read("public/sw.js")
   const manifest = read("app/manifest.ts")
-  assert.match(sw, /narcoguard-shell-v10/)
+  assert.match(sw, /narcoguard-shell-v14/)
   assert.match(sw, /"\/fund"/)
   assert.match(sw, /icon-192\.png\?v=9/)
   assert.match(manifest, /icon-192\.png\?v=9/)

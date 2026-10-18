@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils"
 const links = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/help", label: "Find Help", icon: MapPin },
+  { href: "/planning", label: "My Plans", icon: HeartPulse },
   { href: "/safer-use", label: "Stay Safer", icon: LifeBuoy },
   { href: "/angel", label: "Angel AI", icon: HandHeart },
   { href: "/watch", label: "NG Watch", icon: Watch },
@@ -65,7 +66,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <div className="header-actions"><InstallButton /><button className="menu-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-nav" aria-label="Toggle navigation">{open ? <X /> : <Menu />}</button></div>
     </div><nav id="mobile-nav" className={cn("mobile-nav", open && "is-open")} aria-label="Mobile navigation" aria-hidden={!open}>{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} tabIndex={open ? 0 : -1} aria-current={isActive(href) ? "page" : undefined} onClick={() => setOpen(false)} className={cn("nav-link", isActive(href) && "is-active")}><Icon aria-hidden="true" />{label}</Link>)}</nav></header>
     <div className="mx-auto w-full max-w-7xl px-4 pt-4">
-      <div className="grid gap-3 rounded-2xl border border-primary/30 bg-background/85 p-4 shadow-2xl backdrop-blur md:grid-cols-2">
+      <div className="grid min-w-0 gap-3 rounded-2xl border border-primary/30 bg-background/85 p-3 shadow-2xl backdrop-blur md:grid-cols-2 [&>a]:min-w-0 [&>a]:text-base sm:[&>a]:text-2xl">
         <a href="https://narcoguard.app" className="flex min-h-20 items-center justify-center rounded-xl border border-primary/40 bg-primary/10 px-4 text-center font-orbitron text-2xl font-black tracking-wide text-primary hover:bg-primary/20 sm:text-3xl">
           NARCOGUARD.APP
         </a>

@@ -74,7 +74,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`dark ${inter.variable} ${orbitron.variable}`}>
       <head>
-        <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined)`}</Script>
+        <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(() => undefined)`}</Script>
         {/* Chromium fires beforeinstallprompt once, often before React hydrates; keep it for the install button. */}
         <Script id="narcoguard-install" strategy="beforeInteractive">{`addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__ngInstallPrompt = e; dispatchEvent(new Event("ng-installprompt")) })`}</Script>
         <link rel="icon" href="/icon-dark-32x32.png" sizes="32x32" type="image/png" />
@@ -88,7 +88,7 @@ export default function RootLayout({
         <SiteChrome>{children}</SiteChrome>
         {process.env.VERCEL ? <Analytics /> : null}
         <InstallPrompt />
-        <ServiceWorkerRegister />
+        <ServiceWorkerRegister initialVersion={process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID || "local"} />
       </body>
     </html>
   )

@@ -70,30 +70,22 @@ export default function FundPage() {
           <figure className="mb-8" data-testid="watch-showcase">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2 rounded-2xl overflow-hidden border border-primary/30">
-                <div className="grid gap-3 md:grid-cols-2 p-3">
+                <div className="grid gap-3 p-3">
                   <Image
-                    src="/images/ng46-rev5-blueprint.svg?rev=5-2026-10-12"
-                    alt="NarcoGuard NG46 Rev 5 concept engineering blueprint"
+                    src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
+                    alt="NarcoGuard titanium and pink rose-titanium 3D watch concepts"
                     width={1200}
                     height={800}
                     priority
                     sizes="(min-width: 768px) 50vw, 100vw"
                     className="w-full h-auto rounded-xl"
                   />
-                  <Image
-                    src="/images/ng40-rev5-blueprint.svg?rev=5-2026-10-12"
-                    alt="NarcoGuard NG40 Rev 5 concept engineering blueprint"
-                    width={1200}
-                    height={800}
-                    priority
-                    sizes="(min-width: 768px) 50vw, 100vw"
-                    className="w-full h-auto rounded-xl"
-                  />
+
                 </div>
               </div>
               <div className="rounded-2xl border border-primary/30 p-5 md:col-span-2">
                 <p className="text-sm font-semibold text-primary">Current public engineering package: Rev 5</p>
-                <p className="mt-2 text-sm text-muted-foreground">The drawings above are the current concept blueprints used by the app. They replace earlier lifestyle/exploded renders as the primary fundraising visuals so the campaign page and engineering page stay aligned.</p>
+                <p className="mt-2 text-sm text-muted-foreground">The images show the approved titanium and pink rose-titanium watch concepts with metal link bands. These are design visuals; manufacturing CAD and internal fit remain unverified.</p>
               </div>
             </div>
             <figcaption className="mt-2 text-center text-sm text-muted-foreground">
@@ -205,7 +197,7 @@ export default function FundPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div className="rounded-xl overflow-hidden border border-primary/20">
                 <Image
-                  src="/images/ng46-rev5-blueprint.svg?rev=5-2026-10-12"
+                  src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
                   alt="NarcoGuard NG46 Rev 5 concept blueprint"
                   width={1200}
                   height={800}
@@ -323,7 +315,7 @@ export default function FundPage() {
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng46-rev5-blueprint.svg?rev=5-2026-10-12"
+                src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
                 alt="NarcoGuard NG46 Rev 5 engineering blueprint"
                 width={1200}
                 height={800}
@@ -332,7 +324,7 @@ export default function FundPage() {
             </div>
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng40-rev5-blueprint.svg?rev=5-2026-10-12"
+                src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
                 alt="NarcoGuard NG40 Rev 5 engineering blueprint"
                 width={1200}
                 height={800}
