@@ -30,6 +30,11 @@ test("activation validates ZIPs and requires destination != home", () => {
   assert.equal(activateTravel(memoryStorage(), { destinationZip: null, homeZip: "13201", now: NOW }).ok, false)
 })
 
+test("non-finite activation duration is rejected without throwing", () => {
+  const result = activateTravel(memoryStorage(), { destinationZip: "13202", homeZip: "13201", durationMinutes: Number.NaN, now: NOW })
+  assert.equal(result.ok, false)
+})
+
 test("duration clamps to the allowed window; default is 24h", () => {
   const storage = memoryStorage()
   const short = activateTravel(storage, { destinationZip: "13202", homeZip: "13201", durationMinutes: 1, now: NOW })
