@@ -101,7 +101,7 @@ export async function POST(request: Request) {
 
     const displayName = input.displayName
     let signupVerifier: string | undefined
-    let attempt
+    let attempt: Awaited<ReturnType<typeof signIn>>
     if (input.action === "signup") {
       signupVerifier = createVerifier()
       const store = await cookies()
