@@ -15,6 +15,7 @@ export interface AngelEndpoint {
 
 export interface AngelModelChoice {
   model: string
+  privacy?: AngelPrivacy
   extraBody: Record<string, unknown>
   /** A different endpoint than the provider's own, for a fallback on another service. */
   endpoint?: AngelEndpoint
@@ -22,11 +23,14 @@ export interface AngelModelChoice {
   tokenParam?: "max_tokens" | "max_completion_tokens"
 }
 
+export type AngelPrivacy = "zero-data-retention" | "no-data-collection" | "provider-policy" | "unverified"
+
 export interface AngelProvider {
   name: "Kimi" | "Groq" | "OpenRouter" | "Vercel AI Gateway"
   url: string
   token: string
   model: string
+  privacy: AngelPrivacy
   fastModel?: string
   reasoningModel?: string
   /** Provider-specific request fields merged into every chat completion request. */
@@ -59,6 +63,7 @@ function gatewayProvider(env: Env, oidcHeader: string | null): AngelProvider | n
     url: "https://ai-gateway.vercel.sh/v1/chat/completions",
     token: gatewayToken,
     model,
+    privacy: "provider-policy",
     fastModel: env.ANGEL_GATEWAY_FAST_MODEL,
     reasoningModel: env.ANGEL_GATEWAY_REASONING_MODEL,
     extraBody: gatewayExtraBody(model),
@@ -76,9 +81,25 @@ function groqProvider(env: Env): AngelProvider | null {
     url: "https://api.groq.com/openai/v1/chat/completions",
     token: env.GROQ_API_KEY,
     model,
+    privacy: "provider-policy",
     fastModel: env.GROQ_FAST_MODEL,
     reasoningModel: env.GROQ_REASONING_MODEL,
     extraBody: model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {},
+  }
+}
+
+
+function openRouterProvider(env: Env): AngelProvider | null {
+  if (!env.OPENROUTER_API_KEY) return null
+  return {
+    name: "OpenRouter",
+    url: "https://openrouter.ai/api/v1/chat/completions",
+    token: env.OPENROUTER_API_KEY,
+    model: env.OPENROUTER_MODEL || ANGEL_DEFAULT_MODEL,
+    privacy: "no-data-collection",
+    fastModel: env.OPENROUTER_FAST_MODEL,
+    reasoningModel: env.OPENROUTER_REASONING_MODEL,
+    extraBody: { provider: { data_collection: "deny" } },
   }
 }
 
@@ -90,6 +111,22 @@ function chain(...providers: (AngelProvider | null)[]): AngelProvider | undefine
 }
 
 export function resolveAngelProvider(env: Env, oidcHeader: string | null): AngelProvider | null {
+  const strictPrivacy = env.ANGEL_PRIVACY_MODE === "strict"
+  const gateway = gatewayProvider(env, oidcHeader)
+  const privacySafeOpenRouter = openRouterProvider(env)
+  if (strictPrivacy && gateway) {
+    return {
+      ...gateway,
+      privacy: "zero-data-retention",
+      // In strict mode every Gateway attempt explicitly requests zero retention.
+      extraBody: { providerOptions: { gateway: { zeroDataRetention: true } } },
+      extraBodyFor: () => ({ providerOptions: { gateway: { zeroDataRetention: true } } }),
+      fallbacks: [],
+      next: privacySafeOpenRouter ?? undefined,
+    }
+  }
+  if (strictPrivacy && privacySafeOpenRouter) return privacySafeOpenRouter
+  if (strictPrivacy) return null
   const kimiKey = env.MOONSHOT_API_KEY || env.KIMI_API_KEY
   if (kimiKey) {
     // The gateway (when this deployment has one) catches anything Kimi refuses, so Angel stays on.
@@ -98,6 +135,7 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
       url: env.MOONSHOT_BASE_URL ? `${env.MOONSHOT_BASE_URL.replace(/\/+$/, "")}/chat/completions` : KIMI_DEFAULT_URL,
       token: kimiKey,
       model: env.KIMI_MODEL || KIMI_DEFAULT_MODEL,
+      privacy: "unverified",
       fastModel: env.KIMI_FAST_MODEL,
       reasoningModel: env.KIMI_REASONING_MODEL,
       extraBody: {},
@@ -108,19 +146,8 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
   }
   const groq = groqProvider(env)
   if (groq) return groq
-  if (env.OPENROUTER_API_KEY) {
-    return {
-      name: "OpenRouter",
-      url: "https://openrouter.ai/api/v1/chat/completions",
-      token: env.OPENROUTER_API_KEY,
-      model: env.OPENROUTER_MODEL || ANGEL_DEFAULT_MODEL,
-      fastModel: env.OPENROUTER_FAST_MODEL,
-      reasoningModel: env.OPENROUTER_REASONING_MODEL,
-      // Route only to providers that do not store prompts or use them for training.
-      extraBody: { provider: { data_collection: "deny" } },
-    }
-  }
-  return gatewayProvider(env, oidcHeader)
+  if (privacySafeOpenRouter) return privacySafeOpenRouter
+  return gateway
 }
 
 export function modelForAngelTask(provider: AngelProvider, task: "quick" | "resource" | "reasoning"): string {
@@ -132,8 +159,8 @@ export function modelForAngelTask(provider: AngelProvider, task: "quick" | "reso
 /** Model choices for a task, in the order to try them, ending with any next service's own choices. */
 export function modelAttempts(provider: AngelProvider, task: "quick" | "resource" | "reasoning"): AngelModelChoice[] {
   const model = modelForAngelTask(provider, task)
-  const first: AngelModelChoice = { model, extraBody: provider.extraBodyFor?.(model) ?? provider.extraBody, ...(provider.tokenParam ? { tokenParam: provider.tokenParam } : {}) }
-  const own = [first, ...(provider.fallbacks ?? []).filter((choice) => choice.model !== first.model)]
+  const first: AngelModelChoice = { model, privacy: provider.privacy, extraBody: provider.extraBodyFor?.(model) ?? provider.extraBody, ...(provider.tokenParam ? { tokenParam: provider.tokenParam } : {}) }
+  const own = [first, ...(provider.fallbacks ?? []).filter((choice) => choice.model !== first.model).map((choice) => ({ ...choice, privacy: choice.privacy ?? provider.privacy }))]
   if (!provider.next) return own
   const endpoint = { name: provider.next.name, url: provider.next.url, token: provider.next.token }
   return [...own, ...modelAttempts(provider.next, task).map((choice) => ({ ...choice, endpoint: choice.endpoint ?? endpoint }))]

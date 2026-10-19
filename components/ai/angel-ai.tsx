@@ -21,6 +21,7 @@ import { readLifeSupportState } from "@/lib/life-support"
 import { readResourcePreferences } from "@/lib/resource-personalization"
 import { angelContextHasContent, buildAngelLocalContext } from "@/lib/angel-context"
 import { beginAngelAttempt, finishAngelAttempt, type AngelPendingTurn } from "@/lib/angel-pending"
+import { deactivateTravel, effectiveZip, readTravel } from "@/lib/travel-mode"
 
 interface ChatMessage {
   id: string
