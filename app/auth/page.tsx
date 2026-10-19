@@ -32,6 +32,8 @@ export default function AuthPage() {
     const error = params.get("error")
     const notice = error === "google"
       ? "Google sign-in did not finish. Try again, or use email below."
+      : error === "callback"
+        ? "Sign-in confirmation did not finish. Open the newest confirmation link in this browser, or resend it below."
       : error === "google-off"
         ? "Google sign-in is not switched on yet. Use email below."
         : params.get('reason') === 'expired' ? 'Your session has expired. Sign in to continue where you left off.' : ""
@@ -105,7 +107,7 @@ export default function AuthPage() {
       const response = await fetch("/api/auth", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "resend-signup", email }),
+        body: JSON.stringify({ action: "resend-signup", email, next: destination }),
       })
       const result = await response.json() as AuthResponse
       setCooldown(result.retryAfter ?? AUTH_EMAIL_COOLDOWN_SECONDS)
