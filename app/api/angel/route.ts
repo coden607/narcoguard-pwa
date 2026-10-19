@@ -105,7 +105,7 @@ export async function GET(request: Request) {
     if (!provider) return NextResponse.json({ ok: false, provider: null }, { headers: noStore })
     try {
       const { message: reply, choice } = await completeWithFallback(provider, modelAttempts(provider, "quick"), [{ role: "system", content: "Reply with the single word OK." }, { role: "user", content: "ping" }], false, Date.now() + (maxDuration - 5) * 1000, 64)
-      return NextResponse.json({ ok: true, provider: provider.name, privacy: provider.privacy, answeredBy: endpointFor(provider, choice).name, model: choice.model, configuredModel: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
+      return NextResponse.json({ ok: true, provider: provider.name, privacy: choice.privacy ?? provider.privacy, answeredBy: endpointFor(provider, choice).name, model: choice.model, configuredModel: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
     } catch (error) {
       return NextResponse.json({ ok: false, provider: provider.name, status: error instanceof ProviderError ? error.status : "network", detail: error instanceof ProviderError ? error.detail : undefined }, { headers: noStore })
     }
