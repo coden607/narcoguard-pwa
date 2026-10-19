@@ -1,7 +1,9 @@
 // One-tap sign-in with Google through Supabase Auth, using the PKCE flow so the code returned
 // to NarcoGuard is useless to anyone without the verifier kept in this browser's httpOnly cookie.
 
-export const PKCE_COOKIE = "ng_pkce_verifier"
+export const GOOGLE_PKCE_COOKIE = "ng_pkce_google_verifier"
+export const EMAIL_PKCE_COOKIE = "ng_pkce_email_verifier"
+export const PKCE_COOKIE = GOOGLE_PKCE_COOKIE
 export const PKCE_MAX_AGE_S = 600
 
 const base64url = (bytes: Uint8Array) =>
