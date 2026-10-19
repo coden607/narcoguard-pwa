@@ -19,6 +19,30 @@ function inRequest<T>(request: NextRequest, run: () => Promise<T>) {
 }
 const requestFor = (body: unknown, cookie = '') => new NextRequest('https://app.test/api/auth', { method: 'POST', headers: { Origin: 'https://app.test', Cookie: cookie, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
 
+
+test('successful login stores an httpOnly session and returns the safe destination', async () => {
+  const original = globalThis.fetch
+  process.env.SUPABASE_URL = 'https://example.supabase.co'; process.env.SUPABASE_ANON_KEY = 'test-key'
+  try {
+    globalThis.fetch = async () => Response.json({
+      access_token: 'access-token',
+      refresh_token: 'refresh-token',
+      expires_in: 3600,
+      user: { id: 'fixture-user', email: 'user@example.invalid' },
+    })
+    const request = requestFor({ action: 'login', email: 'user@example.invalid', password: 'fixture-password', next: '/watch' })
+    const outcome = await inRequest(request, () => POST(request))
+    assert.equal(outcome.result.status, 200)
+    const body = await outcome.result.json()
+    assert.equal(body.success, true)
+    assert.equal(body.next, '/watch')
+    assert.equal(outcome.cookies.get('ng_access_token')?.httpOnly, true)
+    assert.equal(outcome.cookies.get('ng_access_token')?.value, 'access-token')
+    assert.equal(outcome.cookies.get('ng_refresh_token')?.httpOnly, true)
+    assert.equal(outcome.cookies.get('ng_refresh_token')?.value, 'refresh-token')
+  } finally { globalThis.fetch = original; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_ANON_KEY }
+})
+
 test('rejected or interrupted signup preserves an outstanding confirmation verifier and destination', async () => {
   const original = globalThis.fetch
   process.env.SUPABASE_URL = 'https://example.supabase.co'; process.env.SUPABASE_ANON_KEY = 'test-key'
