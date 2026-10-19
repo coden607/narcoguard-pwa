@@ -22,11 +22,14 @@ export interface AngelModelChoice {
   tokenParam?: "max_tokens" | "max_completion_tokens"
 }
 
+export type AngelPrivacy = "zero-data-retention" | "no-data-collection" | "provider-policy" | "unverified"
+
 export interface AngelProvider {
   name: "Kimi" | "Groq" | "OpenRouter" | "Vercel AI Gateway"
   url: string
   token: string
   model: string
+  privacy: AngelPrivacy
   fastModel?: string
   reasoningModel?: string
   /** Provider-specific request fields merged into every chat completion request. */
@@ -59,6 +62,7 @@ function gatewayProvider(env: Env, oidcHeader: string | null): AngelProvider | n
     url: "https://ai-gateway.vercel.sh/v1/chat/completions",
     token: gatewayToken,
     model,
+    privacy: "zero-data-retention",
     fastModel: env.ANGEL_GATEWAY_FAST_MODEL,
     reasoningModel: env.ANGEL_GATEWAY_REASONING_MODEL,
     extraBody: gatewayExtraBody(model),
@@ -76,6 +80,7 @@ function groqProvider(env: Env): AngelProvider | null {
     url: "https://api.groq.com/openai/v1/chat/completions",
     token: env.GROQ_API_KEY,
     model,
+    privacy: "provider-policy",
     fastModel: env.GROQ_FAST_MODEL,
     reasoningModel: env.GROQ_REASONING_MODEL,
     extraBody: model.startsWith("openai/gpt-oss") ? { reasoning_effort: "low" } : {},
@@ -90,6 +95,22 @@ function chain(...providers: (AngelProvider | null)[]): AngelProvider | undefine
 }
 
 export function resolveAngelProvider(env: Env, oidcHeader: string | null): AngelProvider | null {
+  const strictPrivacy = env.ANGEL_PRIVACY_MODE === "strict"
+  const gateway = gatewayProvider(env, oidcHeader)
+  if (strictPrivacy && gateway) return gateway
+  if (strictPrivacy && env.OPENROUTER_API_KEY) {
+    return {
+      name: "OpenRouter",
+      url: "https://openrouter.ai/api/v1/chat/completions",
+      token: env.OPENROUTER_API_KEY,
+      model: env.OPENROUTER_MODEL || ANGEL_DEFAULT_MODEL,
+      privacy: "no-data-collection",
+      fastModel: env.OPENROUTER_FAST_MODEL,
+      reasoningModel: env.OPENROUTER_REASONING_MODEL,
+      extraBody: { provider: { data_collection: "deny" } },
+    }
+  }
+  if (strictPrivacy) return null
   const kimiKey = env.MOONSHOT_API_KEY || env.KIMI_API_KEY
   if (kimiKey) {
     // The gateway (when this deployment has one) catches anything Kimi refuses, so Angel stays on.
@@ -98,6 +119,7 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
       url: env.MOONSHOT_BASE_URL ? `${env.MOONSHOT_BASE_URL.replace(/\/+$/, "")}/chat/completions` : KIMI_DEFAULT_URL,
       token: kimiKey,
       model: env.KIMI_MODEL || KIMI_DEFAULT_MODEL,
+      privacy: "unverified",
       fastModel: env.KIMI_FAST_MODEL,
       reasoningModel: env.KIMI_REASONING_MODEL,
       extraBody: {},
@@ -114,13 +136,14 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
       url: "https://openrouter.ai/api/v1/chat/completions",
       token: env.OPENROUTER_API_KEY,
       model: env.OPENROUTER_MODEL || ANGEL_DEFAULT_MODEL,
+      privacy: "no-data-collection",
       fastModel: env.OPENROUTER_FAST_MODEL,
       reasoningModel: env.OPENROUTER_REASONING_MODEL,
       // Route only to providers that do not store prompts or use them for training.
       extraBody: { provider: { data_collection: "deny" } },
     }
   }
-  return gatewayProvider(env, oidcHeader)
+  return gateway
 }
 
 export function modelForAngelTask(provider: AngelProvider, task: "quick" | "resource" | "reasoning"): string {
