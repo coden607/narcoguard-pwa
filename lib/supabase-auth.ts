@@ -3,7 +3,7 @@ import { cookies } from "next/headers"
 const ACCESS_COOKIE = "ng_access_token"
 const REFRESH_COOKIE = "ng_refresh_token"
 
-export type SupabaseUser = { id: string; email?: string; user_metadata?: Record<string, unknown> }
+export type SupabaseUser = { id: string; email?: string; identities?: unknown[]; user_metadata?: Record<string, unknown> }
 
 type SupabaseSession = {
   access_token: string

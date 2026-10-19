@@ -37,6 +37,22 @@ test('rejected or interrupted signup preserves an outstanding confirmation verif
   } finally { globalThis.fetch = original; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_ANON_KEY }
 })
 
+test('obfuscated signup success preserves the outstanding confirmation without disclosing account state', async () => {
+  const original = globalThis.fetch
+  process.env.SUPABASE_URL = 'https://example.supabase.co'; process.env.SUPABASE_ANON_KEY = 'test-key'
+  try {
+    for (const identities of [[], undefined]) {
+      globalThis.fetch = async () => Response.json({ id: 'obfuscated-user', email: 'existing@example.invalid', identities })
+      const request = requestFor({ action: 'signup', email: 'existing@example.invalid', password: 'fixture-password', displayName: 'Fixture', next: '/watch' }, `${EMAIL_PKCE_COOKIE}=previous-verifier; ${EMAIL_NEXT_COOKIE}=/planning`)
+      const outcome = await inRequest(request, () => POST(request))
+      assert.equal(outcome.result.status, 202)
+      assert.deepEqual(await outcome.result.json(), { success: true, confirmationRequired: true, message: 'If this address has an unconfirmed account, a confirmation email will arrive. Check your inbox and spam folder.' })
+      assert.equal(outcome.cookies.get(EMAIL_PKCE_COOKIE)?.value, 'previous-verifier')
+      assert.equal(outcome.cookies.get(EMAIL_NEXT_COOKIE)?.value, '/planning')
+    }
+  } finally { globalThis.fetch = original; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_ANON_KEY }
+})
+
 test('accepted signup replaces the confirmation verifier with the accepted PKCE challenge', async () => {
   const original = globalThis.fetch
   process.env.SUPABASE_URL = 'https://example.supabase.co'; process.env.SUPABASE_ANON_KEY = 'test-key'
@@ -44,7 +60,7 @@ test('accepted signup replaces the confirmation verifier with the accepted PKCE 
   try {
     globalThis.fetch = async (_url, init) => {
       challenge = JSON.parse(String(init?.body)).code_challenge
-      return Response.json({ id: 'fixture-user', email: 'new@example.invalid' })
+      return Response.json({ id: 'fixture-user', email: 'new@example.invalid', identities: [{ provider: 'email' }] })
     }
     const request = requestFor({ action: 'signup', email: 'new@example.invalid', password: 'fixture-password', displayName: 'Fixture', next: '/watch' }, `${EMAIL_PKCE_COOKIE}=previous-verifier; ${EMAIL_NEXT_COOKIE}=/planning`)
     const outcome = await inRequest(request, () => POST(request))

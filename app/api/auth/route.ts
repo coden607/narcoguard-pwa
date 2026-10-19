@@ -117,10 +117,13 @@ export async function POST(request: Request) {
     }
 
     if (input.action === "signup" && !attempt.session && attempt.user && signupVerifier) {
-      // Replace an outstanding confirmation only after the provider accepts this one.
-      const store = await cookies()
-      store.set(EMAIL_PKCE_COOKIE, signupVerifier, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
-      store.set(EMAIL_NEXT_COOKIE, safeAuthDestination(input.next), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
+      // GoTrue can return an obfuscated user with no identities or email sent.
+      // Keep any earlier confirmation usable; the public response stays generic.
+      if (Array.isArray(attempt.user.identities) && attempt.user.identities.length > 0) {
+        const store = await cookies()
+        store.set(EMAIL_PKCE_COOKIE, signupVerifier, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
+        store.set(EMAIL_NEXT_COOKIE, safeAuthDestination(input.next), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
+      }
       return NextResponse.json({
         success: true,
         confirmationRequired: true,
