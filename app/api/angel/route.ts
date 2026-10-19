@@ -105,12 +105,12 @@ export async function GET(request: Request) {
     if (!provider) return NextResponse.json({ ok: false, provider: null }, { headers: noStore })
     try {
       const { message: reply, choice } = await completeWithFallback(provider, modelAttempts(provider, "quick"), [{ role: "system", content: "Reply with the single word OK." }, { role: "user", content: "ping" }], false, Date.now() + (maxDuration - 5) * 1000, 64)
-      return NextResponse.json({ ok: true, provider: provider.name, answeredBy: endpointFor(provider, choice).name, model: choice.model, configuredModel: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
+      return NextResponse.json({ ok: true, provider: provider.name, privacy: provider.privacy, answeredBy: endpointFor(provider, choice).name, model: choice.model, configuredModel: provider.model, reply: reply.content?.slice(0, 40) ?? null }, { headers: noStore })
     } catch (error) {
       return NextResponse.json({ ok: false, provider: provider.name, status: error instanceof ProviderError ? error.status : "network", detail: error instanceof ProviderError ? error.detail : undefined }, { headers: noStore })
     }
   }
-  return NextResponse.json({ available: Boolean(provider), provider: provider?.name ?? null }, { headers: noStore })
+  return NextResponse.json({ available: Boolean(provider), provider: provider?.name ?? null, privacy: provider?.privacy ?? null, strictPrivacy: process.env.ANGEL_PRIVACY_MODE === "strict" }, { headers: noStore })
 }
 
 export async function POST(request: Request) {
