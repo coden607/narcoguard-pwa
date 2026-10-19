@@ -3,7 +3,7 @@ import { cookies } from "next/headers"
 import { z } from "zod"
 import { clearSession, ensureProfile, getSession, isAuthConfigured, isGoogleSignInEnabled, resendSignup, requestPasswordReset, signIn, signUp, storeSession, type AuthFailure } from "@/lib/supabase-auth"
 import { AUTH_EMAIL_COOLDOWN_SECONDS, RECOVERY_MAX_AGE_SECONDS, RECOVERY_VERIFIER_COOKIE, recoveryNotice, safeAuthDestination } from "@/lib/auth-recovery"
-import { challengeFor, createVerifier } from "@/lib/oauth-pkce"
+import { EMAIL_NEXT_COOKIE, EMAIL_PKCE_COOKIE, challengeFor, createVerifier } from "@/lib/oauth-pkce"
 
 const schema = z.object({
   action: z.enum(["login", "signup", "logout", "resend-signup", "reset-password"]),
@@ -84,7 +84,15 @@ export async function POST(request: Request) {
         const verifier = createVerifier()
         store.set(RECOVERY_VERIFIER_COOKIE, verifier, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: RECOVERY_MAX_AGE_SECONDS })
         await requestPasswordReset(input.email, `${new URL(request.url).origin}/api/auth/recovery`, await challengeFor(verifier))
-      } else { await resendSignup(input.email) }
+      } else {
+        const verifier = createVerifier()
+        const next = safeAuthDestination(input.next)
+        const resendError = await resendSignup(input.email, `${new URL(request.url).origin}/api/auth/callback?flow=email`, await challengeFor(verifier))
+        if (!resendError) {
+          store.set(EMAIL_PKCE_COOKIE, verifier, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: 3600 })
+          store.set(EMAIL_NEXT_COOKIE, next, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: 3600 })
+        }
+      }
       // Provider responses can reveal account state. Keep all accepted addresses indistinguishable.
       return NextResponse.json({ success: true, confirmationRequired: input.action === 'resend-signup', retryAfter: AUTH_EMAIL_COOLDOWN_SECONDS, message: recoveryNotice(input.action) }, { headers: { 'Cache-Control': 'private, no-store' } })
     }
@@ -94,11 +102,25 @@ export async function POST(request: Request) {
     }
 
     const displayName = input.displayName
-    const attempt = input.action === "signup"
-      ? await signUp(input.email, input.password, displayName as string)
-      : await signIn(input.email, input.password)
+    let signupVerifier: string | undefined
+    let attempt: Awaited<ReturnType<typeof signIn>>
+    if (input.action === "signup") {
+      signupVerifier = createVerifier()
+      const store = await cookies()
+      const next = safeAuthDestination(input.next)
+      store.set(EMAIL_PKCE_COOKIE, signupVerifier, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
+      store.set(EMAIL_NEXT_COOKIE, next, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
+      attempt = await signUp(input.email, input.password, displayName as string, `${new URL(request.url).origin}/api/auth/callback?flow=email`, await challengeFor(signupVerifier))
+    } else {
+      attempt = await signIn(input.email, input.password)
+    }
 
     if (attempt.error) {
+      if (input.action === "signup") {
+        const store = await cookies()
+        store.delete({ name: EMAIL_PKCE_COOKIE, path: "/api/auth" })
+        store.delete({ name: EMAIL_NEXT_COOKIE, path: "/api/auth" })
+      }
       if (input.action === 'signup' && (attempt.error.code === 'user_already_exists' || /already (?:registered|exists)/i.test(attempt.error.message))) return NextResponse.json({ success: true, confirmationRequired: true, message: recoveryNotice('resend-signup') }, { status: 202 })
       return authErrorResponse(attempt.error)
     }
@@ -115,6 +137,11 @@ export async function POST(request: Request) {
     if (!session?.access_token || !session.refresh_token) return authErrorResponse(null)
 
     await storeSession(session)
+    if (input.action === "signup") {
+      const store = await cookies()
+      store.delete({ name: EMAIL_PKCE_COOKIE, path: "/api/auth" })
+      store.delete({ name: EMAIL_NEXT_COOKIE, path: "/api/auth" })
+    }
     await ensureProfile(session, displayName ?? session.user?.email?.split("@")[0] ?? "NarcoGuard user")
     return NextResponse.json({ success: true, confirmationRequired: false, next: safeAuthDestination(input.next), user: session.user ? { id: session.user.id, email: session.user.email } : null })
   } catch (error) {

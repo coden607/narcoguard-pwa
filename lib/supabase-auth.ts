@@ -69,18 +69,20 @@ export async function signIn(email: string, password: string): Promise<AuthAttem
   return parseAuthAttempt(response)
 }
 
-export async function signUp(email: string, password: string, displayName: string): Promise<AuthAttempt> {
-  const response = await supabaseRequest("/auth/v1/signup", {
+export async function signUp(email: string, password: string, displayName: string, redirectTo?: string, challenge?: string): Promise<AuthAttempt> {
+  const path = redirectTo ? `/auth/v1/signup?redirect_to=${encodeURIComponent(redirectTo)}` : "/auth/v1/signup"
+  const response = await supabaseRequest(path, {
     method: "POST",
-    body: JSON.stringify({ email, password, data: { display_name: displayName } }),
+    body: JSON.stringify({ email, password, data: { display_name: displayName }, ...(challenge ? { code_challenge: challenge, code_challenge_method: "s256" } : {}) }),
   })
   return parseAuthAttempt(response)
 }
 
-export async function resendSignup(email: string): Promise<AuthFailure | null> {
-  const response = await supabaseRequest("/auth/v1/resend", {
+export async function resendSignup(email: string, redirectTo?: string, challenge?: string): Promise<AuthFailure | null> {
+  const path = redirectTo ? `/auth/v1/resend?redirect_to=${encodeURIComponent(redirectTo)}` : "/auth/v1/resend"
+  const response = await supabaseRequest(path, {
     method: "POST",
-    body: JSON.stringify({ type: "signup", email }),
+    body: JSON.stringify({ type: "signup", email, ...(challenge ? { code_challenge: challenge, code_challenge_method: "s256" } : {}) }),
   })
   if (response.ok) return null
   const attempt = await parseAuthAttempt(response)
