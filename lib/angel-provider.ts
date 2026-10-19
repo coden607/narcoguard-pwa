@@ -97,7 +97,16 @@ function chain(...providers: (AngelProvider | null)[]): AngelProvider | undefine
 export function resolveAngelProvider(env: Env, oidcHeader: string | null): AngelProvider | null {
   const strictPrivacy = env.ANGEL_PRIVACY_MODE === "strict"
   const gateway = gatewayProvider(env, oidcHeader)
-  if (strictPrivacy && gateway) return gateway
+  if (strictPrivacy && gateway) {
+    return {
+      ...gateway,
+      // In strict mode every Gateway attempt must request zero retention. Do not fall back
+      // to a route whose retention posture is only inferred from the upstream provider.
+      extraBody: { providerOptions: { gateway: { zeroDataRetention: true } } },
+      extraBodyFor: () => ({ providerOptions: { gateway: { zeroDataRetention: true } } }),
+      fallbacks: [],
+    }
+  }
   if (strictPrivacy && env.OPENROUTER_API_KEY) {
     return {
       name: "OpenRouter",
