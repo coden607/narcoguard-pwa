@@ -15,8 +15,11 @@ test("strict privacy mode prefers zero-retention gateway even when Kimi and Groq
   assert.equal(provider.name, "Vercel AI Gateway")
   assert.equal(provider.privacy, "zero-data-retention")
   const attempts = modelAttempts(provider, "reasoning")
-  assert.equal(attempts.length, 1)
+  assert.equal(attempts.length, 2)
+  assert.equal(attempts[0].privacy, "zero-data-retention")
   assert.deepEqual(attempts[0].extraBody, { providerOptions: { gateway: { zeroDataRetention: true } } })
+  assert.equal(attempts[1].privacy, "no-data-collection")
+  assert.deepEqual(attempts[1].extraBody, { provider: { data_collection: "deny" } })
 })
 
 test("strict privacy mode uses no-data-collection OpenRouter only when gateway is unavailable", () => {
