@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { GOOGLE_PKCE_COOKIE, PKCE_MAX_AGE_S, authorizeUrl, challengeFor, createVerifier } from "@/lib/oauth-pkce"
+import { GOOGLE_NEXT_COOKIE, GOOGLE_PKCE_COOKIE, PKCE_MAX_AGE_S, authorizeUrl, challengeFor, createVerifier } from "@/lib/oauth-pkce"
 import { isGoogleSignInEnabled, supabaseAuthUrl } from "@/lib/supabase-auth"
 import { safeAuthDestination } from '@/lib/auth-recovery'
 
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   response.cookies.set(GOOGLE_PKCE_COOKIE, verifier, {
     httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: PKCE_MAX_AGE_S,
   })
-  response.cookies.set('ng_auth_next', safeAuthDestination(new URL(request.url).searchParams.get('next')), { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: PKCE_MAX_AGE_S })
+  response.cookies.set(GOOGLE_NEXT_COOKIE, safeAuthDestination(new URL(request.url).searchParams.get('next')), { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: PKCE_MAX_AGE_S })
   response.headers.set("Cache-Control", "private, no-store")
   return response
 }
