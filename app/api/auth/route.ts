@@ -106,26 +106,21 @@ export async function POST(request: Request) {
     let attempt: Awaited<ReturnType<typeof signIn>>
     if (input.action === "signup") {
       signupVerifier = createVerifier()
-      const store = await cookies()
-      const next = safeAuthDestination(input.next)
-      store.set(EMAIL_PKCE_COOKIE, signupVerifier, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
-      store.set(EMAIL_NEXT_COOKIE, next, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
       attempt = await signUp(input.email, input.password, displayName as string, `${new URL(request.url).origin}/api/auth/callback?flow=email`, await challengeFor(signupVerifier))
     } else {
       attempt = await signIn(input.email, input.password)
     }
 
     if (attempt.error) {
-      if (input.action === "signup") {
-        const store = await cookies()
-        store.delete({ name: EMAIL_PKCE_COOKIE, path: "/api/auth" })
-        store.delete({ name: EMAIL_NEXT_COOKIE, path: "/api/auth" })
-      }
       if (input.action === 'signup' && (attempt.error.code === 'user_already_exists' || /already (?:registered|exists)/i.test(attempt.error.message))) return NextResponse.json({ success: true, confirmationRequired: true, message: recoveryNotice('resend-signup') }, { status: 202 })
       return authErrorResponse(attempt.error)
     }
 
-    if (input.action === "signup" && !attempt.session && attempt.user) {
+    if (input.action === "signup" && !attempt.session && attempt.user && signupVerifier) {
+      // Replace an outstanding confirmation only after the provider accepts this one.
+      const store = await cookies()
+      store.set(EMAIL_PKCE_COOKIE, signupVerifier, { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
+      store.set(EMAIL_NEXT_COOKIE, safeAuthDestination(input.next), { httpOnly: true, secure: process.env.NODE_ENV === "production", sameSite: "lax", path: "/api/auth", maxAge: 3600 })
       return NextResponse.json({
         success: true,
         confirmationRequired: true,
