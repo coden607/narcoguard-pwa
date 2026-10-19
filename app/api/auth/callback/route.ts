@@ -1,6 +1,6 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
-import { PKCE_COOKIE, nameFromMetadata } from "@/lib/oauth-pkce"
+import { EMAIL_PKCE_COOKIE, GOOGLE_PKCE_COOKIE, nameFromMetadata } from "@/lib/oauth-pkce"
 import { ensureProfile, exchangeCode, isAuthConfigured, storeSession } from "@/lib/supabase-auth"
 import { safeAuthDestination } from '@/lib/auth-recovery'
 
@@ -9,12 +9,14 @@ export const dynamic = "force-dynamic"
 /** Google or email confirmation sends the person back here; PKCE exchanges the code and stores the session. */
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const fail = () => NextResponse.redirect(new URL("/auth?error=callback", url.origin))
+  const flow = url.searchParams.get("flow") === "google" ? "google" : "email"
+  const verifierCookie = flow === "google" ? GOOGLE_PKCE_COOKIE : EMAIL_PKCE_COOKIE
+  const fail = () => NextResponse.redirect(new URL(`/auth?error=${flow === "google" ? "google" : "email-confirmation"}`, url.origin))
   const store = await cookies()
-  const verifier = store.get(PKCE_COOKIE)?.value
+  const verifier = store.get(verifierCookie)?.value
   const next = safeAuthDestination(store.get('ng_auth_next')?.value)
   store.delete({ name: 'ng_auth_next', path: '/api/auth' })
-  store.delete({ name: PKCE_COOKIE, path: "/api/auth" })
+  store.delete({ name: verifierCookie, path: "/api/auth" })
   const code = url.searchParams.get("code")
   if (!isAuthConfigured() || !code || !verifier) return fail()
   try {
