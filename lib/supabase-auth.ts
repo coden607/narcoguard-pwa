@@ -79,9 +79,10 @@ export async function signUp(email: string, password: string, displayName: strin
 }
 
 export async function resendSignup(email: string, redirectTo?: string, challenge?: string): Promise<AuthFailure | null> {
-  const response = await supabaseRequest("/auth/v1/resend", {
+  const path = redirectTo ? `/auth/v1/resend?redirect_to=${encodeURIComponent(redirectTo)}` : "/auth/v1/resend"
+  const response = await supabaseRequest(path, {
     method: "POST",
-    body: JSON.stringify({ type: "signup", email, ...(redirectTo ? { redirect_to: redirectTo } : {}), ...(challenge ? { code_challenge: challenge, code_challenge_method: "s256" } : {}) }),
+    body: JSON.stringify({ type: "signup", email, ...(challenge ? { code_challenge: challenge, code_challenge_method: "s256" } : {}) }),
   })
   if (response.ok) return null
   const attempt = await parseAuthAttempt(response)
