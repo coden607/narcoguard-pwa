@@ -1,22 +1,22 @@
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { PKCE_COOKIE, nameFromMetadata } from "@/lib/oauth-pkce"
-import { ensureProfile, exchangeCode, isGoogleSignInEnabled, storeSession } from "@/lib/supabase-auth"
+import { ensureProfile, exchangeCode, isAuthConfigured, storeSession } from "@/lib/supabase-auth"
 import { safeAuthDestination } from '@/lib/auth-recovery'
 
 export const dynamic = "force-dynamic"
 
-/** Google sends the person back here; the code is exchanged with this browser's verifier and the session stored. */
+/** Google or email confirmation sends the person back here; PKCE exchanges the code and stores the session. */
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const fail = () => NextResponse.redirect(new URL("/auth?error=google", url.origin))
+  const fail = () => NextResponse.redirect(new URL("/auth?error=callback", url.origin))
   const store = await cookies()
   const verifier = store.get(PKCE_COOKIE)?.value
   const next = safeAuthDestination(store.get('ng_auth_next')?.value)
   store.delete({ name: 'ng_auth_next', path: '/api/auth' })
   store.delete({ name: PKCE_COOKIE, path: "/api/auth" })
   const code = url.searchParams.get("code")
-  if (!isGoogleSignInEnabled() || !code || !verifier) return fail()
+  if (!isAuthConfigured() || !code || !verifier) return fail()
   try {
     const session = await exchangeCode(code, verifier)
     if (!session?.access_token || !session.refresh_token) return fail()
