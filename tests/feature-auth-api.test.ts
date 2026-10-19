@@ -8,6 +8,7 @@ import { workAsyncStorage, type WorkStore } from 'next/dist/server/app-render/wo
 import { GET, POST } from '../app/api/auth/route'
 import { GET as recoveryCallback } from '../app/api/auth/recovery/route'
 import { POST as changePassword } from '../app/api/auth/password/route'
+import { EMAIL_NEXT_COOKIE, EMAIL_PKCE_COOKIE, challengeFor } from '../lib/oauth-pkce'
 
 // Run the real route handlers in Next's request cookie context, intercepting only
 // the external Supabase edge. This exercises server authorization and cookie writes.
@@ -17,6 +18,61 @@ function inRequest<T>(request: NextRequest, run: () => Promise<T>) {
   return workAsyncStorage.run({ route: url.pathname, isStaticGeneration: false } as unknown as WorkStore, () => workUnitAsyncStorage.run(store, async () => ({ result: await run(), cookies: store.mutableCookies })))
 }
 const requestFor = (body: unknown, cookie = '') => new NextRequest('https://app.test/api/auth', { method: 'POST', headers: { Origin: 'https://app.test', Cookie: cookie, 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+
+test('rejected or interrupted signup preserves an outstanding confirmation verifier and destination', async () => {
+  const original = globalThis.fetch
+  process.env.SUPABASE_URL = 'https://example.supabase.co'; process.env.SUPABASE_ANON_KEY = 'test-key'
+  try {
+    for (const status of [429, 422, 0]) {
+      globalThis.fetch = async () => {
+        if (!status) throw new Error('fixture network interruption')
+        return Response.json({ error_code: status === 429 ? 'over_request_rate_limit' : 'weak_password', msg: 'Request rejected' }, { status })
+      }
+      const request = requestFor({ action: 'signup', email: 'second@example.invalid', password: 'fixture-password', displayName: 'Fixture', next: '/watch' }, `${EMAIL_PKCE_COOKIE}=previous-verifier; ${EMAIL_NEXT_COOKIE}=/planning`)
+      const outcome = await inRequest(request, () => POST(request))
+      assert.ok(outcome.result.status >= 400)
+      assert.equal(outcome.cookies.get(EMAIL_PKCE_COOKIE)?.value, 'previous-verifier')
+      assert.equal(outcome.cookies.get(EMAIL_NEXT_COOKIE)?.value, '/planning')
+    }
+  } finally { globalThis.fetch = original; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_ANON_KEY }
+})
+
+test('obfuscated signup success preserves the outstanding confirmation without disclosing account state', async () => {
+  const original = globalThis.fetch
+  process.env.SUPABASE_URL = 'https://example.supabase.co'; process.env.SUPABASE_ANON_KEY = 'test-key'
+  try {
+    for (const identities of [[], undefined]) {
+      globalThis.fetch = async () => Response.json({ id: 'obfuscated-user', email: 'existing@example.invalid', identities })
+      const request = requestFor({ action: 'signup', email: 'existing@example.invalid', password: 'fixture-password', displayName: 'Fixture', next: '/watch' }, `${EMAIL_PKCE_COOKIE}=previous-verifier; ${EMAIL_NEXT_COOKIE}=/planning`)
+      const outcome = await inRequest(request, () => POST(request))
+      assert.equal(outcome.result.status, 202)
+      assert.deepEqual(await outcome.result.json(), { success: true, confirmationRequired: true, message: 'If this address has an unconfirmed account, a confirmation email will arrive. Check your inbox and spam folder.' })
+      assert.equal(outcome.cookies.get(EMAIL_PKCE_COOKIE)?.value, 'previous-verifier')
+      assert.equal(outcome.cookies.get(EMAIL_NEXT_COOKIE)?.value, '/planning')
+    }
+  } finally { globalThis.fetch = original; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_ANON_KEY }
+})
+
+test('accepted signup replaces the confirmation verifier with the accepted PKCE challenge', async () => {
+  const original = globalThis.fetch
+  process.env.SUPABASE_URL = 'https://example.supabase.co'; process.env.SUPABASE_ANON_KEY = 'test-key'
+  let challenge = ''
+  try {
+    globalThis.fetch = async (_url, init) => {
+      challenge = JSON.parse(String(init?.body)).code_challenge
+      return Response.json({ id: 'fixture-user', email: 'new@example.invalid', identities: [{ provider: 'email' }] })
+    }
+    const request = requestFor({ action: 'signup', email: 'new@example.invalid', password: 'fixture-password', displayName: 'Fixture', next: '/watch' }, `${EMAIL_PKCE_COOKIE}=previous-verifier; ${EMAIL_NEXT_COOKIE}=/planning`)
+    const outcome = await inRequest(request, () => POST(request))
+    assert.equal(outcome.result.status, 202)
+    const verifier = outcome.cookies.get(EMAIL_PKCE_COOKIE)
+    assert.ok(verifier?.value && verifier.value !== 'previous-verifier')
+    assert.equal(verifier.httpOnly, true)
+    assert.equal(verifier.path, '/api/auth')
+    assert.equal(await challengeFor(verifier.value), challenge)
+    assert.equal(outcome.cookies.get(EMAIL_NEXT_COOKIE)?.value, '/watch')
+  } finally { globalThis.fetch = original; delete process.env.SUPABASE_URL; delete process.env.SUPABASE_ANON_KEY }
+})
 
 test('resend hides provider account state and enforces browser cooldown before sending', async () => {
   const original = globalThis.fetch
