@@ -21,6 +21,7 @@ import { readLifeSupportState } from "@/lib/life-support"
 import { readResourcePreferences } from "@/lib/resource-personalization"
 import { angelContextHasContent, buildAngelLocalContext } from "@/lib/angel-context"
 import { beginAngelAttempt, finishAngelAttempt, type AngelPendingTurn } from "@/lib/angel-pending"
+import { deactivateTravel, effectiveZip, readTravel } from "@/lib/travel-mode"
 
 interface ChatMessage {
   id: string
@@ -281,7 +282,9 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     // A ZIP said or typed in the message becomes the search area for this and later chats.
     const statedZip = zipFromMessage(content)
     if (statedZip && statedZip !== zip) setZip(statedZip)
-    const searchZip = statedZip ?? zip
+    const travel = readTravel(window.localStorage)
+    const travelZip = travel ? effectiveZip(travel, new Date().toISOString()) : { zip: "", inTravel: false }
+    const searchZip = travelZip.inTravel ? travelZip.zip : (statedZip ?? zip)
     const next: ChatMessage[] = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content }]
     setInput("")
     setError(undefined)

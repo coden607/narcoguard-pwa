@@ -12,6 +12,7 @@ import { cardSummary } from "@/lib/resource-display"
 import { directionsUrl } from "@/lib/safer-use"
 import { forgetPlace, PLACE_FORGOTTEN_EVENT, REMEMBER_PLACE_KEY, SAVED_PLACE_KEY, readRememberChoice, readSavedPlace, roundPlace, savePlace } from "@/lib/saved-place"
 import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
+import { activateTravel, deactivateTravel, effectiveZip, readTravel, travelBanner, type TravelState } from "@/lib/travel-mode"
 
 interface KindLookup {
   status: "ok" | "unavailable"
@@ -114,6 +115,7 @@ export function NeedsFinder() {
   const [notice, setNotice] = useState<string>()
   const [data, setData] = useState<NeedsResponse>()
   const [feedback, setFeedback] = useState<ResourceFeedback[]>([])
+  const [travelState, setTravelState] = useState<TravelState | null>(null)
   const [savedPlace, setSavedPlace] = useState<Origin | null>(null)
   const locationGeneration = useRef(0)
 
@@ -140,7 +142,10 @@ export function NeedsFinder() {
   }, [])
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setFeedback(readResourceFeedback(window.localStorage)), 0)
+    const timer = window.setTimeout(() => {
+      setFeedback(readResourceFeedback(window.localStorage))
+      setTravelState(readTravel(window.localStorage))
+    }, 0)
     return () => window.clearTimeout(timer)
   }, [])
 
@@ -176,7 +181,12 @@ export function NeedsFinder() {
 
   const lookup = async (exact: Origin) => {
     // Rounded to about 1 km on the phone, before it is saved or sent (the server rounds again).
-    const origin = roundPlace(exact)
+    let origin = roundPlace(exact)
+    const travel = readTravel(window.localStorage)
+    if (travel) {
+      const active = effectiveZip(travel, new Date().toISOString())
+      if (active.inTravel && active.zip) origin = { zip: active.zip }
+    }
     setBusy(true)
     setNotice(undefined)
     // Remembered on this phone only (coordinates rounded to about 1 km), unless the person turned that off in Angel.
@@ -203,7 +213,20 @@ export function NeedsFinder() {
     /* eslint-enable react-hooks/set-state-in-effect */
     void lookup(saved)
   }, [])
-  const forgetSavedPlace = () => { forgetPlace(window.localStorage); setSavedPlace(null); setZip("") }
+  const forgetSavedPlace = () => { forgetPlace(window.localStorage); deactivateTravel(window.localStorage); setTravelState(null); setSavedPlace(null); setZip("") }
+  const startTravel = () => {
+    if (!/^\d{5}$/.test(zip) || !savedPlace || !("zip" in savedPlace) || savedPlace.zip === zip) {
+      setNotice("Save a different five-digit home ZIP first, then enter the destination ZIP.")
+      return
+    }
+    const result = activateTravel(window.localStorage, { destinationZip: zip, homeZip: savedPlace.zip })
+    if (!result.ok) { setNotice(result.error); return }
+    setTravelState(result.state)
+    setNotice(`Travel mode is on for ${result.state.destinationZip} until it expires automatically.`)
+    void lookup({ zip: result.state.destinationZip })
+  }
+  const stopTravel = () => { deactivateTravel(window.localStorage); setTravelState(null); setNotice("Travel mode is off. Searches use your normal saved place again.") }
+  const activeTravel = travelBanner(travelState, new Date().toISOString())
 
   const findNearMe = () => {
     if (!("geolocation" in navigator)) {
@@ -259,6 +282,11 @@ export function NeedsFinder() {
         )}
         {aiNote && <p className="text-sm" role="status">{aiNote}</p>}
       </div>
+      {activeTravel && (
+        <div className="rounded-lg border p-3 text-sm" data-testid="travel-banner">
+          Travel mode: searching ZIP <strong>{activeTravel.destinationZip}</strong> for about {activeTravel.remainingMinutes} more minutes. <button type="button" className="underline text-primary" onClick={stopTravel}>Turn off</button>
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row gap-2">
         <Button type="button" onClick={findNearMe} disabled={busy}><LocateFixed className="mr-2 h-4 w-4" aria-hidden="true" />Find everything near me</Button>
         <form
@@ -275,6 +303,9 @@ export function NeedsFinder() {
           <input aria-label="ZIP code" inputMode="numeric" maxLength={5} className="bg-background border rounded p-2 w-28" placeholder="ZIP code" value={zip} onChange={(event) => setZip(event.target.value.replace(/\D/g, ""))} />
           <Button type="submit" variant="outline" disabled={busy}>Search</Button>
         </form>
+        {savedPlace && "zip" in savedPlace && /^\d{5}$/.test(zip) && zip !== savedPlace.zip && !activeTravel && (
+          <Button type="button" variant="outline" disabled={busy} onClick={startTravel}>Use this ZIP for travel (24h)</Button>
+        )}
       </div>
       <p className="text-xs text-muted-foreground" data-testid="place-privacy">
         Your location is rounded to about a kilometer and used only to search public directories. It is never stored on our
