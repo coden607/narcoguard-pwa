@@ -21,7 +21,7 @@ test.describe('Authentication recovery with isolated network fixtures', () => {
     await page.getByLabel('Email', { exact: true }).fill('corrected@example.invalid')
     await page.getByRole('button', { name: 'Resend confirmation email' }).click()
     await expect(page.getByRole('button', { name: 'Resend confirmation email' })).toBeDisabled()
-    expect(sent.at(-1)).toEqual({ action: 'resend-signup', email: 'corrected@example.invalid' })
+    expect(sent.at(-1)).toEqual({ action: 'resend-signup', email: 'corrected@example.invalid', next: '/account' })
     await expect(page).toHaveURL(/\/auth$/)
   })
 
