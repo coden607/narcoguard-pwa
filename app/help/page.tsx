@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { NeedsFinder } from "@/components/resources/needs-finder"
 import { ResourceWatchPanel } from "@/components/resources/resource-watch-panel"
+import { ResourceTrustPanel } from "@/components/resources/resource-trust-panel"
 import { HeroHelpRequest } from "@/components/hero/hero-help-request"
 
 export const metadata: Metadata = {
@@ -17,6 +18,7 @@ export default function HelpPage() {
           Listings are grouped from basic needs up to growth and goals. The grouping is only a guide: everyone decides what matters first, and help is never conditional on anything else.
         </p>
       </header>
+      <ResourceTrustPanel />
       <div className="border rounded-xl p-5">
         <NeedsFinder />
       </div>
