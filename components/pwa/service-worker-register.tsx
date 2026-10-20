@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 const UPDATE_INTERVAL_MS = 15 * 60 * 1000
 const VERSION_STORAGE_KEY = "narcoguard_seen_deployment_version_v1"
 const UPDATE_NOTICE_KEY = "narcoguard_update_notice_version_v1"
+const UPDATE_READY_KEY = "narcoguard_update_ready_version_v1"
 
 type VersionResponse = { version?: string }
 
@@ -30,6 +31,14 @@ export function ServiceWorkerRegister({ initialVersion = "local" }: { initialVer
     }
     document.addEventListener("input", markDirty, true)
     document.addEventListener("change", markDirty, true)
+    const syncUpdateAcrossTabs = (event: StorageEvent) => {
+      if (event.storageArea !== window.localStorage || event.key !== UPDATE_READY_KEY || !event.newValue) return
+      if (event.newValue !== loaded) {
+        setUpdateVersion(event.newValue)
+        setCheckStatus("Update ready")
+      }
+    }
+    window.addEventListener("storage", syncUpdateAcrossTabs)
 
     const pushUpdateNotice = async (registration: ServiceWorkerRegistration, version: string) => {
       if (!("Notification" in window) || Notification.permission !== "granted") return
@@ -60,9 +69,11 @@ export function ServiceWorkerRegister({ initialVersion = "local" }: { initialVer
         setCheckStatus(loaded === version ? "Up to date" : "Update ready")
         if (loaded !== version) {
           setUpdateVersion(version)
+          try { window.localStorage.setItem(UPDATE_READY_KEY, version) } catch { /* Cross-tab sync is optional. */ }
           if (registration) await pushUpdateNotice(registration, version)
         } else {
           setUpdateVersion(null)
+          try { window.localStorage.removeItem(UPDATE_READY_KEY) } catch { /* Cross-tab sync is optional. */ }
         }
       } catch {
         if (!disposed) setCheckStatus("Could not check for updates. Try again when online.")
@@ -118,6 +129,7 @@ export function ServiceWorkerRegister({ initialVersion = "local" }: { initialVer
       window.removeEventListener("offline", connectivity)
       document.removeEventListener("input", markDirty, true)
       document.removeEventListener("change", markDirty, true)
+      window.removeEventListener("storage", syncUpdateAcrossTabs)
       navigator.serviceWorker?.removeEventListener("controllerchange", onControllerChange)
       if (timer !== undefined) window.clearInterval(timer)
     }
@@ -129,6 +141,7 @@ export function ServiceWorkerRegister({ initialVersion = "local" }: { initialVer
       try {
         window.localStorage.setItem(VERSION_STORAGE_KEY, updateVersion)
         window.localStorage.removeItem(UPDATE_NOTICE_KEY)
+        window.localStorage.removeItem(UPDATE_READY_KEY)
       } catch { /* Reload remains user-controlled when storage is unavailable. */ }
     }
     window.location.reload()
