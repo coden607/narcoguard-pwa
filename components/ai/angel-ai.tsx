@@ -33,6 +33,17 @@ interface ChatMessage {
 
 const SUGGESTIONS = ["Help me set a goal for this week", "Find food and a place to sleep near me", "How do I get naloxone?"]
 
+export function angelProviderDisclosure(provider: string | null, privacy: string | null, strictPrivacy: boolean) {
+  if (provider === "Kimi") return "Your messages are sent to Kimi (Moonshot AI) to write Angel's replies. NarcoGuard has not confirmed Moonshot's retention or training terms, so share only what you are comfortable with."
+  if (provider === "Vercel AI Gateway") return "Your messages are sent through Vercel AI Gateway to the configured AI model. NarcoGuard requests zero data retention on this route."
+  if (provider === "OpenRouter") return "Your messages are sent through OpenRouter to an AI provider. NarcoGuard asks OpenRouter to deny provider data collection for Angel requests."
+  if (provider === "OpenAI-compatible") return strictPrivacy
+    ? "Angel is configured for strict privacy, so this direct OpenAI-compatible route will not be used."
+    : "Your messages are sent directly to the configured OpenAI-compatible provider. Its retention and training terms depend on the provider configured by NarcoGuard."
+  if (provider === "Groq") return "Your messages are sent to Groq to write Angel's replies. Provider privacy terms apply."
+  return privacy === "zero-data-retention" ? "Angel is using a route configured for zero data retention." : "Angel uses a configured AI provider to write replies. Provider privacy terms apply."
+}
+
 export function AngelAI({ compact = false }: { compact?: boolean }) {
   const router = useRouter()
   const preferences = useUserPreferences()
@@ -42,6 +53,8 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const [availabilityFailed, setAvailabilityFailed] = useState(false)
   const [availabilityAttempt, setAvailabilityAttempt] = useState(0)
   const [provider, setProvider] = useState<string | null>(null)
+  const [privacy, setPrivacy] = useState<string | null>(null)
+  const [strictPrivacy, setStrictPrivacy] = useState(false)
   const [consented, setConsented] = useState(false)
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState("")
@@ -195,11 +208,13 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     let cancelled = false
     fetch("/api/angel", { cache: "no-store" })
       .then((response) => response.json())
-      .then((body: { available?: boolean; provider?: string | null }) => {
+      .then((body: { available?: boolean; provider?: string | null; privacy?: string | null; strictPrivacy?: boolean }) => {
         if (cancelled) return
         setAvailabilityFailed(false)
         setAvailable(Boolean(body.available))
         setProvider(body.provider ?? null)
+        setPrivacy(body.privacy ?? null)
+        setStrictPrivacy(body.strictPrivacy === true)
       })
       .catch(() => { if (!cancelled) setAvailabilityFailed(true) })
     return () => { cancelled = true }
@@ -385,13 +400,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       {available && !consented && (
         <div className="space-y-3 rounded-lg border p-4" data-testid="angel-consent">
           <p className="text-sm">
-            {provider === "Kimi"
-              ? "Your messages are sent to Kimi, an AI model from Moonshot AI, a company based in China, to write Angel's replies. NarcoGuard has not confirmed whether Moonshot AI keeps or trains on these messages, so share only what you are comfortable with. If Kimi is unavailable, they go through Vercel AI Gateway to Anthropic's Claude (zero data retention) or an open model run by Groq instead."
-              : provider === "Vercel AI Gateway"
-              ? "Your messages are sent through Vercel AI Gateway to an AI model to write Angel's replies: Anthropic's Claude, with zero data retention required, or an open model run by Groq when Claude isn't available. Neither provider trains on them."
-              : provider === "OpenRouter"
-              ? "Your messages are sent through OpenRouter to an AI provider to write Angel's replies. NarcoGuard asks OpenRouter to use only providers that do not store or train on them."
-              : "Your messages are sent to Groq, an AI provider, to write Angel's replies. Groq says it does not train on them."}{" "}
+            {angelProviderDisclosure(provider, privacy, strictPrivacy)}{" "}
             If you use voice, your browser turns speech into text (Apple or Google may process the audio), and replies are read aloud on this device.{" "}
             If you tap Use my location, it is rounded to about 1 km and used only to search public directories. It is never sent to the AI provider or stored on our servers; this phone remembers it (or your ZIP) so you only enter it once, until you turn that off or tap Forget.{" "}
             NarcoGuard does not save your chat, and it disappears when you leave this page. Don&apos;t include names, addresses or other details that identify you.

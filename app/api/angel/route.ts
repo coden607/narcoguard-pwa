@@ -110,7 +110,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ ok: false, provider: provider.name, status: error instanceof ProviderError ? error.status : "network", detail: error instanceof ProviderError ? error.detail : undefined }, { headers: noStore })
     }
   }
-  return NextResponse.json({ available: Boolean(provider), provider: provider?.name ?? null, privacy: provider?.privacy ?? null, strictPrivacy: process.env.ANGEL_PRIVACY_MODE === "strict" }, { headers: noStore })
+  const routes = provider ? [...new Set(modelAttempts(provider, "quick").map((choice) => endpointFor(provider, choice).name))] : []
+  return NextResponse.json({ available: Boolean(provider), provider: provider?.name ?? null, privacy: provider?.privacy ?? null, strictPrivacy: process.env.ANGEL_PRIVACY_MODE === "strict", routes }, { headers: noStore })
 }
 
 export async function POST(request: Request) {
