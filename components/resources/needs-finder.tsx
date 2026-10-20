@@ -118,6 +118,8 @@ export function NeedsFinder() {
   const [travelState, setTravelState] = useState<TravelState | null>(null)
   const [savedPlace, setSavedPlace] = useState<Origin | null>(null)
   const locationGeneration = useRef(0)
+  const searchGeneration = useRef(0)
+  const searchAbort = useRef<AbortController | null>(null)
 
   useEffect(() => {
     // Revocation invalidates callbacks already queued by the browser; no location
@@ -136,6 +138,8 @@ export function NeedsFinder() {
     window.addEventListener("storage", storageChanged)
     return () => {
       locationGeneration.current += 1
+      searchGeneration.current += 1
+      searchAbort.current?.abort()
       window.removeEventListener(PLACE_FORGOTTEN_EVENT, revoke)
       window.removeEventListener("storage", storageChanged)
     }
@@ -187,19 +191,28 @@ export function NeedsFinder() {
       const active = effectiveZip(travel, new Date().toISOString())
       if (active.inTravel && active.zip) origin = { zip: active.zip }
     }
+    const generation = ++searchGeneration.current
+    searchAbort.current?.abort()
+    const controller = new AbortController()
+    searchAbort.current = controller
     setBusy(true)
     setNotice(undefined)
     // Remembered on this phone only (coordinates rounded to about 1 km), unless the person turned that off in Angel.
     if (readRememberChoice(window.localStorage)) savePlace(window.localStorage, origin)
     try {
       const params = new URLSearchParams("zip" in origin ? { zip: origin.zip } : { lat: String(origin.lat), lon: String(origin.lon) })
-      const response = await fetch(`/api/resources/needs?${params}`, { cache: "no-store" })
+      const response = await fetch(`/api/resources/needs?${params}`, { cache: "no-store", signal: controller.signal })
       const body = (await response.json()) as NeedsResponse
-      setData(body.kinds ? body : { status: "unavailable", kinds: {} })
-    } catch {
-      setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
+      if (generation === searchGeneration.current) setData(body.kinds ? body : { status: "unavailable", kinds: {} })
+    } catch (error) {
+      if (generation === searchGeneration.current && !(error instanceof DOMException && error.name === "AbortError")) {
+        setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
+      }
     } finally {
-      setBusy(false)
+      if (generation === searchGeneration.current) {
+        if (searchAbort.current === controller) searchAbort.current = null
+        setBusy(false)
+      }
     }
   }
 
