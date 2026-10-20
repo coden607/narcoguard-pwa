@@ -4,7 +4,7 @@ import { test } from "node:test"
 
 test("global styles preserve reduced motion and mobile accessibility safeguards", async () => {
   const css = await readFile(new URL("../app/globals.css", import.meta.url), "utf8")
-  assert.match(css, /prefers-reduced-motion:reduce/)
+  assert.match(css, /prefers-reduced-motion:\\s*reduce/)
   assert.match(css, /:focus-visible/)
   assert.match(css, /@media \(pointer:coarse\)/)
   assert.match(css, /min-height:44px/)
