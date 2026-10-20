@@ -24,6 +24,7 @@ export default function AuthPage() {
   const [displayName, setDisplayName] = useState("")
   const [message, setMessage] = useState("")
   const [busy, setBusy] = useState(false)
+  const [online, setOnline] = useState(true)
   const [google, setGoogle] = useState(false)
   const [confirmationRequired, setConfirmationRequired] = useState(false)
 
@@ -53,6 +54,17 @@ export default function AuthPage() {
   }, [])
 
   useEffect(() => {
+    const update = () => setOnline(navigator.onLine)
+    update()
+    window.addEventListener("online", update)
+    window.addEventListener("offline", update)
+    return () => {
+      window.removeEventListener("online", update)
+      window.removeEventListener("offline", update)
+    }
+  }, [])
+
+  useEffect(() => {
     if (cooldown <= 0) return
     const timer = window.setTimeout(() => setCooldown(value => Math.max(0, value - 1)), 1000)
     return () => window.clearTimeout(timer)
@@ -60,6 +72,7 @@ export default function AuthPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    if (!online) { setMessage("You are offline. Your details are still here; reconnect and try again."); return }
     setBusy(true)
     setMessage("")
     setConfirmationRequired(false)
@@ -91,13 +104,14 @@ export default function AuthPage() {
       router.replace(safeAuthDestination(result.next ?? destination))
       router.refresh()
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to authenticate")
+      setMessage(error instanceof TypeError ? "The sign-in service could not be reached. Check your connection and try again." : error instanceof Error ? error.message : "Unable to authenticate")
     } finally {
       setBusy(false)
     }
   }
 
   async function resendConfirmation() {
+    if (!online) { setMessage("You are offline. Reconnect before requesting another confirmation email."); return }
     if (!email) {
       setMessage("Enter your email first.")
       return
@@ -116,7 +130,7 @@ export default function AuthPage() {
       setConfirmationRequired(true)
       setMessage(result.message ?? "Confirmation email sent. Check your inbox and spam folder.")
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Unable to resend confirmation")
+      setMessage(error instanceof TypeError ? "The confirmation service could not be reached. Check your connection and try again." : error instanceof Error ? error.message : "Unable to resend confirmation")
     } finally {
       setBusy(false)
     }
@@ -141,7 +155,9 @@ export default function AuthPage() {
           </>
         )}
 
-        <form onSubmit={submit} className={google ? "mt-4 space-y-4" : "mt-8 space-y-4"}>
+        {!online && <p role="status" className="mt-4 rounded-lg border border-amber-300/30 bg-amber-300/10 p-3 text-sm text-amber-100">Offline. Reconnect to sign in, create an account, or request email links.</p>}
+
+        <form onSubmit={submit} aria-busy={busy} className={google ? "mt-4 space-y-4" : "mt-8 space-y-4"}>
           {mode === "signup" && (
             <label className="block text-sm">
               Display name
@@ -156,15 +172,15 @@ export default function AuthPage() {
             Password
             <input required type="password" autoComplete={mode === "login" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} className="mt-1 w-full rounded-lg bg-white/10 p-3" minLength={8} maxLength={128} />
           </label>}
-          <button disabled={busy || (mode === 'reset' && cooldown > 0)} className="w-full rounded-lg bg-cyan-500 p-3 font-semibold text-slate-950 disabled:opacity-50">
+          <button disabled={!online || busy || (mode === 'reset' && cooldown > 0)} className="w-full rounded-lg bg-cyan-500 p-3 font-semibold text-slate-950 disabled:opacity-50">
             {busy ? "Working…" : mode === 'reset' ? 'Send reset link' : mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>
 
-        {message && <p role="alert" className="mt-4 text-sm text-amber-200">{message}</p>}
+        {message && <p role="alert" aria-live="polite" className="mt-4 text-sm text-amber-200">{message}</p>}
 
         {confirmationRequired && (
-          <button type="button" disabled={busy || cooldown > 0} onClick={resendConfirmation} className="mt-3 text-sm text-cyan-300 underline disabled:opacity-50">
+          <button type="button" disabled={!online || busy || cooldown > 0} onClick={resendConfirmation} className="mt-3 text-sm text-cyan-300 underline disabled:opacity-50">
             Resend confirmation email
           </button>
         )}
