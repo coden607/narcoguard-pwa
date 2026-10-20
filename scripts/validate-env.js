@@ -50,6 +50,32 @@ for (const file of sourceFiles) {
   }
 }
 
+
+const uhsNames = [
+  "UHS_SMART_CLIENT_ID",
+  "UHS_SMART_AUTH_URL",
+  "UHS_SMART_TOKEN_URL",
+  "UHS_FHIR_BASE_URL",
+  "UHS_SMART_SESSION_SECRET",
+]
+const configuredUhs = uhsNames.filter((name) => Boolean(process.env[name]?.trim()))
+if (configuredUhs.length > 0 && configuredUhs.length !== uhsNames.length) {
+  failures.push(`UHS SMART configuration is partial; set all of: ${uhsNames.join(", ")}`)
+}
+if (configuredUhs.length === uhsNames.length) {
+  for (const name of ["UHS_SMART_AUTH_URL", "UHS_SMART_TOKEN_URL", "UHS_FHIR_BASE_URL"]) {
+    try {
+      const url = new URL(process.env[name])
+      if (url.protocol !== "https:") failures.push(`${name} must use https`)
+    } catch {
+      failures.push(`${name} must be a valid absolute URL`)
+    }
+  }
+  if ((process.env.UHS_SMART_SESSION_SECRET || "").length < 32) {
+    failures.push("UHS_SMART_SESSION_SECRET must be at least 32 characters")
+  }
+}
+
 const secretPattern = /(?:KEY|TOKEN|SECRET|PASSWORD|DATABASE_URL|POSTGRES_URL|ACCOUNT_SID)$/
 for (const name of inventory) {
   if (name.startsWith("NEXT_PUBLIC_") && secretPattern.test(name)) {
