@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test"
 
 test("enlarged text and iPhone display zoom keep public actions reachable", async ({ page }) => {
   await page.setViewportSize({ width: 280, height: 720 })
-  for (const path of ["/auth", "/account", "/watch", "/help", "/stability"]) {
+  for (const path of ["/auth", "/account", "/watch", "/help", "/stability", "/angel", "/health-records"]) {
     await page.goto(path)
     await page.addStyleTag({ content: "html { font-size: 200% !important; }" })
     const width = await page.evaluate(() => ({ page: document.documentElement.scrollWidth, viewport: document.documentElement.clientWidth }))
@@ -74,4 +74,23 @@ test.describe("touch scrolling", () => {
     await page.keyboard.press("Escape")
     await expect(dialog).toBeHidden()
   })
+})
+
+
+test("UHS health records and Angel remain usable at narrow iPhone display zoom", async ({ page }) => {
+  await page.setViewportSize({ width: 280, height: 720 })
+  for (const path of ["/health-records", "/angel"]) {
+    await page.goto(path)
+    await page.addStyleTag({ content: "html { font-size: 200% !important; }" })
+    const dimensions = await page.evaluate(() => ({
+      page: document.documentElement.scrollWidth,
+      viewport: document.documentElement.clientWidth,
+    }))
+    expect(dimensions.page, path).toBeLessThanOrEqual(dimensions.viewport + 1)
+  }
+
+  await page.goto("/health-records")
+  await page.addStyleTag({ content: "html { font-size: 200% !important; }" })
+  await expect(page.getByTestId("uhs-mychart-connector")).toBeVisible()
+  await expect(page.getByRole("link", { name: /Open UHS MyChart/ })).toBeInViewport()
 })
