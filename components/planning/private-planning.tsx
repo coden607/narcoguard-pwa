@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import { beginPlanning, cleanPlan, activeZip, defaultPlanning, dueReminders, normalizePlanningSession, PLAN_FIELDS, PLANNING_KEY, PlanningConflictError, PlanningPersistenceUnavailableError, readPlanningSession, saveCrisisVersion, savePlanning, withPlanningLock, type Kit, type PlanningState } from '@/lib/planning-private'
+import { beginPlanning, cleanPlan, activeZip, defaultPlanning, dueReminders, kitCheckFreshness, normalizePlanningSession, PLAN_FIELDS, PLANNING_KEY, PlanningConflictError, PlanningPersistenceUnavailableError, readPlanningSession, saveCrisisVersion, savePlanning, withPlanningLock, type Kit, type PlanningState } from '@/lib/planning-private'
 import { readLifeSupportState, saveLifeSupportState } from '@/lib/life-support'
 import { rankResources, readResourceFeedback, readResourcePreferences } from '@/lib/resource-personalization'
 import { RESOURCE_LABELS, type NearbyResource, type ResourceKind } from '@/lib/resource-finder'
@@ -207,7 +207,7 @@ export function PrivatePlanning() {
         <a className="underline" href="tel:211">Call 211 for local resource help</a>
       </section>
 
-      <section className={panelClass}>
+      <section id="naloxone-kit-journal" className={panelClass}>
         <h2 className="text-xl font-semibold">Naloxone kit location journal</h2>
         <p>Personal notes only. A location label or date does not establish that a kit is present, stocked or usable. Check the kit and manufacturer instructions.</p>
         <form className="space-y-3" onSubmit={async e=>{e.preventDefault();const next={...kit,id:kit.id || crypto.randomUUID()};if(await update({...state,kits:[...state.kits.filter(k=>k.id!==next.id),next].slice(-30)})) setKit({id:'',label:'',checked:'',expiry:''})}}>
@@ -216,7 +216,9 @@ export function PrivatePlanning() {
           <label className="block">Expiry date on label (optional)<input className={inputClass} type="date" value={kit.expiry} onChange={e=>setKit({...kit,expiry:e.target.value})} /></label>
           <Button type="submit">Save kit</Button>
         </form>
-        <ul className="space-y-2">{state.kits.map(k=><li className="rounded border p-3 space-y-2" key={k.id}><strong>{k.label}</strong><p>Last checked: {k.checked || 'Unknown'}. Label expiry: {k.expiry || 'Unknown'}.</p><div className="flex flex-wrap gap-2"><Button variant="outline" aria-label={`Edit kit ${k.label}`} onClick={()=>setKit(k)}>Edit</Button><Button variant="outline" aria-label={`Erase kit ${k.label}`} onClick={async()=>{if(await update({...state,kits:state.kits.filter(row=>row.id!==k.id)}) && kit.id===k.id) setKit({id:'',label:'',checked:'',expiry:''})}}>Erase</Button></div></li>)}</ul>
+        <ul className="space-y-2">{state.kits.map(k=><li className="rounded border p-3 space-y-2" key={k.id}><strong>{k.label}</strong><p>Last checked: {k.checked || 'Unknown'}. Label expiry: {k.expiry || 'Unknown'}.</p>
+          {kitCheckFreshness(k.checked,new Date(now).toISOString().slice(0,10))==='stale' && <p className="text-sm">This location check is over 90 days old. Check the location again when convenient.</p>}
+          {!k.checked && <p className="text-sm text-muted-foreground">The last-checked date is unknown; NarcoGuard will not assume it was checked today.</p>}<div className="flex flex-wrap gap-2"><Button variant="outline" aria-label={`Edit kit ${k.label}`} onClick={()=>setKit(k)}>Edit</Button><Button variant="outline" aria-label={`Erase kit ${k.label}`} onClick={async()=>{if(await update({...state,kits:state.kits.filter(row=>row.id!==k.id)}) && kit.id===k.id) setKit({id:'',label:'',checked:'',expiry:''})}}>Erase</Button></div></li>)}</ul>
         <Button variant="outline" onClick={async()=>{if(await update({...state,kits:[]})) setKit({id:'',label:'',checked:'',expiry:''})}}>Erase kit journal</Button>
       </section>
 

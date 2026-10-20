@@ -11,6 +11,15 @@ export async function withPlanningLock<T>(locks:PlanningLock|undefined,operation
   return locks.request(PLANNING_LOCK,operation)
 }
 export type Kit = { id: string; label: string; checked: string; expiry: string }
+export type KitCheckFreshness = "unknown" | "recent" | "stale"
+
+export function kitCheckFreshness(checked: string, today: string, staleAfterDays = 90): KitCheckFreshness {
+  if (!checked) return "unknown"
+  const checkedMs = Date.parse(`${checked}T00:00:00Z`)
+  const todayMs = Date.parse(`${today}T00:00:00Z`)
+  if (!Number.isFinite(checkedMs) || !Number.isFinite(todayMs) || checkedMs > todayMs) return "unknown"
+  return Math.floor((todayMs - checkedMs) / 86_400_000) > staleAfterDays ? "stale" : "recent"
+}
 export type PlanVersion = { at: number; plan: CrisisPlan }
 export type FollowUp = { id: string; label: string; dueAt: number }
 export type PlanningState = {
