@@ -58,7 +58,7 @@ async function supabaseRequest(path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers)
   headers.set("apikey", key)
   headers.set("Content-Type", "application/json")
-  return fetch(`${url}${path}`, { ...init, headers, cache: "no-store" })
+  return fetch(`${url}${path}`, { ...init, headers, cache: "no-store", signal: init.signal ?? AbortSignal.timeout(12_000) })
 }
 
 export async function signIn(email: string, password: string): Promise<AuthAttempt> {
