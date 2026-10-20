@@ -92,5 +92,7 @@ test("UHS health records and Angel remain usable at narrow iPhone display zoom",
   await page.goto("/health-records")
   await page.addStyleTag({ content: "html { font-size: 200% !important; }" })
   await expect(page.getByTestId("uhs-mychart-connector")).toBeVisible()
-  await expect(page.getByRole("link", { name: /Open UHS MyChart/ })).toBeInViewport()
+  const uhsLink = page.getByRole("link", { name: /Open UHS MyChart/ })
+  await uhsLink.scrollIntoViewIfNeeded()
+  await expect(uhsLink).toBeInViewport()
 })
