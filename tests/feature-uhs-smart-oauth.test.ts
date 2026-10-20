@@ -7,7 +7,7 @@ const env = {
   UHS_SMART_AUTH_URL: "https://example.test/oauth2/authorize",
   UHS_SMART_TOKEN_URL: "https://example.test/oauth2/token",
   UHS_FHIR_BASE_URL: "https://example.test/FHIR/R4",
-} as unknown as NodeJS.ProcessEnv
+} as unknown as unknown as NodeJS.ProcessEnv
 
 test("UHS SMART authorization uses PKCE, state, aud and read-only scopes", async () => {
   const url = new URL((await buildUhsAuthorizeUrl("https://app.test/api/health/uhs/callback", "state", "verifier-value", env))!)
