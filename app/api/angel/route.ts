@@ -20,6 +20,15 @@ export const maxDuration = 60
 
 const noStore = { "Cache-Control": "private, no-store" }
 
+function diagnosticHeaders(requestId: string, startedAt: number, provider?: string | null) {
+  return {
+    ...noStore,
+    "X-NarcoGuard-Request-Id": requestId,
+    "Server-Timing": `angel;dur=${Math.max(0, Date.now() - startedAt)}`,
+    ...(provider ? { "X-NarcoGuard-AI-Provider": provider } : {}),
+  }
+}
+
 // Best-effort per-instance limit so one client cannot exhaust the free-tier quota.
 const WINDOW_MS = 60_000
 const MAX_PER_WINDOW = 12
@@ -116,14 +125,16 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const startedAt = Date.now()
+  const requestId = crypto.randomUUID()
   const provider = providerFor(request)
-  if (!provider) return NextResponse.json({ available: false, message: "Angel AI is not configured yet." }, { status: 503, headers: noStore })
+  const headers = () => diagnosticHeaders(requestId, startedAt, provider?.name)
+  if (!provider) return NextResponse.json({ available: false, message: "Angel AI is not configured yet." }, { status: 503, headers: headers() })
 
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
-  if (rateLimited(forwarded)) return NextResponse.json({ error: "Too many messages. Wait a minute and try again." }, { status: 429, headers: noStore })
+  if (rateLimited(forwarded)) return NextResponse.json({ error: "Too many messages. Wait a minute and try again." }, { status: 429, headers: headers() })
 
   const parsed = angelRequestSchema.safeParse(await request.json().catch(() => null))
-  if (!parsed.success) return NextResponse.json({ error: "Invalid message." }, { status: 400, headers: noStore })
+  if (!parsed.success) return NextResponse.json({ error: "Invalid message." }, { status: 400, headers: headers() })
 
   const latest = parsed.data.messages.at(-1)
   const notices = latest?.role === "user" ? safetyNotices(latest.content) : []
@@ -166,14 +177,14 @@ export async function POST(request: Request) {
       reply = (await completeWithFallback(provider, used, messages, false, startedAt + (maxDuration - 3) * 1000, route.maxTokens, route.temperature)).message
     }
     const text = reply.content?.trim() || "I couldn't put together a reply. Please try asking another way."
-    return NextResponse.json({ available: true, notices, reply: text, resources }, { headers: noStore })
+    return NextResponse.json({ available: true, notices, reply: text, resources }, { headers: headers() })
   } catch (error) {
     // Only the provider name and HTTP status are logged, never message content.
-    console.warn(`[angel] ${provider.name} request failed: ${error instanceof ProviderError ? error.status : "network"}`)
+    console.warn(`[angel:${requestId}] ${provider.name} request failed: ${error instanceof ProviderError ? error.status : "network"}`)
     // Rejected credentials or an account not yet enabled (e.g. AI Gateway before a card is on file):
     // report Angel as switched off rather than as a temporary failure.
     if (error instanceof ProviderError && (error.status === 401 || error.status === 403)) {
-      return NextResponse.json({ available: false, notices, message: "Angel AI is not switched on yet." }, { status: 503, headers: noStore })
+      return NextResponse.json({ available: false, notices, message: "Angel AI is not switched on yet." }, { status: 503, headers: headers() })
     }
     return NextResponse.json({ available: true, notices, error: "Angel couldn't respond right now. Try again, or use the search below." }, { status: 502, headers: noStore })
   }
