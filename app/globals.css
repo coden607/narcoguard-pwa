@@ -478,3 +478,15 @@ input:focus,textarea:focus,select:focus { border-color: rgba(103,232,249,.7) !im
 @media (prefers-reduced-motion: reduce) {
   *,*::before,*::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Accessibility hardening: visible keyboard focus, comfortable coarse-pointer targets,
+   and no forced horizontal scroll from long machine-generated strings. */
+:where(a,button,input,textarea,select,[role="button"],[role="tab"]):focus-visible {
+  outline: 3px solid hsl(var(--ring));
+  outline-offset: 3px;
+}
+pre,code,kbd,samp { overflow-wrap: anywhere; word-break: break-word; }
+@media (pointer: coarse) {
+  :where(button,[role="button"],[role="tab"],input,select) { min-height: 44px; }
+  :where(.nav-link,.footer-links a) { min-height: 44px; display: inline-flex; align-items: center; }
+}
