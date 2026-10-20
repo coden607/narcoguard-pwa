@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { AccountPanel } from "@/components/account/account-panel"
 
 export const metadata: Metadata = {
@@ -15,6 +16,11 @@ export default function AccountPage() {
         <p className="text-muted-foreground">Optional. Call 911, overdose steps, contacts and the resource finder all work without signing in.</p>
       </header>
       <AccountPanel />
+      <section className="rounded-xl border p-4 space-y-2">
+        <h2 className="text-lg font-semibold">Health records</h2>
+        <p className="text-sm text-muted-foreground">Optionally connect supported patient portals without giving NarcoGuard your portal password.</p>
+        <Link className="inline-flex min-h-11 items-center rounded-lg border px-4 py-2 font-semibold" href="/health-records">Manage health-record connections</Link>
+      </section>
     </main>
   )
 }
