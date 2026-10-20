@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { ExternalLink, HeartPulse, LockKeyhole } from "lucide-react"
 import { getUhsSmartConfig, UHS_MYCHART_URL } from "@/lib/health/uhs-mychart"
+import { UhsMyChartControls } from "@/components/health/uhs-mychart-controls"
 
 export const metadata: Metadata = {
   title: "Health records | NarcoGuard",
@@ -46,6 +47,8 @@ export default function HealthRecordsPage() {
             Secure record sync is not enabled yet because NarcoGuard does not have the required UHS/Epic SMART app-registration values. You can still open UHS MyChart directly.
           </div>
         )}
+
+        <UhsMyChartControls configured={uhs.configured} />
 
         <div className="flex flex-wrap gap-3">
           <a
