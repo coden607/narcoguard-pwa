@@ -324,7 +324,9 @@ export function NeedsFinder() {
       </div>
       <p className="text-xs text-muted-foreground" data-testid="place-privacy">
         Your location is rounded to about a kilometer and used only to search public directories. It is never stored on our
-        servers. So you only enter it once, this phone remembers it until you tap Forget (turn this off in Angel).
+        servers. ZIP searches may also send generic resource categories + the ZIP to Brave Search when fresh web discovery is enabled;
+        your typed need description and GPS coordinates are not sent to Brave. So you only enter it once, this phone remembers it until
+        you tap Forget (turn this off in Angel).
         {savedPlace && <> <button type="button" className="inline-flex min-h-6 items-center underline text-primary" onClick={forgetSavedPlace} data-testid="forget-saved-place">Forget where I am</button></>}
       </p>
       {notice && <p className="text-sm" role="status">{notice}</p>}
