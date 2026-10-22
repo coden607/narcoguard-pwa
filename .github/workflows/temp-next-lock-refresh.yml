@@ -1,0 +1,34 @@
+name: Temporary Next lock refresh
+
+on:
+  push:
+    branches:
+      - feat/brave-groq-resource-discovery
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: feat/brave-groq-resource-discovery
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm install --package-lock-only --ignore-scripts --save-exact next@16.4.2
+      - name: Commit regenerated lock
+        run: |
+          if git diff --quiet -- package.json package-lock.json; then
+            echo "Lockfile already current."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore(deps): upgrade Next.js to 16.4.2"
+          git push origin HEAD:feat/brave-groq-resource-discovery
