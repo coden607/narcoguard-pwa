@@ -3,7 +3,7 @@ export default function PrivacyPolicy() {
     <main className="min-h-screen bg-background p-6">
       <div className="max-w-4xl mx-auto space-y-8">
         <h1 className="text-4xl font-bold text-center">NarcoGuard Privacy</h1>
-        <p className="text-sm text-muted-foreground text-center">Updated October 11, 2026</p>
+        <p className="text-sm text-muted-foreground text-center">Updated October 22, 2026</p>
 
         <div className="space-y-6 text-sm text-muted-foreground">
           <section className="space-y-3">
@@ -55,6 +55,16 @@ export default function PrivacyPolicy() {
               your location, only the names, distances and phone numbers of the places found. We do not store or log the
               location on our servers. So you only enter it once, your phone remembers the ZIP or the rounded location in its own
               storage; tap &quot;Forget where I am&quot;, or untick &quot;Remember … on this phone&quot; in Angel, to erase it.
+            </p>
+            <p>
+              When fresh web discovery is configured and you search by ZIP code, NarcoGuard can also send Brave Search a generic
+              list of resource categories together with that 5-digit ZIP. Your typed need description and GPS coordinates are not
+              sent to Brave. Brave&apos;s current API privacy notice says API query records may be retained for up to 90 days for
+              billing and troubleshooting. Brave&apos;s public result titles, URLs and snippets may then be sent to Groq only to
+              categorize and rank those supplied results; NarcoGuard does not ask Groq to invent provider facts or send your
+              NarcoGuard chat, account, health-record or Guardian data in that ranking request. Groq states that API inputs and
+              outputs are not used for model training unless the customer explicitly permits it, and Zero Data Retention can be
+              enabled in Groq&apos;s Data Controls.
             </p>
             <p>
               Bluetooth heart-rate and blood-oxygen readings are shown only on your screen while connected. They are not
