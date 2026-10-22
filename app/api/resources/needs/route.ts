@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
 import { lookupNeeds } from "@/lib/resource-lookup"
+import { searchFreshZipResources } from "@/lib/resource-web-search"
 
 // Two upstream directories are queried in parallel, with one Overpass fallback attempt.
 export const maxDuration = 60
@@ -16,6 +17,9 @@ const noStore = { "Cache-Control": "private, no-store" }
 export async function GET(request: Request) {
   const parsed = querySchema.safeParse(Object.fromEntries(new URL(request.url).searchParams))
   if (!parsed.success) return NextResponse.json({ error: "Provide a 5-digit ZIP or lat and lon." }, { status: 400, headers: noStore })
-  const result = await lookupNeeds(parsed.data)
-  return NextResponse.json(result, { status: result.status === "unavailable" ? 502 : 200, headers: noStore })
+  const [result, web] = await Promise.all([
+    lookupNeeds(parsed.data),
+    "zip" in parsed.data ? searchFreshZipResources(parsed.data.zip) : Promise.resolve({ status: "skipped" as const, results: [] }),
+  ])
+  return NextResponse.json({ ...result, web }, { status: result.status === "unavailable" && web.status !== "ok" ? 502 : 200, headers: noStore })
 }
