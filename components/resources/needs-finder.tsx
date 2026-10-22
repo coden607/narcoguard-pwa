@@ -21,11 +21,26 @@ interface KindLookup {
   widenedMiles?: number
 }
 
+interface FreshWebResource {
+  title: string
+  url: string
+  description?: string
+  kind: ResourceKind
+  source: "Brave Search"
+  rankedBy: "Groq" | "local rules"
+}
+
 interface NeedsResponse {
   status: "ok" | "partial" | "unavailable"
   message?: string
   fetchedAt?: string
   kinds: Partial<Record<ResourceKind, KindLookup>>
+  web?: {
+    status: "ok" | "disabled" | "unavailable" | "skipped"
+    fetchedAt?: string
+    results: FreshWebResource[]
+    message?: string
+  }
 }
 
 type Origin = { lat: number; lon: number } | { zip: string }
@@ -309,7 +324,9 @@ export function NeedsFinder() {
       </div>
       <p className="text-xs text-muted-foreground" data-testid="place-privacy">
         Your location is rounded to about a kilometer and used only to search public directories. It is never stored on our
-        servers. So you only enter it once, this phone remembers it until you tap Forget (turn this off in Angel).
+        servers. ZIP searches may also send generic resource categories + the ZIP to Brave Search when fresh web discovery is enabled;
+        your typed need description and GPS coordinates are not sent to Brave. So you only enter it once, this phone remembers it until
+        you tap Forget (turn this off in Angel).
         {savedPlace && <> <button type="button" className="inline-flex min-h-6 items-center underline text-primary" onClick={forgetSavedPlace} data-testid="forget-saved-place">Forget where I am</button></>}
       </p>
       {notice && <p className="text-sm" role="status">{notice}</p>}
@@ -317,6 +334,28 @@ export function NeedsFinder() {
       {data && !busy && (
         <div className="space-y-5" aria-live="polite">
           {data.message && <p className="text-sm">{data.message}</p>}
+          {data.web?.status === "ok" && data.web.results.length > 0 && (
+            <section className="space-y-2 rounded-lg border border-cyan-400/30 bg-cyan-400/5 p-3" aria-labelledby="fresh-web-leads" data-testid="fresh-web-leads">
+              <div>
+                <h3 id="fresh-web-leads" className="font-semibold">Fresh web leads</h3>
+                <p className="text-xs text-muted-foreground">
+                  Found live through Brave Search{data.web.results.some((item) => item.rankedBy === "Groq") ? " and categorized by Groq" : ""}. These are web leads, not verified availability. Check the provider page or call before traveling.
+                </p>
+              </div>
+              {data.web.message && <p className="text-xs text-muted-foreground">{data.web.message}</p>}
+              <ul className="space-y-2">
+                {data.web.results.map((item) => (
+                  <li key={item.url} className="rounded-lg border p-3">
+                    <p className="font-medium">{item.title}</p>
+                    <p className="text-xs text-muted-foreground">{SHORT_LABELS[item.kind]} · Source: {item.source}</p>
+                    {item.description && <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>}
+                    <a className="mt-2 inline-flex min-h-8 items-center underline text-primary" href={item.url} target="_blank" rel="noopener noreferrer">Open provider/search result</a>
+                  </li>
+                ))}
+              </ul>
+              {data.web.fetchedAt && <p className="text-xs text-muted-foreground">Web search checked at {new Date(data.web.fetchedAt).toLocaleTimeString()}.</p>}
+            </section>
+          )}
           {data.status === "unavailable" && (
             <a href="tel:211" className="inline-flex min-h-11 items-center rounded-lg border border-primary/50 px-4 font-semibold text-primary hover:bg-primary/10" data-testid="call-211-unavailable">
               Call 211 to find help near you
