@@ -1,0 +1,29 @@
+name: Factory Proposals
+
+# Zero-token feeder (FACTORY_RULES.md 13). Opens at most one `factory:proposed` issue; the owner approves
+# by adding `factory:accepted` + a priority label. Runs from main so a PR cannot change its own feeder.
+on:
+  schedule:
+    - cron: "17 13 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: factory-proposals
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+      - name: Propose the next backlog item
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 factory/proposals.py --create
