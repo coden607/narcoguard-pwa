@@ -73,7 +73,7 @@ Find help or Angel broken in production, or personal data exposed.
 4. **[CODE]** `.factory/locks/autonomy` on `main` is `3` or more, and `.factory/STOP` does not exist on `main`.
 5. **[CODE]** The PR is mergeable and from `factory/issue-*`.
 
-**Merge mechanism:** squash, performed by the workflow. Never by a model.
+**Merge mechanism:** rebase-merge (`gh pr merge --rebase`), performed by the workflow. Never by a model. History on `main` stays one straight line: no merge commits, no squash commits (§12).
 
 ## 4. The end-to-end regression
 
@@ -182,3 +182,26 @@ location data in either.
 ## 11. Changing this file
 
 Human commits to `main` only.
+
+## 12. Linear history (owner decision, rebase-only)
+
+- `main` is one straight line. The only merge method is **rebase**. No merge commits, no squash merges, no
+  force-pushes to `main`. Existing history is never rewritten.
+- A factory PR carries one logical change as one to three clean, conventionally-titled commits (fix-up commits for validation findings are added on top), because every
+  commit lands on `main` as written. Fixes go in as new commits; `main` is never merged into the branch. GitHub rebases at merge time; a conflict is a `factory:needs-human` stop (factory sessions never force-push).
+- The CI job `linear-history` rejects any PR that contains a merge commit.
+- A live-check revert reverts the whole PR range, newest commit first (`factory-live-check.yml`).
+
+## 13. Proposals and memory
+
+- **Proposals.** `factory/proposals.py` (no model, no tokens) may open at most one issue labelled
+  `factory:proposed` from `docs/factory/BACKLOG.md`, and only when no `factory:proposed` or
+  `factory:accepted` issue is open. Triage ignores `factory:proposed`. Only the owner promotes it by adding
+  `factory:accepted` plus a `priority:*` label. That promotion is the approval.
+- **Second brain.** `MEMORY.md` is STATE (current truth, overwritten), `memory/daily/YYYY-MM-DD.md` is EVENT
+  (append-only), `memory/kb/` holds promoted lessons. Factory sessions may append to `memory/daily/` and
+  propose STATE or KB changes inside their own PR (counts toward the size cap). Never record secrets,
+  personal, health or location data: this repository is public.
+- **Spend.** A job that needs more than the cheapest capable tier, or reads more than the files it touches,
+  must say why in the PR body. Heavy-token work (large refactors, full-suite analysis, audits) is queued for
+  the owner's splurge windows, not run hourly.

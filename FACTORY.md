@@ -11,7 +11,7 @@ deterministic dispatcher (`factory/dispatch.py`) for exactly one job and does it
 ```
 issue ──triage──▶ factory:accepted ──implement──▶ PR factory/issue-N (factory:built)
    CI + Factory Gate (guard, build, journeys, hidden scenarios) ──▶ validate-pr (a different session)
-   factory:validated ──▶ Factory Merge (code, squash) ──▶ Vercel deploys ──▶ Factory Live Check
+   factory:validated ──▶ Factory Merge (code, rebase) ──▶ Vercel deploys ──▶ Factory Live Check
    live check fails ──▶ rollback + revert + critical issue + @coden607 + email
 ```
 
@@ -40,7 +40,7 @@ Target: **level 3, guarded** (owner, 2026-10-09). Current dial: see `.factory/lo
 | 0 | nothing; run by hand |
 | 1 | triage, implement, fix |
 | 2 | + a separate session validates and labels `factory:validated` |
-| 3 | + `factory-merge.yml` squash-merges green PRs, Vercel deploys, live check guards |
+| 3 | + `factory-merge.yml` rebase-merges green PRs, Vercel deploys, live check guards |
 
 Raise the dial one notch at a time, after a full lap at the current level, by a human commit to
 `.factory/locks/autonomy`. Protected areas never auto-merge at any level: they cannot pass the guard.

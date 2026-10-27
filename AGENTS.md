@@ -55,6 +55,8 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 - Domain implementation remains in this repository; do not vendor or fork the full Continuity OS into NarcoGuard.
 - Before acting, classify the task through Continuity OS routing semantics. Use deterministic code for exact rules, Jev for repeated/discrete judgment gates, and an LLM only for reasoning/generation work.
 - Route mid-task interruptions through the canonical `route-interrupts` skill: steering folds into the active task, side questions resume afterward, new tasks queue visibly, and only explicit stop/redirect messages halt work.
+- **Token policy.** Order of attack: deterministic code or `rg` first, then Jev (decide only), then the cheapest capable tier, then a frontier model last. An idle factory run (`python3 factory/dispatch.py` prints `idle`) reads nothing else. Spend heavily only on genuinely token-intensive work (cross-file refactors, full audits, test-suite analysis) and say why in the PR body.
+- **Second brain.** Durable project facts go to `MEMORY.md` (STATE: overwrite stale values, keep `as-of`, `source`, `review-by`) and `memory/daily/` (EVENT: append-only, ET times). Promoted lessons go to `memory/kb/`. Run `continuity brain audit --root .` (when the CLI is available) before trusting an old fact. Never store secrets or personal, health or location data: this repository is public.
 - Apply `compress-token-spend` on every substantive run: search/read narrowly, minimize context, reuse stable prompts, and choose the cheapest capable tier from Continuity OS `config/orchestration/models.yaml`.
 - Use Continuity OS guardrails before destructive, irreversible, secret-bearing, production, payment, or external-send actions; repository/system approval rules still take precedence.
 - Use Continuity OS STATE/EVENT memory discipline for durable project facts and append-only events.
@@ -107,6 +109,8 @@ Use `npm run verify` for the complete gate; it runs the same checks as CI, inclu
 ## Git and Deployment
 
 - Work from the current branch unless asked otherwise.
+- **History is one straight line (owner decision).** Merge to `main` only by **rebase-merge** of a reviewed PR. Never create a merge commit, never squash-merge, never force-push `main`. Never merge `origin/main` into a branch: GitHub rebases the PR onto `main` at merge time, so a behind-but-conflict-free branch needs nothing. On a conflict, the owner (or a session the owner has explicitly allowed to force-push its own PR branch with `--force-with-lease`) rebases it; factory sessions stay under the `.claude/settings.json` force-push deny and escalate with `factory:needs-human`. Keep one logical change per PR in one to three clean commits, because each commit lands on `main` unchanged. Never rewrite history that is already on `main`.
+- **Approval gates.** The owner is in the loop for: merging PRs (autonomy dial is 2 until the owner says otherwise), dependency additions and upgrades, CI/workflow and `.factory/` changes, repository settings, and anything on the irreversible list in `FACTORY_RULES.md` §7.3. Everything else the factory may prepare as a PR.
 - Review `git status` and the diff before committing.
 - Do not amend user commits, force-push, or rewrite history unless explicitly requested.
 - Before pushing `main` or deploying production, ensure the full verification gate passes and summarize the exact commit and deployment target.

@@ -1,0 +1,32 @@
+name: Linear History
+
+# Owner decision (FACTORY_RULES.md 12): main is one straight line, rebase-merge only.
+# This job fails a PR that contains a merge commit. The repository ruleset enforces the same on main.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linear-history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Reject merge commits in the PR
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          MERGES=$(git rev-list --merges "${BASE}..${HEAD}")
+          if [ -n "$MERGES" ]; then
+            echo "::error::This PR contains merge commits. History on main is linear: rebase the branch onto main instead of merging main into it."
+            git log --merges --format='%h %s' "${BASE}..${HEAD}"
+            exit 1
+          fi
+          echo "LINEAR_OK $(git rev-list --count "${BASE}..${HEAD}") commit(s), no merge commits"

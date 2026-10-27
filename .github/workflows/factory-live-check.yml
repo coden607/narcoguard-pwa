@@ -64,7 +64,10 @@ jobs:
           if [[ "$HEAD_REF" == factory/issue-* ]]; then
             git config user.name "narcoguard-factory"; git config user.email "factory@users.noreply.github.com"
             BR="factory/revert-${SHA:0:7}"
-            if git checkout -b "$BR" origin/main && git revert --no-edit "$SHA" && git push -u origin "$BR"; then
+            # Rebase-merge lands every PR commit on main, so revert the whole range, newest first.
+            PR_NUM=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/pulls" --jq '.[0].number' 2>/dev/null || echo 1)
+            COMMITS=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUM}" --jq '.commits' 2>/dev/null || echo 1)
+            if git checkout -b "$BR" origin/main && git revert --no-edit "${SHA}~${COMMITS}..${SHA}" && git push -u origin "$BR"; then
               REVERT=$(gh pr create --base main --head "$BR" --title "Revert ${SHA:0:7}: live check failed" --body "Live check failed after this factory merge. See the linked issue." 2>/dev/null || echo "branch $BR pushed; open a PR from it")
             else
               REVERT="revert did not apply cleanly"
