@@ -65,9 +65,13 @@ jobs:
             git config user.name "narcoguard-factory"; git config user.email "factory@users.noreply.github.com"
             BR="factory/revert-${SHA:0:7}"
             # Rebase-merge lands every PR commit on main, so revert the whole range, newest first.
-            PR_NUM=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/pulls" --jq '.[0].number' 2>/dev/null || echo 1)
-            COMMITS=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUM}" --jq '.commits' 2>/dev/null || echo 1)
-            if git checkout -b "$BR" origin/main && git revert --no-edit "${SHA}~${COMMITS}..${SHA}" && git push -u origin "$BR"; then
+            PR_NUM=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/pulls" --jq '.[0].number' 2>/dev/null || true)
+            COMMITS=""
+            [[ "$PR_NUM" =~ ^[0-9]+$ ]] && COMMITS=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUM}" --jq '.commits' 2>/dev/null || true)
+            # Fail closed: never guess the range, a partial revert would leave part of the bad change on main.
+            if ! [[ "$COMMITS" =~ ^[1-9][0-9]*$ ]]; then
+              REVERT="NOT attempted: could not read the PR commit count, revert PR #${PR_NUM:-unknown} by hand"
+            elif git checkout -b "$BR" origin/main && git revert --no-edit "${SHA}~${COMMITS}..${SHA}" && git push -u origin "$BR"; then
               REVERT=$(gh pr create --base main --head "$BR" --title "Revert ${SHA:0:7}: live check failed" --body "Live check failed after this factory merge. See the linked issue." 2>/dev/null || echo "branch $BR pushed; open a PR from it")
             else
               REVERT="revert did not apply cleanly"
