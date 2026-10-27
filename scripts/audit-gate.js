@@ -7,17 +7,7 @@
 // When any of them stops being true the gate fails and names the exception to remove or renew.
 const { execFileSync } = require("node:child_process")
 
-const exceptions = [
-  {
-    advisory: "GHSA-vfj7-8cjw-p6xm",
-    package: "braces",
-    lastVulnerable: "3.0.3",
-    reason:
-      "No patched braces exists. Reaches the tree only via @next/eslint-plugin-next -> fast-glob -> micromatch, " +
-      "used when linting; never bundled or run in production.",
-    reviewBy: "2026-11-04",
-  },
-]
+const exceptions = []
 
 const npm = process.platform === "win32" ? "npm.cmd" : "npm"
 const run = (args) => {
