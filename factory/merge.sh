@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Squash-merges factory PRs that pass every gate in FACTORY_RULES.md 3. Run by factory-merge.yml from main.
+# Rebase-merges factory PRs that pass every gate in FACTORY_RULES.md 3. Run by factory-merge.yml from main.
+# Below autonomy 3 this script does nothing: a person rebase-merges.
 set -uo pipefail
 REPO="${GITHUB_REPOSITORY:-coden607/narcoguard-pwa}"
 LEVEL=$(tr -dc 0-9 < .factory/locks/autonomy 2>/dev/null || echo 0); LEVEL=${LEVEL:-0}
 if [ -f .factory/STOP ]; then echo "MERGE_IDLE stop file on main"; exit 0; fi
-# The stop button fails closed: if the lookup itself fails, nothing merges this run.
 STOPS=$(gh issue list -R "$REPO" --label factory:stop --state open --json number --jq length) || { echo "MERGE_IDLE could not read the stop label"; exit 1; }
 if [ "$STOPS" != "0" ]; then echo "MERGE_IDLE factory:stop label"; exit 0; fi
-if [ "$LEVEL" -lt 3 ]; then echo "MERGE_IDLE autonomy $LEVEL < 3: a human merges"; exit 0; fi
+if [ "$LEVEL" -lt 3 ]; then echo "MERGE_IDLE autonomy $LEVEL < 3: a human rebase-merges"; exit 0; fi
 
 REQUIRED="quality pwa-browser-smoke lighthouse gate"
 BLOCKING='factory:needs-human|factory:rejected|factory:stop|factory:assumption|factory:changes-requested'
@@ -23,9 +23,9 @@ while IFS=$'\t' read -r N REF SHA LABELS MERGEABLE; do
     echo "$RUNS" | grep -qx "$CHECK=success" || { echo "skip #$N: $CHECK not green on $SHA"; OK=0; break; }
   done
   [ "$OK" = 1 ] || continue
-  if gh pr merge "$N" -R "$REPO" --squash --match-head-commit "$SHA"; then
+  if gh pr merge "$N" -R "$REPO" --rebase --match-head-commit "$SHA"; then
     gh pr edit "$N" -R "$REPO" --add-label factory:merged >/dev/null 2>&1 || true
-    echo "MERGED #$N at $SHA"
+    echo "REBASE_MERGED #$N at $SHA"
   else
     echo "MERGE_FAILED #$N"
   fi

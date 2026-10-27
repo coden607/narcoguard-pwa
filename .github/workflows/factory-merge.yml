@@ -1,7 +1,8 @@
 name: Factory Merge
 
-# The merge is code, never a model (FACTORY_RULES.md 3). Squash-merges a factory PR only when every
-# gate is green. Always runs factory/merge.sh from main, so a PR cannot supply its own merge rules.
+# The merge is code, never a model (FACTORY_RULES.md 3). Rebase-merges a factory PR only when every
+# gate is green and autonomy is 3 or higher. Below that, a person rebase-merges. Always runs
+# factory/merge.sh from main, so a PR cannot supply its own merge rules.
 on:
   workflow_run:
     workflows: [CI, Factory Gate]
@@ -31,7 +32,7 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Merge factory PRs that passed every gate
+      - name: Rebase-merge factory PRs that passed every gate
         env:
           GH_TOKEN: ${{ github.token }}
         run: bash factory/merge.sh
