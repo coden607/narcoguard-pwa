@@ -51,21 +51,6 @@ function candidatesFor(center: { lat: number; lon: number }, zoom: number, radiu
   return out.sort((a, b) => a.ring - b.ring)
 }
 
-/** The bounded square of tile URLs around one anchor, deduped and sorted by x then y. */
-export function offlineMapTilesFor(
-  center: { lat: number; lon: number },
-  template: string,
-  zoom = OFFLINE_MAP_ZOOM,
-  radius = OFFLINE_MAP_GRID_RADIUS,
-): OfflineMapTile[] {
-  const byKey = new Map<string, OfflineMapTile>()
-  for (const c of candidatesFor(center, zoom, radius)) {
-    const key = `${c.z}/${c.x}/${c.y}`
-    if (!byKey.has(key)) byKey.set(key, { z: c.z, x: c.x, y: c.y, url: tileUrl(template, c.z, c.x, c.y) })
-  }
-  return [...byKey.values()].sort((a, b) => a.x - b.x || a.y - b.y)
-}
-
 type PackLike = { resources: readonly Pick<OfflineResource, "lat" | "lon">[] } | null | undefined
 
 /**
@@ -105,15 +90,4 @@ export function offlineMapRegionFromPack(
   }
   const tiles = [...byKey.values()].sort((a, b) => a.x - b.x || a.y - b.y)
   return { zoom: OFFLINE_MAP_ZOOM, tiles, anchors: centers.length }
-}
-
-/** Explicit staleness wording for a cached tile or region; never claims current availability. */
-export function offlineMapCacheLabel(cachedAtIso: string, now = Date.now()): string {
-  const age = now - Date.parse(cachedAtIso)
-  if (!Number.isFinite(age) || age < 0) return "cache age unknown"
-  const minutes = Math.floor(age / 60_000)
-  if (minutes < 60) return `cached ${Math.max(1, minutes)} min ago`
-  const hours = Math.floor(minutes / 60)
-  if (hours < 48) return `cached ${hours} hr ago`
-  return `cached ${Math.floor(hours / 24)} days ago`
 }
