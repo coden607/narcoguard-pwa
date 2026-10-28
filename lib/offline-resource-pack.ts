@@ -15,6 +15,8 @@ export type OfflineResource = {
   phone?: string
   website?: string
   hours?: string
+  lat?: number
+  lon?: number
   workedBefore: boolean
 }
 
@@ -59,6 +61,8 @@ export function buildOfflineResourcePack(
       ...(row.resource.phone ? { phone: row.resource.phone } : {}),
       ...(row.resource.website ? { website: row.resource.website } : {}),
       ...(row.resource.hours ? { hours: row.resource.hours } : {}),
+      ...(typeof row.resource.lat === "number" && Number.isFinite(row.resource.lat) ? { lat: row.resource.lat } : {}),
+      ...(typeof row.resource.lon === "number" && Number.isFinite(row.resource.lon) ? { lon: row.resource.lon } : {}),
       workedBefore: worked.has(row.key),
     }))
 
@@ -107,6 +111,8 @@ export function readOfflineResourcePack(storage: Pick<StorageLike, "getItem">): 
         ...(typeof row.phone === "string" ? { phone: row.phone.slice(0, 60) } : {}),
         ...(typeof row.website === "string" ? { website: row.website.slice(0, 400) } : {}),
         ...(typeof row.hours === "string" ? { hours: row.hours.slice(0, 120) } : {}),
+        ...(typeof row.lat === "number" && Number.isFinite(row.lat) ? { lat: row.lat } : {}),
+        ...(typeof row.lon === "number" && Number.isFinite(row.lon) ? { lon: row.lon } : {}),
         workedBefore: row.workedBefore === true,
       }]
     }).slice(0, OFFLINE_RESOURCE_PACK_MAX)

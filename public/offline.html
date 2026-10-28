@@ -76,6 +76,11 @@
     .resource .meta { font-size: .82rem; opacity: .8; margin-top: .35rem; }
     .resource a { color: #7de9ff; word-break: break-word; }
     .stale-warning { border-left: 4px solid #f5b942; padding-left: .75rem; }
+    .map-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: .75rem; border-radius: 12px; overflow: hidden; }
+    .map-grid .tile { aspect-ratio: 1; background: rgba(255,255,255,.08); min-height: 56px; }
+    .map-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .map-grid .missing { display: flex; align-items: center; justify-content: center; height: 100%; min-height: 56px; font-size: .68rem; opacity: .7; text-align: center; padding: .25rem; }
+    @media (min-width: 480px) { .map-grid { grid-template-columns: repeat(4, 1fr); } }
   </style>
 </head>
 <body>
@@ -99,6 +104,13 @@
       <div id="offline-resource-list">
         <p class="small">No saved resource pack is available on this device yet.</p>
       </div>
+    </section>
+
+    <section class="resources" aria-labelledby="offline-map">
+      <h2 id="offline-map">Saved map region</h2>
+      <p class="small stale-warning">Map tiles saved on this device from when you last looked. They may be out of date: streets, businesses and services change. The map is a memory aid around your saved place and saved resources, not a claim about what is there now.</p>
+      <div id="offline-map-grid" class="map-grid" role="img" aria-label="Saved map tiles around your saved place and saved resources"></div>
+      <p class="small" id="offline-map-status" role="status">No map region is saved on this device yet.</p>
     </section>
 
     <section class="steps" aria-labelledby="od-steps">
@@ -203,6 +215,100 @@
       } catch {
         // Corrupt or unavailable local data must never block the offline safety page.
       }
+    })();
+  </script>
+  <script>
+    (() => {
+      // Feature 60: offline map tiles for the saved region. Anchors are the on-device saved
+      // place (coordinates already rounded to about 1 km) and public resource coordinates
+      // from the offline pack. Tiles are served from the service-worker cache when offline;
+      // any tile that was never cached stays an explicit "not saved" cell.
+      const ZOOM = 15;
+      const GRID_RADIUS = 1;
+      const MAX_TILES = 12;
+      const MAX_RESOURCE_ANCHORS = 2;
+      const TILE_BASE = "https://tile.openstreetmap.org/";
+      const grid = document.getElementById("offline-map-grid");
+      const status = document.getElementById("offline-map-status");
+      if (!grid || !status) return;
+
+      const clamp = (value, lo, hi) => Math.min(hi, Math.max(lo, value));
+      const tileXY = (lat, lon) => {
+        const safeLat = clamp(Number.isFinite(lat) ? lat : 0, -85.05112878, 85.05112878);
+        const wrappedLon = ((Number.isFinite(lon) ? lon : 0) + 180) % 360 - 180;
+        const n = 2 ** ZOOM;
+        const x = Math.floor(((wrappedLon + 180) / 360) * n);
+        const rad = (safeLat * Math.PI) / 180;
+        const y = Math.floor(((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n);
+        return { x: clamp(x, 0, n - 1), y: clamp(y, 0, n - 1) };
+      };
+
+      const anchors = [];
+      try {
+        const saved = JSON.parse(localStorage.getItem("narcoguard_saved_place_v1") || "null");
+        if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lon)) anchors.push({ lat: saved.lat, lon: saved.lon });
+      } catch {
+        // Nothing remembered, or storage is blocked.
+      }
+      try {
+        const pack = JSON.parse(localStorage.getItem("narcoguard_offline_resource_pack_v1") || "null");
+        if (pack && Array.isArray(pack.resources)) {
+          for (const row of pack.resources) {
+            if (anchors.length >= MAX_RESOURCE_ANCHORS + 1) break;
+            if (row && Number.isFinite(row.lat) && Number.isFinite(row.lon) && !anchors.some((anchor) => anchor.lat === row.lat && anchor.lon === row.lon)) {
+              anchors.push({ lat: row.lat, lon: row.lon });
+            }
+          }
+        }
+      } catch {
+        // No pack, or storage is blocked.
+      }
+      if (anchors.length === 0) return;
+
+      const tiles = new Map();
+      for (const anchor of anchors) {
+        const { x, y } = tileXY(anchor.lat, anchor.lon);
+        for (let dx = -GRID_RADIUS; dx <= GRID_RADIUS; dx += 1) {
+          for (let dy = -GRID_RADIUS; dy <= GRID_RADIUS; dy += 1) {
+            const tx = clamp(x + dx, 0, 32767);
+            const ty = clamp(y + dy, 0, 32767);
+            if (!tiles.has(tx + "/" + ty)) tiles.set(tx + "/" + ty, { x: tx, y: ty });
+          }
+        }
+      }
+      const list = [...tiles.values()].sort((a, b) => a.x - b.x || a.y - b.y).slice(0, MAX_TILES);
+
+      let settled = 0;
+      let failed = 0;
+      const update = () => {
+        if (settled < list.length) return;
+        if (failed === list.length) {
+          status.textContent = "No map tiles are saved for this area yet. Tiles save on this device when this page is viewed with a connection.";
+          return;
+        }
+        status.textContent = "Showing " + (list.length - failed) + " of " + list.length + " saved map tiles. They were cached on this device when you last looked and may be out of date. Verify before relying on them.";
+      };
+
+      list.forEach((tile) => {
+        const cell = document.createElement("div");
+        cell.className = "tile";
+        const img = document.createElement("img");
+        img.alt = "";
+        img.loading = "lazy";
+        img.src = TILE_BASE + ZOOM + "/" + tile.x + "/" + tile.y + ".png";
+        img.addEventListener("load", () => { settled += 1; update(); });
+        img.addEventListener("error", () => {
+          settled += 1;
+          failed += 1;
+          const missing = document.createElement("div");
+          missing.className = "missing";
+          missing.textContent = "not saved";
+          cell.replaceChildren(missing);
+          update();
+        });
+        cell.appendChild(img);
+        grid.appendChild(cell);
+      });
     })();
   </script>
 </body>

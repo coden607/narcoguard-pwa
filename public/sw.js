@@ -1,4 +1,9 @@
 const CACHE_NAME = "narcoguard-shell-v14";
+// Offline map tiles (Feature 60): a bounded, separate cache for the saved map region.
+// Only https://tile.openstreetmap.org/{z}/{x}/{y}.png GET requests ever enter it.
+const TILE_CACHE_NAME = "narcoguard-map-tiles-v1";
+const TILE_CACHE_MAX = 48;
+const TILE_ORIGIN = "https://tile.openstreetmap.org";
 const APP_SHELL = [
   "/images/ng-titanium-3d.png?rev=complete-2026-10-15",
   "/",
@@ -38,7 +43,7 @@ self.addEventListener("activate", (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== CACHE_NAME)
+            .filter((key) => key !== CACHE_NAME && key !== TILE_CACHE_NAME)
             .map((key) => caches.delete(key))
         )
       )
@@ -50,6 +55,13 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const requestUrl = new URL(event.request.url);
+
+  // Map tiles: cache-first within a hard cap so a saved region stays bounded on device.
+  // This branch runs only for the tile host; every other request keeps the behavior below.
+  if (requestUrl.origin === TILE_ORIGIN && /^\/\d+\/\d+\/\d+\.png$/.test(requestUrl.pathname)) {
+    event.respondWith(serveTile(event.request));
+    return;
+  }
 
   if (requestUrl.origin !== self.location.origin) return;
   if (requestUrl.pathname.startsWith("/api/")) return;
@@ -74,6 +86,27 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
+
+async function serveTile(request) {
+  const cached = await caches.match(request, { cacheName: TILE_CACHE_NAME });
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response && response.ok) {
+      const cache = await caches.open(TILE_CACHE_NAME);
+      await cache.put(request, response.clone());
+      const keys = await cache.keys();
+      for (let index = 0; index < keys.length - TILE_CACHE_MAX; index += 1) {
+        await cache.delete(keys[index]);
+      }
+    }
+    return response;
+  } catch {
+    const offline = await caches.match(request, { cacheName: TILE_CACHE_NAME });
+    if (offline) return offline;
+    return new Response(null, { status: 503, statusText: "Offline" });
+  }
+}
 
 self.addEventListener("push", (event) => {
   event.waitUntil(
