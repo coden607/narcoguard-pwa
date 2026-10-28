@@ -65,6 +65,17 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 - If Continuity OS is unavailable, fail over to the equivalent local NarcoGuard rules and report that routing fallback; do not silently bypass the control plane.
 
 
+## Rules for every AI
+
+Applies to every assistant that reads this repo (chatgpt, claude, codex, gemini, kimi, grok, any other). Owner: Stephen.
+
+1. **Route first.** Before substantive work call the ContinuityOS MCP (`continuity_route`, `continuity_token_analysis`; advisory) at `https://ubuntu-s-1vcpu-2gb-nyc1.tailfd6ac4.ts.net/mcp` (streamable HTTP, OAuth). Only Stephen enters the passphrase, on the OAuth page; never ask for it or store it. Jev decides discrete choices only (`jev --file request.json` on the shared box); it never writes code or prose.
+2. **Save tokens.** Use `compress-token-spend` and `route-with-jev`: `rg` and deterministic code first, then Jev, then the cheapest capable model. Spend big only on genuinely token-heavy work and say why in the PR.
+3. **Claim a lane.** Read board status and messages at the start of each turn, claim a lane with exact repo-relative paths before writing (`continuity_claim_lane`), check open PRs and issues first, then post status with the SHA and release the lane. The board is notification only, not approval.
+4. **Linear history.** Rebase-merge only: no merge commits, no squash, no force-push of shared branches. Roll back with revert commits.
+5. **Manual steps for Stephen** come as one clickable prefilled link with every value inline, so he never opens another tab or goes back. Decisions show scored options with short reasons.
+6. **Never print or commit secrets** (keys, tokens, passphrases, `.env*`). Secrets, repo/ruleset/billing settings and destructive actions always need Stephen, at any autonomy level.
+
 ## Working Style
 
 - Work autonomously on safe, in-scope implementation and verification steps.
