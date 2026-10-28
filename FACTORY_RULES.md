@@ -63,7 +63,7 @@ Find help or Angel broken in production, or personal data exposed.
 
 `.github/workflows/factory-merge.yml` merges only when **every** gate is true. **[CODE]** gates are scripts.
 
-1. **[CODE]** `CI / quality` and `CI / pwa-browser-smoke` and `CI / lighthouse` succeeded on the PR head.
+1. **[CODE]** `CI / quality`, `CI / pwa-browser-smoke`, `CI / lighthouse` and `Linear History / linear-history` succeeded on the PR head.
 2. **[CODE]** `Factory Gate / gate` succeeded on the PR head. It runs `factory/guard.py` (protected paths,
    size cap, test deletion) and `factory/validate.sh`, and `factory/gate.sh` requires these markers:
    `GUARD_OK`, `APP_STARTED`, `E2E_PASSED steps>=` the floor in `.factory/locks/e2e-floor`,
@@ -72,6 +72,9 @@ Find help or Angel broken in production, or personal data exposed.
    (§9), and has no `factory:needs-human`, `factory:assumption` or `factory:stop` label.
 4. **[CODE]** `.factory/locks/autonomy` on `main` is `3` or more, and `.factory/STOP` does not exist on `main`.
 5. **[CODE]** The PR is mergeable and from `factory/issue-*`.
+6. **[CODE]** No review thread is unresolved, the review decision is not `CHANGES_REQUESTED`, and no commit in the PR is a merge commit. If any of this cannot be read, the PR is skipped (fail closed).
+
+Autonomy is **3** (owner decision, 2026-10-28, Stephen). Anyone with write access may also merge a PR, by rebase only. A PR that touches a protected path (§5) fails the guard, so the factory never merges it; the owner does.
 
 **Merge mechanism:** rebase-merge (`gh pr merge --rebase`), performed by the workflow. Never by a model. History on `main` stays one straight line: no merge commits, no squash commits (§12).
 
@@ -190,6 +193,7 @@ Human commits to `main` only.
 - A factory PR carries one logical change as one to three clean, conventionally-titled commits (fix-up commits for validation findings are added on top), because every
   commit lands on `main` as written. Fixes go in as new commits; `main` is never merged into the branch. GitHub rebases at merge time; a conflict is a `factory:needs-human` stop (factory sessions never force-push).
 - The CI job `linear-history` rejects any PR that contains a merge commit.
+- Who may merge: the factory (at autonomy 3, under §3) or anyone, always by rebase. The repository ruleset requires a PR, linear history and the checks, with **0** required approvals so the factory is never blocked by a review it cannot give.
 - A live-check revert reverts the whole PR range, newest commit first (`factory-live-check.yml`).
 
 ## 13. Proposals and memory
