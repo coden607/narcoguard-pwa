@@ -33,7 +33,7 @@ issue ──triage──▶ factory:accepted ──implement──▶ PR factory
 
 ## Autonomy
 
-Target: **level 3, guarded** (owner, 2026-10-09). Owner decision 2026-10-28: the dial stays at **2** — the factory builds and validates PRs, the owner approves and performs every merge (linear history, no merge commits). Level-3 auto-merge stays off until the owner raises the dial by a human commit. Current dial: see `.factory/locks/autonomy`.
+Target: **level 3, guarded** (owner, 2026-10-09). Owner decision 2026-10-28 (Stephen): the dial is **3**. The factory rebase-merges its own green, validated PRs; anyone may merge by rebase only (never squash, never a merge commit), so history stays one straight line. Human approval remains only for guard-protected paths, repository settings and secrets, and the irreversible list. Current dial: see `.factory/locks/autonomy`.
 
 | Level | What runs |
 |---|---|

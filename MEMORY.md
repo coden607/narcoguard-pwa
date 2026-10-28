@@ -7,9 +7,9 @@
 
 ## Project
 - **repo**: coden607/narcoguard-pwa, default branch main, Next.js 16 / React 19 / TypeScript, Node 24, npm — as-of 2026-10-27 · source: repo package.json · review-by 2027-01-27
-- **history-policy**: main is one straight line; rebase-merge only (no merge commits, no squash) — as-of 2026-10-27 · source: Stephen (owner) · review-by 2027-04-27
-- **autonomy-dial**: 2 (human merges; factory builds and validates) — as-of 2026-10-27 · source: .factory/locks/autonomy · review-by 2026-12-27
-- **owner-approval-required**: PR merges, dependency changes, CI/workflow and .factory changes, repo settings, irreversible list (FACTORY_RULES 7.3) — as-of 2026-10-27 · source: Stephen (owner) · review-by 2027-01-27
+- **history-policy**: main is one straight line; rebase-merge only (no merge commits, no squash), by the factory or anyone — as-of 2026-10-28 · source: Stephen (owner) · review-by 2027-04-27
+- **autonomy-dial**: 3 (factory rebase-merges green, validated PRs; anyone may merge by rebase only) — as-of 2026-10-28 · source: Stephen (owner), .factory/locks/autonomy · review-by 2026-12-28
+- **owner-approval-required**: PRs touching guard-protected paths (factory/guard.py: dependencies, CI/workflow, .factory, governance, emergency/auth/data), repo settings and secrets, irreversible list (FACTORY_RULES 7.3) — as-of 2026-10-28 · source: Stephen (owner) · review-by 2027-01-28
 
 ## Operations
 - **routing**: all substantive agent work routes through ContinuityOS (coden607/continuity-os) then Jev (decide only), then cheapest capable tier — as-of 2026-10-27 · source: AGENTS.md · review-by 2027-01-27
