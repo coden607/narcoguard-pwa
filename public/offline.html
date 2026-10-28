@@ -80,7 +80,6 @@
     .map-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: .75rem; border-radius: 12px; overflow: hidden; }
     .map-grid .tile { aspect-ratio: 1; background: rgba(255,255,255,.08); min-height: 56px; }
     .map-grid img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .map-grid .missing { display: flex; align-items: center; justify-content: center; height: 100%; min-height: 56px; font-size: .68rem; opacity: .7; text-align: center; padding: .25rem; }
     @media (min-width: 480px) { .map-grid { grid-template-columns: repeat(4, 1fr); } }
   </style>
 </head>
@@ -221,112 +220,34 @@
   </script>
   <script>
     (() => {
-      // Feature 60: offline map tiles, opt-in only. This page never requests a map provider; it
-      // only shows tiles already saved on this device after the person turned offline maps on.
-      // Anchors are the on-device saved place (rounded to about 1 km) and public resource
-      // coordinates from the offline pack. Any tile that was never saved stays "not saved".
-      const ZOOM = 15;
-      const GRID_RADIUS = 1;
-      const MAX_TILES = 12;
-      const MAX_RESOURCE_ANCHORS = 2;
-      const CACHE_NAME = "narcoguard-map-tiles-v1";
+      // Feature 60: opt-in offline map tiles. This page never requests a map provider; it only
+      // shows tiles this device saved after the person turned offline maps on.
       const section = document.getElementById("offline-map-section");
       const grid = document.getElementById("offline-map-grid");
       const status = document.getElementById("offline-map-status");
-      const attribution = document.getElementById("offline-map-attribution");
-      if (!section || !grid || !status || !attribution || typeof caches === "undefined") return;
-
+      if (!section || !grid || !status || typeof caches === "undefined") return;
       let optIn = null;
       try { optIn = JSON.parse(localStorage.getItem("narcoguard_offline_map_optin_v1") || "null"); } catch { /* storage blocked */ }
-      const template = optIn && typeof optIn.template === "string" ? optIn.template : "";
-      if (!template.startsWith("https://") || !template.includes("{z}") || !template.includes("{x}") || !template.includes("{y}")) return;
+      if (!optIn || typeof optIn.template !== "string" || !optIn.template.startsWith("https://")) return;
       section.hidden = false;
-      attribution.textContent = "Map data: " + (typeof optIn.attribution === "string" ? optIn.attribution : "");
-
-      const clamp = (value, lo, hi) => Math.min(hi, Math.max(lo, value));
-      const tileXY = (lat, lon) => {
-        const safeLat = clamp(Number.isFinite(lat) ? lat : 0, -85.05112878, 85.05112878);
-        const wrappedLon = ((((Number.isFinite(lon) ? lon : 0) + 180) % 360) + 360) % 360 - 180;
-        const n = 2 ** ZOOM;
-        const x = Math.floor(((wrappedLon + 180) / 360) * n);
-        const rad = (safeLat * Math.PI) / 180;
-        const y = Math.floor(((1 - Math.log(Math.tan(rad) + 1 / Math.cos(rad)) / Math.PI) / 2) * n);
-        return { x: clamp(x, 0, n - 1), y: clamp(y, 0, n - 1) };
-      };
-
-      const anchors = [];
-      try {
-        const saved = JSON.parse(localStorage.getItem("narcoguard_saved_place_v1") || "null");
-        if (saved && Number.isFinite(saved.lat) && Number.isFinite(saved.lon)) anchors.push({ lat: saved.lat, lon: saved.lon });
-      } catch {
-        // Nothing remembered, or storage is blocked.
-      }
-      try {
-        const pack = JSON.parse(localStorage.getItem("narcoguard_offline_resource_pack_v1") || "null");
-        if (pack && Array.isArray(pack.resources)) {
-          for (const row of pack.resources) {
-            if (anchors.length >= MAX_RESOURCE_ANCHORS + 1) break;
-            if (row && Number.isFinite(row.lat) && Number.isFinite(row.lon) && !anchors.some((anchor) => anchor.lat === row.lat && anchor.lon === row.lon)) {
-              anchors.push({ lat: row.lat, lon: row.lon });
-            }
-          }
-        }
-      } catch {
-        // No pack, or storage is blocked.
-      }
-      if (anchors.length === 0) return;
-
-      // Same selection as lib/offline-map-region.ts: ring first, then anchor priority, then x/y order.
-      const candidates = [];
-      for (const anchor of anchors) {
-        const { x, y } = tileXY(anchor.lat, anchor.lon);
-        for (let dx = -GRID_RADIUS; dx <= GRID_RADIUS; dx += 1) {
-          for (let dy = -GRID_RADIUS; dy <= GRID_RADIUS; dy += 1) {
-            candidates.push({ x: clamp(x + dx, 0, 2 ** ZOOM - 1), y: clamp(y + dy, 0, 2 ** ZOOM - 1), ring: Math.max(Math.abs(dx), Math.abs(dy)) });
-          }
-        }
-      }
-      candidates.sort((a, b) => a.ring - b.ring);
-      const chosen = new Map();
-      for (const c of candidates) {
-        if (chosen.size >= MAX_TILES) break;
-        if (!chosen.has(c.x + "/" + c.y)) chosen.set(c.x + "/" + c.y, c);
-      }
-      const list = [...chosen.values()].sort((a, b) => a.x - b.x || a.y - b.y);
-      const urlFor = (tile) => template.replace("{z}", String(ZOOM)).replace("{x}", String(tile.x)).replace("{y}", String(tile.y));
-
-      caches.open(CACHE_NAME).then(async (cache) => {
+      document.getElementById("offline-map-attribution").textContent = "Map data: " + String(optIn.attribution || "");
+      const none = "No map tiles are saved for this area yet. Tiles save on this device when you are online with offline maps turned on.";
+      caches.open("narcoguard-map-tiles-v1").then(async (cache) => {
         let shown = 0;
-        for (const tile of list) {
+        for (const request of (await cache.keys()).slice(0, 12)) {
+          const hit = await cache.match(request);
+          if (!hit) continue;
+          const img = document.createElement("img");
+          img.alt = "";
+          img.src = URL.createObjectURL(await hit.blob());
           const cell = document.createElement("div");
           cell.className = "tile";
-          let blob = null;
-          try {
-            const hit = await cache.match(urlFor(tile));
-            blob = hit ? await hit.blob() : null;
-          } catch {
-            blob = null;
-          }
-          if (blob) {
-            const img = document.createElement("img");
-            img.alt = "";
-            img.src = URL.createObjectURL(blob);
-            cell.appendChild(img);
-            shown += 1;
-          } else {
-            const missing = document.createElement("div");
-            missing.className = "missing";
-            missing.textContent = "not saved";
-            cell.appendChild(missing);
-          }
+          cell.appendChild(img);
           grid.appendChild(cell);
+          shown += 1;
         }
-        status.textContent = shown === 0
-          ? "No map tiles are saved for this area yet. Tiles save on this device when you are online with offline maps turned on."
-          : "Showing " + shown + " of " + list.length + " saved map tiles. They were saved on this device when you last looked and may be out of date. Verify before relying on them.";
-      }).catch(() => {
-        status.textContent = "No map tiles are saved for this area yet. Tiles save on this device when you are online with offline maps turned on.";
-      });
+        status.textContent = shown === 0 ? none : "Showing " + shown + " saved map tiles. They were saved on this device when you last looked and may be out of date. Verify before relying on them.";
+      }).catch(() => { status.textContent = none; });
     })();
   </script>
 </body>
