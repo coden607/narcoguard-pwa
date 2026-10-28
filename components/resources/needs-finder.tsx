@@ -11,7 +11,7 @@ import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type R
 import { cardSummary } from "@/lib/resource-display"
 import { directionsUrl } from "@/lib/safer-use"
 import { forgetPlace, PLACE_FORGOTTEN_EVENT, REMEMBER_PLACE_KEY, SAVED_PLACE_KEY, readRememberChoice, readSavedPlace, roundPlace, savePlace } from "@/lib/saved-place"
-import { fetchDirectory, isLowBandwidthActive, LOW_BANDWIDTH_CACHE, LOW_BANDWIDTH_CHANGED_EVENT, readLowBandwidthChoice, saveLowBandwidthChoice, type DirectoryCaches } from "@/lib/low-bandwidth"
+import { clearDirectoryCache, fetchDirectory, isLowBandwidthActive, LOW_BANDWIDTH_CACHE, LOW_BANDWIDTH_CHANGED_EVENT, saveLowBandwidthChoice, type DirectoryCaches } from "@/lib/low-bandwidth"
 import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
 import { activateTravel, deactivateTravel, effectiveZip, readTravel, travelBanner, type TravelState } from "@/lib/travel-mode"
 
@@ -145,12 +145,16 @@ export function NeedsFinder() {
   const [lowData, setLowData] = useState(false)
   const [servedFromCache, setServedFromCache] = useState(false)
   const locationGeneration = useRef(0)
+  const searchGeneration = useRef(0)
 
   useEffect(() => {
     // Revocation invalidates callbacks already queued by the browser; no location
     // is carried in the signal and consuming it never writes or rebroadcasts.
     const revoke = () => {
       locationGeneration.current += 1
+      searchGeneration.current += 1
+      // The low data cache keys carry the ZIP or rounded coordinates, so forgetting a place clears it.
+      void clearDirectoryCache("caches" in window ? window.caches : undefined)
       setSavedPlace(null)
       setZip("")
       setBusy(false)
@@ -172,9 +176,9 @@ export function NeedsFinder() {
     const timer = window.setTimeout(() => {
       setFeedback(readResourceFeedback(window.localStorage))
       setTravelState(readTravel(window.localStorage))
-      setLowData(readLowBandwidthChoice(window.localStorage) || connection()?.saveData === true)
+      setLowData(lowDataActive())
     }, 0)
-    const followToggle = () => setLowData(readLowBandwidthChoice(window.localStorage) || connection()?.saveData === true)
+    const followToggle = () => setLowData(lowDataActive())
     window.addEventListener(LOW_BANDWIDTH_CHANGED_EVENT, followToggle)
     return () => {
       window.clearTimeout(timer)
@@ -222,6 +226,7 @@ export function NeedsFinder() {
       const active = effectiveZip(travel, new Date().toISOString())
       if (active.inTravel && active.zip) origin = { zip: active.zip }
     }
+    const search = ++searchGeneration.current
     setBusy(true)
     setNotice(undefined)
     // Remembered on this phone only (coordinates rounded to about 1 km), unless the person turned that off in Angel.
@@ -235,11 +240,17 @@ export function NeedsFinder() {
           lowData: true,
           caches: await openDirectoryCache(),
           onRefresh: ({ body }) => {
+            // A refresh for an older search must not replace the results of a newer one.
+            if (search !== searchGeneration.current) return
             const refreshed = body as NeedsResponse
             if (refreshed.kinds) { setData(refreshed); setServedFromCache(false) }
           },
         })
+        if (search !== searchGeneration.current) return
         if (!result.ok) {
+          // Keep the per-kind fallback links the API sends with its 502.
+          const failed = result.body as NeedsResponse | null
+          if (failed?.kinds) { setServedFromCache(false); setData(failed); return }
           setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
           return
         }
@@ -255,7 +266,7 @@ export function NeedsFinder() {
     } catch {
       setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
     } finally {
-      setBusy(false)
+      if (search === searchGeneration.current) setBusy(false)
     }
   }
 

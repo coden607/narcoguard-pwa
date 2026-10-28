@@ -18,10 +18,16 @@ export interface ConnectionLike {
 
 /** Off unless the person turned it on. Blocked storage simply means off. */
 export function readLowBandwidthChoice(store: Store | undefined): boolean {
+  return readLowBandwidthSetting(store) === "on"
+}
+
+/** The person's explicit choice, or undefined when they never made one (or storage is blocked). */
+export function readLowBandwidthSetting(store: Store | undefined): "on" | "off" | undefined {
   try {
-    return store?.getItem(LOW_BANDWIDTH_KEY) === "on"
+    const value = store?.getItem(LOW_BANDWIDTH_KEY)
+    return value === "on" || value === "off" ? value : undefined
   } catch {
-    return false
+    return undefined
   }
 }
 
@@ -36,9 +42,15 @@ export function systemSavesData(connection: ConnectionLike | null | undefined): 
   return connection?.saveData === true
 }
 
-/** Low data mode is active when the person chose it or the device asks to save data. */
+/** An explicit choice (on or off) always wins; with no choice the device data-saving hint decides. */
 export function isLowBandwidthActive(store: Store | undefined, connection: ConnectionLike | null | undefined): boolean {
-  return readLowBandwidthChoice(store) || systemSavesData(connection)
+  const choice = readLowBandwidthSetting(store)
+  return choice === undefined ? systemSavesData(connection) : choice === "on"
+}
+
+/** Removes every cached search, which includes keys carrying a ZIP or rounded coordinates. */
+export async function clearDirectoryCache(storage: { delete(name: string): Promise<boolean> } | undefined): Promise<void> {
+  try { await storage?.delete(LOW_BANDWIDTH_CACHE) } catch { /* nothing cached, or CacheStorage blocked */ }
 }
 
 export interface DirectoryCaches {
@@ -69,6 +81,11 @@ async function parseBody(response: Response): Promise<unknown> {
   return response.json()
 }
 
+/** Error responses can still carry useful JSON (the needs API's 502 lists fallback links); never throws. */
+async function errorBody(response: Response): Promise<unknown> {
+  try { return await response.json() } catch { return null }
+}
+
 /**
  * Cache-first directory fetch for low data mode: a cached answer for the same rounded
  * search shows immediately (stale is explicit — the caller labels it), a background
@@ -79,7 +96,7 @@ export async function fetchDirectory(url: string, options: DirectoryFetchOptions
   const fetchImpl = options.fetchImpl ?? fetch
   if (!options.lowData || !options.caches) {
     const response = await fetchImpl(url)
-    if (!response.ok) return { ok: false, servedFromCache: false, body: null }
+    if (!response.ok) return { ok: false, servedFromCache: false, body: await errorBody(response) }
     const body = await parseBody(response)
     return { ok: true, servedFromCache: false, body, fetchedAt: (body as { fetchedAt?: string })?.fetchedAt }
   }
@@ -100,7 +117,7 @@ export async function fetchDirectory(url: string, options: DirectoryFetchOptions
 
   try {
     const response = await fetchImpl(url)
-    if (!response.ok) return { ok: false, servedFromCache: false, body: null }
+    if (!response.ok) return { ok: false, servedFromCache: false, body: await errorBody(response) }
     const copy = response.clone()
     const body = await parseBody(response)
     await options.caches.put(url, copy).catch(() => undefined)
