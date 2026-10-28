@@ -11,6 +11,7 @@ import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type R
 import { cardSummary } from "@/lib/resource-display"
 import { directionsUrl } from "@/lib/safer-use"
 import { forgetPlace, PLACE_FORGOTTEN_EVENT, REMEMBER_PLACE_KEY, SAVED_PLACE_KEY, readRememberChoice, readSavedPlace, roundPlace, savePlace } from "@/lib/saved-place"
+import { fetchDirectory, isLowBandwidthActive, LOW_BANDWIDTH_CACHE, LOW_BANDWIDTH_CHANGED_EVENT, readLowBandwidthChoice, saveLowBandwidthChoice, type DirectoryCaches } from "@/lib/low-bandwidth"
 import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
 import { activateTravel, deactivateTravel, effectiveZip, readTravel, travelBanner, type TravelState } from "@/lib/travel-mode"
 
@@ -44,6 +45,15 @@ interface NeedsResponse {
 }
 
 type Origin = { lat: number; lon: number } | { zip: string }
+
+type ConnectionInfo = { saveData?: boolean }
+const connection = () => (typeof navigator !== "undefined" ? (navigator as Navigator & { connection?: ConnectionInfo }).connection : undefined)
+const lowDataActive = () => isLowBandwidthActive(window.localStorage, connection())
+/** The on-device cache used in low data mode; undefined where CacheStorage is unavailable. */
+const openDirectoryCache = async (): Promise<DirectoryCaches | undefined> => {
+  if (!("caches" in window)) return undefined
+  try { return await window.caches.open(LOW_BANDWIDTH_CACHE) } catch { return undefined }
+}
 
 const DIRECTORY_211 = { title: "Find local help through 211", url: "https://www.211.org/get-help" }
 
@@ -132,6 +142,8 @@ export function NeedsFinder() {
   const [feedback, setFeedback] = useState<ResourceFeedback[]>([])
   const [travelState, setTravelState] = useState<TravelState | null>(null)
   const [savedPlace, setSavedPlace] = useState<Origin | null>(null)
+  const [lowData, setLowData] = useState(false)
+  const [servedFromCache, setServedFromCache] = useState(false)
   const locationGeneration = useRef(0)
 
   useEffect(() => {
@@ -160,12 +172,20 @@ export function NeedsFinder() {
     const timer = window.setTimeout(() => {
       setFeedback(readResourceFeedback(window.localStorage))
       setTravelState(readTravel(window.localStorage))
+      setLowData(readLowBandwidthChoice(window.localStorage) || connection()?.saveData === true)
     }, 0)
-    return () => window.clearTimeout(timer)
+    const followToggle = () => setLowData(readLowBandwidthChoice(window.localStorage) || connection()?.saveData === true)
+    window.addEventListener(LOW_BANDWIDTH_CHANGED_EVENT, followToggle)
+    return () => {
+      window.clearTimeout(timer)
+      window.removeEventListener(LOW_BANDWIDTH_CHANGED_EVENT, followToggle)
+    }
   }, [])
 
   useEffect(() => {
     let cancelled = false
+    // Low data mode skips this probe: it only powers the optional "Let AI read my words" hint.
+    if (lowDataActive()) return
     fetch("/api/resources/understand", { cache: "no-store" })
       .then((response) => response.json())
       .then((body: Ai) => { if (!cancelled) setAi({ available: Boolean(body.available), provider: body.provider ?? null }) })
@@ -206,10 +226,31 @@ export function NeedsFinder() {
     setNotice(undefined)
     // Remembered on this phone only (coordinates rounded to about 1 km), unless the person turned that off in Angel.
     if (readRememberChoice(window.localStorage)) savePlace(window.localStorage, origin)
+    const params = new URLSearchParams("zip" in origin ? { zip: origin.zip } : { lat: String(origin.lat), lon: String(origin.lon) })
     try {
-      const params = new URLSearchParams("zip" in origin ? { zip: origin.zip } : { lat: String(origin.lat), lon: String(origin.lon) })
+      if (lowDataActive()) {
+        // Low data mode: text-only, cache-first. Ask the server to skip the fresh web search round.
+        params.set("web", "0")
+        const result = await fetchDirectory(`/api/resources/needs?${params}`, {
+          lowData: true,
+          caches: await openDirectoryCache(),
+          onRefresh: ({ body }) => {
+            const refreshed = body as NeedsResponse
+            if (refreshed.kinds) { setData(refreshed); setServedFromCache(false) }
+          },
+        })
+        if (!result.ok) {
+          setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
+          return
+        }
+        const body = result.body as NeedsResponse
+        setServedFromCache(result.servedFromCache)
+        setData(body.kinds ? body : { status: "unavailable", kinds: {} })
+        return
+      }
       const response = await fetch(`/api/resources/needs?${params}`, { cache: "no-store" })
       const body = (await response.json()) as NeedsResponse
+      setServedFromCache(false)
       setData(body.kinds ? body : { status: "unavailable", kinds: {} })
     } catch {
       setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
@@ -241,6 +282,14 @@ export function NeedsFinder() {
     void lookup({ zip: result.state.destinationZip })
   }
   const stopTravel = () => { deactivateTravel(window.localStorage); setTravelState(null); setNotice("Travel mode is off. Searches use your normal saved place again.") }
+  const toggleLowData = () => {
+    const next = !lowData
+    saveLowBandwidthChoice(window.localStorage, next)
+    setLowData(next)
+    setNotice(next
+      ? "Low data mode is on: listings stay text-only, searches use your on-device cache first, and fresh web leads are skipped."
+      : "Low data mode is off. Searches always ask the directories first.")
+  }
   const activeTravel = travelBanner(travelState, new Date().toISOString())
 
   const findNearMe = () => {
@@ -322,6 +371,12 @@ export function NeedsFinder() {
           <Button type="button" variant="outline" disabled={busy} onClick={startTravel}>Use this ZIP for travel (24h)</Button>
         )}
       </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Button type="button" variant="outline" size="sm" aria-pressed={lowData} onClick={toggleLowData} data-testid="low-data-toggle">
+          Low data mode: {lowData ? "on" : "off"}
+        </Button>
+        {lowData && <p className="text-xs text-muted-foreground">Listings stay text-only, searches use this phone's cache first, and fresh web leads are skipped.</p>}
+      </div>
       <p className="text-xs text-muted-foreground" data-testid="place-privacy">
         Your location is rounded to about a kilometer and used only to search public directories. It is never stored on our
         servers. ZIP searches may also send generic resource categories + the ZIP to Brave Search when fresh web discovery is enabled;
@@ -334,6 +389,11 @@ export function NeedsFinder() {
       {data && !busy && (
         <div className="space-y-5" aria-live="polite">
           {data.message && <p className="text-sm">{data.message}</p>}
+          {servedFromCache && (
+            <p className="text-sm" data-testid="cached-results-note">
+              Low data mode: showing your cached search{data.fetchedAt ? ` from ${new Date(data.fetchedAt).toLocaleTimeString()}` : ""}. It may be out of date — call first. Search again when online for fresh listings.
+            </p>
+          )}
           {data.web?.status === "ok" && data.web.results.length > 0 && (
             <section className="space-y-2 rounded-lg border border-cyan-400/30 bg-cyan-400/5 p-3" aria-labelledby="fresh-web-leads" data-testid="fresh-web-leads">
               <div>
@@ -356,6 +416,7 @@ export function NeedsFinder() {
               {data.web.fetchedAt && <p className="text-xs text-muted-foreground">Web search checked at {new Date(data.web.fetchedAt).toLocaleTimeString()}.</p>}
             </section>
           )}
+          {data.web?.status === "skipped" && lowData && <p className="text-sm text-muted-foreground">Fresh web leads are off in low data mode.</p>}
           {data.status === "unavailable" && (
             <a href="tel:211" className="inline-flex min-h-11 items-center rounded-lg border border-primary/50 px-4 font-semibold text-primary hover:bg-primary/10" data-testid="call-211-unavailable">
               Call 211 to find help near you
