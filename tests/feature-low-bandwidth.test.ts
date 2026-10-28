@@ -1,7 +1,7 @@
 import assert from "node:assert/strict"
 import { readFile } from "node:fs/promises"
 import { test } from "node:test"
-import { fetchDirectory, isLowBandwidthActive, readLowBandwidthChoice, saveLowBandwidthChoice, systemSavesData } from "../lib/low-bandwidth"
+import { clearDirectoryCache, fetchDirectory, isLowBandwidthActive, LOW_BANDWIDTH_CACHE, readLowBandwidthChoice, saveLowBandwidthChoice, systemSavesData } from "../lib/low-bandwidth"
 
 const memory = () => {
   const data = new Map<string, string>()
@@ -110,4 +110,34 @@ test("the needs API honors web=0 by skipping the fresh web search", async () => 
   assert.match(source, /searchParams\.get\("web"\) === "0"/)
   assert.match(source, /!skipFreshWeb \? searchFreshZipResources/)
   assert.match(source, /Promise\.resolve\(\{ status: "skipped" as const, results: \[\] \}\)/)
+})
+
+test("an explicit off choice wins over the device data-saving hint", () => {
+  const store = memory()
+  saveLowBandwidthChoice(store, false)
+  assert.equal(isLowBandwidthActive(store, { saveData: true }), false)
+  assert.equal(isLowBandwidthActive(memory(), { saveData: true }), true, "no choice yet: the device hint decides")
+})
+
+test("an error response keeps its JSON body so fallback links survive a 502", async () => {
+  const empty = { match: async () => undefined, put: async () => undefined }
+  const body = { status: "unavailable", kinds: { naloxone: { fallback: [{ title: "211", url: "https://www.211.org/get-help" }] } } }
+  const result = await fetchDirectory("/api/resources/needs?zip=13901&web=0", { lowData: true, caches: empty, fetchImpl: async () => new Response(JSON.stringify(body), { status: 502 }) })
+  assert.equal(result.ok, false)
+  assert.deepEqual(result.body, body)
+})
+
+test("forgetting a place clears the cached searches that carry its ZIP or coordinates", async () => {
+  const deleted: string[] = []
+  await clearDirectoryCache({ delete: async (name: string) => { deleted.push(name); return true } })
+  assert.deepEqual(deleted, [LOW_BANDWIDTH_CACHE])
+  await assert.doesNotReject(clearDirectoryCache({ delete: async () => { throw new Error("blocked") } }))
+  await assert.doesNotReject(clearDirectoryCache(undefined))
+})
+
+test("find help ignores stale refreshes, clears the cache on forget, and shows 502 fallback links", async () => {
+  const source = await readFile(new URL("../components/resources/needs-finder.tsx", import.meta.url), "utf8")
+  assert.match(source, /search !== searchGeneration\.current\) return/)
+  assert.match(source, /clearDirectoryCache\(/)
+  assert.match(source, /failed\?\.kinds/)
 })
