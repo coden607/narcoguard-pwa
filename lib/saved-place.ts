@@ -2,6 +2,8 @@
 // Coordinates are rounded to about 1 km before they are saved; nothing here is sent anywhere by itself.
 // The person can forget it with one tap, and it is never required for any help.
 
+import { clearOfflineMapCache } from "./offline-map-cache"
+
 export const SAVED_PLACE_KEY = "narcoguard_saved_place_v1"
 export const REMEMBER_PLACE_KEY = "narcoguard_remember_place_v1"
 /** Same-tab revocation signal. Contains no location or personal data. */
@@ -39,6 +41,8 @@ export function savePlace(store: Store | undefined, place: SavedPlace): void {
 
 export function forgetPlace(store: Store | undefined): void {
   try { store?.removeItem(SAVED_PLACE_KEY) } catch { /* nothing to forget */ }
+  // Saved map tiles reveal the area, so forgetting the place deletes them too.
+  void clearOfflineMapCache()
   if (typeof window !== "undefined") window.dispatchEvent(new Event(PLACE_FORGOTTEN_EVENT))
 }
 

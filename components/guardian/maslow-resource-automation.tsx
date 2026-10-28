@@ -9,7 +9,9 @@ import { cardSummary } from "@/lib/resource-display"
 import { upcomingOpeningWindows } from "@/lib/opening-hours"
 import { inventoryFreshness, knownResourcesFor, readKnownResources, rememberKnownResources, type KnownResource } from "@/lib/resource-inventory"
 import { saveOfflineResourcePack } from "@/lib/offline-resource-pack"
-import { offlineMapRegionFromPack, warmOfflineMapCache } from "@/lib/offline-map-region"
+import { offlineMapRegionFromPack } from "@/lib/offline-map-region"
+import { clearOfflineMapCache, warmOfflineMapCache } from "@/lib/offline-map-cache"
+import { OFFLINE_MAP_CONSENT_TEXT, clearOfflineMapOptIn, configuredTileProvider, readOfflineMapOptIn, saveOfflineMapOptIn } from "@/lib/offline-map-config"
 import { readSavedPlace } from "@/lib/saved-place"
 import { detectResourceChanges, readResourceChangeWatches, setResourceChangeWatch, type ResourceChange } from "@/lib/resource-change-watch"
 import { activeResourceVerification, readResourceVerifications, saveResourceVerification, verificationLabel, type ResourceVerification, type ResourceVerificationMethod, type ResourceVerificationStatus } from "@/lib/resource-verification"
@@ -41,11 +43,12 @@ type KindLookup = {
 
 const ALL_RESOURCE_KINDS = [...new Set(MASLOW_LEVELS.flatMap((level) => level.kinds as readonly ResourceKind[]))]
 
-// Feature 60: after the offline pack refreshes, warm the bounded map-tile cache for the saved
-// region. Only runs when a service worker already controls this page; fire-and-forget.
+// Feature 60: offline map tiles are opt-in and off by default. Nothing is requested from a map
+// provider unless a provider is configured AND the person turned this on for this device.
 const warmOfflineMapRegion = (pack: ReturnType<typeof saveOfflineResourcePack>) => {
-  if (!("serviceWorker" in navigator) || !navigator.serviceWorker.controller) return
-  warmOfflineMapCache(offlineMapRegionFromPack(pack, readSavedPlace(window.localStorage)))
+  const provider = configuredTileProvider()
+  if (!provider || !readOfflineMapOptIn(window.localStorage, provider)) return
+  void warmOfflineMapCache(offlineMapRegionFromPack(pack, readSavedPlace(window.localStorage), provider.template))
 }
 
 type NeedsLookup = {
@@ -68,6 +71,8 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
   const [verifications, setVerifications] = useState<ResourceVerification[]>([])
   const [verificationMethods, setVerificationMethods] = useState<Record<string, ResourceVerificationMethod>>({})
   const [verificationNotes, setVerificationNotes] = useState<Record<string, string>>({})
+  const [offlineMapOn, setOfflineMapOn] = useState(false)
+  const mapProvider = useMemo(() => configuredTileProvider(), [])
   const data = request.zip === zip ? request.data ?? null : null
   const error = request.zip === zip ? request.error ?? "" : ""
   const loading = Boolean(zip) && request.zip !== zip
@@ -83,9 +88,10 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
       setInventory(known)
       setWatchedKeys(readResourceChangeWatches(window.localStorage))
       setVerifications(readResourceVerifications(window.localStorage))
+      setOfflineMapOn(Boolean(readOfflineMapOptIn(window.localStorage, mapProvider)))
     }, 0)
     return () => window.clearTimeout(timer)
-  }, [])
+  }, [mapProvider])
 
   useEffect(() => {
     if (!zip) return
@@ -150,6 +156,19 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
     warmOfflineMapRegion(saveOfflineResourcePack(window.localStorage, readKnownResources(window.localStorage), nextFeedback))
   }
 
+  const setOfflineMaps = (on: boolean) => {
+    if (!mapProvider) return
+    if (on) {
+      saveOfflineMapOptIn(window.localStorage, mapProvider)
+      setOfflineMapOn(true)
+      warmOfflineMapRegion(saveOfflineResourcePack(window.localStorage, readKnownResources(window.localStorage), readResourceFeedback(window.localStorage)))
+    } else {
+      clearOfflineMapOptIn(window.localStorage)
+      setOfflineMapOn(false)
+      void clearOfflineMapCache()
+    }
+  }
+
   const toggleResourceWatch = (resource: NearbyResource) => {
     const key = resourceKey(resource)
     const enabled = !watchedKeys.includes(key)
@@ -205,6 +224,14 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
           {loading && <p className="text-sm">Checking nearby public directories…</p>}
           <button type="button" className="text-sm underline text-primary" onClick={() => setRefreshTick((value) => value + 1)} disabled={loading}>Refresh known availability</button>
         </div>
+        {mapProvider && <div className="rounded border p-3 space-y-2" data-testid="offline-map-consent">
+          <label className="flex gap-2 items-start text-sm font-medium">
+            <input type="checkbox" className="mt-1" checked={offlineMapOn} onChange={(e) => setOfflineMaps(e.target.checked)} />
+            Save map pictures for offline use on this device
+          </label>
+          <p className="text-xs text-muted-foreground">{OFFLINE_MAP_CONSENT_TEXT(mapProvider.host)}</p>
+          {offlineMapOn && <p className="text-xs text-muted-foreground">Map data: {mapProvider.attribution}</p>}
+        </div>}
         {error && <p className="text-sm">Live lookup failed: {error} Previously known resources remain available below with freshness labels; directory links remain available too.</p>}
         {data?.message && <p className="text-sm">{data.message}</p>}
         {resourceChanges.length > 0 && <div className="rounded border border-primary/30 p-3" role="status" data-testid="resource-change-alerts">
