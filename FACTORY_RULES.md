@@ -74,7 +74,7 @@ Find help or Angel broken in production, or personal data exposed.
 5. **[CODE]** The PR is mergeable and from `factory/issue-*`.
 6. **[CODE]** No review thread is unresolved, the review decision is not `CHANGES_REQUESTED`, and no commit in the PR is a merge commit. If any of this cannot be read, the PR is skipped (fail closed).
 
-Autonomy is **3** (owner decision, 2026-10-28, Stephen). Anyone with write access may also merge a PR, by rebase only. A PR that touches a protected path (§5) fails the guard, so the factory never merges it; the owner does.
+Autonomy is **5** (owner decision, 2026-10-28, Stephen; levels in FACTORY.md). The merge gates above are unchanged at 5: level 5 widens what the factory works on, it removes no safeguard. Secrets, repository/ruleset/billing settings and destructive actions still need the owner at every level. Anyone with write access may also merge a PR, by rebase only. A PR that touches a protected path (§5) fails the guard, so the factory never merges it; the owner does.
 
 **Merge mechanism:** rebase-merge (`gh pr merge --rebase`), performed by the workflow. Never by a model. History on `main` stays one straight line: no merge commits, no squash commits (§12).
 
