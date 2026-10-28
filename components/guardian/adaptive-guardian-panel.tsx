@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { BrainCircuit, Bell, ShieldCheck } from "lucide-react"
-import { Button } from "@/components/ui/button"
 import {
   activeLearnedEvents,
   learnedEventLabel,

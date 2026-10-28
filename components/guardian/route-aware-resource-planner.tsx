@@ -20,7 +20,8 @@ type NeedsLookup = {
 
 export function RouteAwareResourcePlanner({ plan }: { plan: PlanItem | null }) {
   const zip = extractPlanZip(plan?.location)
-  const kinds = plan?.need ? resourceKindsForNeeds([plan.need]) : []
+  const need = plan?.need
+  const kinds = useMemo(() => (need ? resourceKindsForNeeds([need]) : []), [need])
   const [request, setRequest] = useState<{ key: string; data?: NeedsLookup; error?: string }>({ key: "" })
   const key = plan && zip ? [plan.id, plan.date, plan.time ?? "", zip, plan.need ?? ""].join("|") : ""
   const loading = Boolean(key) && request.key !== key
