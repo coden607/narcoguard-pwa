@@ -9,6 +9,8 @@ import { cardSummary } from "@/lib/resource-display"
 import { upcomingOpeningWindows } from "@/lib/opening-hours"
 import { inventoryFreshness, knownResourcesFor, readKnownResources, rememberKnownResources, type KnownResource } from "@/lib/resource-inventory"
 import { saveOfflineResourcePack } from "@/lib/offline-resource-pack"
+import { offlineMapRegionFromPack, warmOfflineMapCache } from "@/lib/offline-map-region"
+import { readSavedPlace } from "@/lib/saved-place"
 import { detectResourceChanges, readResourceChangeWatches, setResourceChangeWatch, type ResourceChange } from "@/lib/resource-change-watch"
 import { activeResourceVerification, readResourceVerifications, saveResourceVerification, verificationLabel, type ResourceVerification, type ResourceVerificationMethod, type ResourceVerificationStatus } from "@/lib/resource-verification"
 import {
@@ -38,6 +40,13 @@ type KindLookup = {
 }
 
 const ALL_RESOURCE_KINDS = [...new Set(MASLOW_LEVELS.flatMap((level) => level.kinds as readonly ResourceKind[]))]
+
+// Feature 60: after the offline pack refreshes, warm the bounded map-tile cache for the saved
+// region. Only runs when a service worker already controls this page; fire-and-forget.
+const warmOfflineMapRegion = (pack: ReturnType<typeof saveOfflineResourcePack>) => {
+  if (!("serviceWorker" in navigator) || !navigator.serviceWorker.controller) return
+  warmOfflineMapCache(offlineMapRegionFromPack(pack, readSavedPlace(window.localStorage)))
+}
 
 type NeedsLookup = {
   status: "ok" | "partial" | "unavailable"
@@ -98,7 +107,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
         setResourceChanges(changes)
         const nextInventory = rememberKnownResources(window.localStorage, zip, seen, fetchedAt)
         setInventory(nextInventory)
-        saveOfflineResourcePack(window.localStorage, nextInventory, readResourceFeedback(window.localStorage), fetchedAt)
+        warmOfflineMapRegion(saveOfflineResourcePack(window.localStorage, nextInventory, readResourceFeedback(window.localStorage), fetchedAt))
         if (changes.length > 0 && "Notification" in window && Notification.permission === "granted" && "serviceWorker" in navigator) {
           void navigator.serviceWorker.ready.then((registration) => registration.showNotification("NarcoGuard resource update", {
             body: "A resource you chose to watch changed in public-directory data. Open NarcoGuard to review.",
@@ -138,7 +147,7 @@ export function MaslowResourceAutomation({ needs, postalCode }: { needs: readonl
     saveResourceFeedback(window.localStorage, row)
     const nextFeedback = readResourceFeedback(window.localStorage)
     setFeedback(nextFeedback)
-    saveOfflineResourcePack(window.localStorage, readKnownResources(window.localStorage), nextFeedback)
+    warmOfflineMapRegion(saveOfflineResourcePack(window.localStorage, readKnownResources(window.localStorage), nextFeedback))
   }
 
   const toggleResourceWatch = (resource: NearbyResource) => {
