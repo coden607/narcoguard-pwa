@@ -74,7 +74,7 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 - Never print, commit, or copy secret values. Refer to environment variables by name only.
 - Do not bypass sandbox, approval, branch-protection, or provider security controls.
 - Require explicit confirmation immediately before destructive operations, production deployment, database migration against production, payment activation, secret rotation, or sending external communications.
-- Factory merge gate (owner decision, 2026-10-28, supersedes 2026-10-09): the autonomy dial stays at `.factory/locks/autonomy = 2`. The factory builds and validates PRs but never merges. Every merge — factory or human — is approved by the owner, squash- or rebase-merged to keep `main` linear. `factory-merge.yml` remains disarmed at level < 3. Everything on the irreversible list (§7.3) still needs the owner. See `MISSION.md`, `FACTORY_RULES.md` and `FACTORY.md`.
+- Factory merge gate (owner decision, 2026-10-28, supersedes 2026-10-09): the autonomy dial stays at `.factory/locks/autonomy = 2`. The factory builds and validates PRs but never merges. Every merge — factory or human — is approved by the owner, rebase-merged (never squash, never a merge commit) to keep `main` linear. `factory-merge.yml` remains disarmed at level < 3. Everything on the irreversible list (§7.3) still needs the owner. See `MISSION.md`, `FACTORY_RULES.md` and `FACTORY.md`.
 
 ## Required Checks
 
@@ -113,7 +113,6 @@ Use `npm run verify` for the complete gate; it runs the same checks as CI, inclu
 - **Approval gates.** The owner is in the loop for: merging PRs (autonomy dial is 2 until the owner says otherwise), dependency additions and upgrades, CI/workflow and `.factory/` changes, repository settings, and anything on the irreversible list in `FACTORY_RULES.md` §7.3. Everything else the factory may prepare as a PR.
 - Review `git status` and the diff before committing.
 - Do not amend user commits, force-push, or rewrite history unless explicitly requested.
-- Linear history (owner rule, 2026-10-28): `main` is one straight line. Rebase branches onto `main`; merge via squash or rebase + fast-forward only; never create merge commits. Branch protection enforces `required_linear_history` on `main`.
 - Before pushing `main` or deploying production, ensure the full verification gate passes and summarize the exact commit and deployment target.
 - Verify the live deployment and critical PWA/emergency paths after release.
 
