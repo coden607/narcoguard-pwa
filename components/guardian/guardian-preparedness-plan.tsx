@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { BatteryCharging, BusFront, CheckCircle2, HeartHandshake, PackageCheck } from "lucide-react"
 import type { GuardianState, PreparednessItem } from "@/lib/guardian-stability"
 import { PREPAREDNESS_ITEMS } from "@/lib/guardian-stability"
@@ -97,5 +98,6 @@ export function GuardianPreparednessPlan({
     <p className="text-xs text-muted-foreground">
       A checked box means only that you marked it ready. NarcoGuard does not verify supplies, medication access, transportation, appointments, or another person&apos;s availability.
     </p>
+    <p className="text-sm"><Link className="underline text-primary" href="/planning#naloxone-kit-journal">Manage my naloxone kit location journal</Link> in Private planning.</p>
   </section>
 }
