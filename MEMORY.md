@@ -8,7 +8,7 @@
 ## Project
 - **repo**: coden607/narcoguard-pwa, default branch main, Next.js 16 / React 19 / TypeScript, Node 24, npm — as-of 2026-10-27 · source: repo package.json · review-by 2027-01-27
 - **history-policy**: main is one straight line; rebase-merge only (no merge commits, no squash), by the factory or anyone — as-of 2026-10-28 · source: Stephen (owner) · review-by 2027-04-27
-- **autonomy-dial**: 3 (factory rebase-merges green, validated PRs; anyone may merge by rebase only) — as-of 2026-10-28 · source: Stephen (owner), .factory/locks/autonomy · review-by 2026-12-28
+- **autonomy-dial**: 5 (levels 4-5 add scope: proposal feeder + cross-repo sweeps; merge gates unchanged; secrets, settings, billing and destructive actions still need Stephen; rebase-only) — as-of 2026-10-28 · source: Stephen (owner), .factory/locks/autonomy · review-by 2026-12-28
 - **owner-approval-required**: PRs touching guard-protected paths (factory/guard.py: dependencies, CI/workflow, .factory, governance, emergency/auth/data), repo settings and secrets, irreversible list (FACTORY_RULES 7.3) — as-of 2026-10-28 · source: Stephen (owner) · review-by 2027-01-28
 
 ## Operations

@@ -33,7 +33,7 @@ issue ──triage──▶ factory:accepted ──implement──▶ PR factory
 
 ## Autonomy
 
-Target: **level 3, guarded** (owner, 2026-10-09). Owner decision 2026-10-28 (Stephen): the dial is **3**. The factory rebase-merges its own green, validated PRs; anyone may merge by rebase only (never squash, never a merge commit), so history stays one straight line. Human approval remains only for guard-protected paths, repository settings and secrets, and the irreversible list. Current dial: see `.factory/locks/autonomy`.
+Target: **level 3, guarded** (owner, 2026-10-09). Owner decision 2026-10-28 (Stephen, explicit order): the dial is **5**. The factory rebase-merges its own green, validated PRs; anyone may merge by rebase only (never squash, never a merge commit), so history stays one straight line. Human approval remains only for guard-protected paths, repository settings and secrets, and the irreversible list. Current dial: see `.factory/locks/autonomy`.
 
 | Level | What runs |
 |---|---|
@@ -41,6 +41,10 @@ Target: **level 3, guarded** (owner, 2026-10-09). Owner decision 2026-10-28 (Ste
 | 1 | triage, implement, fix |
 | 2 | + a separate session validates and labels `factory:validated` |
 | 3 | + `factory-merge.yml` rebase-merges green PRs, Vercel deploys, live check guards |
+| 4 | + the weekly proposal feeder runs and the factory keeps its own backlog, docs, tests and dependency hygiene moving (one `factory:proposed` issue at a time; `factory:accepted` stays the owner's approval) |
+| 5 | + the factory and its assistants sweep all of the owner's repos for red CI, stale audit exceptions and green dependency bumps, and fix them by small PRs that are rebase-merged when green and linear |
+
+Levels 4 and 5 add scope, not safeguards. The merge code gates on `autonomy >= 3` (`factory/merge.sh`), so 5 merges exactly what 3 merges. **Even at 5 these still need the owner:** secrets and credentials; repository, ruleset and billing settings (`settings/apply.sh` stays unapplied until he says so); destructive actions (deleting repos, branches or data; history rewrites); guard-protected paths; sending user data to a third party without opt-in; anything labelled `factory:needs-human`; any PR with an unresolved review thread, requested changes or red CI.
 
 Raise the dial one notch at a time, after a full lap at the current level, by a human commit to
 `.factory/locks/autonomy`. Protected areas never auto-merge at any level: they cannot pass the guard.
