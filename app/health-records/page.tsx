@@ -2,6 +2,7 @@ import type { Metadata } from "next"
 import Link from "next/link"
 import { ExternalLink, HeartPulse, LockKeyhole } from "lucide-react"
 import { getUhsSmartConfig, UHS_MYCHART_URL } from "@/lib/health/uhs-mychart"
+import { hasUsableUhsSecret } from "@/lib/health/uhs-oauth"
 import { UhsMyChartControls } from "@/components/health/uhs-mychart-controls"
 
 export const metadata: Metadata = {
@@ -10,8 +11,12 @@ export const metadata: Metadata = {
   robots: { index: false },
 }
 
-export default function HealthRecordsPage() {
+export default async function HealthRecordsPage({ searchParams }: { searchParams: Promise<{ error?: string | string[]; connected?: string | string[] }> }) {
   const uhs = getUhsSmartConfig()
+  // The live flow is offered only when registration AND a usable session secret are both present.
+  const ready = uhs.configured && hasUsableUhsSecret(process.env.UHS_SMART_SESSION_SECRET)
+  const params = await searchParams
+  const callbackError = typeof params.error === "string" ? params.error.slice(0, 40) : undefined
 
   return (
     <main className="mx-auto max-w-3xl space-y-6 p-4 sm:p-8">
@@ -34,13 +39,13 @@ export default function HealthRecordsPage() {
         <div className="rounded-xl border p-4 text-sm">
           <p className="flex items-center gap-2 font-semibold"><LockKeyhole className="h-4 w-4" aria-hidden="true" />Privacy boundary</p>
           <p className="mt-2 text-muted-foreground">
-            NarcoGuard will never ask for or store your UHS MyChart username or password. A future record connection uses UHS/Epic authorization and read-only FHIR permissions that you approve.
+            NarcoGuard will never ask for or store your UHS MyChart username or password. The record connection uses UHS/Epic authorization and read-only FHIR permissions that you approve, and you can disconnect at any time.
           </p>
         </div>
 
-        {uhs.configured ? (
+        {ready ? (
           <div className="rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-4 text-sm" role="status">
-            UHS SMART-on-FHIR app registration is configured. The authorization flow can be enabled after callback/token handling passes its privacy and revocation tests.
+            UHS MyChart connection is available. Records are read only when you tap Load, are tied to your NarcoGuard account, and are not saved.
           </div>
         ) : (
           <div className="rounded-xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm" role="status">
@@ -48,7 +53,7 @@ export default function HealthRecordsPage() {
           </div>
         )}
 
-        <UhsMyChartControls configured={uhs.configured} />
+        <UhsMyChartControls ready={ready} callbackError={callbackError} connected={params.connected === "1"} />
 
         <div className="flex flex-wrap gap-3">
           <a
@@ -65,7 +70,7 @@ export default function HealthRecordsPage() {
         </div>
 
         <div className="text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">Planned read-only data classes</p>
+          <p className="font-medium text-foreground">Read-only data classes</p>
           <p>Demographics, vital signs, conditions, encounters, appointments and care goals. No chart writes, messages, refill requests or appointment changes.</p>
         </div>
       </section>

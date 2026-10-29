@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { SITE_URL } from "@/lib/site-url"
+import { getSession } from "@/lib/supabase-auth"
 import { getUhsSmartConfig } from "@/lib/health/uhs-mychart"
 import {
+  clearUhsCookies,
+  hasUsableUhsSecret,
   sealUhsSession,
-  UHS_OAUTH_MAX_AGE_S,
+  UHS_COOKIE_PATH,
   UHS_PKCE_COOKIE,
   UHS_SESSION_COOKIE,
   UHS_SESSION_MAX_AGE_S,
@@ -19,14 +22,16 @@ export async function GET(request: NextRequest) {
   const store = await cookies()
   const verifier = store.get(UHS_PKCE_COOKIE)?.value
   const expectedState = store.get(UHS_STATE_COOKIE)?.value
-  store.delete(UHS_PKCE_COOKIE)
-  store.delete(UHS_STATE_COOKIE)
+  clearUhsCookies(store, [UHS_PKCE_COOKIE, UHS_STATE_COOKIE])
 
   if (!code || !state || !verifier || !expectedState || state !== expectedState) return fail("invalid-callback")
+  // The connection belongs to the NarcoGuard account that is signed in now; no account, no connection.
+  const user = await getSession()
+  if (!user?.id) return fail("signed-out")
 
   const config = getUhsSmartConfig()
   const secret = process.env.UHS_SMART_SESSION_SECRET
-  if (!config.configured || !config.tokenUrl || !config.clientId || !secret) return fail("not-configured")
+  if (!config.configured || !config.tokenUrl || !config.clientId || !hasUsableUhsSecret(secret)) return fail("not-configured")
 
   const redirectUri = `${SITE_URL}/api/health/uhs/callback`
   const response = await fetch(config.tokenUrl, {
@@ -45,16 +50,23 @@ export async function GET(request: NextRequest) {
 
   if (!response?.ok) return fail("token-exchange")
 
-  const body = await response.json().catch(() => null) as { access_token?: unknown; expires_in?: unknown; patient?: unknown } | null
-  if (!body || typeof body.access_token !== "string") return fail("token-response")
+  const body = await response.json().catch(() => null) as { access_token?: unknown; token_type?: unknown; scope?: unknown; expires_in?: unknown; patient?: unknown } | null
+  // SMART token responses must carry a bearer access token, the granted scope and (for patient scopes) the patient id.
+  if (
+    !body || typeof body.access_token !== "string" || !body.access_token ||
+    typeof body.token_type !== "string" || body.token_type.toLowerCase() !== "bearer" ||
+    typeof body.scope !== "string" || !body.scope.split(/\s+/).some((scope) => scope.startsWith("patient/")) ||
+    typeof body.patient !== "string" || !body.patient
+  ) return fail("token-response")
   const expiresIn = typeof body.expires_in === "number" && body.expires_in > 0 ? Math.min(body.expires_in, UHS_SESSION_MAX_AGE_S) : UHS_SESSION_MAX_AGE_S
   const sealed = await sealUhsSession({
+    userId: user.id,
     accessToken: body.access_token,
-    patient: typeof body.patient === "string" ? body.patient : undefined,
+    patient: body.patient,
     expiresAt: Date.now() + expiresIn * 1000,
   }, secret)
 
   const secure = process.env.NODE_ENV === "production"
-  store.set(UHS_SESSION_COOKIE, sealed, { httpOnly: true, secure, sameSite: "lax", path: "/api/health/uhs", maxAge: expiresIn })
+  store.set(UHS_SESSION_COOKIE, sealed, { httpOnly: true, secure, sameSite: "lax", path: UHS_COOKIE_PATH, maxAge: expiresIn })
   return NextResponse.redirect(`${SITE_URL}/health-records?connected=1`)
 }

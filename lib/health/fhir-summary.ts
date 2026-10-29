@@ -6,7 +6,7 @@ export type FhirResource = {
 
 export type FhirBundle = {
   resourceType?: string
-  entry?: { resource?: FhirResource }[]
+  entry?: { resource?: FhirResource; search?: { mode?: unknown } }[]
 }
 
 const textFromConcept = (value: unknown): string | null => {
@@ -17,19 +17,55 @@ const textFromConcept = (value: unknown): string | null => {
   return typeof display === "string" && display.trim() ? display.trim() : null
 }
 
-const asEntries = (bundle: unknown) => {
+/** Only real search matches of the expected type: OperationOutcome and included resources are dropped. */
+const asEntries = (bundle: unknown, resourceType: string) => {
   if (!bundle || typeof bundle !== "object") return []
   const entries = (bundle as FhirBundle).entry
-  return Array.isArray(entries) ? entries.flatMap(entry => entry.resource ? [entry.resource] : []) : []
+  if (!Array.isArray(entries)) return []
+  return entries.flatMap(entry => {
+    const mode = entry?.search?.mode
+    if (!entry?.resource || entry.resource.resourceType !== resourceType) return []
+    if (mode !== undefined && mode !== "match") return []
+    return [entry.resource]
+  })
 }
+
+const codeOf = (value: unknown) => {
+  if (!value || typeof value !== "object") return null
+  const coding = (value as { coding?: { code?: unknown }[] }).coding
+  const code = Array.isArray(coding) ? coding.find(item => typeof item?.code === "string")?.code : null
+  return typeof code === "string" ? code : null
+}
+
+type HumanName = { use?: unknown; text?: unknown; given?: unknown[]; family?: unknown; period?: { end?: unknown } }
+const NAME_PREFERENCE = ["usual", "official", undefined, "nickname"]
+
+/** The current display name: usual, then official; never old, maiden, temp or an ended name. */
+function currentName(names: HumanName[] | undefined) {
+  if (!Array.isArray(names)) return undefined
+  const current = names.filter(name => {
+    if (!name || typeof name !== "object") return false
+    if (name.use === "old" || name.use === "maiden" || name.use === "temp" || name.use === "anonymous") return false
+    const end = typeof name.period?.end === "string" ? Date.parse(name.period.end) : NaN
+    return !(Number.isFinite(end) && end < Date.now())
+  })
+  const rank = (name: HumanName) => {
+    const index = NAME_PREFERENCE.indexOf(typeof name.use === "string" ? name.use : undefined)
+    return index === -1 ? NAME_PREFERENCE.length : index
+  }
+  return [...current].sort((a, b) => rank(a) - rank(b))[0]
+}
+
+const INVALID_OBSERVATION_STATUS = new Set(["entered-in-error", "cancelled"])
+const INVALID_CONDITION_VERIFICATION = new Set(["refuted", "entered-in-error"])
 
 export function normalizePatient(resource: unknown) {
   if (!resource || typeof resource !== "object") return null
   const patient = resource as {
-    name?: { text?: unknown; given?: unknown[]; family?: unknown }[]
+    name?: HumanName[]
     birthDate?: unknown
   }
-  const first = patient.name?.[0]
+  const first = currentName(patient.name)
   const explicit = typeof first?.text === "string" ? first.text.trim() : ""
   const parts = [
     ...(Array.isArray(first?.given) ? first.given.filter((x): x is string => typeof x === "string") : []),
@@ -41,30 +77,47 @@ export function normalizePatient(resource: unknown) {
   }
 }
 
+type Quantity = { value?: unknown; unit?: unknown }
+const formatQuantity = (quantity: Quantity | undefined) => (typeof quantity?.value === "number" ? quantity.value : null)
+
 export function normalizeVitals(bundle: unknown) {
-  return asEntries(bundle).slice(0, 20).flatMap(resource => {
-    const valueQuantity = resource.valueQuantity as { value?: unknown; unit?: unknown } | undefined
+  return asEntries(bundle, "Observation").slice(0, 20).flatMap(resource => {
+    // Withdrawn or cancelled measurements are never shown as ordinary readings.
+    if (typeof resource.status !== "string" || INVALID_OBSERVATION_STATUS.has(resource.status)) return []
     const code = textFromConcept(resource.code)
-    if (!code || typeof valueQuantity?.value !== "number") return []
-    return [{
+    if (!code) return []
+    const base = {
       id: typeof resource.id === "string" ? resource.id : undefined,
       name: code,
-      value: valueQuantity.value,
-      unit: typeof valueQuantity.unit === "string" ? valueQuantity.unit : null,
       at: typeof resource.effectiveDateTime === "string" ? resource.effectiveDateTime : typeof resource.issued === "string" ? resource.issued : null,
-    }]
+    }
+    const valueQuantity = resource.valueQuantity as Quantity | undefined
+    if (typeof valueQuantity?.value === "number") {
+      return [{ ...base, value: String(valueQuantity.value), unit: typeof valueQuantity.unit === "string" ? valueQuantity.unit : null }]
+    }
+    // Blood pressure keeps systolic and diastolic in components (LOINC 8480-6 / 8462-4).
+    const components = Array.isArray(resource.component) ? resource.component as { code?: unknown; valueQuantity?: Quantity }[] : []
+    const part = (loinc: string) => components.find(item => codeOf(item?.code) === loinc)?.valueQuantity
+    const systolic = formatQuantity(part("8480-6"))
+    const diastolic = formatQuantity(part("8462-4"))
+    if (systolic === null || diastolic === null) return []
+    const unit = part("8480-6")?.unit
+    return [{ ...base, value: `${systolic}/${diastolic}`, unit: typeof unit === "string" ? unit : null }]
   })
 }
 
 export function normalizeConditions(bundle: unknown) {
-  return asEntries(bundle).slice(0, 50).flatMap(resource => {
+  return asEntries(bundle, "Condition").slice(0, 50).flatMap(resource => {
+    // Refuted or entered-in-error diagnoses are not conditions the person has.
+    const verification = codeOf(resource.verificationStatus)
+    if (verification && INVALID_CONDITION_VERIFICATION.has(verification)) return []
     const name = textFromConcept(resource.code)
     return name ? [{ id: typeof resource.id === "string" ? resource.id : undefined, name }] : []
   })
 }
 
 export function normalizeAppointments(bundle: unknown) {
-  return asEntries(bundle).slice(0, 30).flatMap(resource => {
+  return asEntries(bundle, "Appointment").slice(0, 30).flatMap(resource => {
     const status = typeof resource.status === "string" ? resource.status : "unknown"
     const start = typeof resource.start === "string" ? resource.start : null
     const serviceType = Array.isArray(resource.serviceType) ? textFromConcept(resource.serviceType[0]) : null
@@ -74,7 +127,7 @@ export function normalizeAppointments(bundle: unknown) {
 }
 
 export function normalizeEncounters(bundle: unknown) {
-  return asEntries(bundle).slice(0, 30).map(resource => ({
+  return asEntries(bundle, "Encounter").slice(0, 30).filter(resource => resource.status !== "entered-in-error").map(resource => ({
     id: typeof resource.id === "string" ? resource.id : undefined,
     status: typeof resource.status === "string" ? resource.status : "unknown",
     type: Array.isArray(resource.type) ? textFromConcept(resource.type[0]) : null,
@@ -85,7 +138,8 @@ export function normalizeEncounters(bundle: unknown) {
 }
 
 export function normalizeGoals(bundle: unknown) {
-  return asEntries(bundle).slice(0, 30).flatMap(resource => {
+  return asEntries(bundle, "Goal").slice(0, 30).flatMap(resource => {
+    if (resource.lifecycleStatus === "entered-in-error") return []
     const description = textFromConcept(resource.description)
     if (!description) return []
     return [{

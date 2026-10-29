@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
-import { UHS_SESSION_COOKIE } from "@/lib/health/uhs-oauth"
+import { clearUhsCookies } from "@/lib/health/uhs-oauth"
 
 export async function POST() {
-  const store = await cookies()
-  store.delete(UHS_SESSION_COOKIE)
+  // Expire the session and cancel any pending authorization attempt, all on their scoped path.
+  clearUhsCookies(await cookies())
   return NextResponse.json({ disconnected: true }, { headers: { "Cache-Control": "private, no-store" } })
 }
