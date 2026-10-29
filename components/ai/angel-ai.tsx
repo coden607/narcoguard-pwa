@@ -13,6 +13,8 @@ import { coarsen } from "@/lib/resource-finder"
 import { spokenResourceSummary, type AngelResources } from "@/lib/angel-resources"
 import { AngelResourceCards } from "@/components/ai/angel-resource-cards"
 import { AngelLogChart } from "@/components/ai/angel-log-chart"
+import { AngelUndo } from "@/components/ai/angel-undo"
+import { droppedIds, markUndone, recordAction, type AngelAction, type AngelActionKind } from "@/lib/angel-undo"
 import { buildAngelLogChart, type AngelLogChart as LogChart } from "@/lib/angel-log-chart"
 import { readGuardianState } from "@/lib/guardian-stability"
 import { useVoice } from "@/lib/hooks/use-voice"
@@ -90,6 +92,9 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const [activity, setActivity] = useState<ActivityState | null>(null)
   const [clock, setClock] = useState(0)
   const stoppedRef = useRef(false)
+  // Recent local actions that can be undone (#245). Restore data stays in page memory only.
+  const [actions, setActions] = useState<AngelAction[]>([])
+  const restoreRef = useRef(new Map<string, () => void>())
   const endRef = useRef<HTMLDivElement>(null)
   const messagesRef = useRef<ChatMessage[]>([])
   const voice = useVoice()
@@ -184,7 +189,35 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     }
   }, [invalidatePendingContext])
 
+  const recordUndoable = (kind: AngelActionKind, restore: () => void) => {
+    const id = crypto.randomUUID()
+    restoreRef.current.set(id, restore)
+    setActions((current) => {
+      const next = recordAction(current, { id, kind })
+      for (const dropped of droppedIds(current, next)) restoreRef.current.delete(dropped)
+      return next
+    })
+  }
+
+  const undoAction = (id: string) => {
+    const restore = restoreRef.current.get(id)
+    if (!restore) return
+    restoreRef.current.delete(id)
+    restore()
+    setActions((current) => markUndone(current, id))
+  }
+
+  const dismissActions = () => {
+    restoreRef.current.clear()
+    setActions([])
+  }
+
   const clearConversation = () => {
+    const cleared = messagesRef.current
+    if (cleared.length > 0) recordUndoable("clear-conversation", () => {
+      messagesRef.current = [...cleared, ...messagesRef.current]
+      setMessages(messagesRef.current)
+    })
     cancelPending()
     messagesRef.current = []
     setMessages([])
@@ -309,7 +342,18 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     return answered ? undefined : history[lastAsk].content
   }
 
-  const forgetLocation = () => { locationGenerationRef.current++; invalidatePendingContext(); locationRef.current = null; setLocation(null); setLocationNote(undefined); setLocating(false); setZip(""); forgetPlace(window.localStorage) }
+  const forgetLocation = () => {
+    const forgottenZip = /^\d{5}$/.test(zip) ? zip : ""
+    const forgottenLocation = locationRef.current
+    if (forgottenZip || forgottenLocation) recordUndoable("forget-place", () => {
+      if (forgottenLocation) {
+        locationRef.current = forgottenLocation
+        setLocation(forgottenLocation)
+        if (readRememberChoice(window.localStorage)) savePlace(window.localStorage, forgottenLocation)
+      } else setZip(forgottenZip)
+    })
+    locationGenerationRef.current++; invalidatePendingContext(); locationRef.current = null; setLocation(null); setLocationNote(undefined); setLocating(false); setZip(""); forgetPlace(window.localStorage)
+  }
   const toggleRemember = (remember: boolean) => { setRememberPlace(remember); saveRememberChoice(window.localStorage, remember) }
 
   /** Sends a message and returns what Angel should say back (safety notices first), or null on failure. */
@@ -540,6 +584,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
             </div>
           </div>
 
+          <AngelUndo actions={actions} onUndo={undoAction} onDismiss={dismissActions} />
           {error && <p className="text-sm" role="alert">{error}</p>}
           {!online && <p className="text-sm" role="status">You are offline. Angel messages stay on this page until you choose to retry. Emergency calls use your phone connection.</p>}
           {pending && (
