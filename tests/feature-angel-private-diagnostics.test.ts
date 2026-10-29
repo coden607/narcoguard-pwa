@@ -9,6 +9,8 @@ test("Angel diagnostics correlate failures without logging message content", asy
   assert.match(source, /Server-Timing/)
   assert.match(source, /X-NarcoGuard-AI-Provider/)
   assert.match(source, /\[angel:\$\{requestId\}\]/)
+  assert.match(source, /servedBy = endpointFor\(provider, first\.choice\)\.name/)
+  assert.match(source, /status: 502, headers: headers\(\)/)
   assert.doesNotMatch(source, /console\.(?:log|info|warn)\([^\n]*latest\.content/)
   assert.doesNotMatch(source, /console\.(?:log|info|warn)\([^\n]*messages/)
 })
