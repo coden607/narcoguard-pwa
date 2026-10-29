@@ -4,7 +4,7 @@ import { test } from "node:test"
 import React from "react"
 import { renderToStaticMarkup } from "react-dom/server"
 import { AngelUndo } from "../components/ai/angel-undo"
-import { droppedIds, markUndone, MAX_RECENT_ACTIONS, recordAction, UNDO_NOTES, type AngelAction } from "../lib/angel-undo"
+import { droppedIds, markUndone, mergeRestored, MAX_RECENT_ACTIONS, recordAction, UNDO_NOTES, type AngelAction } from "../lib/angel-undo"
 
 test("recent actions keep the newest first, cap the list, and report what fell off", () => {
   let list: AngelAction[] = []
@@ -48,13 +48,39 @@ test("the Undo notice is a polite status with touch-sized, keyboard-reachable bu
   assert.equal(renderToStaticMarkup(React.createElement(AngelUndo, { actions: [], onUndo: () => {}, onDismiss: () => {} })), "")
 })
 
+test("undoing clears in any order keeps the conversation in its original order", () => {
+  const a = [{ id: "a1" }, { id: "a2" }]
+  const b = [{ id: "b1" }]
+  const later = [{ id: "c1" }]
+  const batchOf = new Map<string, number>()
+  // Clear A (batch 0), clear B (batch 1), write C, then undo A before B.
+  for (const m of a) batchOf.set(m.id, 0)
+  let chat = mergeRestored(later, a, batchOf)
+  assert.deepEqual(chat.map((m) => m.id), ["a1", "a2", "c1"])
+  for (const m of b) batchOf.set(m.id, 1)
+  chat = mergeRestored(chat, b, batchOf)
+  assert.deepEqual(chat.map((m) => m.id), ["a1", "a2", "b1", "c1"])
+  // Undoing B first, then A, gives the same order.
+  const other = new Map<string, number>([["b1", 1]])
+  let chat2 = mergeRestored(later, b, other)
+  for (const m of a) other.set(m.id, 0)
+  chat2 = mergeRestored(chat2, a, other)
+  assert.deepEqual(chat2.map((m) => m.id), ["a1", "a2", "b1", "c1"])
+})
+
 test("clearing the chat and forgetting the place are undoable; restore data never leaves page memory", () => {
   const chat = readFileSync("components/ai/angel-ai.tsx", "utf8")
   assert.match(chat, /recordUndoable\("clear-conversation"/)
   assert.match(chat, /recordUndoable\("forget-place"/)
   assert.match(chat, /<AngelUndo actions=\{actions\} onUndo=\{undoAction\} onDismiss=\{dismissActions\} \/>/)
   // Restoring a location writes it back only when the person still has "remember" on.
-  assert.match(chat, /if \(readRememberChoice\(window\.localStorage\)\) savePlace\(window\.localStorage, forgottenLocation\)/)
+  assert.match(chat, /if \(forgottenLocation && readRememberChoice\(window\.localStorage\)\) savePlace\(window\.localStorage, forgottenLocation\)/)
+  // Undo restores both the ZIP and the location, and drops a pending request built for a different area.
+  const forget = chat.slice(chat.indexOf("const forgetLocation"), chat.indexOf("const toggleRemember"))
+  assert.match(forget, /recordUndoable\("forget-place", \(\) => \{\s*\/\/[^\n]*\n\s*locationGenerationRef\.current\+\+\s*\n\s*invalidatePendingContext\(\)/)
+  assert.match(forget, /setLocation\(forgottenLocation\)/)
+  assert.match(forget, /\n\s*setZip\(forgottenZip\)\n/)
+  assert.match(chat, /mergeRestored\(messagesRef\.current, cleared, clearBatchRef\.current\.of\)/)
   // Dismissing drops every restore closure.
   assert.match(chat, /const dismissActions = \(\) => \{\s*restoreRef\.current\.clear\(\)/)
   const lib = readFileSync("lib/angel-undo.ts", "utf8")
