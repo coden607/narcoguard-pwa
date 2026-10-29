@@ -21,6 +21,8 @@ import { readLifeSupportState } from "@/lib/life-support"
 import { readResourcePreferences } from "@/lib/resource-personalization"
 import { angelContextHasContent, buildAngelLocalContext } from "@/lib/angel-context"
 import { beginAngelAttempt, finishAngelAttempt, type AngelPendingTurn } from "@/lib/angel-pending"
+import { angelActivitySteps, type AngelActivityPhase } from "@/lib/angel-activity"
+import { AngelActivity } from "@/components/ai/angel-activity"
 import { deactivateTravel, effectiveZip, readTravel } from "@/lib/travel-mode"
 
 interface ChatMessage {
@@ -30,6 +32,17 @@ interface ChatMessage {
   notices?: string[]
   resources?: AngelResources
 }
+
+interface ActivityState {
+  phase: AngelActivityPhase
+  maySearch: boolean
+  startedAt: number
+  endedAt?: number
+  resources?: AngelResources
+}
+
+/** Wall-clock milliseconds, read only in event handlers (never during render). */
+const nowMs = () => Date.now()
 
 const SUGGESTIONS = ["Help me set a goal for this week", "Find food and a place to sleep near me", "How do I get naloxone?"]
 
@@ -65,6 +78,10 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   const [pending, setPending] = useState<AngelPendingTurn | null>(null)
   const pendingRef = useRef<AngelPendingTurn | null>(null)
   const requestRef = useRef<AbortController | null>(null)
+  // The live activity log for the latest request (#244); the Stop button aborts only that request.
+  const [activity, setActivity] = useState<ActivityState | null>(null)
+  const [clock, setClock] = useState(0)
+  const stoppedRef = useRef(false)
   const endRef = useRef<HTMLDivElement>(null)
   const messagesRef = useRef<ChatMessage[]>([])
   const voice = useVoice()
@@ -107,7 +124,23 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     setPending(null)
     setBusy(false)
     setError(undefined)
+    setActivity(null)
   }, [])
+
+  /** Stop the request in flight. The message stays pending so it can be retried or cancelled. */
+  const stopRequest = useCallback(() => {
+    stoppedRef.current = true
+    requestRef.current?.abort()
+  }, [])
+
+  const endActivity = (phase: AngelActivityPhase, resources?: AngelResources) =>
+    setActivity((current) => current && { ...current, phase, endedAt: nowMs(), ...(resources ? { resources } : {}) })
+
+  useEffect(() => {
+    if (activity?.phase !== "waiting") return
+    const timer = window.setInterval(() => setClock(nowMs()), 1000)
+    return () => window.clearInterval(timer)
+  }, [activity?.phase])
 
   // A pending request contains a snapshot of sharing choices. Discard that
   // payload when choices change; the draft can be sent again with fresh consent.
@@ -161,6 +194,10 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     setError(undefined)
     const controller = new AbortController()
     requestRef.current = controller
+    stoppedRef.current = false
+    const startedAt = nowMs()
+    setClock(startedAt)
+    setActivity({ phase: "waiting", maySearch: routeAngelTurn(turn.content).task === "resource", startedAt })
     try {
       const response = await fetch("/api/angel", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: turn.body, signal: controller.signal,
@@ -168,9 +205,11 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       const body = (await response.json()) as { available?: boolean; reply?: string; error?: string; notices?: string[]; resources?: ChatMessage["resources"] }
       if (pendingRef.current?.id !== turn.id) return null
       if (!response.ok || !body.reply || body.available === false) {
+        endActivity("failed")
         setError([...(body.notices ?? []), body.error ?? "Angel couldn't respond. Your message is still pending; retry when ready."].join(" "))
         return null
       }
+      endActivity("done", body.resources)
       const reply: ChatMessage = { id: crypto.randomUUID(), role: "assistant", content: body.reply, notices: body.notices, resources: body.resources }
       messagesRef.current = [...messagesRef.current, { id: turn.id, role: "user", content: turn.content }, reply]
       setMessages(messagesRef.current)
@@ -178,7 +217,10 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       setPending(pendingRef.current)
       return speakableText(body.notices, [body.reply, spokenResourceSummary(body.resources)].filter(Boolean).join(" "))
     } catch {
-      if (pendingRef.current?.id === turn.id) setError("No response confirmed. Your message is still pending. Check your connection and retry when ready.")
+      if (pendingRef.current?.id !== turn.id) return null
+      endActivity(stoppedRef.current ? "stopped" : "failed")
+      if (stoppedRef.current) setError("Stopped. Nothing from that request was received. Your message is kept below; retry or cancel it.")
+      else setError("No response confirmed. Your message is still pending. Check your connection and retry when ready.")
       return null
     } finally {
       if (requestRef.current === controller) {
@@ -492,6 +534,14 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
             </div>
           )}
 
+          {activity && (
+            <AngelActivity
+              steps={angelActivitySteps({ phase: activity.phase, maySearch: activity.maySearch, elapsedSeconds: ((activity.endedAt ?? Math.max(clock, activity.startedAt)) - activity.startedAt) / 1000, resources: activity.resources })}
+              running={activity.phase === "waiting"}
+              onStop={stopRequest}
+            />
+          )}
+
           <div
             className="flex-1 space-y-3 overflow-y-auto min-h-64 max-h-[55vh] rounded-xl border border-border/60 bg-background/30 p-3 sm:p-4"
             aria-live="polite"
@@ -538,7 +588,6 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
                 )}
               </div>
             ))}
-            {busy && <p className="text-sm text-muted-foreground" role="status">Angel is thinking…</p>}
             <div ref={endRef} />
           </div>
 
