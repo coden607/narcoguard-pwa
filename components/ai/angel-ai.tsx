@@ -12,6 +12,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { coarsen } from "@/lib/resource-finder"
 import { spokenResourceSummary, type AngelResources } from "@/lib/angel-resources"
 import { AngelResourceCards } from "@/components/ai/angel-resource-cards"
+import { AngelLogChart } from "@/components/ai/angel-log-chart"
+import { buildAngelLogChart, type AngelLogChart as LogChart } from "@/lib/angel-log-chart"
+import { readGuardianState } from "@/lib/guardian-stability"
 import { useVoice } from "@/lib/hooks/use-voice"
 import { isFatalRecognitionError, speakableText } from "@/lib/voice"
 import { parseAngelLocalCommand } from "@/lib/angel-voice-commands"
@@ -32,6 +35,10 @@ interface ChatMessage {
   content: string
   notices?: string[]
   resources?: AngelResources
+  /** A chart built on this phone from the person's own logs. */
+  chart?: LogChart
+  /** Shown here only; never included in what is sent to Angel. */
+  localOnly?: boolean
 }
 
 interface ActivityState {
@@ -45,7 +52,7 @@ interface ActivityState {
 /** Wall-clock milliseconds, read only in event handlers (never during render). */
 const nowMs = () => Date.now()
 
-const SUGGESTIONS = ["Help me set a goal for this week", "Find food and a place to sleep near me", "How do I get naloxone?"]
+const SUGGESTIONS = ["Help me set a goal for this week", "Find food and a place to sleep near me", "How do I get naloxone?", "Show my logs this week"]
 
 export function angelProviderDisclosure(provider: string | null, privacy: string | null, strictPrivacy: boolean) {
   if (provider === "Kimi") return "Your messages are sent to Kimi (Moonshot AI) to write Angel's replies. NarcoGuard has not confirmed Moonshot's retention or training terms, so share only what you are comfortable with."
@@ -336,6 +343,15 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
       if (!locationRef.current || !pending) return said
       return `${said} ${(await send(pending)) ?? ""}`.trim()
     }
+    if (local?.type === "log_chart") {
+      const now = new Date()
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
+      const chart = buildAngelLogChart(readGuardianState(window.localStorage).entries, today)
+      messagesRef.current = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content, localOnly: true }, { id: crypto.randomUUID(), role: "assistant", content: "", chart, localOnly: true }]
+      setMessages(messagesRef.current)
+      setInput("")
+      return chart.text
+    }
     if (pendingRef.current) return null
     // A ZIP said or typed in the message becomes the search area for this and later chats.
     const statedZip = zipFromMessage(content)
@@ -361,7 +377,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     const turn: AngelPendingTurn = {
       id: next[next.length - 1].id, content, status: "pending",
       body: JSON.stringify({
-        messages: next.slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })),
+        messages: next.filter((message) => !message.localOnly).slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })),
         ...(/^\d{5}$/.test(searchZip) ? { zip: searchZip } : locationRef.current ? { location: locationRef.current } : {}),
         ...(localContext ? { localContext } : {}),
       }),
@@ -558,6 +574,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
                 {message.content && (
                   <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl p-3 text-sm ${message.role === "user" ? "bg-primary text-primary-foreground" : "glass"}`}>{message.content}</p>
                 )}
+                {message.chart && <AngelLogChart chart={message.chart} />}
                 {message.resources && <AngelResourceCards resources={message.resources} />}
               </div>
             ))}

@@ -3,6 +3,7 @@ export type AngelLocalCommand =
   | { type: "clear" }
   | { type: "read_aloud"; enabled: boolean }
   | { type: "location"; enabled: boolean }
+  | { type: "log_chart" }
 
 const clean = (text: string) => text.trim().toLowerCase().replace(/[.,!?]+$/g, "")
 
@@ -17,5 +18,6 @@ export function parseAngelLocalCommand(text: string): AngelLocalCommand | null {
   if (/^(turn off|disable|stop) (read aloud|reading aloud|voice replies)$/.test(value)) return { type: "read_aloud", enabled: false }
   if (/^(use|share) my (current )?location( for searches)?$/.test(value)) return { type: "location", enabled: true }
   if (/^(stop using|stop sharing|turn off|forget|don't use|do not use) my (current )?location$/.test(value)) return { type: "location", enabled: false }
+  if (/^(show|chart) (me )?my (logs?|check-ins?|meals?)( (this|for the|for the last) (week|7 days))?$/.test(value)) return { type: "log_chart" }
   return null
 }
