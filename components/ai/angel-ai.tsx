@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { coarsen } from "@/lib/resource-finder"
 import { spokenResourceSummary, type AngelResources } from "@/lib/angel-resources"
+import { AngelResourceCards } from "@/components/ai/angel-resource-cards"
 import { useVoice } from "@/lib/hooks/use-voice"
 import { isFatalRecognitionError, speakableText } from "@/lib/voice"
 import { parseAngelLocalCommand } from "@/lib/angel-voice-commands"
@@ -31,6 +32,8 @@ interface ChatMessage {
   content: string
   notices?: string[]
   resources?: AngelResources
+  /** When the reply arrived; "Open now" chips are judged against this time, never re-evaluated silently. */
+  receivedAt?: Date
 }
 
 interface ActivityState {
@@ -210,7 +213,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         return null
       }
       endActivity("done", body.resources)
-      const reply: ChatMessage = { id: crypto.randomUUID(), role: "assistant", content: body.reply, notices: body.notices, resources: body.resources }
+      const reply: ChatMessage = { id: crypto.randomUUID(), role: "assistant", content: body.reply, notices: body.notices, resources: body.resources, receivedAt: new Date() }
       messagesRef.current = [...messagesRef.current, { id: turn.id, role: "user", content: turn.content }, reply]
       setMessages(messagesRef.current)
       pendingRef.current = finishAngelAttempt(pendingRef.current, turn.id, true)
@@ -557,35 +560,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
                 {message.content && (
                   <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl p-3 text-sm ${message.role === "user" ? "bg-primary text-primary-foreground" : "glass"}`}>{message.content}</p>
                 )}
-                {message.resources && (
-                  <div className="space-y-3 text-sm" data-testid="angel-resources">
-                    {message.resources.message && <p className="text-muted-foreground">{message.resources.message}</p>}
-                    {message.resources.groups.map((group) => (
-                      <section key={group.kind} aria-label={group.shortLabel} className="space-y-2">
-                        <h4 className="font-semibold">{group.label}</h4>
-                        {group.widenedMiles && group.results.length > 0 && <p className="text-xs text-muted-foreground">Nothing within 10 miles, so this searched up to {group.widenedMiles} miles.</p>}
-                        {group.results.length > 0 ? (
-                          <ul className="space-y-2">
-                            {group.results.map((resource) => (
-                              <li key={`${resource.name}-${resource.lat}-${resource.lon}`} className="rounded-lg border p-2">
-                                <strong>{resource.name}</strong>{resource.distanceMiles !== undefined && ` · ${resource.distanceMiles} mi`}
-                                {resource.address && <span className="block text-muted-foreground">{resource.address}</span>}
-                                {resource.phone && <a className="underline text-primary" href={`tel:${resource.phone.replace(/[^\d+]/g, "")}`}>Call {resource.phone}</a>}
-                                <span className="block text-xs text-muted-foreground">Source: {resource.source}. Call first to confirm.</span>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-muted-foreground">
-                            {group.status === "ok" ? "No listing found nearby." : "This search is not available right now."}{" "}
-                            {group.fallback.map((link) => <a key={link.url} className="underline text-primary mr-2" href={link.url} target="_blank" rel="noreferrer">{link.title}</a>)}
-                            <a className="underline text-primary" href="tel:211">Call 211</a>
-                          </p>
-                        )}
-                      </section>
-                    ))}
-                  </div>
-                )}
+                {message.resources && <AngelResourceCards resources={message.resources} now={message.receivedAt} />}
               </div>
             ))}
             <div ref={endRef} />
