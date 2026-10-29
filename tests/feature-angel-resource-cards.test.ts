@@ -18,15 +18,13 @@ const resources: AngelResources = {
   ],
 }
 
-// A Monday at 10:00 local time, inside the listed hours.
-const monday = new Date(2026, 9, 26, 10, 0, 0)
-const render = (now?: Date) => renderToStaticMarkup(React.createElement(AngelResourceCards, { resources, now }))
+const render = () => renderToStaticMarkup(React.createElement(AngelResourceCards, { resources }))
 
 test("a resource card shows name, distance, hours, source, call first, and Call and Directions buttons", () => {
-  const html = render(monday)
+  const html = render()
   assert.match(html, /Hope Kitchen/)
   assert.match(html, /0\.4 mi/)
-  assert.match(html, /Open now/)
+  assert.match(html, /Listed hours \(local time there\): /)
   assert.match(html, /href="tel:6075550100"/)
   assert.match(html, /Call \(607\) 555-0100/)
   assert.match(html, /href="https:\/\/www\.google\.com\/maps\/dir\/\?api=1&amp;destination=42\.10000,-75\.90000"/)
@@ -36,16 +34,16 @@ test("a resource card shows name, distance, hours, source, call first, and Call 
 })
 
 test("unknown hours and missing coordinates stay explicit instead of guessing", () => {
-  const html = render(monday)
+  const html = render()
   const pantry = html.slice(html.indexOf("No Hours Pantry"))
   assert.match(pantry, /Hours unknown/)
   assert.equal((html.match(/data-testid="angel-directions"/g) ?? []).length, 1, "no Directions without coordinates")
-  // Without the time the reply arrived, the chip never claims open or closed.
-  assert.doesNotMatch(render(undefined), /Open now|Closed now/)
+  // The place may be in another time zone than the phone, so the card never claims open or closed.
+  assert.doesNotMatch(html, /Open now|Closed now/)
 })
 
 test("empty and unavailable searches keep directory links and Call 211", () => {
-  const html = render(monday)
+  const html = render()
   assert.match(html, /No listing found nearby\./)
   assert.match(html, /This search is not available right now\./)
   assert.match(html, /Shelter directory/)
@@ -53,12 +51,11 @@ test("empty and unavailable searches keep directory links and Call 211", () => {
 })
 
 test("cards are text-first, touch-sized and wrap on narrow screens", () => {
-  const html = render(monday)
+  const html = render()
   assert.doesNotMatch(html, /<img|<svg|animate-/)
   assert.match(html, /min-h-11/)
   assert.match(html, /break-words/)
   assert.match(html, /flex-wrap/)
   const chat = readFileSync("components/ai/angel-ai.tsx", "utf8")
-  assert.match(chat, /<AngelResourceCards resources=\{message\.resources\} now=\{message\.receivedAt\} \/>/)
-  assert.match(chat, /receivedAt: new Date\(\)/)
+  assert.match(chat, /<AngelResourceCards resources=\{message\.resources\} \/>/)
 })

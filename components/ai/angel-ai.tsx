@@ -32,8 +32,6 @@ interface ChatMessage {
   content: string
   notices?: string[]
   resources?: AngelResources
-  /** When the reply arrived; "Open now" chips are judged against this time, never re-evaluated silently. */
-  receivedAt?: Date
 }
 
 interface ActivityState {
@@ -213,7 +211,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         return null
       }
       endActivity("done", body.resources)
-      const reply: ChatMessage = { id: crypto.randomUUID(), role: "assistant", content: body.reply, notices: body.notices, resources: body.resources, receivedAt: new Date() }
+      const reply: ChatMessage = { id: crypto.randomUUID(), role: "assistant", content: body.reply, notices: body.notices, resources: body.resources }
       messagesRef.current = [...messagesRef.current, { id: turn.id, role: "user", content: turn.content }, reply]
       setMessages(messagesRef.current)
       pendingRef.current = finishAngelAttempt(pendingRef.current, turn.id, true)
@@ -560,7 +558,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
                 {message.content && (
                   <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl p-3 text-sm ${message.role === "user" ? "bg-primary text-primary-foreground" : "glass"}`}>{message.content}</p>
                 )}
-                {message.resources && <AngelResourceCards resources={message.resources} now={message.receivedAt} />}
+                {message.resources && <AngelResourceCards resources={message.resources} />}
               </div>
             ))}
             <div ref={endRef} />
