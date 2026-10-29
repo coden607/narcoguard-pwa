@@ -34,6 +34,16 @@ export function markUndone(list: AngelAction[], id: string): AngelAction[] {
   return list.map((entry) => entry.id === id ? { ...entry, status: "undone" as const } : entry)
 }
 
+/**
+ * Puts restored messages back where they were in the conversation. Each clear gets an increasing batch number;
+ * messages from earlier clears come first, and messages written since (no batch) stay last. Undoing clears in any
+ * order therefore keeps the original chronology. `batchOf` must already include the restored messages.
+ */
+export function mergeRestored<T extends { id: string }>(current: T[], restored: T[], batchOf: ReadonlyMap<string, number>): T[] {
+  const rank = (message: T) => batchOf.get(message.id) ?? Number.POSITIVE_INFINITY
+  return [...current, ...restored].sort((a, b) => rank(a) === rank(b) ? 0 : rank(a) < rank(b) ? -1 : 1)
+}
+
 /** The ids that fell off the end of the list, so their restore data can be dropped from memory. */
 export function droppedIds(before: AngelAction[], after: AngelAction[]): string[] {
   const kept = new Set(after.map((entry) => entry.id))

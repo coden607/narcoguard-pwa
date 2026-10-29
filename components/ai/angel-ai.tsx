@@ -14,7 +14,7 @@ import { spokenResourceSummary, type AngelResources } from "@/lib/angel-resource
 import { AngelResourceCards } from "@/components/ai/angel-resource-cards"
 import { AngelLogChart } from "@/components/ai/angel-log-chart"
 import { AngelUndo } from "@/components/ai/angel-undo"
-import { droppedIds, markUndone, recordAction, type AngelAction, type AngelActionKind } from "@/lib/angel-undo"
+import { droppedIds, markUndone, mergeRestored, recordAction, type AngelAction, type AngelActionKind } from "@/lib/angel-undo"
 import { buildAngelLogChart, type AngelLogChart as LogChart } from "@/lib/angel-log-chart"
 import { readGuardianState } from "@/lib/guardian-stability"
 import { useVoice } from "@/lib/hooks/use-voice"
@@ -95,6 +95,8 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
   // Recent local actions that can be undone (#245). Restore data stays in page memory only.
   const [actions, setActions] = useState<AngelAction[]>([])
   const restoreRef = useRef(new Map<string, () => void>())
+  // Which clear each restored message came from, so undoing clears out of order keeps the conversation in order.
+  const clearBatchRef = useRef({ next: 0, of: new Map<string, number>() })
   const endRef = useRef<HTMLDivElement>(null)
   const messagesRef = useRef<ChatMessage[]>([])
   const voice = useVoice()
@@ -214,8 +216,10 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
 
   const clearConversation = () => {
     const cleared = messagesRef.current
+    const batch = clearBatchRef.current.next++
     if (cleared.length > 0) recordUndoable("clear-conversation", () => {
-      messagesRef.current = [...cleared, ...messagesRef.current]
+      for (const message of cleared) clearBatchRef.current.of.set(message.id, batch)
+      messagesRef.current = mergeRestored(messagesRef.current, cleared, clearBatchRef.current.of)
       setMessages(messagesRef.current)
     })
     cancelPending()
@@ -346,11 +350,15 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
     const forgottenZip = /^\d{5}$/.test(zip) ? zip : ""
     const forgottenLocation = locationRef.current
     if (forgottenZip || forgottenLocation) recordUndoable("forget-place", () => {
-      if (forgottenLocation) {
-        locationRef.current = forgottenLocation
-        setLocation(forgottenLocation)
-        if (readRememberChoice(window.localStorage)) savePlace(window.localStorage, forgottenLocation)
-      } else setZip(forgottenZip)
+      // A pending request holds the search area it was written with; drop it so a retry cannot search a different area.
+      locationGenerationRef.current++
+      invalidatePendingContext()
+      setLocating(false)
+      locationRef.current = forgottenLocation
+      setLocation(forgottenLocation)
+      if (forgottenLocation && readRememberChoice(window.localStorage)) savePlace(window.localStorage, forgottenLocation)
+      // Both come back; the ZIP keeps its usual precedence for searches.
+      setZip(forgottenZip)
     })
     locationGenerationRef.current++; invalidatePendingContext(); locationRef.current = null; setLocation(null); setLocationNote(undefined); setLocating(false); setZip(""); forgetPlace(window.localStorage)
   }
