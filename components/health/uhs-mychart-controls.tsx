@@ -7,18 +7,28 @@ type Summary = {
   connected?: boolean
   checkedAt?: string
   patient?: { name: string | null; birthDate: string | null } | null
-  vitals?: { id?: string; name: string; value: number; unit: string | null; at: string | null }[]
+  vitals?: { id?: string; name: string; value: string; unit: string | null; at: string | null }[]
   conditions?: { id?: string; name: string }[]
   encounters?: { id?: string; status: string; type: string | null; start: string | null }[]
   appointments?: { id?: string; status: string; start: string | null; description: string | null }[]
   goals?: { id?: string; description: string; status: string }[]
+  unavailable?: string[]
   error?: string
 }
 
-export function UhsMyChartControls({ configured }: { configured: boolean }) {
+const CALLBACK_ERRORS: Record<string, string> = {
+  "access_denied": "UHS MyChart access was not approved. Nothing was connected.",
+  "invalid-callback": "The UHS sign-in could not be verified. Please try connecting again.",
+  "signed-out": "Sign in to NarcoGuard first, then connect UHS MyChart.",
+  "not-configured": "UHS record connection is not available right now.",
+  "token-exchange": "UHS did not complete the connection. Please try again.",
+  "token-response": "UHS returned an incomplete connection. Please try again.",
+}
+
+export function UhsMyChartControls({ ready, callbackError, connected }: { ready: boolean; callbackError?: string; connected?: boolean }) {
   const [summary, setSummary] = useState<Summary | null>(null)
   const [busy, setBusy] = useState(false)
-  const [message, setMessage] = useState("")
+  const [message, setMessage] = useState(() => (callbackError ? CALLBACK_ERRORS[callbackError] ?? "UHS MyChart could not be connected. Please try again." : connected ? "UHS MyChart connected. Tap Load my UHS summary to read it." : ""))
 
   const load = async () => {
     setBusy(true)
@@ -33,7 +43,7 @@ export function UhsMyChartControls({ configured }: { configured: boolean }) {
       }
       if (!response.ok) throw new Error(body.error || "UHS records could not be loaded.")
       setSummary(body)
-      setMessage("UHS summary loaded for this session only.")
+      setMessage(body.unavailable?.length ? `UHS summary loaded for this session only. Not available right now: ${body.unavailable.join(", ")}.` : "UHS summary loaded for this session only.")
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "UHS records could not be loaded.")
     } finally {
@@ -44,15 +54,19 @@ export function UhsMyChartControls({ configured }: { configured: boolean }) {
   const disconnect = async () => {
     setBusy(true)
     try {
-      await fetch("/api/health/uhs/disconnect", { method: "POST" })
-    } finally {
+      const response = await fetch("/api/health/uhs/disconnect", { method: "POST" })
+      if (!response.ok) throw new Error("disconnect failed")
+      // Only a confirmed disconnect clears the view and announces it.
       setSummary(null)
       setMessage("UHS MyChart disconnected from this NarcoGuard session.")
+    } catch {
+      setMessage("UHS MyChart could not be disconnected. Check your connection and try again.")
+    } finally {
       setBusy(false)
     }
   }
 
-  if (!configured) return null
+  if (!ready) return message ? <p role="status" aria-live="polite" className="text-sm">{message}</p> : null
 
   return (
     <div className="space-y-4" data-testid="uhs-smart-controls">
@@ -77,6 +91,10 @@ export function UhsMyChartControls({ configured }: { configured: boolean }) {
           <section>
             <h4 className="font-medium">Conditions</h4>
             {summary.conditions?.length ? <ul className="list-disc pl-5 text-sm">{summary.conditions.map((item, index) => <li key={item.id || `${item.name}-${index}`}>{item.name}</li>)}</ul> : <p className="text-sm text-muted-foreground">No conditions returned.</p>}
+          </section>
+          <section>
+            <h4 className="font-medium">Visits</h4>
+            {summary.encounters?.length ? <ul className="list-disc pl-5 text-sm">{summary.encounters.map((item, index) => <li key={item.id || index}>{item.type || "Visit"} · {item.status}{item.start ? ` · ${new Date(item.start).toLocaleString()}` : ""}</li>)}</ul> : <p className="text-sm text-muted-foreground">No visits returned.</p>}
           </section>
           <section>
             <h4 className="font-medium">Appointments</h4>

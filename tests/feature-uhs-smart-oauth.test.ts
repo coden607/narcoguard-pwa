@@ -22,10 +22,12 @@ test("UHS SMART authorization uses PKCE, state, aud and read-only scopes", async
 
 test("short-lived FHIR session cookie payload is encrypted and expires closed", async () => {
   const secret = "x".repeat(32)
-  const session = { accessToken: "sensitive-token", patient: "patient-1", expiresAt: Date.now() + 60_000 }
+  const session = { userId: "user-1", accessToken: "sensitive-token", patient: "patient-1", expiresAt: Date.now() + 60_000 }
   const sealed = await sealUhsSession(session, secret)
   assert.equal(sealed.includes("sensitive-token"), false)
   assert.deepEqual(await openUhsSession(sealed, secret), session)
   assert.equal(await openUhsSession(sealed, "y".repeat(32)), null)
   assert.equal(await openUhsSession(await sealUhsSession({ ...session, expiresAt: Date.now() - 1 }, secret), secret), null)
+  // A session without the owning NarcoGuard account id is refused.
+  assert.equal(await openUhsSession(await sealUhsSession({ ...session, userId: "" }, secret), secret), null)
 })

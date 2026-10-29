@@ -6,6 +6,21 @@ export const UHS_STATE_COOKIE = "ng_uhs_oauth_state"
 export const UHS_SESSION_COOKIE = "ng_uhs_fhir_session"
 export const UHS_OAUTH_MAX_AGE_S = 600
 export const UHS_SESSION_MAX_AGE_S = 55 * 60
+/** Every UHS cookie is scoped to this path, so it must also be cleared on this path. */
+export const UHS_COOKIE_PATH = "/api/health/uhs"
+export const UHS_SECRET_MIN_LENGTH = 32
+
+/** True only when the session secret can actually seal a session (present and long enough). */
+export const hasUsableUhsSecret = (secret: string | undefined): secret is string =>
+  typeof secret === "string" && secret.length >= UHS_SECRET_MIN_LENGTH
+
+type CookieWriter = { set: (name: string, value: string, options: { path: string; maxAge: number; httpOnly: boolean; secure: boolean; sameSite: "lax" }) => unknown }
+
+/** Expires the session and any pending OAuth attempt on their scoped path (a plain delete targets "/"). */
+export function clearUhsCookies(store: CookieWriter, names: string[] = [UHS_SESSION_COOKIE, UHS_PKCE_COOKIE, UHS_STATE_COOKIE]) {
+  const secure = process.env.NODE_ENV === "production"
+  for (const name of names) store.set(name, "", { path: UHS_COOKIE_PATH, maxAge: 0, httpOnly: true, secure, sameSite: "lax" })
+}
 
 const encoder = new TextEncoder()
 
@@ -23,13 +38,15 @@ async function sessionKey(secret: string) {
 }
 
 export type UhsSession = {
+  /** The NarcoGuard account that authorized this connection; reads are refused for any other account. */
+  userId: string
   accessToken: string
   patient?: string
   expiresAt: number
 }
 
 export async function sealUhsSession(session: UhsSession, secret: string) {
-  if (secret.length < 32) throw new Error("UHS session secret must be at least 32 characters")
+  if (!hasUsableUhsSecret(secret)) throw new Error("UHS session secret must be at least 32 characters")
   const iv = crypto.getRandomValues(new Uint8Array(12))
   const ciphertext = await crypto.subtle.encrypt(
     { name: "AES-GCM", iv },
@@ -41,7 +58,7 @@ export async function sealUhsSession(session: UhsSession, secret: string) {
 
 export async function openUhsSession(value: string, secret: string): Promise<UhsSession | null> {
   try {
-    if (secret.length < 32) return null
+    if (!hasUsableUhsSecret(secret)) return null
     const [ivValue, cipherValue] = value.split(".")
     if (!ivValue || !cipherValue) return null
     const plaintext = await crypto.subtle.decrypt(
@@ -50,7 +67,7 @@ export async function openUhsSession(value: string, secret: string): Promise<Uhs
       fromB64url(cipherValue),
     )
     const parsed = JSON.parse(new TextDecoder().decode(plaintext)) as UhsSession
-    if (!parsed.accessToken || !Number.isFinite(parsed.expiresAt) || parsed.expiresAt <= Date.now()) return null
+    if (typeof parsed.userId !== "string" || !parsed.userId || !parsed.accessToken || !Number.isFinite(parsed.expiresAt) || parsed.expiresAt <= Date.now()) return null
     return parsed
   } catch {
     return null
