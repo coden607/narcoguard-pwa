@@ -87,7 +87,7 @@ async function complete(provider: AngelProvider, choice: AngelModelChoice, messa
  * Tries each model choice in order; a refusal (no access, unsupported) falls back to the next, and so
  * does any failure when the next choice is on another service. Every attempt shares one deadline.
  */
-async function completeWithFallback(provider: AngelProvider, allChoices: AngelModelChoice[], messages: ChatMessage[], withTools: boolean, deadline: number, maxTokens?: number, temperature?: number) {
+async function completeWithFallback(provider: AngelProvider, allChoices: AngelModelChoice[], messages: ChatMessage[], withTools: boolean, deadline: number, maxTokens?: number, temperature?: number, requestId?: string) {
   // Skip models that just refused for account reasons, so replies are not slowed by a known refusal.
   const choices = availableAttempts(provider, allChoices)
   for (const [index, choice] of choices.entries()) {
@@ -99,7 +99,7 @@ async function completeWithFallback(provider: AngelProvider, allChoices: AngelMo
       if (error instanceof ProviderError) noteRefusal(endpointFor(provider, choice), choice.model, error.status)
       const crossService = !last && endpointFor(provider, choices[index + 1]).url !== endpointFor(provider, choice).url
       if (last || !(error instanceof ProviderError && shouldTryFallback(error.status, crossService))) throw error
-      console.warn(`[angel] ${endpointFor(provider, choice).name} refused ${choice.model} (${error.status}${errorKind(error.detail)}); trying ${endpointFor(provider, choices[index + 1]).name} ${choices[index + 1].model}`)
+      console.warn(`[angel${requestId ? `:${requestId}` : ""}] ${endpointFor(provider, choice).name} refused ${choice.model} (${error.status}${errorKind(error.detail)}); trying ${endpointFor(provider, choices[index + 1]).name} ${choices[index + 1].model}`)
     }
   }
   throw new ProviderError(0)
@@ -127,7 +127,9 @@ export async function POST(request: Request) {
   const startedAt = Date.now()
   const requestId = crypto.randomUUID()
   const provider = providerFor(request)
-  const headers = () => diagnosticHeaders(requestId, startedAt, provider?.name)
+  // The provider header names the service that actually answered, which can differ after a fallback.
+  let servedBy = provider?.name
+  const headers = () => diagnosticHeaders(requestId, startedAt, servedBy)
   if (!provider) return NextResponse.json({ available: false, message: "Angel AI is not configured yet." }, { status: 503, headers: headers() })
 
   const forwarded = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown"
@@ -146,7 +148,8 @@ export async function POST(request: Request) {
     const withTools = route.useTools && notices.length === 0
     // With tools, leave time for the directory search and the follow-up reply; without, use the whole budget.
     const firstDeadline = startedAt + (withTools ? 28 : maxDuration - 5) * 1000
-    const first = await completeWithFallback(provider, modelAttempts(provider, route.task), messages, withTools, firstDeadline, route.maxTokens, route.temperature)
+    const first = await completeWithFallback(provider, modelAttempts(provider, route.task), messages, withTools, firstDeadline, route.maxTokens, route.temperature, requestId)
+    servedBy = endpointFor(provider, first.choice).name
     let reply = first.message
     // The follow-up after a search uses whichever model answered, so a refused model is not tried twice.
     const used = [first.choice]
@@ -174,7 +177,7 @@ export async function POST(request: Request) {
       messages.push({ role: "assistant", content: reply.content ?? null, tool_calls: calls })
       // Every call gets an answer; the combined result is attached to the first so the model sees it once.
       calls.forEach((c, index) => messages.push({ role: "tool", tool_call_id: c.id, content: JSON.stringify(index === 0 ? toolResult : { note: "Combined with the first search." }) }))
-      reply = (await completeWithFallback(provider, used, messages, false, startedAt + (maxDuration - 3) * 1000, route.maxTokens, route.temperature)).message
+      reply = (await completeWithFallback(provider, used, messages, false, startedAt + (maxDuration - 3) * 1000, route.maxTokens, route.temperature, requestId)).message
     }
     const text = reply.content?.trim() || "I couldn't put together a reply. Please try asking another way."
     return NextResponse.json({ available: true, notices, reply: text, resources }, { headers: headers() })
@@ -186,6 +189,6 @@ export async function POST(request: Request) {
     if (error instanceof ProviderError && (error.status === 401 || error.status === 403)) {
       return NextResponse.json({ available: false, notices, message: "Angel AI is not switched on yet." }, { status: 503, headers: headers() })
     }
-    return NextResponse.json({ available: true, notices, error: "Angel couldn't respond right now. Try again, or use the search below." }, { status: 502, headers: noStore })
+    return NextResponse.json({ available: true, notices, error: "Angel couldn't respond right now. Try again, or use the search below." }, { status: 502, headers: headers() })
   }
 }
