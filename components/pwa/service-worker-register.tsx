@@ -33,12 +33,21 @@ export function ServiceWorkerRegister({ initialVersion = "local" }: { initialVer
     document.addEventListener("change", markDirty, true)
     const syncUpdateAcrossTabs = (event: StorageEvent) => {
       if (event.storageArea !== window.localStorage || event.key !== UPDATE_READY_KEY || !event.newValue) return
-      if (event.newValue !== loaded) {
+      if (event.newValue !== loaded && /^[a-zA-Z0-9._-]{1,128}$/.test(event.newValue)) {
         setUpdateVersion(event.newValue)
         setCheckStatus("Update ready")
       }
     }
     window.addEventListener("storage", syncUpdateAcrossTabs)
+    // A tab that mounts after another tab already saw the update reads the persisted value.
+    queueMicrotask(() => { try {
+      if (disposed) return
+      const persisted = window.localStorage.getItem(UPDATE_READY_KEY)
+      if (persisted && loaded && persisted !== loaded && /^[a-zA-Z0-9._-]{1,128}$/.test(persisted)) {
+        setUpdateVersion(persisted)
+        setCheckStatus("Update ready")
+      }
+    } catch { /* Cross-tab sync is optional. */ } })
 
     const pushUpdateNotice = async (registration: ServiceWorkerRegistration, version: string) => {
       if (!("Notification" in window) || Notification.permission !== "granted") return

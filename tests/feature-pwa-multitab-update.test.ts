@@ -9,4 +9,5 @@ test("PWA deployment update readiness synchronizes across open tabs", async () =
   assert.match(source, /window\.localStorage\.setItem\(UPDATE_READY_KEY, version\)/)
   assert.match(source, /window\.removeEventListener\("storage", syncUpdateAcrossTabs\)/)
   assert.match(source, /window\.localStorage\.removeItem\(UPDATE_READY_KEY\)/)
+  assert.match(source, /window\.localStorage\.getItem\(UPDATE_READY_KEY\)/)
 })
