@@ -276,7 +276,8 @@ export function NeedsFinder() {
     if (!saved) return
     /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from device storage */
     setSavedPlace(saved)
-    if ("zip" in saved) setZip(saved.zip)
+    // Restore must not clobber a ZIP the person already typed while the page was hydrating.
+    if ("zip" in saved) setZip((current) => (/^\d{5}$/.test(current) ? current : saved.zip))
     /* eslint-enable react-hooks/set-state-in-effect */
     void lookup(saved)
   }, [])
@@ -292,7 +293,7 @@ export function NeedsFinder() {
     setNotice(`Travel mode is on for ${result.state.destinationZip} until it expires automatically.`)
     void lookup({ zip: result.state.destinationZip })
   }
-  const stopTravel = () => { deactivateTravel(window.localStorage); setTravelState(null); setNotice("Travel mode is off. Searches use your normal saved place again.") }
+  const stopTravel = () => { deactivateTravel(window.localStorage); setTravelState(null); setZip(savedPlace && "zip" in savedPlace ? savedPlace.zip : ""); setNotice("Travel mode is off. Searches use your normal saved place again.") }
   const toggleLowData = () => {
     const next = !lowData
     saveLowBandwidthChoice(window.localStorage, next)

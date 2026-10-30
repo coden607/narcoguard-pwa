@@ -143,3 +143,16 @@ test("the stored record contains ZIP strings only — no coordinate fields", () 
   const raw = JSON.parse(storage.getItem("narcoguard_travel_mode_v1")!)
   assert.deepEqual(Object.keys(raw).sort(), ["active", "destinationZip", "expiresAt", "homeZip", "startedAt", "version"])
 })
+
+test("blocked storage returns ok:false instead of throwing, and deactivate reports false", () => {
+  const throwingStorage = (): StorageLike => ({
+    getItem: () => null,
+    setItem: () => {
+      throw new Error("storage denied")
+    },
+  })
+  const activated = activateTravel(throwingStorage(), { destinationZip: "13202", homeZip: "13201", now: NOW })
+  assert.equal(activated.ok, false)
+  if (!activated.ok) assert.match(activated.error, /could not be saved/)
+  assert.equal(deactivateTravel(throwingStorage()), false)
+})
