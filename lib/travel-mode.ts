@@ -95,16 +95,25 @@ export function activateTravel(
     startedAt: now,
     expiresAt: new Date(startedMs + minutes * MIN_MS).toISOString(),
   }
-  writeTravel(storage, state)
+  try {
+    writeTravel(storage, state)
+  } catch {
+    return { ok: false, error: "Travel mode could not be saved on this device. Storage is full or blocked; free space or allow storage, then try again." }
+  }
   return { ok: true, state }
 }
 
 /** Explicit deactivation; the record (including home ZIP) is deleted. */
 export function deactivateTravel(storage: StorageLike): boolean {
-  if (readTravel(storage) === null) return false
-  writeTravel(storage, null)
-  storage.setItem(TRAVEL_MODE_KEY, "")
-  return true
+  try {
+    if (readTravel(storage) === null) return false
+    writeTravel(storage, null)
+    storage.setItem(TRAVEL_MODE_KEY, "")
+    return true
+  } catch {
+    // Blocked/full storage must not crash the toggle; the UI still turns off.
+    return false
+  }
 }
 
 export type ExtendResult = { ok: true; state: TravelState } | { ok: false; error: string }
