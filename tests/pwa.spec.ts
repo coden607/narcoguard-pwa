@@ -20,6 +20,7 @@ test.describe("PWA production flow", () => {
     const manifest = await response.json()
     expect(manifest.start_url).toBe("/")
     expect(manifest.display).toBe("standalone")
+    expect(manifest.shortcuts.map((shortcut: { url: string }) => shortcut.url)).toEqual(["/ar", "/help", "/calm"])
     expect(manifest.icons).toEqual(
       expect.arrayContaining([
         expect.objectContaining({ src: "/icon-192.png?v=9", sizes: "192x192" }),
