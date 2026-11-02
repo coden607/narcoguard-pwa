@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs"
 import { test } from "node:test"
 import { PUBLIC_ROUTES } from "../lib/site-url"
 
-const NEW_PAGES = ["/naloxone-card", "/treatment", "/prevention", "/check-on-me", "/debrief", "/test-strips", "/aftercare", "/rescue-breathing", "/wound-care", "/bystander"]
+const NEW_PAGES = ["/naloxone-card", "/treatment", "/prevention", "/check-on-me", "/debrief", "/test-strips", "/aftercare", "/rescue-breathing", "/wound-care", "/bystander", "/911-script"]
 
 test("new public pages are in the sitemap and linked from Stay Safer", () => {
   const saferUse = readFileSync("app/safer-use/page.tsx", "utf8")
@@ -21,5 +21,5 @@ test("the check-on-me timer and pharmacy card are precached for offline use", ()
 
 test("the emergency-adjacent pages and the bystander QR code are precached", () => {
   const worker = readFileSync("public/sw.js", "utf8")
-  for (const path of ["/aftercare", "/rescue-breathing", "/wound-care", "/bystander", "/bystander-qr.svg"]) assert.match(worker, new RegExp(`"${path}"`), path)
+  for (const path of ["/aftercare", "/rescue-breathing", "/wound-care", "/bystander", "/bystander-qr.svg", "/911-script"]) assert.match(worker, new RegExp(`"${path}"`), path)
 })

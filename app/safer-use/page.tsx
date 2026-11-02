@@ -58,7 +58,7 @@ export default function SaferUsePage() {
             </li>
           ))}
         </ul>
-        <p className="text-sm">Someone won&apos;t wake up? Follow the <Link className="text-primary underline" href="/ar">step-by-step overdose guide</Link>, pace <Link className="text-primary underline" href="/rescue-breathing">rescue breaths</Link>, or hand a bystander the <Link className="text-primary underline" href="/bystander">bystander steps</Link>. After naloxone: <Link className="text-primary underline" href="/aftercare">what to do next</Link>.</p>
+        <p className="text-sm">Someone won&apos;t wake up? Follow the <Link className="text-primary underline" href="/ar">step-by-step overdose guide</Link>, pace <Link className="text-primary underline" href="/rescue-breathing">rescue breaths</Link>, or hand a bystander the <Link className="text-primary underline" href="/bystander">bystander steps</Link>. Calling 911? Here is <Link className="text-primary underline" href="/911-script">what to say</Link>. After naloxone: <Link className="text-primary underline" href="/aftercare">what to do next</Link>.</p>
       </section>
 
       <section aria-labelledby="naloxone" className="space-y-3">
