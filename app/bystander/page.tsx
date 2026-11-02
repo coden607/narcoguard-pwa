@@ -20,6 +20,7 @@ export default function BystanderPage() {
         {OVERDOSE_STEPS.map((step) => <li key={step}>{step}</li>)}
       </ol>
       <Link href="/ar" className="block rounded-2xl border-2 border-primary px-6 py-4 text-center text-xl font-bold">Show me each step</Link>
+      <Link href="/911-script" className="block rounded-2xl border-2 border-primary px-6 py-4 text-center text-xl font-bold">What to say to 911</Link>
       <section aria-labelledby="qr" className="flex flex-col items-center gap-3 rounded-2xl bg-white p-6 text-center text-black">
         <h2 id="qr" className="text-xl font-bold">Open these steps on your own phone</h2>
         <Image src="/bystander-qr.svg" alt="QR code linking to narcoguard.app/bystander" width={220} height={220} unoptimized priority />
