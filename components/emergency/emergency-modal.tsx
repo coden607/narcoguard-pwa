@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { AlertTriangle, MapPin, MessageSquare, Phone, Pill, Share2 } from "lucide-react"
 import { alertMessage } from "@/lib/contact-alerts-shared"
 import { useEmergencyContacts } from "@/lib/emergency-contacts-store"
+import { useWakeLock } from "@/lib/hooks/use-wake-lock"
 import { useContactAlert } from "@/lib/hooks/use-contact-alert"
 
 interface EmergencyModalProps {
@@ -47,6 +48,8 @@ async function shareLocation(): Promise<string> {
 }
 
 export function EmergencyModal({ open, onClose }: EmergencyModalProps) {
+  // Keep the screen on while the emergency steps are open (#263). Silently does nothing if unsupported.
+  useWakeLock(open)
   const { state } = useEmergencyContacts()
   const { available, sending, deliveries, note, send } = useContactAlert()
   const [stage, setStage] = useState<"idle" | "preview">("idle")
