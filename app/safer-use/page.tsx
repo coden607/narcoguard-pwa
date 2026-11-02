@@ -61,7 +61,7 @@ export default function SaferUsePage() {
         <h2 id="naloxone" className="text-2xl font-semibold">Get naloxone (Narcan)</h2>
         <p className="text-sm text-muted-foreground">Naloxone reverses opioid overdoses and does not harm someone who has no opioids in their body. Keep it where people can find it.</p>
         <LinkList links={NALOXONE_SOURCES} testId="naloxone-sources" />
-        <p className="text-sm">Pharmacies near you are listed under <Link className="text-primary underline" href="/help">Find help</Link> (call first to check they have it).</p>
+        <p className="text-sm">Pharmacies near you are listed under <Link className="text-primary underline" href="/help">Find help</Link> (call first to check they have it). Nervous about asking? Show the pharmacist the <Link className="text-primary underline" href="/naloxone-card">ask-for-naloxone card</Link>.</p>
       </section>
 
       <section aria-labelledby="strips" className="space-y-3">
