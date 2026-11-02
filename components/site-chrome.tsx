@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation"
 import { ArrowLeft, LifeBuoy, HandHeart, HeartPulse, Home, LogIn, MapPin, Menu, ShieldCheck, Sparkles, Users, Watch, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { InstallButton } from "@/components/pwa/install-button"
+import { isEmergencyPrimary } from "@/lib/emergency-routes"
 import { cn } from "@/lib/utils"
 
 const links = [
@@ -65,7 +66,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
       <nav className="desktop-nav" aria-label="Primary navigation">{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined} className={cn("nav-link", isActive(href) && "is-active")}><Icon aria-hidden="true" />{label}</Link>)}</nav>
       <div className="header-actions"><InstallButton /><button className="menu-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-nav" aria-label="Toggle navigation">{open ? <X /> : <Menu />}</button></div>
     </div><nav id="mobile-nav" className={cn("mobile-nav", open && "is-open")} aria-label="Mobile navigation" aria-hidden={!open}>{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} tabIndex={open ? 0 : -1} aria-current={isActive(href) ? "page" : undefined} onClick={() => setOpen(false)} className={cn("nav-link", isActive(href) && "is-active")}><Icon aria-hidden="true" />{label}</Link>)}</nav></header>
-    <div className="mx-auto w-full max-w-7xl px-4 pt-4">
+    {!isEmergencyPrimary(pathname) && <div className="mx-auto w-full max-w-7xl px-4 pt-4" data-funding-banner="" data-testid="funding-banner">
       <div className="grid min-w-0 gap-3 rounded-2xl border border-primary/30 bg-background/85 p-3 shadow-2xl backdrop-blur md:grid-cols-2 [&>a]:min-w-0 [&>a]:text-base sm:[&>a]:text-2xl">
         <a href="https://narcoguard.app" className="flex min-h-20 items-center justify-center rounded-xl border border-primary/40 bg-primary/10 px-4 text-center font-orbitron text-2xl font-black tracking-wide text-primary hover:bg-primary/20 sm:text-3xl">
           NARCOGUARD.APP
@@ -74,7 +75,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
           SUPPORT ON GOFUNDME
         </a>
       </div>
-    </div>
+    </div>}
     <main id="main-content" className="site-main">
       {pathname !== "/" && <BackButton />}
       {children}

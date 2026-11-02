@@ -11,7 +11,7 @@ export const FALLBACK_COPY = {
 
 export function EmergencyFallback({ title, message, onRetry }: { title: string; message: string; onRetry?: () => void }) {
   return (
-    <main className="mx-auto max-w-2xl space-y-6 p-4 sm:p-8" data-testid="emergency-fallback">
+    <main className="mx-auto max-w-2xl space-y-6 p-4 sm:p-8" data-testid="emergency-fallback" data-emergency-primary="">
       <a href="tel:911" className="block min-h-14 rounded-2xl bg-red-600 px-6 py-4 text-center text-3xl font-black text-white" data-testid="fallback-911">
         Call 911
       </a>

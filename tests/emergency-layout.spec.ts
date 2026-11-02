@@ -34,3 +34,28 @@ test("emergency screens stay usable with text at 200% (#301)", async ({ page }) 
   })
   for (const screen of SCREENS) await expectUsable(page, screen.path, screen.callTestId, "200% text")
 })
+
+// #314: nothing sits between a bystander and Call 911. The funding banner is gone on these
+// pages (including at 200% text) and still shows on ordinary pages.
+const NO_BANNER = ["/ar", "/911-script", "/bystander", "/rescue-breathing", "/aftercare", "/this-page-does-not-exist"]
+const WITH_BANNER = ["/", "/help"]
+
+test("funding banner is hidden on emergency pages with text at 200% (#314)", async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1024 })
+  await page.addInitScript(() => {
+    document.addEventListener("DOMContentLoaded", () => {
+      const style = document.createElement("style")
+      style.textContent = "html { font-size: 200% !important; }"
+      document.head.append(style)
+    })
+  })
+  for (const path of NO_BANNER) {
+    await page.goto(path)
+    await expect(page.locator("#main-content"), `page loaded: ${path}`).toBeVisible()
+    await expect(page.getByTestId("funding-banner"), `banner on ${path}`).toBeHidden()
+  }
+  for (const path of WITH_BANNER) {
+    await page.goto(path)
+    await expect(page.getByTestId("funding-banner"), `banner on ${path}`).toBeVisible()
+  }
+})
