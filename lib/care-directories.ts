@@ -58,3 +58,43 @@ export const TREATMENT_DIRECTORIES: CareDirectoryGroup[] = [
     ],
   },
 ]
+
+// Syringe services, HIV and hepatitis C testing, and PrEP (issue #273). Sources: CDC testing
+// locator, HIV.gov locator and PrEP pages, NASEN's syringe services map. Free self-test kits are
+// mailed by Together TakeMeHome, a CDC-funded program. Hepatitis C cure: CDC, "Hepatitis C basics".
+export const PREVENTION_FACTS: string[] = [
+  "Syringe services programs give new supplies and often free testing, naloxone, wound care and treatment referrals, with no judgment.",
+  "Using new needles and your own supplies every time lowers the risk of HIV, hepatitis C and skin infections.",
+  "Hepatitis C can be cured with medicine. Testing is the first step.",
+  "PrEP is a medicine that lowers the chance of getting HIV, including from sharing injection equipment.",
+]
+
+export const PREVENTION_DIRECTORIES: CareDirectoryGroup[] = [
+  {
+    id: "syringe-services",
+    title: "Syringe services",
+    intro: "Find a program near you. Many also mail supplies.",
+    links: [
+      { title: "NASEN syringe services map", url: "https://www.nasen.org/map/", what: "Directory of syringe services programs across the U.S." },
+    ],
+  },
+  {
+    id: "testing",
+    title: "HIV and hepatitis C testing",
+    intro: "Testing is often free. Self-tests can be mailed to you.",
+    links: [
+      { title: "CDC testing locator", url: "https://gettested.cdc.gov/", what: "Find free, fast and confidential HIV, hepatitis and STI testing." },
+      { title: "HIV.gov service locator", url: "https://locator.hiv.gov/", what: "HIV testing, PrEP and care near an address." },
+      { title: "Together TakeMeHome", url: "https://together.takemehome.org/", what: "Free HIV self-test kits by mail." },
+    ],
+  },
+  {
+    id: "prep",
+    title: "PrEP",
+    intro: "Ask a clinic or health center. Programs can help with cost.",
+    links: [
+      { title: "PrEP locator", url: "https://preplocator.org/", what: "Find PrEP providers near you." },
+      { title: "HIV.gov: PrEP", url: "https://www.hiv.gov/hiv-basics/hiv-prevention/using-hiv-medication-to-reduce-risk/pre-exposure-prophylaxis", what: "What PrEP is, who it is for, and how to pay for it." },
+    ],
+  },
+]
