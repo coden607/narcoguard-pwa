@@ -42,6 +42,7 @@ export default function SaferUsePage() {
         <p className="text-xs text-muted-foreground">
           Run by <a className="underline" href={NEVER_USE_ALONE.source} target="_blank" rel="noopener noreferrer">neverusealone.com</a>, not NarcoGuard. NarcoGuard does not connect the call or share anything with them.
         </p>
+        <p className="text-sm">No one to call? Set the <Link className="text-primary underline" href="/check-on-me">check-on-me timer</Link>. If you don&apos;t answer it, your phone sounds a loud alarm for anyone nearby.</p>
       </section>
 
       <section aria-labelledby="lines" className="space-y-3">
@@ -70,6 +71,16 @@ export default function SaferUsePage() {
           {TEST_STRIP_FACTS.map((fact) => <li key={fact}>{fact}</li>)}
         </ul>
         <LinkList links={TEST_STRIP_SOURCES} testId="test-strip-sources" />
+        <p className="text-sm">Want to keep track? Use the private <Link className="text-primary underline" href="/test-strips">test-strip log</Link>. It stays on this phone.</p>
+      </section>
+
+      <section aria-labelledby="more-care" className="space-y-3" data-testid="more-care">
+        <h2 id="more-care" className="text-2xl font-semibold">More care</h2>
+        <ul className="list-disc space-y-2 pl-5 text-sm">
+          <li><Link className="text-primary underline" href="/treatment">Start buprenorphine or methadone</Link>, including by video visit</li>
+          <li><Link className="text-primary underline" href="/prevention">Syringe services, HIV and hepatitis C testing, and PrEP</Link></li>
+          <li><Link className="text-primary underline" href="/debrief">After you helped someone</Link>: a short check-in and support lines</li>
+        </ul>
       </section>
 
       <section aria-labelledby="meetings" className="space-y-3">
