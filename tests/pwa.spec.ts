@@ -5,6 +5,7 @@ import "./planning.spec"
 import "./offline-pending.spec"
 import "./resource-discovery.spec"
 import "./resource-governance.spec"
+import "./emergency-offline.spec"
 
 test.describe("PWA production flow", () => {
   test("serves a valid install manifest and icons", async ({ page, request }) => {
