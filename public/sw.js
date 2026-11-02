@@ -1,4 +1,4 @@
-const CACHE_NAME = "narcoguard-shell-v15";
+const CACHE_NAME = "narcoguard-shell-v16";
 // Offline map tiles (Feature 60) live in a separate cache that the page fills only after the
 // person opts in. The worker never fetches or intercepts any third-party tile request; it just
 // keeps that cache when old shell caches are cleaned up.
@@ -14,6 +14,11 @@ const APP_SHELL = [
   "/ar",
   "/check-on-me",
   "/naloxone-card",
+  "/aftercare",
+  "/rescue-breathing",
+  "/wound-care",
+  "/bystander",
+  "/bystander-qr.svg",
   "/manifest.webmanifest",
   "/icon-192.png?v=9",
   "/icon-512.png?v=9",

@@ -58,7 +58,7 @@ export default function SaferUsePage() {
             </li>
           ))}
         </ul>
-        <p className="text-sm">Someone won&apos;t wake up? Follow the <Link className="text-primary underline" href="/ar">step-by-step overdose guide</Link>.</p>
+        <p className="text-sm">Someone won&apos;t wake up? Follow the <Link className="text-primary underline" href="/ar">step-by-step overdose guide</Link>, pace <Link className="text-primary underline" href="/rescue-breathing">rescue breaths</Link>, or hand a bystander the <Link className="text-primary underline" href="/bystander">bystander steps</Link>. After naloxone: <Link className="text-primary underline" href="/aftercare">what to do next</Link>.</p>
       </section>
 
       <section aria-labelledby="naloxone" className="space-y-3">
@@ -81,6 +81,7 @@ export default function SaferUsePage() {
         <h2 id="more-care" className="text-2xl font-semibold">More care</h2>
         <ul className="list-disc space-y-2 pl-5 text-sm">
           <li><Link className="text-primary underline" href="/treatment">Start buprenorphine or methadone</Link>, including by video visit</li>
+          <li><Link className="text-primary underline" href="/wound-care">Xylazine (tranq) wound care</Link> and where to get it treated</li>
           <li><Link className="text-primary underline" href="/prevention">Syringe services, HIV and hepatitis C testing, and PrEP</Link></li>
           <li><Link className="text-primary underline" href="/debrief">After you helped someone</Link>: a short check-in and support lines</li>
         </ul>
