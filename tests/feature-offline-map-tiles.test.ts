@@ -129,7 +129,7 @@ test("warming sends no cookies or referrer, is capped and idempotent, and cleari
 test("service worker, offline page and UI never contact a provider before opt-in", () => {
   const worker = readFileSync("public/sw.js", "utf8")
   assert.match(worker, /key !== CACHE_NAME && key !== TILE_CACHE_NAME/)
-  assert.match(worker, /narcoguard-shell-v15/)
+  assert.match(worker, /narcoguard-shell-v16/)
   assert.doesNotMatch(worker, /openstreetmap|serveTile/)
   const offline = readFileSync("public/offline.html", "utf8")
   assert.match(offline, /id="offline-map-section"[^>]*hidden/)
