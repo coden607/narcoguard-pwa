@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import Link from "next/link"
+import { ToleranceCard } from "@/components/harm-reduction/tolerance-card"
 import {
   BENEFIT_LINKS, CRISIS_LINES, MEETING_FINDERS, NALOXONE_SOURCES, NEVER_USE_ALONE, SAFER_USE_REVIEWED,
   TEST_STRIP_FACTS, TEST_STRIP_SOURCES, type HelpLink,
@@ -44,6 +45,8 @@ export default function SaferUsePage() {
         </p>
         <p className="text-sm">No one to call? Set the <Link className="text-primary underline" href="/check-on-me">check-on-me timer</Link>. If you don&apos;t answer it, your phone sounds a loud alarm for anyone nearby.</p>
       </section>
+
+      <ToleranceCard />
 
       <section aria-labelledby="lines" className="space-y-3">
         <h2 id="lines" className="text-2xl font-semibold">Call or text now</h2>
