@@ -7,6 +7,7 @@ export const EMERGENCY_OFFLINE_PATHS = [
   "/ar",
   "/bystander",
   "/bystander-qr.svg",
+  "/911-script",
   "/rescue-breathing",
   "/aftercare",
   "/check-on-me",

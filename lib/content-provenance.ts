@@ -3,6 +3,7 @@
 // source or a bad date, and warns when a review is more than a year old. Each entry reuses the
 // sources and review date the page already shows, so the two cannot drift apart.
 import { AFTERCARE_REVIEWED, AFTERCARE_SOURCES } from "@/lib/aftercare"
+import { CALL_SCRIPT_REVIEWED, CALL_SCRIPT_SOURCES } from "@/lib/call-script"
 import { CARE_DIRECTORIES_REVIEWED, PREVENTION_DIRECTORIES, TREATMENT_DIRECTORIES } from "@/lib/care-directories"
 import { PHARMACY_CARD_REVIEWED, PHARMACY_CARD_SOURCES } from "@/lib/pharmacy-card"
 import { RESCUE_BREATHING_REVIEWED, RESCUE_BREATHING_SOURCES } from "@/lib/rescue-breathing"
@@ -31,6 +32,7 @@ const directoryLinks = (groups: typeof TREATMENT_DIRECTORIES) => groups.flatMap(
 export const CONTENT_PROVENANCE: Record<string, Provenance> = {
   "/ar": { reviewed: GUIDES_REVIEWED, sources: GUIDE_SOURCES },
   "/bystander": { reviewed: "2026-11-02", sources: OVERDOSE_STEP_SOURCES },
+  "/911-script": { reviewed: CALL_SCRIPT_REVIEWED, sources: CALL_SCRIPT_SOURCES },
   "/aftercare": { reviewed: AFTERCARE_REVIEWED, sources: AFTERCARE_SOURCES },
   "/rescue-breathing": { reviewed: RESCUE_BREATHING_REVIEWED, sources: RESCUE_BREATHING_SOURCES },
   "/wound-care": { reviewed: WOUND_CARE_REVIEWED, sources: WOUND_CARE_SOURCES },

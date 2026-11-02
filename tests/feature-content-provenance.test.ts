@@ -4,7 +4,7 @@ import { test } from "node:test"
 import { CONTENT_PROVENANCE, REVIEW_DUE_MONTHS, monthsSince } from "../lib/content-provenance"
 
 // Pages that show clinical or safety guidance. A new one must be added here and to the registry.
-const SAFETY_PAGES = ["/ar", "/bystander", "/aftercare", "/rescue-breathing", "/wound-care", "/naloxone-card", "/debrief", "/safer-use", "/treatment", "/prevention"]
+const SAFETY_PAGES = ["/ar", "/bystander", "/911-script", "/aftercare", "/rescue-breathing", "/wound-care", "/naloxone-card", "/debrief", "/safer-use", "/treatment", "/prevention"]
 
 test("every safety page has a provenance entry for a page that exists", () => {
   for (const route of SAFETY_PAGES) {
