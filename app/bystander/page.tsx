@@ -14,8 +14,8 @@ export const metadata: Metadata = {
 export default function BystanderPage() {
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-4 sm:p-8">
-      <h1 className="text-4xl font-black">Someone may be overdosing. Here&apos;s how to help.</h1>
       <a href="tel:911" className="block rounded-2xl bg-red-600 px-6 py-5 text-center text-3xl font-black text-white" data-testid="bystander-911">Call 911</a>
+      <h1 className="text-4xl font-black">Someone may be overdosing. Here&apos;s how to help.</h1>
       <ol className="list-decimal space-y-4 pl-7 text-2xl font-semibold leading-snug" data-testid="bystander-steps">
         {OVERDOSE_STEPS.map((step) => <li key={step}>{step}</li>)}
       </ol>
