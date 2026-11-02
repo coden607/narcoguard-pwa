@@ -490,3 +490,5 @@ pre,code,kbd,samp { overflow-wrap: anywhere; word-break: break-word; }
   :where(button,[role="button"],[role="tab"],input,select) { min-height: 44px; }
   :where(.nav-link,.footer-links a) { min-height: 44px; display: inline-flex; align-items: center; }
 }
+/* Error and not-found screens put Call 911 first and can appear at any URL, so the funding banner hides itself there (#314). */
+.site-shell:has([data-emergency-primary]) [data-funding-banner] { display: none; }
