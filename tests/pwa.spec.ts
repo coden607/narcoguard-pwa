@@ -200,3 +200,10 @@ test('watch retry cleans up a renderer that failed after attaching its canvas', 
   await expect(viewer.locator('canvas')).toHaveCount(1)
   await expect(viewer.getByRole('slider', { name: 'Exploded view' })).toBeEnabled()
 })
+
+test("an unknown page still offers Call 911 and the overdose steps (#296)", async ({ page }) => {
+  const response = await page.goto("/this-page-does-not-exist")
+  expect(response?.status()).toBe(404)
+  await expect(page.getByTestId("fallback-911")).toHaveAttribute("href", "tel:911")
+  await expect(page.getByText("Give naloxone (Narcan)", { exact: false }).first()).toBeVisible()
+})
