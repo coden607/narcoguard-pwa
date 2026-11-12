@@ -1,9 +1,11 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { LifeSupportTools } from "@/components/guardian/life-support-tools"
+import { notifyWakeTime } from "@/lib/wake-notification"
+import { browserStorage, tryStorageWrite } from "@/lib/browser-storage"
 import {
   buildMorningBrief,
   clearDailyLifeState,
@@ -41,9 +43,13 @@ export default function DailyLifePage() {
   const [journalText, setJournalText] = useState("")
   const [weather, setWeather] = useState("")
   const [weatherStatus, setWeatherStatus] = useState("")
+  const [reminderStatus, setReminderStatus] = useState("")
+  const [storageStatus, setStorageStatus] = useState("")
+  const lastWakeReminder = useRef("")
+  const wakeReminderInFlight = useRef(false)
 
   useEffect(() => {
-    const load = window.setTimeout(() => setState(readDailyLifeState(window.localStorage)), 0)
+    const load = window.setTimeout(() => setState(readDailyLifeState(browserStorage())), 0)
     const timer = window.setInterval(() => setNow(timeString()), 60_000)
     return () => { window.clearTimeout(load); window.clearInterval(timer) }
   }, [])
@@ -53,9 +59,13 @@ export default function DailyLifePage() {
     const target = state.wakeTime
     const maybeNotify = () => {
       if (timeString() !== target || document.visibilityState !== "visible") return
-      if ("Notification" in window && Notification.permission === "granted") {
-        new Notification("NarcoGuard wake reminder", { body: "Your chosen wake time is here. Open Daily Life for your morning brief." })
-      }
+      const key = `${todayString()}:${target}`
+      if (lastWakeReminder.current === key || wakeReminderInFlight.current) return
+      wakeReminderInFlight.current = true
+      void notifyWakeTime().then((shown) => {
+        if (shown) lastWakeReminder.current = key
+        setReminderStatus(shown ? "Your wake reminder was shown." : "Your chosen wake time is here. A browser notification could not be shown.")
+      }).finally(() => { wakeReminderInFlight.current = false })
     }
     maybeNotify()
     const timer = window.setInterval(maybeNotify, 30_000)
@@ -63,7 +73,8 @@ export default function DailyLifePage() {
   }, [state?.enabled, state?.modules.wakeReminder, state?.wakeTime])
 
   const update = (next: DailyLifeState) => {
-    saveDailyLifeState(window.localStorage, next)
+    const saved = tryStorageWrite(() => saveDailyLifeState(browserStorage(), next))
+    setStorageStatus(saved ? "" : "Your browser could not save Daily Life. Changes work for this visit only and may be lost when you leave or reload this page.")
     setState(next)
   }
 
@@ -101,6 +112,7 @@ export default function DailyLifePage() {
     <h1 className="text-3xl font-bold">Daily Life</h1>
     <p>Build a routine around what you want: wake-up prompts, schedule, journals, morning briefing and evening reset. Everything here is optional and stored in this browser.</p>
     <Button onClick={() => update({ ...defaultDailyLifeState(), enabled: true })}>Enable Daily Life</Button>
+    {storageStatus && <p role="status">{storageStatus}</p>}
   </main>
 
   const enabledKinds = kinds.filter((kind) => journalKindEnabled(state, kind.id))
@@ -112,6 +124,7 @@ export default function DailyLifePage() {
       <h1 className="text-3xl font-bold">Daily Life</h1>
       <p className="text-muted-foreground">Choose only the tools you want. NarcoGuard does not assume a routine, mood, goal, or journal style for you.</p>
     </header>
+    {storageStatus && <p role="status" className="rounded-lg border p-3 text-sm">{storageStatus}</p>}
 
     <section className="border rounded-xl p-5 space-y-4">
       <h2 className="text-xl font-semibold">What I want available</h2>
@@ -135,10 +148,18 @@ export default function DailyLifePage() {
       </label>
       {state.modules.wakeReminder && <div className="space-y-2">
         <Button variant="outline" onClick={async () => {
-          if (!("Notification" in window)) return
-          await Notification.requestPermission()
-          setState(readDailyLifeState(window.localStorage))
+          if (!("Notification" in window)) {
+            setReminderStatus("Browser notifications are unavailable here. On iPhone, try the installed home-screen app.")
+            return
+          }
+          try {
+            const permission = await Notification.requestPermission()
+            setReminderStatus(permission === "granted" ? "Notifications allowed while Daily Life is active." : "Notifications are not allowed. Change this site's notification permission in your browser settings if you want them.")
+          } catch {
+            setReminderStatus("Notifications could not be enabled in this browser.")
+          }
         }}>Allow browser notifications</Button>
+        {reminderStatus && <p role="status" className="text-sm">{reminderStatus}</p>}
         <p className="text-xs text-muted-foreground">The current PWA reminder works while Daily Life is active and may use browser notifications. It is not represented as a guaranteed background alarm.</p>
       </div>}
       {state.modules.weather && <div>
@@ -219,7 +240,11 @@ export default function DailyLifePage() {
       <p className="text-sm">Daily Life data is stored in this browser. It is not automatically shared with Angel, Heroes, contacts, or analytics.</p>
       <Button variant="destructive" onClick={() => {
         if (window.confirm("Erase all Daily Life routines, schedule items, and journal entries from this browser?")) {
-          clearDailyLifeState(window.localStorage)
+          if (!tryStorageWrite(() => clearDailyLifeState(browserStorage()))) {
+            setStorageStatus("Your browser could not erase the saved Daily Life data. Nothing was erased. Try allowing site storage, or clear this site's data in your browser settings.")
+            return
+          }
+          setStorageStatus("")
           setState(defaultDailyLifeState())
         }
       }}>Erase Daily Life data</Button>

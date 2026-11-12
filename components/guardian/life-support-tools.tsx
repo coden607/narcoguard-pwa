@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
+import { browserStorage, tryStorageWrite } from "@/lib/browser-storage"
 import {
   clearLifeSupportState,
   defaultLifeSupportState,
@@ -16,13 +17,15 @@ export function LifeSupportTools() {
   const [constraint, setConstraint] = useState("")
   const [task, setTask] = useState("")
   const [doc, setDoc] = useState("")
+  const [storageStatus, setStorageStatus] = useState("")
 
   useEffect(() => {
-    const timer = window.setTimeout(() => setState(readLifeSupportState(window.localStorage)), 0)
+    const timer = window.setTimeout(() => setState(readLifeSupportState(browserStorage())), 0)
     return () => window.clearTimeout(timer)
   }, [])
   const update = (next: LifeSupportState) => {
-    saveLifeSupportState(window.localStorage, next)
+    const saved = tryStorageWrite(() => saveLifeSupportState(browserStorage(), next))
+    setStorageStatus(saved ? "" : "Your browser could not save support-tool changes. They work for this visit only and may be lost when you leave or reload this page.")
     setState(next)
   }
   const resetSteps = useMemo(() => state ? disruptionSteps(state) : [], [state])
@@ -32,9 +35,11 @@ export function LifeSupportTools() {
     <h2 className="text-xl font-semibold">Personal support tools</h2>
     <p className="text-sm text-muted-foreground">Optional continuity, transportation backup, document checklist, personal crisis plan, and disruption-recovery tools. Stored only in this browser.</p>
     <Button onClick={() => update({ ...defaultLifeSupportState(), enabled: true })}>Enable support tools</Button>
+    {storageStatus && <p role="status">{storageStatus}</p>}
   </section>
 
   return <section className="border rounded-xl p-5 space-y-6">
+    {storageStatus && <p role="status" className="text-sm">{storageStatus}</p>}
     <div>
       <h2 className="text-xl font-semibold">Personal support tools</h2>
       <p className="text-sm text-muted-foreground">You set the goal and constraints. NarcoGuard organizes them; it does not score or diagnose you.</p>
@@ -91,7 +96,7 @@ export function LifeSupportTools() {
     </div>
 
     <div className="pt-2 border-t">
-      <Button variant="destructive" onClick={()=>{if(window.confirm("Erase all personal support-tool data from this browser?")){clearLifeSupportState(window.localStorage);setState(defaultLifeSupportState())}}}>Erase support-tool data</Button>
+      <Button variant="destructive" onClick={()=>{if(window.confirm("Erase all personal support-tool data from this browser?")){if(!tryStorageWrite(()=>clearLifeSupportState(browserStorage()))){setStorageStatus("Your browser could not erase support-tool data. Nothing was erased. Clear this site's data in your browser settings if needed.");return}setStorageStatus("");setState(defaultLifeSupportState())}}}>Erase support-tool data</Button>
     </div>
   </section>
 }

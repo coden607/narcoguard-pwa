@@ -35,7 +35,12 @@ function localDate() {
 
 export function ActivityFeed() {
   useSyncExternalStore(subscribe, snapshot, serverSnapshot)
-  const state = typeof window === "undefined" ? null : readGuardianState(window.localStorage)
+  let state = null
+  try {
+    state = typeof window === "undefined" ? null : readGuardianState(window.localStorage)
+  } catch {
+    // Accessing localStorage itself may throw when the browser blocks site data.
+  }
 
   const items: { icon: typeof CheckCircle; text: string; detail: string }[] = []
   if (state?.enabled) {

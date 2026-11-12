@@ -14,6 +14,7 @@ import { forgetPlace, PLACE_FORGOTTEN_EVENT, REMEMBER_PLACE_KEY, SAVED_PLACE_KEY
 import { clearDirectoryCache, fetchDirectory, isLowBandwidthActive, LOW_BANDWIDTH_CACHE, LOW_BANDWIDTH_CHANGED_EVENT, saveLowBandwidthChoice, type DirectoryCaches } from "@/lib/low-bandwidth"
 import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
 import { activateTravel, deactivateTravel, effectiveZip, readTravel, travelBanner, type TravelState } from "@/lib/travel-mode"
+import { browserStorage } from "@/lib/browser-storage"
 
 interface KindLookup {
   status: "ok" | "unavailable"
@@ -48,7 +49,7 @@ type Origin = { lat: number; lon: number } | { zip: string }
 
 type ConnectionInfo = { saveData?: boolean }
 const connection = () => (typeof navigator !== "undefined" ? (navigator as Navigator & { connection?: ConnectionInfo }).connection : undefined)
-const lowDataActive = () => isLowBandwidthActive(window.localStorage, connection())
+const lowDataActive = () => isLowBandwidthActive(browserStorage(), connection())
 /** The on-device cache used in low data mode; undefined where CacheStorage is unavailable. */
 const openDirectoryCache = async (): Promise<DirectoryCaches | undefined> => {
   if (!("caches" in window)) return undefined
@@ -160,7 +161,7 @@ export function NeedsFinder() {
       setBusy(false)
     }
     const storageChanged = (event: StorageEvent) => {
-      if (event.storageArea !== window.localStorage) return
+      if (event.storageArea !== browserStorage()) return
       if (event.key === null || (event.key === SAVED_PLACE_KEY && event.newValue === null) || (event.key === REMEMBER_PLACE_KEY && event.newValue === "off")) revoke()
     }
     window.addEventListener(PLACE_FORGOTTEN_EVENT, revoke)
@@ -174,8 +175,8 @@ export function NeedsFinder() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      setFeedback(readResourceFeedback(window.localStorage))
-      setTravelState(readTravel(window.localStorage))
+      setFeedback(readResourceFeedback(browserStorage()))
+      setTravelState(readTravel(browserStorage()))
       setLowData(lowDataActive())
     }, 0)
     const followToggle = () => setLowData(lowDataActive())
@@ -221,7 +222,7 @@ export function NeedsFinder() {
   const lookup = async (exact: Origin) => {
     // Rounded to about 1 km on the phone, before it is saved or sent (the server rounds again).
     let origin = roundPlace(exact)
-    const travel = readTravel(window.localStorage)
+    const travel = readTravel(browserStorage())
     if (travel) {
       const active = effectiveZip(travel, new Date().toISOString())
       if (active.inTravel && active.zip) origin = { zip: active.zip }
@@ -230,7 +231,7 @@ export function NeedsFinder() {
     setBusy(true)
     setNotice(undefined)
     // Remembered on this phone only (coordinates rounded to about 1 km), unless the person turned that off in Angel.
-    if (readRememberChoice(window.localStorage)) savePlace(window.localStorage, origin)
+    if (readRememberChoice(browserStorage())) savePlace(browserStorage(), origin)
     const params = new URLSearchParams("zip" in origin ? { zip: origin.zip } : { lat: String(origin.lat), lon: String(origin.lon) })
     try {
       if (lowDataActive()) {
@@ -272,7 +273,7 @@ export function NeedsFinder() {
 
   // A place remembered on this phone searches straight away, so help shows without asking again.
   useEffect(() => {
-    const saved = readRememberChoice(window.localStorage) ? readSavedPlace(window.localStorage) : null
+    const saved = readRememberChoice(browserStorage()) ? readSavedPlace(browserStorage()) : null
     if (!saved) return
     /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from device storage */
     setSavedPlace(saved)
@@ -281,22 +282,22 @@ export function NeedsFinder() {
     /* eslint-enable react-hooks/set-state-in-effect */
     void lookup(saved)
   }, [])
-  const forgetSavedPlace = () => { forgetPlace(window.localStorage); deactivateTravel(window.localStorage); setTravelState(null); setSavedPlace(null); setZip("") }
+  const forgetSavedPlace = () => { forgetPlace(browserStorage()); deactivateTravel(browserStorage()); setTravelState(null); setSavedPlace(null); setZip("") }
   const startTravel = () => {
     if (!/^\d{5}$/.test(zip) || !savedPlace || !("zip" in savedPlace) || savedPlace.zip === zip) {
       setNotice("Save a different five-digit home ZIP first, then enter the destination ZIP.")
       return
     }
-    const result = activateTravel(window.localStorage, { destinationZip: zip, homeZip: savedPlace.zip })
+    const result = activateTravel(browserStorage(), { destinationZip: zip, homeZip: savedPlace.zip })
     if (!result.ok) { setNotice(result.error); return }
     setTravelState(result.state)
     setNotice(`Travel mode is on for ${result.state.destinationZip} until it expires automatically.`)
     void lookup({ zip: result.state.destinationZip })
   }
-  const stopTravel = () => { deactivateTravel(window.localStorage); setTravelState(null); setZip(savedPlace && "zip" in savedPlace ? savedPlace.zip : ""); setNotice("Travel mode is off. Searches use your normal saved place again.") }
+  const stopTravel = () => { deactivateTravel(browserStorage()); setTravelState(null); setZip(savedPlace && "zip" in savedPlace ? savedPlace.zip : ""); setNotice("Travel mode is off. Searches use your normal saved place again.") }
   const toggleLowData = () => {
     const next = !lowData
-    saveLowBandwidthChoice(window.localStorage, next)
+    saveLowBandwidthChoice(browserStorage(), next)
     setLowData(next)
     setNotice(next
       ? "Low data mode is on: listings stay text-only, searches use your on-device cache first, and fresh web leads are skipped."

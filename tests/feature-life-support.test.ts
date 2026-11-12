@@ -1,6 +1,13 @@
 import { strict as assert } from "node:assert"
 import { test } from "node:test"
-import { defaultLifeSupportState, disruptionSteps, readLifeSupportState } from "../lib/life-support"
+import { clearLifeSupportState, defaultLifeSupportState, disruptionSteps, readLifeSupportState, saveLifeSupportState } from "../lib/life-support"
+import { tryStorageWrite } from "../lib/browser-storage"
+
+test("support tools report unavailable persistence and deletion without throwing", () => {
+  const blocked = { getItem() { throw new Error("blocked") }, setItem() { throw new Error("blocked") }, removeItem() { throw new Error("blocked") } }
+  assert.equal(tryStorageWrite(() => saveLifeSupportState(blocked, defaultLifeSupportState())), false)
+  assert.equal(tryStorageWrite(() => clearLifeSupportState(blocked)), false)
+})
 
 class MemoryStorage {
   value: string | null = null
