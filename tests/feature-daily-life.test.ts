@@ -1,6 +1,7 @@
 import { strict as assert } from "node:assert"
 import { test } from "node:test"
-import { buildMorningBrief, defaultDailyLifeState, readDailyLifeState } from "../lib/daily-life"
+import { buildMorningBrief, clearDailyLifeState, defaultDailyLifeState, readDailyLifeState, saveDailyLifeState } from "../lib/daily-life"
+import { tryStorageWrite } from "../lib/browser-storage"
 
 class MemoryStorage {
   value: string | null = null
@@ -8,6 +9,16 @@ class MemoryStorage {
   setItem(_key:string,value:string) { this.value=value }
   removeItem() { this.value=null }
 }
+
+test("Daily Life reports blocked writes and erasure without throwing or claiming persistence", () => {
+  const blocked = { getItem() { throw new Error("blocked") }, setItem() { throw new Error("blocked") }, removeItem() { throw new Error("blocked") } }
+  assert.equal(tryStorageWrite(() => saveDailyLifeState(blocked, defaultDailyLifeState())), false)
+  assert.equal(tryStorageWrite(() => clearDailyLifeState(blocked)), false)
+  const storage = new MemoryStorage()
+  assert.equal(tryStorageWrite(() => saveDailyLifeState(storage, { ...defaultDailyLifeState(), enabled: true })), true)
+  assert.equal(readDailyLifeState(storage).enabled, true)
+  assert.equal(tryStorageWrite(() => clearDailyLifeState(storage)), true)
+})
 
 test("Daily Life is opt-in and journals are off by default", () => {
   const state=defaultDailyLifeState()

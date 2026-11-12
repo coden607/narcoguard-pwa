@@ -74,7 +74,7 @@ test("clearing the chat and forgetting the place are undoable; restore data neve
   assert.match(chat, /recordUndoable\("forget-place"/)
   assert.match(chat, /<AngelUndo actions=\{actions\} onUndo=\{undoAction\} onDismiss=\{dismissActions\} \/>/)
   // Restoring a location writes it back only when the person still has "remember" on.
-  assert.match(chat, /if \(forgottenLocation && readRememberChoice\(window\.localStorage\)\) savePlace\(window\.localStorage, forgottenLocation\)/)
+  assert.match(chat, /if \(forgottenLocation && readRememberChoice\(browserStorage\(\)\)\) savePlace\(browserStorage\(\), forgottenLocation\)/)
   // Undo restores both the ZIP and the location, and drops a pending request built for a different area.
   const forget = chat.slice(chat.indexOf("const forgetLocation"), chat.indexOf("const toggleRemember"))
   assert.match(forget, /recordUndoable\("forget-place", \(\) => \{\s*\/\/[^\n]*\n\s*locationGenerationRef\.current\+\+\s*\n\s*invalidatePendingContext\(\)/)

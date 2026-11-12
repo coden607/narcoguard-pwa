@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { EmergencyContacts } from "@/components/contacts/emergency-contacts"
+import { SavedSetupPanel } from "@/components/contacts/saved-setup-details"
 
 export const metadata: Metadata = {
   title: "Emergency contacts | NarcoGuard",
@@ -12,8 +13,9 @@ export default function ContactsPage() {
     <main className="max-w-3xl mx-auto p-4 sm:p-8 space-y-6">
       <header className="space-y-2">
         <h1 className="text-3xl font-bold">Emergency contacts</h1>
-        <p className="text-muted-foreground">Pick up to five people who agree to get a text when you ask for help.</p>
+        <p className="text-muted-foreground">Call someone you saved in setup, find your naloxone, or separately invite people to receive texts when you ask for help.</p>
       </header>
+      <SavedSetupPanel />
       <EmergencyContacts />
     </main>
   )
