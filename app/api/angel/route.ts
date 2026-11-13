@@ -9,7 +9,7 @@ import {
 } from "@/lib/angel-ai"
 import { resourcesForModel, toAngelResources, type AngelResources } from "@/lib/angel-resources"
 import { orderByMaslow } from "@/lib/need-intent"
-import { attemptTimeoutMs, availableAttempts, endpointFor, modelAttempts, noteRefusal, resolveAngelProvider, shouldTryFallback, type AngelModelChoice, type AngelProvider } from "@/lib/angel-provider"
+import { attemptTimeoutMs, availableAttempts, endpointFor, modelAttempts, noteRefusal, resolveAngelProvider, angelPrivacyIsStrict, shouldTryFallback, type AngelModelChoice, type AngelProvider } from "@/lib/angel-provider"
 import { routeAngelTurn } from "@/lib/angel-routing"
 import { routeLifeCompassTurn } from "@/lib/life-compass"
 import { lookupKinds } from "@/lib/resource-lookup"
@@ -121,7 +121,7 @@ export async function GET(request: Request) {
     }
   }
   const routes = provider ? [...new Set(modelAttempts(provider, "quick").map((choice) => endpointFor(provider, choice).name))] : []
-  return NextResponse.json({ available: Boolean(provider), provider: provider?.name ?? null, privacy: provider?.privacy ?? null, strictPrivacy: process.env.ANGEL_PRIVACY_MODE === "strict", routes }, { headers: noStore })
+  return NextResponse.json({ available: Boolean(provider), provider: provider?.name ?? null, privacy: provider?.privacy ?? null, strictPrivacy: angelPrivacyIsStrict(process.env), routes }, { headers: noStore })
 }
 
 export async function POST(request: Request) {

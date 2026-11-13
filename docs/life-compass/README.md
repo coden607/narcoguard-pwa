@@ -29,3 +29,9 @@ NarcoGuard remains MIT for its preexisting code and generic Angel adapters. `lib
 
 - National Institute of Mental Health, [Psychotherapies](https://www.nimh.nih.gov/health/topics/psychotherapies) (CBT and related methods; not AI efficacy).
 - NICE, [Shared decision making NG197](https://www.nice.org.uk/guidance/ng197/chapter/recommendations) (person-centered options and uncertainty; not individual outcome prediction).
+
+## Privacy-first provider policy
+
+Angel defaults to strict mode when `ANGEL_PRIVACY_MODE` is unset or invalid. Strict mode requests Vercel AI Gateway Zero Data Retention if available, falling back only to OpenRouter with `provider.data_collection: "deny"`. Moonshot/Kimi credentials are never used for Angel responses (including explicit standard mode); credentials remain unchanged because they may be used by other functionality. Standard compatibility mode must be explicitly configured and is unsuitable for sensitive user information. Cloud providers and API gateways may still process metadata; privacy settings are not guarantees of absolute confidentiality. Browser speech recognition may involve the browser vendor.
+
+The root NarcoGuard `LICENSE` now documents scope: earlier MIT rights remain MIT; only original Life Compass protocol files with explicit licensing headers are under PolyForm Noncommercial 1.0.0. This does not revoke MIT grants or restrict independently authored competing products. Counsel review remains necessary before release.
