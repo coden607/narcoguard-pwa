@@ -43,3 +43,10 @@ test("strict privacy mode refuses unverified-only configuration", () => {
     GROQ_API_KEY: "groq-key",
   }, null), null)
 })
+
+test("production-like configuration never routes to Kimi on default privacy settings", () => {
+  const provider = resolveAngelProvider({ MOONSHOT_API_KEY: "mk", OPENROUTER_API_KEY: "or" }, null)
+  assert.equal(provider?.name, "OpenRouter")
+  assert.equal(provider?.next, undefined)
+  assert.equal(modelAttempts(provider!, "reasoning").length, 1)
+})

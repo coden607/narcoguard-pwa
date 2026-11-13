@@ -1,9 +1,10 @@
 import { strict as assert } from "node:assert"
 import { test } from "node:test"
-import { attemptTimeoutMs, endpointFor, modelAttempts, resolveAngelProvider, shouldTryFallback } from "../lib/angel-provider"
+import { attemptTimeoutMs, endpointFor, modelAttempts, resolveAngelProvider, angelPrivacyIsStrict, shouldTryFallback } from "../lib/angel-provider"
 
 test("OpenRouter is the primary non-strict provider and requests no data collection", () => {
   const provider = resolveAngelProvider({
+    ANGEL_PRIVACY_MODE: "standard",
     OPENROUTER_API_KEY: "or",
     OPENROUTER_MODEL: "x/y",
     OPENAI_API_KEY: "oa",
@@ -20,7 +21,6 @@ test("OpenRouter is the primary non-strict provider and requests no data collect
     "OpenRouter",
     "OpenAI-compatible",
     "Groq",
-    "Kimi",
     "Vercel AI Gateway",
     "Vercel AI Gateway",
   ])
@@ -28,6 +28,7 @@ test("OpenRouter is the primary non-strict provider and requests no data collect
 
 test("a generic OpenAI-compatible key can target Gemini, Grok, or another compatible endpoint", () => {
   const provider = resolveAngelProvider({
+    ANGEL_PRIVACY_MODE: "standard",
     OPENAI_COMPAT_API_KEY: "compatible-key",
     OPENAI_COMPAT_BASE_URL: "https://llm.example.test/v1/",
     OPENAI_COMPAT_MODEL: "provider/model",
@@ -46,7 +47,7 @@ test("a generic OpenAI-compatible key can target Gemini, Grok, or another compat
 
 test("OPENAI_API_KEY uses the official OpenAI endpoint but still requires an explicit model", () => {
   assert.equal(resolveAngelProvider({ OPENAI_API_KEY: "oa" }, null), null)
-  const provider = resolveAngelProvider({ OPENAI_API_KEY: "oa", OPENAI_MODEL: "gpt-current" }, null)
+  const provider = resolveAngelProvider({ ANGEL_PRIVACY_MODE: "standard", OPENAI_API_KEY: "oa", OPENAI_MODEL: "gpt-current" }, null)
   assert.equal(provider?.name, "OpenAI-compatible")
   assert.equal(provider?.url, "https://api.openai.com/v1/chat/completions")
   assert.equal(provider?.model, "gpt-current")
@@ -59,7 +60,7 @@ test("a generic compatibility key is ignored without both a base URL and model",
 })
 
 test("Groq remains a direct fallback with its own model override", () => {
-  const provider = resolveAngelProvider({ GROQ_API_KEY: "k", GROQ_MODEL: "m" }, null)
+  const provider = resolveAngelProvider({ ANGEL_PRIVACY_MODE: "standard", GROQ_API_KEY: "k", GROQ_MODEL: "m" }, null)
   assert.equal(provider?.name, "Groq")
   assert.equal(provider?.token, "k")
   assert.equal(provider?.model, "m")
@@ -105,24 +106,34 @@ test("strict privacy rejects providers without an enforceable retention control"
   assert.equal(resolveAngelProvider({ ANGEL_PRIVACY_MODE: "strict", OPENAI_API_KEY: "oa", OPENAI_MODEL: "m", GROQ_API_KEY: "g", MOONSHOT_API_KEY: "mk" }, null), null)
 })
 
-test("Kimi remains available as a legacy fallback and uses max_tokens", () => {
-  const provider = resolveAngelProvider({ MOONSHOT_API_KEY: "mk" }, "oidc")!
-  assert.equal(provider.name, "Kimi")
-  assert.equal(provider.url, "https://api.moonshot.ai/v1/chat/completions")
-  assert.equal(provider.model, "kimi-k2-turbo-preview")
-  const attempts = modelAttempts(provider, "resource")
-  assert.deepEqual(attempts.map((a) => [a.endpoint?.name ?? provider.name, a.model]), [
-    ["Kimi", "kimi-k2-turbo-preview"],
-    ["Vercel AI Gateway", "anthropic/claude-sonnet-5"],
-    ["Vercel AI Gateway", "openai/gpt-oss-120b"],
-  ])
-  assert.equal(attempts[0].tokenParam, "max_tokens")
-  assert.equal(endpointFor(provider, attempts[0]).token, "mk")
-  assert.equal(endpointFor(provider, attempts[1]).token, "oidc")
+test("Moonshot credentials cannot enable Kimi, even in standard mode", () => {
+  assert.equal(resolveAngelProvider({ MOONSHOT_API_KEY: "mk" }, null), null)
+  assert.equal(resolveAngelProvider({ ANGEL_PRIVACY_MODE: "standard", MOONSHOT_API_KEY: "mk" }, null), null)
+  const gateway = resolveAngelProvider({ MOONSHOT_API_KEY: "mk" }, "oidc")
+  assert.equal(gateway?.name, "Vercel AI Gateway")
+  assert.equal(gateway?.next, undefined)
+})
+
+test("privacy is strict by default when no mode or an invalid mode is configured", () => {
+  assert.equal(angelPrivacyIsStrict({}), true)
+  assert.equal(angelPrivacyIsStrict({ ANGEL_PRIVACY_MODE: "strict" }), true)
+  assert.equal(angelPrivacyIsStrict({ ANGEL_PRIVACY_MODE: "STR1CT" }), true)
+  assert.equal(angelPrivacyIsStrict({ ANGEL_PRIVACY_MODE: "standard" }), false)
+  const provider = resolveAngelProvider({
+    OPENROUTER_API_KEY: "or",
+    GROQ_API_KEY: "g",
+    MOONSHOT_API_KEY: "mk",
+    OPENAI_API_KEY: "oa",
+    OPENAI_MODEL: "m",
+  }, null)
+  assert.equal(provider?.name, "OpenRouter")
+  assert.equal(provider?.next, undefined)
+  assert.deepEqual(provider?.extraBody, { provider: { data_collection: "deny" } })
 })
 
 test("fallback chain preserves every configured provider in priority order", () => {
   const provider = resolveAngelProvider({
+    ANGEL_PRIVACY_MODE: "standard",
     OPENAI_API_KEY: "oa",
     OPENAI_MODEL: "gpt-current",
     GROQ_API_KEY: "gk",
@@ -131,7 +142,6 @@ test("fallback chain preserves every configured provider in priority order", () 
   assert.deepEqual(modelAttempts(provider, "quick").map((a) => a.endpoint?.name ?? provider.name), [
     "OpenAI-compatible",
     "Groq",
-    "Kimi",
     "Vercel AI Gateway",
     "Vercel AI Gateway",
   ])
@@ -163,12 +173,12 @@ test("attempt timeouts share one deadline", () => {
 
 test("refused models cool down temporarily but the chain is never empty", async () => {
   const { availableAttempts, noteRefusal, COOLDOWN_MS } = await import("../lib/angel-provider")
-  const provider = resolveAngelProvider({ MOONSHOT_API_KEY: "mk-cooldown" }, "oidc-cooldown")!
+  const provider = resolveAngelProvider({ ANGEL_PRIVACY_MODE: "standard", OPENROUTER_API_KEY: "or", OPENROUTER_MODEL: "or-model", OPENAI_API_KEY: "oa", OPENAI_MODEL: "oa-model", GROQ_API_KEY: "groq", GROQ_MODEL: "groq-model" }, null)!
   const all = modelAttempts(provider, "quick")
   const now = 5_000_000
   noteRefusal(endpointFor(provider, all[0]), all[0].model, 429, now)
   noteRefusal(endpointFor(provider, all[1]), all[1].model, 403, now)
-  assert.deepEqual(availableAttempts(provider, all, now + 1).map((a) => a.model), ["openai/gpt-oss-120b"])
+  assert.deepEqual(availableAttempts(provider, all, now + 1).map((a) => a.model), ["groq-model"])
   noteRefusal(endpointFor(provider, all[2]), all[2].model, 429, now)
   assert.equal(availableAttempts(provider, all, now + 1).length, 1)
   assert.equal(availableAttempts(provider, all, now + COOLDOWN_MS + 1).length, 3)

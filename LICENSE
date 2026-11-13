@@ -1,3 +1,21 @@
+NarcoGuard licensing scope (November 13, 2026)
+
+Previously released NarcoGuard software remains available under its existing
+MIT license grants, reproduced below. Existing copies and third-party rights
+cannot be withdrawn retroactively.
+
+New independently authored Life Compass protocol files with an explicit
+LicenseRef-PolyForm-Noncommercial-1.0.0 header are governed by PolyForm
+Noncommercial 1.0.0 (full text: docs/life-compass/LICENSE).
+Unmarked NarcoGuard source and upstream contributions retain their applicable
+licenses. Do not assume any other file is re-licensed by this notice.
+
+The Founding Constitution is a governance proposal, not an operative license.
+Copyright cannot prevent independent implementations of an idea.
+Review this scoped arrangement with qualified IP counsel before publication.
+
+----------------- MIT License for legacy/unmarked files -------------------
+
 MIT License
 
 Copyright (c) 2026 Stephen Blanford

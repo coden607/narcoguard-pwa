@@ -1,8 +1,8 @@
 import { ANGEL_DEFAULT_MODEL, ANGEL_GATEWAY_DEFAULT_MODEL } from "@/lib/angel-ai"
 
-// Angel prefers OpenRouter, then any explicitly configured OpenAI-compatible endpoint.
-// Groq, Kimi, and Vercel AI Gateway remain fallbacks so existing deployments keep working.
-// In strict privacy mode only routes with enforceable retention controls are accepted.
+// Default to Vercel AI Gateway with ZDR enforcement, then OpenRouter with
+// provider data collection denied. Kimi is never an Angel fallback.
+// Standard compatibility mode requires an explicit environment opt-in.
 
 export interface AngelEndpoint {
   name: AngelProvider["name"]
@@ -128,22 +128,6 @@ function openAICompatibleProvider(env: Env): AngelProvider | null {
   }
 }
 
-function kimiProvider(env: Env): AngelProvider | null {
-  const token = env.MOONSHOT_API_KEY || env.KIMI_API_KEY
-  if (!token) return null
-  return {
-    name: "Kimi",
-    url: env.MOONSHOT_BASE_URL ? completionEndpoint(env.MOONSHOT_BASE_URL) : KIMI_DEFAULT_URL,
-    token,
-    model: env.KIMI_MODEL || KIMI_DEFAULT_MODEL,
-    privacy: "unverified",
-    fastModel: env.KIMI_FAST_MODEL,
-    reasoningModel: env.KIMI_REASONING_MODEL,
-    extraBody: {},
-    tokenParam: "max_tokens",
-  }
-}
-
 /** Links fallback services in order, skipping any that are not configured. */
 function chain(...providers: (AngelProvider | null)[]): AngelProvider | undefined {
   const present = providers.filter((p): p is AngelProvider => p !== null)
@@ -151,8 +135,13 @@ function chain(...providers: (AngelProvider | null)[]): AngelProvider | undefine
   return present[0]
 }
 
+/** Missing or unexpected privacy mode fails closed to strict. */
+export function angelPrivacyIsStrict(env: Env): boolean {
+  return env.ANGEL_PRIVACY_MODE !== "standard"
+}
+
 export function resolveAngelProvider(env: Env, oidcHeader: string | null): AngelProvider | null {
-  const strictPrivacy = env.ANGEL_PRIVACY_MODE === "strict"
+  const strictPrivacy = angelPrivacyIsStrict(env)
   const gateway = gatewayProvider(env, oidcHeader)
   const openRouter = openRouterProvider(env)
 
@@ -173,7 +162,6 @@ export function resolveAngelProvider(env: Env, oidcHeader: string | null): Angel
     openRouter,
     openAICompatibleProvider(env),
     groqProvider(env),
-    kimiProvider(env),
     gateway,
   ) ?? null
 }
