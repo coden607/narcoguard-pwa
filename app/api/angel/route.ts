@@ -11,6 +11,7 @@ import { resourcesForModel, toAngelResources, type AngelResources } from "@/lib/
 import { orderByMaslow } from "@/lib/need-intent"
 import { attemptTimeoutMs, availableAttempts, endpointFor, modelAttempts, noteRefusal, resolveAngelProvider, shouldTryFallback, type AngelModelChoice, type AngelProvider } from "@/lib/angel-provider"
 import { routeAngelTurn } from "@/lib/angel-routing"
+import { routeLifeCompassTurn } from "@/lib/life-compass"
 import { lookupKinds } from "@/lib/resource-lookup"
 
 // Conversations are relayed to the AI provider to generate a reply and are not stored or logged by NarcoGuard.
@@ -141,7 +142,8 @@ export async function POST(request: Request) {
   const latest = parsed.data.messages.at(-1)
   const notices = latest?.role === "user" ? safetyNotices(latest.content) : []
   const messages: ChatMessage[] = buildChatMessages(parsed.data)
-  const route = routeAngelTurn(latest?.content ?? "")
+  const baseRoute = routeAngelTurn(latest?.content ?? "")
+  const route = parsed.data.mode === "life-compass" ? routeLifeCompassTurn(baseRoute) : baseRoute
 
   try {
     // Overdose or crisis messages get the fastest possible reply: no directory searches before the 911/988 notice.

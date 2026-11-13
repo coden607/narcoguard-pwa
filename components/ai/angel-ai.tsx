@@ -55,6 +55,7 @@ interface ActivityState {
 const nowMs = () => Date.now()
 
 const SUGGESTIONS = ["Help me set a goal for this week", "Find food and a place to sleep near me", "How do I get naloxone?", "Show my logs this week"]
+const COMPASS_SUGGESTIONS = ["What should my next move be?", "Challenge my assumptions about a situation", "Compare my options over 30 and 90 days", "Help me weigh evidence and uncertainty"]
 
 export function angelProviderDisclosure(provider: string | null, privacy: string | null, strictPrivacy: boolean) {
   if (provider === "Kimi") return "Your messages are sent to Kimi (Moonshot AI) to write Angel's replies. NarcoGuard has not confirmed Moonshot's retention or training terms, so share only what you are comfortable with."
@@ -67,7 +68,8 @@ export function angelProviderDisclosure(provider: string | null, privacy: string
   return privacy === "zero-data-retention" ? "Angel is using a route configured for zero data retention." : "Angel uses a configured AI provider to write replies. Provider privacy terms apply."
 }
 
-export function AngelAI({ compact = false }: { compact?: boolean }) {
+export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean; mode?: "angel" | "life-compass" }) {
+  const isCompass = mode === "life-compass"
   const router = useRouter()
   const preferences = useUserPreferences()
   const voiceEnabled = preferences?.features.voiceActivation ?? true
@@ -432,6 +434,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         messages: next.filter((message) => !message.localOnly).slice(-20).map(({ role, content: body }) => ({ role, content: body.slice(0, 2000) })),
         ...(/^\d{5}$/.test(searchZip) ? { zip: searchZip } : locationRef.current ? { location: locationRef.current } : {}),
         ...(localContext ? { localContext } : {}),
+        ...(isCompass ? { mode: "life-compass" } : {}),
       }),
     }
     pendingRef.current = turn
@@ -486,8 +489,8 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
           <Sparkles className="w-6 h-6 text-white" />
         </div>
         <div>
-          <h3 className="text-lg font-semibold font-orbitron">ANGEL AI</h3>
-          <p className="text-xs text-muted-foreground">Your lifeline assistant, guardian and resource finder</p>
+          <h3 className="text-lg font-semibold font-orbitron">{isCompass ? "ANGEL AI · LIFE COMPASS" : "ANGEL AI"}</h3>
+          <p className="text-xs text-muted-foreground">{isCompass ? "Impartial reflection and evidence-led decisions" : "Your lifeline assistant, guardian and resource finder"}</p>
         </div>
       </div>
 
@@ -495,6 +498,12 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         Angel is not an emergency service and cannot see your vitals or contact anyone. If someone may be overdosing, call{" "}
         <a className="underline" href="tel:911">911</a>. In a crisis, call or text <a className="underline" href="tel:988">988</a>.
       </p>
+
+      {isCompass && (
+        <p className="text-sm text-muted-foreground" data-testid="life-compass-disclosure">
+          Life Compass helps compare explanations, practical options and possible outcomes. It does not diagnose or replace counseling, and it cannot verify live research or your personal facts. Replies are not automatically saved. Any optional local planning context is shared only if you enable it below.
+        </p>
+      )}
 
       {available === null && !availabilityFailed && <p className="text-sm text-muted-foreground" role="status">Checking whether Angel is available…</p>}
       {availabilityFailed && <div className="space-y-2 text-sm"><p role="status">Angel&apos;s availability could not be checked. Check your connection and try again.</p><Button type="button" variant="outline" disabled={!online} onClick={() => { setAvailabilityFailed(false); setAvailabilityAttempt((attempt) => attempt + 1) }}>Check Angel availability</Button></div>}
@@ -524,7 +533,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
         <>
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
             <div className="flex flex-wrap gap-2">
-              {SUGGESTIONS.map((suggestion) => (
+              {(isCompass ? COMPASS_SUGGESTIONS : SUGGESTIONS).map((suggestion) => (
                 <Button key={suggestion} type="button" size="sm" variant="outline" disabled={busy || !!pending} onClick={() => void send(suggestion).then((answer) => { if (answer && readAloud) void voice.speak(answer) })}>{suggestion}</Button>
               ))}
             </div>
@@ -618,7 +627,7 @@ export function AngelAI({ compact = false }: { compact?: boolean }) {
             aria-label="Conversation with Angel"
             data-testid="angel-chat-history"
           >
-            {messages.length === 0 && <p className="text-sm text-muted-foreground">Hi, I&apos;m Angel. I can help you find nearby help or plan a next step toward a goal. What would help right now?</p>}
+            {messages.length === 0 && <p className="text-sm text-muted-foreground">{isCompass ? "Tell me about a decision or situation you want to examine. I’ll distinguish facts from interpretations and challenge my own recommendation." : "Hi, I’m Angel. I can help you find nearby help or plan a next step toward a goal. What would help right now?"}</p>}
             {messages.map((message) => (
               <div key={message.id} className={message.role === "user" ? "flex justify-end" : "space-y-2"}>
                 {message.notices?.map((notice) => (
