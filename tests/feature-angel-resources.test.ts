@@ -144,8 +144,8 @@ test("lookupKinds says a sparse need is unavailable when the wider search fails,
 test("an overdose message is answered without directory searches so the 911 notice is not delayed", async () => {
   const { POST } = await import("../app/api/angel/route")
   const realFetch = globalThis.fetch
-  const saved = process.env.GROQ_API_KEY
-  process.env.GROQ_API_KEY = "test-key"
+  const saved = process.env.OPENROUTER_API_KEY
+  process.env.OPENROUTER_API_KEY = "test-key"
   const toolsOffered: boolean[] = []
   globalThis.fetch = (async (_input: string | URL, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body))
@@ -161,24 +161,24 @@ test("an overdose message is answered without directory searches so the 911 noti
     assert.equal(toolsOffered.at(-1), true, "ordinary needs still get searches")
   } finally {
     globalThis.fetch = realFetch
-    if (saved === undefined) delete process.env.GROQ_API_KEY
-    else process.env.GROQ_API_KEY = saved
+    if (saved === undefined) delete process.env.OPENROUTER_API_KEY
+    else process.env.OPENROUTER_API_KEY = saved
   }
 })
 
-test("on a gateway free tier, Angel answers with the open model instead of switching off", async () => {
+test("when ZDR gateway refuses, Angel only falls back to restricted OpenRouter", async () => {
   const { POST } = await import("../app/api/angel/route")
   const realFetch = globalThis.fetch
-  const saved = process.env.GROQ_API_KEY
-  const savedKimi = process.env.KIMI_API_KEY
-  const savedMoonshot = process.env.MOONSHOT_API_KEY
-  delete process.env.GROQ_API_KEY
-  delete process.env.KIMI_API_KEY
-  delete process.env.MOONSHOT_API_KEY
+  const saved = process.env.OPENROUTER_API_KEY
+  process.env.OPENROUTER_API_KEY = "test-router"
   const models: string[] = []
+  const endpoints: string[] = []
+  const policies: unknown[] = []
   globalThis.fetch = (async (_input: string | URL, init?: RequestInit) => {
     const body = JSON.parse(String(init?.body))
     models.push(body.model)
+    endpoints.push(String(_input))
+    policies.push(body.provider ?? body.providerOptions ?? null)
     if (body.model === "anthropic/claude-sonnet-5") return new Response(JSON.stringify({ error: { message: "Free tier users do not have access to this model." } }), { status: 403 })
     return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: "Hey, I'm here. What do you need tonight?" } }] }), { status: 200 })
   }) as typeof fetch
@@ -189,12 +189,12 @@ test("on a gateway free tier, Angel answers with the open model instead of switc
     assert.equal(body.available, true)
     assert.match(body.reply, /What do you need tonight/)
     assert.deepEqual(models, ["anthropic/claude-sonnet-5", "openai/gpt-oss-120b"])
+    assert.deepEqual(endpoints, ["https://ai-gateway.vercel.sh/v1/chat/completions", "https://openrouter.ai/api/v1/chat/completions"])
+    assert.deepEqual(policies[0], { gateway: { zeroDataRetention: true } })
+    assert.deepEqual(policies[1], { data_collection: "deny" })
   } finally {
     globalThis.fetch = realFetch
-    if (saved !== undefined) process.env.GROQ_API_KEY = saved
-    if (savedKimi !== undefined) process.env.KIMI_API_KEY = savedKimi
-    else delete process.env.KIMI_API_KEY
-    if (savedMoonshot !== undefined) process.env.MOONSHOT_API_KEY = savedMoonshot
-    else delete process.env.MOONSHOT_API_KEY
+    if (saved === undefined) delete process.env.OPENROUTER_API_KEY
+    else process.env.OPENROUTER_API_KEY = saved
   }
 })
