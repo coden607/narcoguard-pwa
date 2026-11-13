@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { RESOURCE_KINDS } from "@/lib/resource-finder"
 import { orderByMaslow } from "@/lib/need-intent"
+import { LIFE_COMPASS_SYSTEM_PROMPT } from "@/lib/life-compass"
 
 // Angel AI: a conversational guide for finding help and working toward personal goals. It is not an
 // emergency service, a clinician or a monitor. Emergency guidance is deterministic (below), so it
@@ -29,6 +30,7 @@ export const angelRequestSchema = z.object({
   // Approximate location for searches only. It is rounded again on the server and never sent to the AI provider.
   location: z.object({ lat: z.number().min(-90).max(90), lon: z.number().min(-180).max(180) }).strict().optional(),
   localContext: angelLocalContextSchema.optional(),
+  mode: z.enum(["angel", "life-compass"]).optional(),
 })
 export type AngelRequest = z.infer<typeof angelRequestSchema>
 
@@ -103,5 +105,10 @@ export function buildChatMessages(request: AngelRequest) {
       content: "Optional person-selected planning context (not a medical record; use only to tailor practical suggestions): " + JSON.stringify(request.localContext),
     })
   }
-  return [{ role: "system" as const, content: ANGEL_SYSTEM_PROMPT }, ...context, ...request.messages]
+  return [
+    { role: "system" as const, content: ANGEL_SYSTEM_PROMPT },
+    ...(request.mode === "life-compass" ? [{ role: "system" as const, content: LIFE_COMPASS_SYSTEM_PROMPT }] : []),
+    ...context,
+    ...request.messages,
+  ]
 }

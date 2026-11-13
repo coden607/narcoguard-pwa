@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import Link from "next/link"
 import { AngelAI } from "@/components/ai/angel-ai"
 import { NeedsFinder } from "@/components/resources/needs-finder"
 
@@ -17,6 +18,10 @@ export default function AngelPage() {
           The search below works without the chat.
         </p>
       </header>
+      <Link href="/angel/life-compass" className="block rounded-lg border p-4 hover:bg-muted/40" data-testid="life-compass-entry">
+        <strong>Life Compass: decision support</strong>
+        <span className="block text-sm text-muted-foreground">Compare options, challenge assumptions, and plan next steps. Not a clinical service.</span>
+      </Link>
       <AngelAI />
       <div className="border rounded-xl p-5">
         <NeedsFinder />
