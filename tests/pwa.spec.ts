@@ -7,6 +7,7 @@ import "./emergency-layout.spec"
 import "./resource-discovery.spec"
 import "./resource-governance.spec"
 import "./emergency-offline.spec"
+import "./life-compass-browser.spec"
 
 test.describe("PWA production flow", () => {
   test("serves a valid install manifest and icons", async ({ page, request }) => {
