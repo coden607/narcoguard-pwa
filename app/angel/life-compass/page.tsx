@@ -1,6 +1,8 @@
 import type { Metadata } from "next"
 import Link from "next/link"
 import { AngelAI } from "@/components/ai/angel-ai"
+import { LifeCompassEvidence } from "@/components/ai/life-compass-evidence"
+import { LifeCompassJournal } from "@/components/ai/life-compass-journal"
 
 export const metadata: Metadata = {
   title: "Life Compass decision support | Angel AI | NarcoGuard",
@@ -19,6 +21,8 @@ export default function LifeCompassPage() {
         </p>
       </header>
       <AngelAI mode="life-compass" />
+      <LifeCompassEvidence />
+      <LifeCompassJournal />
     </main>
   )
 }
