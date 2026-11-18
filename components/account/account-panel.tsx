@@ -6,24 +6,15 @@ import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { type ContactsState, useEmergencyContacts } from "@/lib/emergency-contacts-store"
-import { getUserPreferences, saveUserPreferences, type UserPreferences } from "@/lib/user-preferences"
+import { emergencyContactsAreTemporary, useEmergencyContacts } from "@/lib/emergency-contacts-store"
+import { getUserPreferences, preferencesAreTemporary, saveUserPreferences } from "@/lib/user-preferences"
 import { MIN_PASSPHRASE_LENGTH, openVault, sealVault, type SealedVault } from "@/lib/vault-crypto"
+import { parseAccountBackup, requestAccount as request, signOutAccount, type AccountBackup } from "@/lib/account-client"
 
 type Account = { available: boolean; authenticated: boolean; user: { email?: string } | null; sessionExpired?: boolean }
-type Backup = { v: 1; savedAt: string; contacts: ContactsState; preferences: UserPreferences }
 
 // The account is optional: every safety feature works without one. Backup carries emergency
 // contacts and settings only, sealed on this device; the Guardian planner is never included.
-
-async function request<T>(url: string, init?: RequestInit): Promise<{ ok: boolean; status: number; data: T & { error?: string } }> {
-  try {
-    const response = await fetch(url, { cache: "no-store", ...init, headers: { "Content-Type": "application/json", ...init?.headers } })
-    return { ok: response.ok, status: response.status, data: (await response.json()) as T & { error?: string } }
-  } catch {
-    return { ok: false, status: 0, data: { error: "Could not reach NarcoGuard. Check your connection." } as T & { error?: string } }
-  }
-}
 
 export function AccountPanel() {
   const router = useRouter()
@@ -58,6 +49,8 @@ export function AccountPanel() {
     setNote(undefined)
     try {
       setNote(await task())
+    } catch {
+      setNote("The action could not be completed. Your account status has not been changed. Check your connection and try again.")
     } finally {
       setBusy(false)
     }
@@ -65,7 +58,7 @@ export function AccountPanel() {
 
   const backUp = () => run(async () => {
     if (passphrase !== confirm) return "The passphrases do not match."
-    const backup: Backup = { v: 1, savedAt: new Date().toISOString(), contacts, preferences: getUserPreferences() }
+    const backup: AccountBackup = { v: 1, savedAt: new Date().toISOString(), contacts, preferences: getUserPreferences() }
     let sealed: SealedVault
     try {
       sealed = await sealVault(backup, passphrase)
@@ -82,10 +75,12 @@ export function AccountPanel() {
     const { ok, data } = await request<{ vault: { sealed: SealedVault } | null }>("/api/account/vault")
     if (!ok) return data.error ?? "The backup could not be loaded."
     if (!data.vault) return "There is no backup on this account yet."
-    const backup = await openVault<Backup>(data.vault.sealed, passphrase)
-    if (!backup || backup.v !== 1) return "That passphrase does not open this backup."
+    const backup = parseAccountBackup(await openVault(data.vault.sealed, passphrase))
+    if (!backup) return "That passphrase does not open a valid backup. Nothing on this device was replaced."
+    if (!window.confirm("Replace the contacts and settings on this device with this backup? Your Guardian planner stays as it is.")) return "Nothing was restored."
     update(() => backup.contacts)
     saveUserPreferences(backup.preferences)
+    if (preferencesAreTemporary() || emergencyContactsAreTemporary()) return "Restored for this visit only. Your browser could not save all contacts and settings; they may be lost when you reload or close this tab."
     return `Restored ${backup.contacts.contacts.length} contact(s) and your settings from ${new Date(backup.savedAt).toLocaleString()}.`
   })
 
@@ -98,7 +93,7 @@ export function AccountPanel() {
   })
 
   const signOut = () => run(async () => {
-    await request("/api/auth", { method: "POST", body: JSON.stringify({ action: "logout" }) })
+    await signOutAccount()
     setAccount((current) => (current ? { ...current, authenticated: false, user: null } : current))
     router.refresh()
     return "Signed out. Your contacts and settings stay on this device."

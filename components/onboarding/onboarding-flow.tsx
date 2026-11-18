@@ -51,10 +51,10 @@ interface OnboardingFlowProps {
 
 export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
   const [step, setStep] = useState(0)
-  const [name, setName] = useState("")
-  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>([])
-  const [naloxoneLocations, setNaloxoneLocations] = useState<NaloxoneLocation[]>([])
-  const [preferences, setPreferences] = useState(getUserPreferences())
+  const [preferences, setPreferences] = useState(getUserPreferences)
+  const [name, setName] = useState(preferences.name)
+  const [emergencyContacts, setEmergencyContacts] = useState<EmergencyContact[]>(preferences.emergencyContacts)
+  const [naloxoneLocations, setNaloxoneLocations] = useState<NaloxoneLocation[]>(preferences.naloxoneLocations)
   const { isInstallable, isInstalled, installPWA, method } = usePWAInstall()
 
 
@@ -74,6 +74,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
     const finalPreferences = {
       name,
       hasCompletedOnboarding: true,
+      skippedSetup: false,
       emergencyContacts,
       naloxoneLocations,
       emergencyPreferences: preferences.emergencyPreferences,
@@ -1199,7 +1200,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
   const totalSteps = steps.length
 
-  const isStep2Invalid = step === 2 && !name
+  const isStep2Invalid = step === 2 && !name.trim()
   const isStep10Invalid = step === 10 && (!preferences.legal.state || !preferences.legal.acknowledgedGoodSamaritan)
   const isStep11Invalid =
     step === 11 &&
@@ -1209,7 +1210,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
 
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <div className="min-h-screen bg-background relative overflow-hidden" data-testid="onboarding">
       <ParticleField count={50} />
 
       <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />

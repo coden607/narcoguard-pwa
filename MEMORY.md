@@ -12,6 +12,7 @@
 - **owner-approval-required**: PRs touching guard-protected paths (factory/guard.py: dependencies, CI/workflow, .factory, governance, emergency/auth/data), repo settings and secrets, irreversible list (FACTORY_RULES 7.3) — as-of 2026-10-28 · source: Stephen (owner) · review-by 2027-01-28
 
 ## Operations
+- **public-deployment-observed**: www.narcoguard.app /api/app-version reported a382a7163157f8b82b5760c5937704b98cb64f84, the same commit as main; live check passed (help, angel, safer-use, camera policy, ZIP 13901) — as-of 2026-11-18 · source: public /api/app-version and factory/live-check.sh · review-by 2026-12-18
 - **routing**: all substantive agent work routes through ContinuityOS (coden607/continuity-os) then Jev (decide only), then cheapest capable tier — as-of 2026-10-27 · source: AGENTS.md · review-by 2027-01-27
 - **ci-skills-token**: CI step "Install pinned private agent skills" needs a valid SKILLS_READ_TOKEN secret (read on coden607/skills) — as-of 2026-10-27 · source: Actions run 40326329532 · review-by 2026-11-10
 

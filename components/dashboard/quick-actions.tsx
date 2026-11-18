@@ -5,6 +5,7 @@ import { GlowButton } from "@/components/effects/glow-button"
 import { Phone, MapPin, Users, BookOpen, Contact, Settings, LifeBuoy, PhoneCall } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { NEVER_USE_ALONE } from "@/lib/safer-use"
+import { saveUserPreferences } from "@/lib/user-preferences"
 
 export function QuickActions() {
   const router = useRouter()
@@ -31,11 +32,7 @@ export function QuickActions() {
   }
 
   const openSettings = () => {
-    // Clear onboarding to restart setup
-    if (confirm("Reset app and go through setup again?")) {
-      localStorage.removeItem("narcoguard_preferences")
-      window.location.reload()
-    }
+    saveUserPreferences({ hasCompletedOnboarding: false })
   }
 
   return (
