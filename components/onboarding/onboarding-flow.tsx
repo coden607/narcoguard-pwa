@@ -497,7 +497,7 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
       <div className="text-center space-y-4">
         <MapPin className="w-16 h-16 mx-auto text-secondary pulse-glow" />
         <h2 className="text-3xl font-bold glow-text">Where's Your Naloxone?</h2>
-        <p className="text-muted-foreground">Help heroes find your life-saving medication quickly</p>
+        <p className="text-muted-foreground">Save where you keep naloxone on this device. It stays here, and nobody is notified.</p>
       </div>
       <div className="space-y-4 max-w-2xl mx-auto">
         {naloxoneLocations.map((location) => (
@@ -723,15 +723,15 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         </div>
 
         <div className="space-y-4">
-          <h4 className="font-semibold">Roles & Responsibilities:</h4>
+          <h4 className="font-semibold">What the role would include, once a reviewed network exists:</h4>
           <ul className="space-y-3 text-sm">
             <li className="flex items-start gap-3">
               <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-              <span>Respond to emergency alerts in your area</span>
+              <span>Choose whether to respond if nearby requests are later switched on</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
-              <span>Administer naloxone following AR-guided instructions</span>
+              <span>Give naloxone using the step-by-step guide in this app</span>
             </li>
             <li className="flex items-start gap-3">
               <Check className="w-5 h-5 text-green-500 mt-0.5 shrink-0" />
@@ -749,29 +749,29 @@ export function OnboardingFlow({ onComplete }: OnboardingFlowProps) {
         </div>
 
         <div className="space-y-4">
-          <h4 className="font-semibold">Training Available:</h4>
+          <h4 className="font-semibold">Training in this app</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="font-semibold text-sm">Naloxone Administration</p>
-              <p className="text-xs text-muted-foreground">AR-guided training</p>
-            </div>
-            <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="font-semibold text-sm">CPR Certification</p>
-              <p className="text-xs text-muted-foreground">VR simulation available</p>
-            </div>
-            <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="font-semibold text-sm">Emergency Response</p>
-              <p className="text-xs text-muted-foreground">Crisis management</p>
-            </div>
-            <div className="p-3 bg-primary/10 rounded-lg border border-primary/20">
-              <p className="font-semibold text-sm">Mental Health First Aid</p>
-              <p className="text-xs text-muted-foreground">Support techniques</p>
-            </div>
+            <Link href="/ar" className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="font-semibold text-sm">Naloxone guide</p>
+              <p className="text-xs text-muted-foreground">Step-by-step instructions and a second-dose timer</p>
+            </Link>
+            <Link href="/ar" className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="font-semibold text-sm">CPR guide</p>
+              <p className="text-xs text-muted-foreground">Hand position, depth, and a compression beat. Not a certification.</p>
+            </Link>
+            <Link href="/ar#training-modules" className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="font-semibold text-sm">Practice lessons</p>
+              <p className="text-xs text-muted-foreground">Short lessons with a question. Progress stays on this device.</p>
+            </Link>
+            <Link href="/hero-signup" className="p-3 bg-primary/10 rounded-lg border border-primary/20">
+              <p className="font-semibold text-sm">Hero test</p>
+              <p className="text-xs text-muted-foreground">The graded test. There is no virtual-reality course.</p>
+            </Link>
           </div>
         </div>
 
         <p className="text-sm text-muted-foreground text-center">
-          You can start hero training anytime from the app. No pressure to decide now!
+          The guides and lessons work now. Nearby Hero alerts are off until a separate safety and privacy review. No pressure to decide now.
         </p>
       </HolographicCard>
     </div>,

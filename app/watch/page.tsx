@@ -92,7 +92,7 @@ export default function NGWatchPage() {
   const coreMinimumLayerMarginMm2 = Math.min(...variant.calc.coreLayerMarginsMm2)
   const idealizedRuntimeHours = variant.calc.idealizedRuntimeHours
   const caseMm = variant.model.caseDiameterMm
-  const simulationPanels = [
+  const designChecks = [
     {
       label: "Sealed core fit",
       value: "Conditional",
@@ -376,15 +376,18 @@ export default function NGWatchPage() {
           </div>
         </section>
 
-        {/* Simulation / validation summary */}
-        <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {simulationPanels.map((panel) => (
+        <section className="mb-8 space-y-3" aria-labelledby="design-checks-heading">
+          <h2 id="design-checks-heading" className="text-lg font-semibold">Design checks, not a running watch</h2>
+          <p className="text-sm text-muted-foreground">These figures come from the design model. They are not measurements from hardware, and they are not a sensor simulation.</p>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {designChecks.map((panel) => (
             <HolographicCard key={panel.label} className="p-5" glowIntensity="medium">
               <p className="text-xs uppercase tracking-[0.18em] text-primary">{panel.label}</p>
               <p className="mt-2 text-3xl font-bold font-mono">{panel.value}</p>
               <p className="mt-2 text-sm text-muted-foreground">{panel.detail}</p>
             </HolographicCard>
           ))}
+          </div>
         </section>
 
         {/* Funding CTA */}
