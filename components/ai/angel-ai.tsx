@@ -29,7 +29,8 @@ import { angelContextHasContent, buildAngelLocalContext } from "@/lib/angel-cont
 import { beginAngelAttempt, finishAngelAttempt, type AngelPendingTurn } from "@/lib/angel-pending"
 import { angelActivitySteps, type AngelActivityPhase } from "@/lib/angel-activity"
 import { AngelActivity } from "@/components/ai/angel-activity"
-import { deactivateTravel, effectiveZip, readTravel } from "@/lib/travel-mode"
+import { effectiveZip, readTravel } from "@/lib/travel-mode"
+import { browserStorage } from "@/lib/browser-storage"
 
 interface ChatMessage {
   id: string
@@ -179,10 +180,10 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
       setLocationNote(undefined)
       setLocating(false)
       setZip("")
-      setRememberPlace(readRememberChoice(window.localStorage))
+      setRememberPlace(readRememberChoice(browserStorage()))
     }
     const storageChanged = (event: StorageEvent) => {
-      if (event.storageArea !== window.localStorage) return
+      if (event.storageArea !== browserStorage()) return
       if (event.key === null || (event.key === SAVED_PLACE_KEY && event.newValue === null) || (event.key === REMEMBER_PLACE_KEY && event.newValue === "off")) revoke()
     }
     window.addEventListener(PLACE_FORGOTTEN_EVENT, revoke)
@@ -280,8 +281,8 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
 
   useEffect(() => {
     // Read after mount so the server render and hydration agree.
-    const remember = readRememberChoice(window.localStorage)
-    const saved = remember ? readSavedPlace(window.localStorage) : null
+    const remember = readRememberChoice(browserStorage())
+    const saved = remember ? readSavedPlace(browserStorage()) : null
     /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from device storage */
     setRememberPlace(remember)
     if (saved && "zip" in saved) setZip(saved.zip)
@@ -290,7 +291,7 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
   }, [])
 
   useEffect(() => {
-    if (rememberPlace && /^\d{5}$/.test(zip)) savePlace(window.localStorage, { zip })
+    if (rememberPlace && /^\d{5}$/.test(zip)) savePlace(browserStorage(), { zip })
   }, [zip, rememberPlace])
 
   useEffect(() => {
@@ -322,7 +323,7 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
         const rounded = { lat: coarsen(position.coords.latitude), lon: coarsen(position.coords.longitude) }
         locationRef.current = rounded
         setLocation(rounded)
-        if (readRememberChoice(window.localStorage)) savePlace(window.localStorage, rounded)
+        if (readRememberChoice(browserStorage())) savePlace(browserStorage(), rounded)
         // The location the person just chose replaces any ZIP typed earlier.
         setZip("")
         setLocating(false)
@@ -358,13 +359,13 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
       setLocating(false)
       locationRef.current = forgottenLocation
       setLocation(forgottenLocation)
-      if (forgottenLocation && readRememberChoice(window.localStorage)) savePlace(window.localStorage, forgottenLocation)
+      if (forgottenLocation && readRememberChoice(browserStorage())) savePlace(browserStorage(), forgottenLocation)
       // Both come back; the ZIP keeps its usual precedence for searches.
       setZip(forgottenZip)
     })
-    locationGenerationRef.current++; invalidatePendingContext(); locationRef.current = null; setLocation(null); setLocationNote(undefined); setLocating(false); setZip(""); forgetPlace(window.localStorage)
+    locationGenerationRef.current++; invalidatePendingContext(); locationRef.current = null; setLocation(null); setLocationNote(undefined); setLocating(false); setZip(""); forgetPlace(browserStorage())
   }
-  const toggleRemember = (remember: boolean) => { setRememberPlace(remember); saveRememberChoice(window.localStorage, remember) }
+  const toggleRemember = (remember: boolean) => { setRememberPlace(remember); saveRememberChoice(browserStorage(), remember) }
 
   /** Sends a message and returns what Angel should say back (safety notices first), or null on failure. */
   const send = async (text: string): Promise<string | null> => {
@@ -400,7 +401,7 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
     if (local?.type === "log_chart") {
       const now = new Date()
       const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
-      const chart = buildAngelLogChart(readGuardianState(window.localStorage).entries, today)
+      const chart = buildAngelLogChart(readGuardianState(browserStorage()).entries, today)
       messagesRef.current = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content, localOnly: true }, { id: crypto.randomUUID(), role: "assistant", content: "", chart, localOnly: true }]
       setMessages(messagesRef.current)
       setInput("")
@@ -410,7 +411,7 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
     // A ZIP said or typed in the message becomes the search area for this and later chats.
     const statedZip = zipFromMessage(content)
     if (statedZip && statedZip !== zip) setZip(statedZip)
-    const travel = readTravel(window.localStorage)
+    const travel = readTravel(browserStorage())
     const travelZip = travel ? effectiveZip(travel, new Date().toISOString()) : { zip: "", inTravel: false }
     const searchZip = travelZip.inTravel ? travelZip.zip : (statedZip ?? zip)
     const next: ChatMessage[] = [...messagesRef.current, { id: crypto.randomUUID(), role: "user", content }]
@@ -421,9 +422,9 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
       const now = new Date()
       const date = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`
       const context = buildAngelLocalContext(
-        readDailyLifeState(window.localStorage),
-        readLifeSupportState(window.localStorage),
-        readResourcePreferences(window.localStorage),
+        readDailyLifeState(browserStorage()),
+        readLifeSupportState(browserStorage()),
+        readResourcePreferences(browserStorage()),
         date,
       )
       if (angelContextHasContent(context)) localContext = context

@@ -92,3 +92,7 @@ export function clearEmergencyContacts() {
   memory = null
   listeners.forEach((listener) => listener())
 }
+
+export function emergencyContactsAreTemporary(): boolean {
+  return memory !== null
+}

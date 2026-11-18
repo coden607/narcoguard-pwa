@@ -27,7 +27,7 @@ import {
   DollarSign,
   ExternalLink,
 } from "lucide-react"
-import { saveUserPreferences } from "@/lib/user-preferences"
+import { preferencesAreTemporary, saveUserPreferences } from "@/lib/user-preferences"
 import { useUserPreferences } from "@/lib/hooks/use-user-preferences"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -131,6 +131,11 @@ export default function DashboardPage() {
       <ParticleField count={72} />
 
       <div className="relative z-10 container mx-auto px-4 py-6 space-y-6">
+        {preferencesAreTemporary() && (
+          <p role="status" className="rounded-lg border border-amber-500/50 p-4 text-sm">
+            Your browser could not save settings. They work for this visit, but may be lost when you close or reload this tab.
+          </p>
+        )}
         {skippedSetup && (
           <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
