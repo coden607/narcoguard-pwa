@@ -1,4 +1,3 @@
-const axios = require("axios")
 const fs = require("fs")
 const path = require("path")
 
@@ -363,10 +362,13 @@ function shouldPublishToday(platform, date) {
 async function pushToRelay(relayUrl, payload) {
   if (!relayUrl) return { status: "skipped" }
   if (process.env.ALLOW_MARKETING_PUBLISH !== "true") return { status: "approval-required" }
-  await axios.post(relayUrl, payload, {
+  const response = await fetch(relayUrl, {
+    method: "POST",
     headers: { "Content-Type": "application/json" },
-    timeout: 15000,
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(15000),
   })
+  if (!response.ok) throw new Error(`Marketing relay responded ${response.status}`)
   return { status: "sent", relayUrl }
 }
 
