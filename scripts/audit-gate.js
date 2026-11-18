@@ -7,7 +7,18 @@
 // When any of them stops being true the gate fails and names the exception to remove or renew.
 const { execFileSync } = require("node:child_process")
 
-const exceptions = []
+// Temporary, reviewed development-only risk acceptance: GHSA-fc5q-39xc-vjpf.
+// No patched picomatch release exists as of 2026-11-18. The gate continues to
+// fail if production is affected, a fixed version is published, or review expires.
+// Never accept untrusted user-supplied glob patterns in build/test tooling.
+const exceptions = [
+  {
+    advisory: "GHSA-fc5q-39xc-vjpf",
+    package: "picomatch",
+    lastVulnerable: "4.0.7",
+    reviewBy: "2026-11-25",
+  },
+]
 
 const npm = process.platform === "win32" ? "npm.cmd" : "npm"
 const run = (args) => {
