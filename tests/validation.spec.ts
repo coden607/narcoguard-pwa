@@ -65,16 +65,18 @@ test.describe("NarcoGuard Production Validation", () => {
   })
 
   test("critical APIs fail closed when providers are unavailable", async ({ request }) => {
-    for (const api of ["/api/vitals", "/api/location", "/api/stats"]) {
+    for (const api of ["/api/vitals", "/api/stats"]) {
       const response = await request.get(api)
       expect(response.status()).toBe(503)
       await expect(response.json()).resolves.toMatchObject({ available: false })
     }
   })
 
-  test("emergency dispatch route is removed and never reports success", async ({ request }) => {
-    const missing = await request.get("/api/emergency")
-    expect(missing.status()).toBe(404)
+  test("obsolete dispatch and location routes are removed and never report success", async ({ request }) => {
+    for (const api of ["/api/emergency", "/api/location"]) {
+      const missing = await request.get(api)
+      expect(missing.status()).toBe(404)
+    }
     const response = await request.post("/api/emergency", { data: { location: null, vitals: null } })
     expect(response.status()).toBe(404)
     const contentType = response.headers()["content-type"] ?? ""
