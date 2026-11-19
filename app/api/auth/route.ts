@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { z } from "zod"
-import { clearSession, ensureProfile, getSession, isAuthConfigured, isGoogleSignInEnabled, resendSignup, requestPasswordReset, signIn, signUp, storeSession, type AuthFailure } from "@/lib/supabase-auth"
+import { clearSession, ensureProfile, getSession, isAppleSignInEnabled, isAuthConfigured, isGoogleSignInEnabled, resendSignup, requestPasswordReset, signIn, signUp, storeSession, type AuthFailure } from "@/lib/supabase-auth"
+import { emailRedirectUri, publicAuthOrigin, recoveryRedirectUri } from "@/lib/auth-origin"
 import { AUTH_EMAIL_COOLDOWN_SECONDS, RECOVERY_MAX_AGE_SECONDS, RECOVERY_VERIFIER_COOKIE, recoveryNotice, safeAuthDestination } from "@/lib/auth-recovery"
 import { EMAIL_NEXT_COOKIE, EMAIL_PKCE_COOKIE, challengeFor, createVerifier } from "@/lib/oauth-pkce"
 
@@ -30,7 +31,7 @@ export async function GET(request: Request) {
     const hadSession = Boolean(store.get('ng_access_token')?.value || store.get('ng_refresh_token')?.value)
     const user = await getSession()
     const next = safeAuthDestination(new URL(request.url).searchParams.get('next'))
-    return NextResponse.json({ available: true, google: isGoogleSignInEnabled(), authenticated: Boolean(user), sessionExpired: hadSession && !user, recoveryUrl: `/auth?reason=expired&next=${encodeURIComponent(next)}`, user: user ? { id: user.id, email: user.email } : null }, { headers: { 'Cache-Control': 'private, no-store' } })
+    return NextResponse.json({ available: true, google: isGoogleSignInEnabled(), apple: isAppleSignInEnabled(), authenticated: Boolean(user), sessionExpired: hadSession && !user, recoveryUrl: `/auth?reason=expired&next=${encodeURIComponent(next)}`, user: user ? { id: user.id, email: user.email } : null }, { headers: { 'Cache-Control': 'private, no-store' } })
   } catch {
     return NextResponse.json({ error: "Authentication service is unavailable" }, { status: 503 })
   }
@@ -83,11 +84,11 @@ export async function POST(request: Request) {
       if (input.action === 'reset-password') {
         const verifier = createVerifier()
         store.set(RECOVERY_VERIFIER_COOKIE, verifier, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: RECOVERY_MAX_AGE_SECONDS })
-        await requestPasswordReset(input.email, `${new URL(request.url).origin}/api/auth/recovery`, await challengeFor(verifier))
+        await requestPasswordReset(input.email, `${recoveryRedirectUri(publicAuthOrigin(request))}`, await challengeFor(verifier))
       } else {
         const verifier = createVerifier()
         const next = safeAuthDestination(input.next)
-        const resendError = await resendSignup(input.email, `${new URL(request.url).origin}/api/auth/callback?flow=email`, await challengeFor(verifier))
+        const resendError = await resendSignup(input.email, `${emailRedirectUri(publicAuthOrigin(request))}`, await challengeFor(verifier))
         if (!resendError) {
           store.set(EMAIL_PKCE_COOKIE, verifier, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: 3600 })
           store.set(EMAIL_NEXT_COOKIE, next, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'lax', path: '/api/auth', maxAge: 3600 })
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
     let attempt: Awaited<ReturnType<typeof signIn>>
     if (input.action === "signup") {
       signupVerifier = createVerifier()
-      attempt = await signUp(input.email, input.password, displayName as string, `${new URL(request.url).origin}/api/auth/callback?flow=email`, await challengeFor(signupVerifier))
+      attempt = await signUp(input.email, input.password, displayName as string, `${emailRedirectUri(publicAuthOrigin(request))}`, await challengeFor(signupVerifier))
     } else {
       attempt = await signIn(input.email, input.password)
     }
