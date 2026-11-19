@@ -53,7 +53,7 @@ Execution rule: implement and validate **one feature at a time**. Each feature m
 - Feature 21: **complete and merged**
 - Feature 22: **complete and merged**
 - Feature 23: **complete and merged**
-- Feature 24: **complete and merged**
+- Feature 24: **library removed** — the overlay never called a weather API or appeared in the UI; it was deleted rather than wired with invented alerts
 - Feature 25: **complete and merged**
 - Features 1–25: **all merged. The original roadmap is fully shipped.**
 - Feature 26: **complete and merged**
