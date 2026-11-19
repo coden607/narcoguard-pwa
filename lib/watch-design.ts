@@ -17,7 +17,8 @@ export const watchDesignModel = {
   caseDiameterMm: 46,
   caseThicknessMm: 13.8,
   usableInternalPlanarAreaMm2: 1250,
-  nominalBatteryCapacityMah: 500,
+  // Volume estimate pending cell selection; not a quoted cell.
+  nominalBatteryCapacityMah: 250,
   nominalBatteryVoltage: 3.7,
   sensorMonitoringPowerMw: 12.4,
   placement: [
@@ -81,7 +82,8 @@ export const watchDesignModel40 = {
   caseDiameterMm: 40,
   caseThicknessMm: 12.2,
   usableInternalPlanarAreaMm2: 918.63,
-  nominalBatteryCapacityMah: 300,
+  // Volume estimate pending cell selection; not a quoted cell.
+  nominalBatteryCapacityMah: 120,
   nominalBatteryVoltage: 3.7,
   sensorMonitoringPowerMw: 12.4,
   placement: [
@@ -141,9 +143,23 @@ export function calculatePlanarFootprint(modules: readonly WatchDesignModule[]) 
 }
 
 export function calculateIdealizedRuntimeHours(capacityMah: number, voltage: number, loadMw: number) {
+  // Sensor-only energy check, not a public battery-life claim. Full power budget is in progress.
   if (capacityMah <= 0 || voltage <= 0 || loadMw <= 0) return 0
   return Math.round((capacityMah * voltage) / loadMw)
 }
+
+/** Public label for the volume-estimate cell capacity. Final capacity is pending cell selection. */
+export function formatEstimatedBatteryCapacityMah(mah: number) {
+  return `~${mah} mAh (estimated)`
+}
+
+/** Nominal energy from the volume-estimate capacity at the stated voltage, rounded to two decimals. */
+export function formatEstimatedBatteryEnergyWh(mah: number, voltage: number) {
+  return `~${((mah * voltage) / 1000).toFixed(2)} Wh (estimated)`
+}
+
+export const CELL_SELECTION_PENDING_NOTE = "Final cell capacity is pending cell selection."
+
 export function calculateLayerFootprint(layer: WatchDesignLayer) {
   return calculatePlanarFootprint(layer.modules)
 }
