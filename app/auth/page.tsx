@@ -26,6 +26,7 @@ export default function AuthPage() {
   const [busy, setBusy] = useState(false)
   const [online, setOnline] = useState(true)
   const [google, setGoogle] = useState(false)
+  const [apple, setApple] = useState(false)
   const [confirmationRequired, setConfirmationRequired] = useState(false)
 
   useEffect(() => {
@@ -37,11 +38,13 @@ export default function AuthPage() {
         ? "Email confirmation did not finish. Enter your email below and request a new confirmation link."
       : error === "google-off"
         ? "Google sign-in is not switched on yet. Use email below."
+      : error === "apple-off"
+        ? "Apple sign-in is not switched on yet. Use Google or email below."
         : params.get('reason') === 'expired' ? 'Your session has expired. Sign in to continue where you left off.' : ""
     let cancelled = false
     fetch("/api/auth", { cache: "no-store" })
       .then((r) => r.json())
-      .then((data: { google?: boolean }) => { if (!cancelled) setGoogle(data.google === true) })
+      .then((data: { google?: boolean; apple?: boolean }) => { if (!cancelled) { setGoogle(data.google === true); setApple(data.apple === true) } })
       .catch(() => undefined)
       .finally(() => {
         if (cancelled) return
@@ -151,13 +154,20 @@ export default function AuthPage() {
               Continue with Google
             </a>
             <p className="mt-2 text-xs text-white/60">NarcoGuard never sees your Google password.</p>
-            <p className="mt-6 text-center text-xs uppercase tracking-wide text-white/50">or use email</p>
           </>
+        )}
+        {apple && (
+          <a href={`/api/auth/apple?next=${encodeURIComponent(destination)}`} data-testid="apple-sign-in" className={`${google ? "mt-3" : "mt-8"} flex w-full items-center justify-center gap-3 rounded-lg bg-black p-3 font-semibold text-white ring-1 ring-white/30`}>
+            Continue with Apple
+          </a>
+        )}
+        {(google || apple) && (
+          <p className="mt-6 text-center text-xs uppercase tracking-wide text-white/50">or use email</p>
         )}
 
         {!online && <p role="status" className="mt-4 rounded-lg border border-amber-300/30 bg-amber-300/10 p-3 text-sm text-amber-100">Offline. Reconnect to sign in, create an account, or request email links.</p>}
 
-        <form onSubmit={submit} aria-busy={busy} className={google ? "mt-4 space-y-4" : "mt-8 space-y-4"}>
+        <form onSubmit={submit} aria-busy={busy} className={(google || apple) ? "mt-4 space-y-4" : "mt-8 space-y-4"}>
           {mode === "signup" && (
             <label className="block text-sm">
               Display name
