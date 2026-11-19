@@ -4,6 +4,7 @@ import { watchDesignModel } from "../lib/watch-design"
 import { ENVELOPE, GEOMETRY_40, GEOMETRY_46, LAYERS, PARTS, planInterferences } from "../lib/watch-geometry"
 import { WATCH_COMPONENTS, WATCH_COMPONENTS_40, calloutNumber } from "../lib/watch-components"
 import { BOM_40, BOM_46, bomTotals } from "../lib/watch-bom"
+import { PROTOTYPE_UNIT_COST } from "../lib/funding-goal"
 
 test("the layer stack runs from the case back to the full case thickness without overlaps", () => {
   assert.equal(LAYERS[0].z0, 0)
@@ -71,11 +72,12 @@ test("the 40 mm keeps every numbered component and safety function of the 46 mm"
 test("the bills of materials match the funding goal and differ only where the case size requires", () => {
   const big = bomTotals(BOM_46)
   const small = bomTotals(BOM_40)
+  assert.equal(big.complete, PROTOTYPE_UNIT_COST)
   assert.ok(big.hardware > 0)
   assert.ok(big.components > 0)
   assert.equal(small.count, big.count)
   assert.ok(small.complete < big.complete)
-  const boards = (bom: typeof BOM_46) => bom.flatMap((c) => c.items).find((item) => item.name === "10-Layer HDI PCB Assembly")!.partNumber
+  const boards = (bom: typeof BOM_46) => bom.flatMap((c) => c.items).find((item) => item.name === "8-layer HDI carrier assembly")!.partNumber
   assert.notEqual(boards(BOM_40), boards(BOM_46))
   const chips = (bom: typeof BOM_46, name: string) => bom.find((c) => c.category === name)!.items
   assert.deepEqual(chips(BOM_40, "Main Processing Unit"), chips(BOM_46, "Main Processing Unit"))

@@ -350,11 +350,11 @@ export default function NGWatchPage() {
               <div className="space-y-3 text-sm">
                 {[
                   ["Compute", "W5+ Gen 2", "Qualcomm Snapdragon (2025)"],
-                  ["Health MCU", "NRF5340-QKAA-R7", "Nordic nRF5340"],
+                  ["Health MCU", "private hardware package", "Dedicated safety microcontroller"],
                   ["Vitals AFE", "MAX86178", "Analog Devices / Maxim"],
-                  ["Motion", "LSM6DSO32XTR", "STMicroelectronics"],
+                  ["Motion", "private hardware package", "6-axis IMU"],
                   ["Cellular", "SDX35", "Snapdragon X35 5G RedCap"],
-                  ["Barometer", "BMP390", "Bosch Sensortec"],
+                  ["Barometer", "private hardware package", "Pressure sensor with a vent"],
                 ].map(([system, part, maker]) => (
                   <div key={part} className="grid grid-cols-[.8fr_1fr] gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0">
                     <span className="text-muted-foreground">{system}</span>
@@ -503,7 +503,7 @@ export default function NGWatchPage() {
                   >
                     <Download className="h-5 w-5 text-primary" />
                     <p className="mt-2 font-semibold">Download full fabrication package</p>
-                    <p className="text-xs text-muted-foreground">Open the latest successful Watch CAD Validation run and download the versioned narcoguard-rev5-cad artifact.</p>
+                    <p className="text-xs text-muted-foreground">The narcoguard-rev5-cad manufacturing package is not published from this public repository.</p>
                   </a>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2">
@@ -535,7 +535,7 @@ export default function NGWatchPage() {
               <HolographicCard className="p-6">
                 <h3 className="font-bold text-lg">CAD provenance & release boundary</h3>
                 <div className="mt-3 space-y-3 text-sm text-muted-foreground">
-                  <p>Source geometry is versioned at <span className="font-mono text-primary">hardware/cad/rev5/build_rev5.py</span> and checked against envelope/interference, DFM, package-content, and fail-closed release gates.</p>
+                  <p>Manufacturing CAD, Gerbers and the buildable bill of materials are proprietary and are not in this public repository. The picture on this page is a concept.</p>
                   <p>STEP is the editable solid-exchange format, STL supports prototype/visualization workflows, and DXF carries selected 2D fabrication profiles.</p>
                   <p>The GD&amp;T/tolerance CSV is a planning surface, not a released drawing. Supplier CAD, routed PCB data, final datum scheme/tolerance stack, RF/antenna signoff, thermal/ingress validation, and physical prototype inspection remain required before tooling release.</p>
                   <p>The medication/auto-injector research pod remains outside this manufacturing package and is not represented as a validated drug-delivery mechanism.</p>
@@ -546,35 +546,13 @@ export default function NGWatchPage() {
                     Rev 5 now includes an 8-layer HDI safety/core carrier specification, placement and routing constraints, PCBWay capability checks, impedance/thermal/power feasibility models, and a generated BOM/placement/fabrication review package.
                   </p>
                   <p className="mt-2 text-xs text-amber-300">
-                    Gerber/NC-drill release remains blocked until the validated electrical netlist, final PCBWay impedance stackup, and vendor-approved W5+/X35 compute/RF interface are available. No proprietary DDR/RF pinout is invented.
+                    Gerber/NC-drill release remains blocked. This public site does not contain Gerbers. No board here has a clean DRC, and none of it is fabrication-ready.
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-3">
-                    <a
-                      href="https://github.com/coden607/narcoguard-pwa/actions/workflows/watch-pcb.yml"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
-                    >
-                      Open PCB engineering artifacts <ExternalLink className="ml-1 h-4 w-4" />
-                    </a>
-                    <a
-                      href="https://github.com/coden607/narcoguard-pwa/blob/main/hardware/pcb/rev5/README.md"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center text-sm font-semibold text-primary hover:underline"
-                    >
-                      Inspect PCBWay package <ExternalLink className="ml-1 h-4 w-4" />
-                    </a>
-                  </div>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    The public check is <span className="font-mono">watch-pcb.yml</span>. It does not upload Gerbers.
+                    Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
+                  </p>
                 </div>
-                <a
-                  href="https://github.com/coden607/narcoguard-pwa/blob/main/hardware/cad/rev5/build_rev5.py"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-5 inline-flex items-center text-sm font-semibold text-primary hover:underline"
-                >
-                  Inspect the parametric CAD source <ExternalLink className="ml-1 h-4 w-4" />
-                </a>
               </HolographicCard>
             </div>
           </TabsContent>
@@ -803,9 +781,9 @@ export default function NGWatchPage() {
                     ["BioZ", "Body impedance analysis (hydration, composition)"],
                     ["Skin Temperature", "Melexis MLX90632 IR (trend only)"],
                     ["EDA (research)", "ams-OSRAM AS7038RB candidate"],
-                    ["Motion", "STMicro LSM6DSO32X 6-axis IMU (32g)"],
+                    ["Motion", "6-axis IMU, including a high-g range for impact research"],
                     ["Compass", "STMicro LIS2MDL 3-axis magnetometer"],
-                    ["Barometer", "Bosch BMP390 (altitude, weather)"],
+                    ["Barometer", "Pressure sensor behind a membrane vent"],
                     ["Fall Detection", "Planned; algorithm not written"],
                   ]
                 },
@@ -815,7 +793,7 @@ export default function NGWatchPage() {
                     ["Cellular", "Snapdragon X35 5G RedCap + LTE fallback; carrier certification unverified"],
                     ["eSIM", "STMicro ST4SIM-200M eUICC; carrier support unverified"],
                     ["Satellite", "SOS messaging via W5+ Gen 2 (Skylo NB-NTN) where available"],
-                    ["Wi-Fi", "Infineon CYW43022 candidate; Wi-Fi standard and RF integration unverified"],
+                    ["Wi-Fi", "Treated as part of the wearable module, with a separate safety radio. Not a second Wi-Fi chip."],
                     ["Bluetooth", "Bluetooth LE (version per final radio)"],
                     ["GNSS", "Platform/modem GNSS (L1+L5 capable); no separate chip"],
                     ["NFC", "STMicro ST54K (emergency ID; payments need certification)"],
@@ -863,7 +841,7 @@ export default function NGWatchPage() {
                     ["Back", "Zirconia ceramic with sensor windows"],
                     ["Dimensions", `Target ${caseMm}mm case, about ${variant.model.caseThicknessMm}mm thick (Rev 5 concept CAD generated; physical validation pending)`],
                     ["Weight", "Unknown until a prototype is built"],
-                    ["Water Rating", "Target IP68/ISO 22810; qualification unverified"],
+                    ["Water Rating", "Target IEC 60529 IP68 at 1.5 m for 30 min, plus ISO 22810. Not certified."],
                     ["Temp Range", "Target -20C to +55C (untested)"],
                     ["Strap", variantId === "40" ? "20mm quick-release silicone with S/M and M/L bands for smaller wrists; biocompatibility unverified" : "22mm quick-release candidate silicone; biocompatibility and ingress effects unverified"],
                     ["Gaskets", "Fluoroelastomer (FKM) seals, supplier TBD"],

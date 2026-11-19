@@ -54,7 +54,7 @@ const techSpecs = `# NarcoGuard NG Technical Specifications
 - **NFC**: For pairing and authentication
 
 ### Durability
-- **Water Resistance**: IP68 (50m depth)
+- **Water Resistance**: IP68 target, 1.5 m for 30 min per IEC 60529. Not certified.
 - **Shock Resistance**: MIL-STD-810H
 - **Temperature Range**: -20°C to 60°C
 - **Certifications**: Regulatory classification not established; formal review required

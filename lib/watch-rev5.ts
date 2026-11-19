@@ -1,3 +1,5 @@
+// Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
+
 export type Feasibility = "high" | "medium" | "experimental"
 
 export interface Rev5Module {
@@ -45,12 +47,12 @@ export const WATCH_REV5_MODULES: readonly Rev5Module[] = [
     label: "Thermoelectric case-back harvester",
     feasibility: "medium",
     sizes: ["NG46", "NG40"],
-    purpose: "Harvest a small amount of energy from the skin-to-ambient temperature gradient.",
-    candidatePart: "Thin custom TEG + ADP5091/ADP5092 low-voltage harvester",
+    purpose: "Reviewed and not fitted. A body-heat generator needs more thickness than this sealed case back has.",
+    candidatePart: "Not fitted",
     designRules: [
-      "Must preserve optical sensor skin contact and thermal sensing accuracy.",
-      "Must not thermally insulate the wearer enough to collapse the temperature gradient.",
-      "Output is auxiliary only and requires on-wrist measurement.",
+      "Do not place a TEG on the case back. That face is the sensor windows and the Qi coil.",
+      "Do not claim body-heat charging.",
+      "A later case with a real thermal path would be a new design, not a drop-in.",
     ],
   },
   {

@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
+// Public concept model. Manufacturing outlines are not in this repository.
+
 export type WatchDesignModule = {
   label: string
   widthMm: number
@@ -56,7 +59,7 @@ export const watchDesignModel = {
   },
   interLayerClearanceMm: 0.6,
   waterResistance: {
-    target: "IP68 enclosure + ISO 22810 water-resistant watch qualification",
+    target: "IP68 per IEC 60529, continuous immersion at 1.5 m for 30 min, plus ISO 22810 water-resistant watch qualification. Not certified.",
     status: "unverified" as const,
     sealedInterfaces: [
       "case-back perimeter",
@@ -77,7 +80,7 @@ export const watchDesignModel = {
 export const watchDesignModel40 = {
   caseDiameterMm: 40,
   caseThicknessMm: 12.2,
-  usableInternalPlanarAreaMm2: 920,
+  usableInternalPlanarAreaMm2: 918.63,
   nominalBatteryCapacityMah: 300,
   nominalBatteryVoltage: 3.7,
   sensorMonitoringPowerMw: 12.4,
@@ -120,7 +123,7 @@ export const watchDesignModel40 = {
   },
   interLayerClearanceMm: 0.6,
   waterResistance: {
-    target: "IP68 enclosure + ISO 22810 water-resistant watch qualification",
+    target: "IP68 per IEC 60529, continuous immersion at 1.5 m for 30 min, plus ISO 22810 water-resistant watch qualification. Not certified.",
     status: "unverified" as const,
     sealedInterfaces: [
       "case-back perimeter",

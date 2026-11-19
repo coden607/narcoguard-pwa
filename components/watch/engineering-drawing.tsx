@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
 "use client"
 
 import { useRef } from "react"
@@ -426,7 +427,7 @@ export function EngineeringDrawing({ selected, onSelect, geometry = GEOMETRY_46,
                 )),
               )
             })()}
-            <text x={12} y={199.5} fill={C.accent}>ALL DIMENSIONS IN MM. CONCEPT LAYOUT FOR DISCUSSION — NOT FOR MANUFACTURE, NOT A MEDICAL DEVICE.</text>
+            <text x={12} y={199.5} fill={C.accent}>ALL DIMENSIONS IN MM. CONCEPT ONLY — NOT FOR MANUFACTURE. Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.</text>
           </g>
 
           <g fontSize={2.2} fill={C.line}>
@@ -439,7 +440,7 @@ export function EngineeringDrawing({ selected, onSelect, geometry = GEOMETRY_46,
             <text x={209} y={189} fill={C.faint}>DRAWING</text>
             <text x={209} y={192.4}>{drawingNumber}</text>
             <text x={250} y={189} fill={C.faint}>REV</text>
-            <text x={250} y={192.4}>4.2 CONCEPT</text>
+            <text x={250} y={192.4}>5 CONCEPT</text>
             <text x={209} y={198} fill={C.faint}>UNITS / PROJECTION</text>
             <text x={209} y={201.4}>MM · THIRD ANGLE</text>
             <text x={250} y={198} fill={C.faint}>STATUS</text>

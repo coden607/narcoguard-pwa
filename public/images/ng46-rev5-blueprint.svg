@@ -20,5 +20,5 @@
 <text x="575" y="480" font-size="16">W5+/X35 compute/RF kept behind vendor-approved interface</text>
 <text x="828" y="495" font-size="14">RF zone</text><text x="685" y="492" font-size="14">SoC</text><text x="608" y="492" font-size="14">MCU</text>
 <text x="705" y="570" font-size="14">12 mm optical window</text><text x="638" y="690" font-size="14">annular rotor envelope</text>
-<text x="40" y="742" font-size="13" fill="#9adcc7">REV 5 ENGINEERING — fabrication CAD + PCBWay constraints/simulations are current.</text><text x="40" y="762" font-size="13" fill="#9adcc7">GERBER/NC DRILL RELEASE BLOCKED — final netlist, vendor RF interface, stackup and physical validation still required.</text></g>
+<text x="40" y="722" font-size="13" fill="#9adcc7">REV 5 ENGINEERING — fabrication CAD + PCBWay constraints/simulations are current.</text><text x="40" y="742" font-size="13" fill="#9adcc7">GERBER/NC DRILL RELEASE BLOCKED — final netlist, vendor RF interface, stackup and physical validation still required.</text><text x="40" y="772" font-size="12" fill="#9adcc7">Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.</text></g>
 </svg>

@@ -1,5 +1,7 @@
 # NarcoGuard NG Rev 5 — Energy Harvesting + Camera Addendum
 
+Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
+
 Status: research hardware concept. These additions are not manufacturing-ready and do not change the current non-medical-device status.
 
 ## Design decision
@@ -86,6 +88,8 @@ Rules:
 - test thermal effects under strong sunlight.
 
 ## 4. Thermoelectric body-heat harvesting
+
+Not fitted. A module thin enough for this case back does not produce useful power at a 1–3 K wrist delta, and that face is already the sensor windows and the Qi coil.
 
 Feasibility: MEDIUM.
 

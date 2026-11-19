@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
 // Numbered callouts shared by the engineering drawing, the 3D model and the component legend on
 // /watch. Part numbers are candidates that still need supplier confirmation.
 
@@ -11,7 +12,7 @@ export interface WatchComponent {
 
 export const WATCH_COMPONENTS: readonly WatchComponent[] = [
   { id: "snapdragon", name: "Snapdragon W5+ Gen 2", partNumber: "W5+ Gen 2 (SKU TBD)", color: "#FF4136", description: "Qualcomm's current wearable platform (2025): 4nm, Wear OS, always-on co-processor, GNSS and satellite SOS messaging. NarcoGuard firmware does not exist yet." },
-  { id: "nordic", name: "nRF5340 Safety MCU", partNumber: "NRF5340-QKAA-R7", color: "#FF851B", description: "Independent microcontroller intended to keep sensing and local alarms running if the main OS fails; firmware not written." },
+  { id: "nordic", name: "Safety microcontroller", partNumber: "private hardware package", color: "#FF851B", description: "Independent microcontroller intended to keep sensing and local alarms running if the main OS fails; firmware not written." },
   { id: "display", name: '1.45" LTPO AMOLED', partNumber: "466×466 LTPO (vendor TBD)", color: "#FFDC00", description: "466x466 round display, 1-120Hz adaptive. Always-on mode would show status without waking the main processor. Brightness and vendor are unconfirmed." },
   { id: "ppg-ecg", name: "MAX86178 PPG+ECG+BioZ", partNumber: "MAX86178", color: "#FF69B4", description: "Optical + electrical front end: heart rate, SpO2 estimate, single-lead ECG and skin contact. Wrist accuracy for overdose detection is unproven." },
   { id: "naloxone", name: "Naloxone Module (research)", partNumber: "Not specified", color: "#FF0000", description: "Future research only: drug container, needle and actuator would need clinical engineering, a pharmaceutical partner and FDA review. Not functional." },

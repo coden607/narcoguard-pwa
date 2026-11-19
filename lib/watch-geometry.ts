@@ -1,3 +1,6 @@
+// Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
+// Illustrative layout for the public drawing. It is not the manufacturing placement.
+
 import { watchDesignModel, watchDesignModel40, type WatchDesignModel } from "@/lib/watch-design"
 
 // Concept geometry for the drawing and the 3D model, in millimetres. Axes: x toward 3 o'clock,
@@ -111,9 +114,9 @@ export function buildWatchGeometry(model: WatchDesignModel, spec: LayoutSpec) {
     { id: "soc", label: "SoC + co-processor", callout: "snapdragon", z: pcbTop, h: 1.2, ...at(spec.soc, soc.widthMm, soc.heightMm) },
     { id: "connectivity", label: "Connectivity stack", callout: "cellular", z: pcbTop, h: 1.2, ...at(spec.connectivity, connectivity.widthMm, connectivity.heightMm) },
     { id: "mcu", label: "nRF5340 (aQFN94 7×7)", callout: "nordic", z: pcbTop, h: 0.9, ...at(spec.mcu, 7, 7) },
-    { id: "imu", label: "LSM6DSO32X (LGA-14 2.5×3)", z: pcbTop, h: 0.86, ...at(spec.imu, 2.5, 3) },
-    { id: "baro", label: "BMP390 (LGA-10 2×2)", z: pcbTop, h: 0.75, ...at(spec.baro, 2, 2) },
-    { id: "nfc", label: "ST54K NFC controller", callout: "nfc", z: pcbTop, h: 0.6, ...at(spec.nfc, 4.5, 4.5) },
+    { id: "imu", label: "6-axis IMU", z: pcbTop, h: 0.86, ...at(spec.imu, 2.5, 3) },
+    { id: "baro", label: "Barometer", z: pcbTop, h: 0.75, ...at(spec.baro, 2, 2) },
+    { id: "nfc", label: "NFC controller", callout: "nfc", z: pcbTop, h: 0.6, ...at(spec.nfc, 4.5, 4.5) },
     { id: "emmc", label: "eMMC 32 GB (11.5×13), board underside", x: spec.soc.x, y: spec.soc.y, z: round(layer("compute").z0 - 0.6), w: 11.5, d: 13, h: 0.6, hidden: true },
     { id: "battery", label: `Battery ${battery.widthMm}×${battery.heightMm}×${batteryPlane.maximumHeightMm} mm`, callout: "battery", x: 0, y: 0, z: layer("battery").z0, w: battery.widthMm, d: battery.heightMm, h: batteryPlane.maximumHeightMm, hidden: true },
     { id: "sensor-flex", label: "Optical sensor flex (MAX86178, LEDs, photodiodes)", callout: "ppg-ecg", x: 0, y: 0, z: round(layer("case-back").z1 - 0.5), w: spec.sensorFlex, d: spec.sensorFlex, h: 0.5, hidden: true },
@@ -186,8 +189,8 @@ export const GEOMETRY_46 = buildWatchGeometry(watchDesignModel, {
   imu: { x: 5, y: -13 },
   baro: { x: 9, y: -12 },
   nfc: { x: -6, y: -14.5 },
-  openIssues: ({ displayDiameter, clearance }) => [
-    `Display envelope: a 1.45" round panel is Ø${displayDiameter} mm, but the planar model still budgets 31×31 mm. Reconcile in CAD.`,
+  openIssues: ({ clearance }) => [
+    "The round display opening is a concept. The matched panel outline is in the private hardware package, not this sketch.",
     "Planar budget is over-allocated in the design model (see the sealed-core fit check); the layout above stacks modules to fit.",
     `The eMMC sits under the board in the ${clearance} mm battery clearance; package height and swelling allowance need verification.`,
     "Medication pod is a separate sealed lug module; actuator, needle path and drug stability are unspecified research items.",
@@ -209,8 +212,8 @@ export const GEOMETRY_40 = buildWatchGeometry(watchDesignModel40, {
   imu: { x: 5, y: -12 },
   baro: { x: 9, y: -11 },
   nfc: { x: -1, y: -11.75 },
-  openIssues: ({ displayDiameter, clearance }) => [
-    `Display envelope: a 1.2" round panel is Ø${displayDiameter} mm against a 27×27 mm planar budget; reconcile in CAD.`,
+  openIssues: ({ clearance }) => [
+    "The smaller round display opening is a concept. The matched panel outline is in the private hardware package, not this sketch.",
     "The connectivity stack is budgeted at 12×12 mm (16×14 on the 46 mm) as a compact RF module target; if no vendor confirms it, the board must go double-sided.",
     `The SoC corner sits within 0.05 mm of the Ø34.2 board edge, and the eMMC sits in the ${clearance} mm battery clearance; both need CAD and tolerance checks.`,
     "Same medication pod as the 46 mm (the dose volume does not shrink); it sits in a 20 mm lug and remains research only.",

@@ -1,5 +1,9 @@
 # NarcoGuard wearable concept: BOM and validation notes
 
+Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
+
+Orderable part numbers and manufacturing files are not in this public repository.
+
 This document describes the current engineering concept. It is not a manufacturing drawing, medical-device specification, or evidence that the hardware can safely administer medication.
 
 ## 2026-10-05 modernization (watch-only design)
@@ -23,14 +27,14 @@ Known limitation: published overdose-detection research mainly uses chest-worn r
 | --- | --- | --- | --- |
 | Case | 46 × 13.8 mm Ti-6Al-4V | 40 × 12.2 mm Ti-6Al-4V | Smaller wrists; the size class of 40–41 mm smartwatches |
 | Display | 1.4–1.5 in LTPO AMOLED (Ø36.8 panel) | 1.2 in round AMOLED, about 396×396 (Ø30.5 panel) | Fits inside a Ø34.2 mm board area |
-| Battery | 500 mAh, 28×22×5 mm | 300 mAh, about 24×19×4.2 mm | Volume available; expect shorter runtime (idealized model 90 h vs 149 h, not measured) |
+| Battery | Cell sized to the clearance stack. The old 500 mAh figure is not a quoted cell. | Smaller cell. The old 300 mAh figure is not a quoted cell. | Runtime must be measured. A sensor-only hour count is not the system budget. |
 | Connectivity stack | 16×14 mm budget | 12×12 mm compact RF module target | The 46 mm footprint does not fit beside the SoC; needs vendor confirmation or a double-sided board |
-| Qi coil | Wurth 760308103 | About 15–25 mm receive coil (TBD) | Smaller case back |
+| Qi coil | Sealed receive coil | Smaller sealed receive coil | Smaller case back |
 | Crystal / case back | 46 mm sapphire, zirconia back | About 36 mm, 0.8 mm sapphire; smaller zirconia back | Smaller case; drop testing required |
 | Strap | 22 mm LSR | 20 mm LSR with S/M and M/L bands | Fits smaller wrists |
 | Medication pod | 18×12×10 mm research module | Unchanged | Dose volume does not shrink; needle length would be set for body size by clinicians, not by sex |
 
-Candidate component subtotal: $307.90 (46 mm: $325.40); complete build estimate $432.90 (46 mm: $450.40). The public goal stays sized on the 46 mm estimate, so a mix of sizes builds about the same number of prototypes. The drawing (NG-CON-040), 3D model and the side-by-side render `public/images/ng-sizes-render.jpg` are generated from `lib/watch-geometry.ts` (`GEOMETRY_40`); open issues are listed on the drawing.
+The public concept total moves when a line is removed. It is not a quote. The drawing and the side-by-side render are concepts. Manufacturing files are proprietary and are not in this repository.
 
 ## Modular bill of materials
 
@@ -69,7 +73,7 @@ These are feasibility calculations, not CAD evidence. The core remains condition
 
 ## Water-resistance requirement
 
-Water resistance is a required design constraint, not a current product claim. The target is an IP68 enclosure qualification under [IEC 60529](https://webstore.iec.ch/en/publication/2453) together with water-resistant-watch qualification under [ISO 22810:2010](https://www.iso.org/standard/45334.html). The applicable standards define the test methods and marking requirements; a rendered blueprint or gasket specification cannot substitute for those tests.
+Water resistance is a required design constraint, not a current product claim. The target is IEC 60529 IP68 as continuous immersion at 1.5 m for 30 minutes, the depth stated for this design, together with water-resistant-watch qualification under [ISO 22810:2010](https://www.iso.org/standard/45334.html). The standards define the test methods. A drawing is not a certificate. No watch has been tested.
 
 The enclosure concept must use a continuous case-back seal, controlled crystal and crown interfaces, sealed service connectors, a sealed charging strategy, protected sensor windows, and a cartridge bay that cannot compromise the pressure boundary. The medication module must be mechanically locked out during water exposure and must not be represented as safe to deploy underwater.
 
