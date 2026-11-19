@@ -65,17 +65,23 @@ test.describe("NarcoGuard Production Validation", () => {
   })
 
   test("critical APIs fail closed when providers are unavailable", async ({ request }) => {
-    for (const api of ["/api/vitals", "/api/emergency", "/api/location", "/api/stats"]) {
+    for (const api of ["/api/vitals", "/api/location", "/api/stats"]) {
       const response = await request.get(api)
       expect(response.status()).toBe(503)
       await expect(response.json()).resolves.toMatchObject({ available: false })
     }
   })
 
-  test("emergency dispatch never reports a fabricated success", async ({ request }) => {
+  test("emergency dispatch route is removed and never reports success", async ({ request }) => {
+    const missing = await request.get("/api/emergency")
+    expect(missing.status()).toBe(404)
     const response = await request.post("/api/emergency", { data: { location: null, vitals: null } })
-    expect(response.status()).toBe(503)
-    await expect(response.json()).resolves.toMatchObject({ available: false, dispatched: false })
+    expect(response.status()).toBe(404)
+    const contentType = response.headers()["content-type"] ?? ""
+    if (contentType.includes("json")) {
+      const body = await response.json()
+      expect(body.dispatched).not.toBe(true)
+    }
   })
 
   test("native text correction is enabled for prose fields", async ({ page }) => {
