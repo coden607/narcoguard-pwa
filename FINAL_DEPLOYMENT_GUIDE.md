@@ -422,9 +422,9 @@ navigator.serviceWorker.getRegistrations().then(console.log)
 - Iterate based on real-world usage
 
 **The app currently:**
-- ✅ Works perfectly with MOCK data
-- ✅ Requires NO external API keys to run
-- ✅ Fully functional for demonstration
+- ✅ Runs without inventing mock vitals, heroes, donations, or locations
+- ✅ Keeps provider-backed features off until their keys are set
+- ✅ Calls 911 and uses consented contact texts when Twilio is configured
 - ✅ Ready for real integrations when you're ready
 
 **When adding real services:**

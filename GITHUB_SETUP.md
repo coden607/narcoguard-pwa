@@ -115,18 +115,11 @@ NEXT_PUBLIC_APP_NAME=NarcoGuard
 NEXT_PUBLIC_APP_URL=https://narcoguard.app
 NEXT_PUBLIC_API_URL=https://narcoguard.app/api
 
-# Feature Flags
-NEXT_PUBLIC_ENABLE_LOCATION_TRACKING=true
-NEXT_PUBLIC_ENABLE_VITALS_MONITORING=true
-NEXT_PUBLIC_ENABLE_EMERGENCY_ALERTS=true
-NEXT_PUBLIC_ENABLE_HERO_NETWORK=true
-NEXT_PUBLIC_ENABLE_AR_GUIDANCE=true
-
 # Environment
 NODE_ENV=production
 \`\`\`
 
-**Note**: The app works perfectly with MOCK data. Add real API keys only when you have actual services to integrate.
+**Note**: Features that need a provider stay off until their keys are set. The app does not invent mock vitals, heroes, donations, or locations.
 
 ## Step 7: Enable GitHub Actions
 
