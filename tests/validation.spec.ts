@@ -64,16 +64,14 @@ test.describe("NarcoGuard Production Validation", () => {
     await page.waitForTimeout(2000)
   })
 
-  test("critical APIs fail closed when providers are unavailable", async ({ request }) => {
-    for (const api of ["/api/vitals", "/api/stats"]) {
-      const response = await request.get(api)
-      expect(response.status()).toBe(503)
-      await expect(response.json()).resolves.toMatchObject({ available: false })
-    }
+  test("vitals API fails closed when no wearable ingest provider is configured", async ({ request }) => {
+    const response = await request.get("/api/vitals")
+    expect(response.status()).toBe(503)
+    await expect(response.json()).resolves.toMatchObject({ available: false })
   })
 
-  test("obsolete dispatch, location, and analytics routes are removed and never report success", async ({ request }) => {
-    for (const api of ["/api/emergency", "/api/location", "/api/analytics/emergency"]) {
+  test("obsolete dispatch, location, analytics, and stats routes are removed and never report success", async ({ request }) => {
+    for (const api of ["/api/emergency", "/api/location", "/api/analytics/emergency", "/api/stats"]) {
       const missing = await request.get(api)
       expect(missing.status()).toBe(404)
     }
