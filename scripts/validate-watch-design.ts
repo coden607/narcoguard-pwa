@@ -3,9 +3,12 @@ import { watchDesignCalculations, watchDesignCalculations40, watchDesignModel, w
 
 // This is a deterministic engineering-model regression check, not a substitute
 // for CAD, enclosure testing, battery qualification, or sensor validation.
+assert.equal(watchDesignModel.nominalBatteryCapacityMah, 250)
+assert.equal(watchDesignModel.nominalBatteryVoltage, 3.7)
 assert.equal(watchDesignCalculations.planarFootprintMm2, 2469)
 assert.equal(watchDesignCalculations.planarFitMarginMm2, -1219)
-assert.equal(watchDesignCalculations.idealizedRuntimeHours, 149)
+// idealizedRuntimeHours is a sensor-only energy check, not a public battery-life claim.
+// Power budget is in progress; do not treat that field as a published hour figure.
 assert.deepEqual(watchDesignCalculations.coreLayerFootprintsMm2, [1089, 548, 616])
 assert.deepEqual(watchDesignCalculations.coreLayerMarginsMm2, [161, 702, 634])
 assert.equal(watchDesignCalculations.coreStackHeightMm, 10.2)
@@ -24,7 +27,8 @@ assert.deepEqual(watchDesignCalculations40.coreLayerFootprintsMm2, [841, 468, 45
 assert.ok(watchDesignCalculations40.coreLayerMarginsMm2.every((margin) => margin > 0))
 assert.equal(watchDesignCalculations40.coreStackHeightMm, 9.4)
 assert.equal(watchDesignCalculations40.coreThicknessMarginMm, 2.8)
-assert.equal(watchDesignCalculations40.idealizedRuntimeHours, 90)
+assert.equal(watchDesignModel40.nominalBatteryCapacityMah, 120)
+assert.equal(watchDesignModel40.nominalBatteryVoltage, 3.7)
 assert.equal(watchDesignModel40.medicationPod.underwaterDeployment, false)
 assert.equal(watchDesignModel40.waterResistance.status, "unverified")
 
@@ -35,7 +39,7 @@ console.log(
       planarFootprintMm2: watchDesignCalculations.planarFootprintMm2,
       planarAllowanceMm2: watchDesignModel.usableInternalPlanarAreaMm2,
       planarFitMarginMm2: watchDesignCalculations.planarFitMarginMm2,
-      idealizedRuntimeHours: watchDesignCalculations.idealizedRuntimeHours,
+      runtimeStatus: "needs recalculation (power budget in progress)",
       waterResistanceTarget: watchDesignModel.waterResistance.target,
     },
     null,

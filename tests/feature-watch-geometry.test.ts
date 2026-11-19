@@ -65,7 +65,7 @@ test("the 40 mm layout fits its smaller board and case with the same layer rules
 
 test("the 40 mm keeps every numbered component and safety function of the 46 mm", () => {
   assert.deepEqual(WATCH_COMPONENTS_40.map((c) => c.id), WATCH_COMPONENTS.map((c) => c.id))
-  assert.match(WATCH_COMPONENTS_40.find((c) => c.id === "battery")!.name, /300mAh/)
+  assert.match(WATCH_COMPONENTS_40.find((c) => c.id === "battery")!.name, /~120 mAh \(estimated\)/)
   assert.equal(WATCH_COMPONENTS_40.find((c) => c.id === "naloxone")!.description, WATCH_COMPONENTS.find((c) => c.id === "naloxone")!.description)
 })
 

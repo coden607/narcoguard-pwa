@@ -25,7 +25,7 @@ import {
   Download,
   Boxes,
 } from "lucide-react"
-import { watchDesignCalculations, watchDesignCalculations40, watchDesignModel, watchDesignModel40 } from "@/lib/watch-design"
+import { CELL_SELECTION_PENDING_NOTE, formatEstimatedBatteryCapacityMah, formatEstimatedBatteryEnergyWh, watchDesignCalculations, watchDesignCalculations40, watchDesignModel, watchDesignModel40 } from "@/lib/watch-design"
 import { WATCH_COMPONENTS, WATCH_COMPONENTS_40 } from "@/lib/watch-components"
 import { GEOMETRY_40, GEOMETRY_46 } from "@/lib/watch-geometry"
 import { BOM_40, BOM_46, UNIT_COSTS, bomTotals } from "@/lib/watch-bom"
@@ -90,7 +90,8 @@ export default function NGWatchPage() {
   const componentBOMTotal = totals.components
   const totalPerUnit = totals.hardware
   const coreMinimumLayerMarginMm2 = Math.min(...variant.calc.coreLayerMarginsMm2)
-  const idealizedRuntimeHours = variant.calc.idealizedRuntimeHours
+  const batteryCapacityLabel = formatEstimatedBatteryCapacityMah(variant.model.nominalBatteryCapacityMah)
+  const batteryEnergyLabel = formatEstimatedBatteryEnergyWh(variant.model.nominalBatteryCapacityMah, variant.model.nominalBatteryVoltage)
   const caseMm = variant.model.caseDiameterMm
   const designChecks = [
     {
@@ -160,7 +161,7 @@ export default function NGWatchPage() {
             {[
               ["Case", `${caseMm} × ${variant.model.caseThicknessMm} mm`],
               ["Display", variant.geometry.ENVELOPE.displayDiameter > 33 ? '1.45" round' : '1.2" round'],
-              ["Battery", `${variant.model.nominalBatteryCapacityMah} mAh`],
+              ["Battery", `${batteryCapacityLabel}, 3.7V, ${batteryEnergyLabel}`],
               ["Band", `${variant.geometry.ENVELOPE.strapWidth} mm titanium link`],
               ["Base candidate HW", `${totalPerUnit.toFixed(2)}`],
             ].map(([term, value]) => (
@@ -459,7 +460,7 @@ export default function NGWatchPage() {
                 </div>
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-xs uppercase tracking-[0.16em] text-primary">Runtime model</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Idealized energy-only estimate: {idealizedRuntimeHours} hours; radio bursts, conversion losses, temperature, battery aging, and safety reserve are not modeled.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Battery life needs recalculation against the full power budget (in progress). No hour or day figure is published until that budget is complete. {CELL_SELECTION_PENDING_NOTE}</p>
                 </div>
               </div>
             </HolographicCard>
@@ -758,7 +759,7 @@ export default function NGWatchPage() {
                 {
                   icon: Battery, color: "text-green-500", title: "Candidate Sealed Power System",
                   specs: [
-                    ["Battery", `${variant.model.nominalBatteryCapacityMah}mAh Li-ion polymer, IEC 62133-2 / UN38.3 certified cell required`],
+                    ["Battery", `${batteryCapacityLabel} certified protected lithium polymer pouch cell at 3.7V (${batteryEnergyLabel}); IEC 62133-2 / UN38.3 certified cell required. ${CELL_SELECTION_PENDING_NOTE}`],
                     ["Battery Life", "Unknown until measured; cellular watches typically need daily charging"],
                     ["Energy harvesting", "Rev 5 research: crown generator, photovoltaic ring, and on the larger case an automatic rotor. Body-heat thermoelectric harvesting was reviewed and is not fitted. None of this is claimed to continuously power the cellular watch"],
                     ["Wireless Charging", variantId === "40" ? "Sealed Qi with a smaller receive coil" : "Sealed Qi receive coil"],
