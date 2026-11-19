@@ -75,7 +75,7 @@ cat grants/tracking/SUMMARY.md
 ## Supporting the Mission
 
 In addition to grants, NarcoGuard is funded through:
-- **GoFundMe**: https://gofund.me/ac8905cc
+- **GoFundMe**: https://www.gofundme.com/f/fund-narcoguard-broome-county
 - **Direct partnerships**: Contact stephen.r.blanford@gmail.com
 - **Hero Network**: Community volunteer program
 

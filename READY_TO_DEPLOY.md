@@ -52,7 +52,7 @@ All grant proposals are prepared and ready in `grants/ready-to-submit/`:
 
 Automated 7-day campaign cycle running 3x daily:
 - Demo URL: https://v0-narcoguard-pwa-build-4zfrgsdwj-coden809s-projects.vercel.app/
-- GoFundMe: https://gofund.me/ac8905cca
+- GoFundMe: https://www.gofundme.com/f/fund-narcoguard-broome-county
 - Content saved in `marketing/posts/` for manual sharing
 
 ## Deployment Status
