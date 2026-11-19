@@ -161,7 +161,7 @@ export default function NGWatchPage() {
               ["Case", `${caseMm} × ${variant.model.caseThicknessMm} mm`],
               ["Display", variant.geometry.ENVELOPE.displayDiameter > 33 ? '1.45" round' : '1.2" round'],
               ["Battery", `${variant.model.nominalBatteryCapacityMah} mAh`],
-              ["Strap", `${variant.geometry.ENVELOPE.strapWidth} mm`],
+              ["Band", `${variant.geometry.ENVELOPE.strapWidth} mm titanium link`],
               ["Base candidate HW", `${totalPerUnit.toFixed(2)}`],
             ].map(([term, value]) => (
               <div key={term} className="rounded-lg border border-border/60 p-2">
@@ -173,34 +173,27 @@ export default function NGWatchPage() {
           <figure className="mt-4" data-testid="rev5-primary-visuals">
             <div className="overflow-hidden rounded-2xl border border-primary/30 bg-background/40">
               <Image
-                src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
-                alt="NarcoGuard NG46 rugged titanium and NG40 pink rose-titanium concepts with metal link bracelets, front, side, rear and exploded views"
-                width={1536}
-                height={1024}
+                src="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
+                alt="Concept render of NarcoGuard NG46 in natural titanium and NG40 in rose gold titanium, both on premium metal titanium link bracelets with integrated solar cells"
+                width={1280}
+                height={720}
                 priority
                 sizes="(min-width: 1152px) 1100px, 100vw"
                 className="block h-auto w-full object-contain"
               />
             </div>
-            <a href="/images/ng-titanium-3d.png?rev=complete-2026-10-15" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4">Open full-size watch blueprint</a>
+            <a href="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4">Open full-size concept render</a>
             <div className="mt-3 grid gap-3 lg:grid-cols-2">
               <Image
-                src="/images/ng-exploded-view.jpg?rev=visual-2026-10-14"
-                alt="NarcoGuard Rev 5 exploded engineering concept"
-                width={1200}
-                height={1500}
-                className="h-auto w-full rounded-xl border border-border/60 bg-background"
-              />
-              <Image
-                src="/images/ng-modular-exploded.jpg?rev=visual-2026-10-14"
-                alt="NarcoGuard Rev 5 modular watch family engineering concept"
-                width={1200}
-                height={1500}
+                src="/images/ng-rev5-exploded-titanium.jpg?rev=titanium-solar-2026-11-18"
+                alt="Concept render: labeled exploded view of the Rev 5 watch with a titanium link band, integrated solar cells, and silver, titanium, and rose gold titanium finish swatches"
+                width={720}
+                height={1280}
                 className="h-auto w-full rounded-xl border border-border/60 bg-background"
               />
             </div>
             <figcaption className="mt-3 rounded-xl border border-amber-400/30 bg-amber-400/5 p-3 text-xs text-muted-foreground">
-              <strong className="text-foreground">Primary visual direction:</strong> rugged titanium NG46 and pink rose-titanium NG40 with metal link bracelets. These generated 3D concept renders show the intended appearance; they are not exports from the downloadable CAD. Internal layout, materials, dimensions, and manufacturing fit remain unverified. Use the Blueprint, 3D, CAD, BOM, and PCBWay sections below for the current engineering package and its limits.
+              <strong className="text-foreground">Primary visual direction:</strong> a premium solid metal titanium link bracelet with solar cells integrated into the band. Men&apos;s finishes are silver or natural titanium (NG46); the women&apos;s finish is rose gold titanium (NG40). These generated 3D concept renders show the intended appearance; they are not photographs of a built watch and are not exports from the downloadable CAD. Internal layout, materials, dimensions, and manufacturing fit remain unverified. Use the Blueprint, 3D, CAD, BOM, and PCBWay sections below for the current engineering package and its limits.
             </figcaption>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Current engineering blueprint</Button>
@@ -226,12 +219,10 @@ export default function NGWatchPage() {
           </div>
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             {[
-              ["/images/ng-watch-hero.jpg?rev=visual-2026-10-14", "NG46 / NG40 Hero Network concept"],
+              ["/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18", "NG46 natural titanium and NG40 rose gold titanium on solar-inlay link bracelets"],
+              ["/images/ng-rev5-exploded-titanium.jpg?rev=titanium-solar-2026-11-18", "Labeled exploded view with titanium solar link band and finish swatches"],
+              ["/images/ng-titanium-3d.png?rev=complete-2026-10-15", "Earlier NG46 / NG40 metal-link 3D concept board"],
               ["/images/ng-blueprint.jpg?rev=visual-2026-10-14", "Original NarcoGuard watch blueprint concept"],
-              ["/images/ng-blueprint-detailed.jpg?rev=visual-2026-10-14", "Original detailed engineering concept"],
-              ["/images/ng-sizes-render.jpg?rev=visual-2026-10-14", "Original NG46 / NG40 size and form study"],
-              ["/images/watch-on-wrist-lifestyle.jpg?rev=visual-2026-10-14", "Wearable lifestyle concept"],
-              ["/images/ng-titanium-3d.png?rev=complete-2026-10-15", "NG46 titanium / NG40 pink rose-titanium 3D concept"],
             ].map(([src, label]) => (
               <figure key={src} className="overflow-hidden rounded-2xl border border-border/60 bg-background/35">
                 <Image
@@ -808,9 +799,9 @@ export default function NGWatchPage() {
                     ["Weight", "Unknown until a prototype is built"],
                     ["Water Rating", "Target IEC 60529 IP68 at 1.5 m for 30 min, plus ISO 22810. Not certified."],
                     ["Temp Range", "Target -20C to +55C (untested)"],
-                    ["Strap", variantId === "40" ? "20mm quick-release silicone with S/M and M/L bands for smaller wrists; biocompatibility unverified" : "22mm quick-release candidate silicone; biocompatibility and ingress effects unverified"],
+                    ["Band", variantId === "40" ? "20 mm premium solid titanium link bracelet with solar cells integrated into the band; women's finish is rose gold titanium. Candidate part; biocompatibility, clasp, and ingress effects unverified." : "22 mm premium solid titanium link bracelet with solar cells integrated into the band; men's finishes are silver or natural titanium. Candidate part; biocompatibility, clasp, and ingress effects unverified."],
                     ["Gaskets", "Fluoroelastomer (FKM) seals, supplier TBD"],
-                    ["Modular Parts", "Battery, strap, glass; service seals require post-service pressure testing"],
+                    ["Modular Parts", "Battery, band, glass; service seals require post-service pressure testing"],
                   ]
                 },
                 {

@@ -13,26 +13,31 @@ test("installed PWA refresh includes the current Rev 5 watch visuals, fabricatio
   assert.match(sw, /"\/watch"/)
   assert.match(sw, /ng46-rev5-blueprint\.svg/)
   assert.match(sw, /ng40-rev5-blueprint\.svg/)
-  assert.match(sw, /narcoguard-shell-v17/)
+  assert.match(sw, /narcoguard-shell-v18/)
 
   assert.match(watch, /ng46-rev5-blueprint\.svg\?rev=5-2026-10-14/)
   assert.match(watch, /ng40-rev5-blueprint\.svg\?rev=5-2026-10-14/)
   assert.match(watch, /data-testid="rev5-concept-visual-gallery"/)
-  assert.match(watch, /ng-blueprint-detailed\.jpg\?rev=visual-2026-10-14/)
-  assert.match(watch, /ng-exploded-view\.jpg\?rev=visual-2026-10-14/)
-  assert.match(watch, /ng-modular-exploded\.jpg\?rev=visual-2026-10-14/)
+  assert.match(watch, /ng-rev5-hero-titanium\.jpg\?rev=titanium-solar-2026-11-18/)
+  assert.match(watch, /ng-rev5-exploded-titanium\.jpg\?rev=titanium-solar-2026-11-18/)
   assert.match(watch, /Primary visual direction:/)
+  assert.match(watch, /premium solid metal titanium link bracelet with solar cells integrated into the band/)
+  assert.match(watch, /rose gold titanium/)
   for (const concept of [
-    "ng-watch-hero.jpg",
+    "ng-rev5-hero-titanium.jpg",
+    "ng-rev5-exploded-titanium.jpg",
+    "ng-titanium-3d.png",
     "ng-blueprint.jpg",
-    "ng-blueprint-detailed.jpg",
-    "ng-exploded-view.jpg",
-    "ng-modular-exploded.jpg",
-    "ng-sizes-render.jpg",
-    "watch-on-wrist-lifestyle.jpg",
   ]) {
     assert.match(watch, new RegExp(concept.replace(".", "\\.")), concept)
   }
+  assert.doesNotMatch(watch, /ng-watch-hero\.jpg/)
+  assert.doesNotMatch(watch, /ng-sizes-render\.jpg/)
+  assert.doesNotMatch(watch, /watch-on-wrist-lifestyle\.jpg/)
+  assert.doesNotMatch(watch, /ng-exploded-view\.jpg/)
+  assert.doesNotMatch(watch, /ng-modular-exploded\.jpg/)
+  assert.doesNotMatch(watch, /ng-blueprint-detailed\.jpg/)
+  assert.doesNotMatch(watch, /quick-release silicone/)
   assert.match(watch, /Concept artwork — use the Blueprint, 3D, CAD, BOM, and PCBWay sections for current engineering status/)
 
   assert.match(drawing, /Rev 5 concept engineering drawing/)

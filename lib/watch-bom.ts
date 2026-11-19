@@ -405,13 +405,13 @@ export const BOM_46: BomCategory[] = [
         datasheet: "swissjewel.com",
       },
       {
-        name: "Medical Silicone Sport Strap (w/ Quick-Release)",
-        description: "Candidate LSR silicone strap with 22mm interface; biocompatibility, skin contact, washability, and sensor integration require qualification",
+        name: "Titanium solar-inlay link bracelet",
+        description: "Candidate premium solid titanium link bracelet with solar cells integrated into the band, 22 mm lug interface; men's finishes are silver or natural titanium. Clasp, finish, solar-cell integration, biocompatibility, and ingress effects require qualification. Unit price is an unquoted placeholder pending a supplier quote.",
         quantity: 1,
         unitPrice: 6.00,
-        supplier: "Custom (Shin-Etsu Chemical)",
-        partNumber: "NG-STRAP-LSR-22MM",
-        datasheet: "shinetsu.com",
+        supplier: "Custom (TBD)",
+        partNumber: "NG-BAND-TI-SOLAR-22MM",
+        datasheet: "N/A - Custom",
       },
       {
         name: "8-layer HDI carrier assembly",
@@ -509,9 +509,9 @@ export const BOM_40: BomCategory[] = replace(BOM_46, {
     unitPrice: 13.0,
     partNumber: "NG-SAP-40-08 (quote)",
   },
-  "Medical Silicone Sport Strap (w/ Quick-Release)": {
-    description: "Candidate LSR silicone strap with a 20 mm interface, supplied with small/medium and medium/large bands so it fits smaller wrists; biocompatibility and skin contact require qualification",
-    partNumber: "NG-STRAP-LSR-20MM",
+  "Titanium solar-inlay link bracelet": {
+    description: "Candidate premium solid titanium link bracelet with solar cells integrated into the band, 20 mm lug interface for smaller wrists; women's finish is rose gold titanium. Clasp, finish, solar-cell integration, biocompatibility, and ingress effects require qualification. Unit price is an unquoted placeholder pending a supplier quote.",
+    partNumber: "NG-BAND-TI-SOLAR-20MM",
   },
   "8-layer HDI carrier assembly": {
     description: "Smaller 8-layer 1+6+1 HDI carrier for the 40 mm case. A separate fabrication from the 46 mm board. Not a released Gerber set.",

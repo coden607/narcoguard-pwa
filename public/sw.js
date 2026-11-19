@@ -1,4 +1,4 @@
-const CACHE_NAME = "narcoguard-shell-v17";
+const CACHE_NAME = "narcoguard-shell-v18";
 // Offline map tiles (Feature 60) live in a separate cache that the page fills only after the
 // person opts in. The worker never fetches or intercepts any third-party tile request; it just
 // keeps that cache when old shell caches are cleaned up.
@@ -31,9 +31,8 @@ const APP_SHELL = [
   "/images/ng40-rev5-blueprint.svg",
   "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14",
   "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14",
-  "/images/ng-blueprint-detailed.jpg?rev=visual-2026-10-14",
-  "/images/ng-exploded-view.jpg?rev=visual-2026-10-14",
-  "/images/ng-modular-exploded.jpg?rev=visual-2026-10-14",
+  "/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18",
+  "/images/ng-rev5-exploded-titanium.jpg?rev=titanium-solar-2026-11-18",
 ];
 
 self.addEventListener("install", (event) => {

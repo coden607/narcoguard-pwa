@@ -124,7 +124,7 @@ test('watch, account and support reflow on narrow zoomed displays', async ({ pag
     expect(width.page, `${path} should fit the viewport`).toBeLessThanOrEqual(width.viewport + 1)
     await expect(page.getByRole('button', { name: 'Toggle navigation' })).toBeInViewport()
   }
-  const image = page.locator('img[src*="ng-titanium-3d"]').first()
+  const image = page.locator('img[src*="ng-rev5-hero-titanium"]').first()
   await expect(image).toBeVisible()
   await expect.poll(() => image.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
 })
@@ -140,9 +140,9 @@ test('the complete primary watch board retains its full aspect ratio on iPhone w
       height: img.getBoundingClientRect().height,
       parentHeight: img.parentElement!.getBoundingClientRect().height,
     }))
-    expect(dimensions.height / dimensions.width).toBeCloseTo(1024 / 1536, 2)
+    expect(dimensions.height / dimensions.width).toBeCloseTo(720 / 1280, 2)
     expect(dimensions.parentHeight).toBeGreaterThanOrEqual(dimensions.height)
-    await expect(page.getByRole('link', { name: 'Open full-size watch blueprint' })).toHaveAttribute('href', /rev=complete-2026-10-15/)
+    await expect(page.getByRole('link', { name: 'Open full-size concept render' })).toHaveAttribute('href', /rev=titanium-solar-2026-11-18/)
   }
 })
 
