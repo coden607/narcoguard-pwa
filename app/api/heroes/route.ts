@@ -1,7 +1,7 @@
 import { isSameOrigin, json, readJson } from "@/lib/api-helpers"
 import { alertsStatus } from "@/lib/hero-alerts"
 import { acceptsHeroNaloxoneAttestation, heroSecret, verifyCertificate } from "@/lib/hero-certification"
-import { canGoOnCall, parseNaloxoneExpiry, utcDate } from "@/lib/hero-readiness"
+import { canGoOnCall, exactTotal, parseNaloxoneExpiry, staleOnCallPath, utcDate } from "@/lib/hero-readiness"
 import { getAuthContext, heroServerRest, isAuthConfigured, isHeroServerConfigured } from "@/lib/supabase-auth"
 
 // Hero enrollment: a signed-in account with a valid 100% certificate. Nearby help requests stay
@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic"
 
 const enrollmentAvailable = () => isAuthConfigured() && isHeroServerConfigured() && Boolean(heroSecret())
 
-const HERO_COLUMNS = "auth_user_id,test_version,passed_at,expires_at,enrolled,naloxone_ready,naloxone_expires_on,on_call,on_call_since"
+const HERO_COLUMNS = "auth_user_id,test_version,passed_at,expires_at,enrolled,naloxone_ready,naloxone_expires_on,on_call,on_call_since,updated_at"
 
 type HeroRow = {
   auth_user_id: string
@@ -24,6 +24,7 @@ type HeroRow = {
   naloxone_expires_on: string | null
   on_call: boolean
   on_call_since: string | null
+  updated_at: string
 }
 
 async function ownHeroRow(userId: string): Promise<HeroRow | null> {
@@ -53,18 +54,23 @@ export async function GET() {
     getAuthContext().catch(() => null),
     heroServerRest(
       `hero_certifications?on_call=eq.true&enrolled=eq.true&naloxone_ready=eq.true&naloxone_expires_on=gte.${today}&expires_at=gt.${encodeURIComponent(new Date().toISOString())}&select=auth_user_id`,
+      { method: "HEAD", headers: { Prefer: "count=exact" } },
     ).catch(() => null),
   ])
   let hero = auth ? await ownHeroRow(auth.user.id) : null
-  if (hero?.on_call && !canGoOnCall(readinessOf(hero))) {
-    const cleared = await heroServerRest(`hero_certifications?auth_user_id=eq.${encodeURIComponent(hero.auth_user_id)}`, {
+  if (hero?.on_call && hero.updated_at && !canGoOnCall(readinessOf(hero))) {
+    const cleared = await heroServerRest(staleOnCallPath(hero.auth_user_id, hero.updated_at), {
       method: "PATCH",
-      headers: { Prefer: "return=minimal" },
+      headers: { Prefer: "return=representation" },
       body: JSON.stringify({ on_call: false }),
     }).catch(() => null)
-    if (cleared?.ok) hero = { ...hero, on_call: false, on_call_since: null }
+    if (cleared?.ok) {
+      const rows = (await cleared.json()) as HeroRow[]
+      // No row means a newer save changed this record. Read that version instead of forcing Off Call.
+      hero = rows[0] ?? await ownHeroRow(hero.auth_user_id) ?? hero
+    }
   }
-  const onCallCount = countResponse?.ok ? ((await countResponse.json()) as { auth_user_id: string }[]).length : null
+  const onCallCount = countResponse?.ok ? exactTotal(countResponse.headers.get("content-range")) : null
 
   return json({
     enrollment: true,

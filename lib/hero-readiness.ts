@@ -42,6 +42,36 @@ export function canGoOnCall(input: {
     && naloxoneCurrent(input.naloxoneReady, input.naloxoneExpiresOn, today)
 }
 
+/** The signup screen uses the same instant and UTC day as the server. */
+export function readinessView(input: {
+  enrolled: boolean
+  expiresAt: string
+  naloxoneReady: boolean
+  naloxoneExpiresOn: string | null
+  now?: number
+}) {
+  const now = input.now ?? Date.now()
+  const today = utcDate(new Date(now))
+  return {
+    certCurrent: certificateCurrent(input.expiresAt, now),
+    naloxoneCurrent: naloxoneCurrent(input.naloxoneReady, input.naloxoneExpiresOn, today),
+    readyForCall: canGoOnCall({ ...input, now, today }),
+  }
+}
+
+/** PostgREST Content-Range total, such as "0-0/12" or star-slash-zero. A missing total is unknown, not zero. */
+export function exactTotal(contentRange: string | null): number | null {
+  const total = contentRange?.split("/")[1]
+  if (!total || total === "*") return null
+  const count = Number(total)
+  return Number.isSafeInteger(count) && count >= 0 ? count : null
+}
+
+/** Clears On Call only if this exact row is still On Call. A newer save changes updated_at and no longer matches. */
+export function staleOnCallPath(userId: string, updatedAt: string): string {
+  return `hero_certifications?auth_user_id=eq.${encodeURIComponent(userId)}&on_call=eq.true&updated_at=eq.${encodeURIComponent(updatedAt)}`
+}
+
 /** Empty is "no date". Anything else must be a real YYYY-MM-DD. */
 export function parseNaloxoneExpiry(value: unknown): { ok: true; date: string | null } | { ok: false } {
   if (value === undefined || value === null || value === "") return { ok: true, date: null }

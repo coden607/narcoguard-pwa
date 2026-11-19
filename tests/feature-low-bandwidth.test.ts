@@ -72,6 +72,26 @@ test("cache-first fetch answers from the on-device cache and refreshes in the ba
   assert.equal(fetches, 2)
 })
 
+test("an aborted cache refresh does not write the forgotten search back", async () => {
+  let rejectFetch: (error: Error) => void = () => undefined
+  const pending = new Promise<Response>((_, reject) => { rejectFetch = reject })
+  const puts: string[] = []
+  const caches = {
+    match: async () => jsonResponse({ status: "ok", fetchedAt: "cached" }),
+    put: async (key: string) => { puts.push(key) },
+  }
+  const result = await fetchDirectory("/api/resources/needs?zip=13901&web=0", {
+    lowData: true,
+    caches,
+    fetchImpl: () => pending,
+  })
+  assert.equal(result.servedFromCache, true)
+  assert.ok(result.refresh)
+  rejectFetch(new DOMException("The operation was aborted.", "AbortError"))
+  await result.refresh
+  assert.deepEqual(puts, [])
+})
+
 test("cache-first fetch reports failure explicitly only when the cache is empty and the network fails", async () => {
   const empty = { match: async () => undefined, put: async () => undefined }
   const offline = await fetchDirectory("/api/resources/needs?zip=13901&web=0", { lowData: true, caches: empty, fetchImpl: async () => { throw new Error("offline") } })

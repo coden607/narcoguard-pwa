@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { CertificationTest, HERO_CERTIFICATE_KEY } from "@/components/hero/certification-test"
 import { HeroAvailabilityPanel } from "@/components/hero/hero-availability-panel"
 import { PracticalHelpOfferPanel } from "@/components/hero/practical-help-offer-panel"
-import { useLocalDate } from "@/lib/hooks/use-guardian-state"
+import { readinessView } from "@/lib/hero-readiness"
 
 type HeroState = {
   expires_at: string
@@ -25,6 +25,8 @@ type HeroState = {
 type Status = { enrollment: boolean; certification: boolean; nearbyRequests: boolean; hero?: HeroState | null }
 
 const noSubscription = () => () => undefined
+let capturedClock = 0
+const clientClock = () => capturedClock || (capturedClock = Date.now())
 const storedCertificate = () => {
   try {
     return localStorage.getItem(HERO_CERTIFICATE_KEY)
@@ -42,7 +44,7 @@ export default function HeroSignup() {
   const [note, setNote] = useState<string>()
   const [busy, setBusy] = useState(false)
   const [naloxoneOnCall, setNaloxoneOnCall] = useState(false)
-  const today = useLocalDate() ?? ""
+  const clock = useSyncExternalStore(noSubscription, () => clientClock(), () => null)
   const [naloxoneReady, setNaloxoneReady] = useState(false)
   const [naloxoneExpiresOn, setNaloxoneExpiresOn] = useState("")
 
@@ -112,9 +114,17 @@ export default function HeroSignup() {
   }
 
   const hero = status?.hero ?? null
-  const certCurrent = Boolean(today && hero && hero.expires_at.slice(0, 10) >= today)
-  const naloxoneCurrent = Boolean(today && naloxoneReady && naloxoneExpiresOn && naloxoneExpiresOn >= today)
-  const readyForCall = Boolean(hero?.enrolled && certCurrent && naloxoneCurrent)
+  const eligibility = hero && clock !== null
+    ? readinessView({
+      enrolled: hero.enrolled,
+      expiresAt: hero.expires_at,
+      naloxoneReady,
+      naloxoneExpiresOn: naloxoneExpiresOn || null,
+      now: clock,
+    })
+    : null
+  const certCurrent = eligibility?.certCurrent === true
+  const readyForCall = eligibility?.readyForCall === true
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:p-6">

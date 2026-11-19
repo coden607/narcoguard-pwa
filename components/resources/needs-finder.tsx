@@ -240,6 +240,7 @@ export function NeedsFinder() {
     // Remembered on this phone only (coordinates rounded to about 1 km), unless the person turned that off in Angel.
     if (readRememberChoice(browserStorage())) savePlace(browserStorage(), origin)
     const params = new URLSearchParams("zip" in origin ? { zip: origin.zip } : { lat: String(origin.lat), lon: String(origin.lon) })
+    let refresh: Promise<void> | undefined
     try {
       if (lowDataActive()) {
         // Low data mode: text-only, cache-first. Ask the server to skip the fresh web search round.
@@ -255,6 +256,7 @@ export function NeedsFinder() {
             if (refreshed.kinds) { setData(refreshed); setServedFromCache(false) }
           },
         })
+        refresh = result.refresh
         if (search !== searchGeneration.current) return
         if (!result.ok) {
           // Keep the per-kind fallback links the API sends with its 502.
@@ -278,10 +280,13 @@ export function NeedsFinder() {
         setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
       }
     } finally {
-      if (search === searchGeneration.current) {
+      if (search === searchGeneration.current) setBusy(false)
+      // A cache hit returns before its refresh. Keep this controller until that refresh
+      // settles so forget, unmount, and a newer search can still abort it.
+      if (!refresh && searchAbort.current === controller) searchAbort.current = null
+      void refresh?.finally(() => {
         if (searchAbort.current === controller) searchAbort.current = null
-        setBusy(false)
-      }
+      })
     }
   }
 

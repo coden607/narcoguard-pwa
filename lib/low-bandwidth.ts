@@ -67,6 +67,8 @@ export interface DirectoryFetchResult {
   body: unknown
   /** When servedFromCache, the time the cached search originally ran (if the body carried one). */
   fetchedAt?: string
+  /** Settles when a cache-hit background refresh finishes or is aborted. Absent when no refresh was started. */
+  refresh?: Promise<void>
 }
 
 export interface DirectoryFetchOptions {
@@ -104,15 +106,16 @@ export async function fetchDirectory(url: string, options: DirectoryFetchOptions
   const cached = await options.caches.match(url).catch(() => undefined)
   if (cached) {
     const body = await parseBody(cached)
-    void fetchImpl(url)
+    const refresh = fetchImpl(url)
       .then(async (response) => {
         if (!response.ok) return
         await options.caches?.put(url, response.clone())
         const fresh = await parseBody(response)
         options.onRefresh?.({ body: fresh, fetchedAt: (fresh as { fetchedAt?: string })?.fetchedAt })
       })
+      .then(() => undefined)
       .catch(() => undefined)
-    return { ok: true, servedFromCache: true, body, fetchedAt: (body as { fetchedAt?: string })?.fetchedAt }
+    return { ok: true, servedFromCache: true, body, fetchedAt: (body as { fetchedAt?: string })?.fetchedAt, refresh }
   }
 
   try {
