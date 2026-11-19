@@ -91,6 +91,8 @@ Current status: unverified. The repository has no physical enclosure, CAD interf
 
 The public concept page includes these illustrative assets: `ng-rev5-hero-titanium.jpg`, `ng-rev5-exploded-titanium.jpg`, `ng-titanium-3d.png`, and `ng-blueprint.jpg`. They communicate intended appearance and modular boundaries only; dimensions, tolerances, fastener specifications, material selection and actuator safety margins still require CAD and prototype verification.
 
+Swappable battery concept (not validated): [NG-REV5-SWAPPABLE-BATTERY.md](NG-REV5-SWAPPABLE-BATTERY.md).
+
 ## Simulation status
 
 The repository now has a deterministic regression test for Kalman filtering, confidence-weighted fusion, normal readings, sustained multi-signal deterioration and escalation gating. This verifies software behavior only. It cannot establish sensor accuracy, overdose detection sensitivity/specificity, safe medication delivery, or clinical efficacy.
