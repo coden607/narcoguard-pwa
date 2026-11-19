@@ -164,7 +164,7 @@ The NG Auto-Injection system is revolutionizing overdose prevention.
 ✅ Never Use Alone support
 
 Help fund 80 life-saving watches for Broome County:
-https://gofund.me/ac8905cc
+https://www.gofundme.com/f/fund-narcoguard-broome-county
 
 #NarcoGuard #OverdosePrevention #SaveLives
 \`\`\`

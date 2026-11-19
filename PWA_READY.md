@@ -91,7 +91,7 @@ The app is production-ready and configured for:
 ### Marketing URLs
 
 - **Live Demo**: https://v0-narcoguard-pwa-build-4zfrgsdwj-coden809s-projects.vercel.app/
-- **GoFundMe**: https://gofund.me/ac8905cca
+- **GoFundMe**: https://www.gofundme.com/f/fund-narcoguard-broome-county
 - **GitHub**: https://github.com/coden809/narcoguard-pwa
 
 ### Lighthouse PWA Score Target
