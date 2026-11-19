@@ -1,7 +1,7 @@
-// =============================================================================
-// CANDIDATE BILL OF MATERIALS - supplier and part numbers require confirmation.
-// This is a research concept, not a manufacturing-ready or medical-device BOM.
-// =============================================================================
+// Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
+//
+// Public concept bill of materials. Orderable part numbers, land patterns and
+// manufacturing files are not published here. This is not a medical-device BOM.
 export interface BomItem {
   name: string
   description: string
@@ -33,13 +33,13 @@ export const BOM_46: BomCategory[] = [
         datasheet: "qualcomm.com/wearables",
       },
       {
-        name: "Nordic nRF5340 Safety MCU",
+        name: "Safety microcontroller",
         description: "Independent low-power microcontroller that keeps sensor sampling and local alarms running if the main OS crashes or reboots. Algorithms on it are unvalidated.",
         quantity: 1,
         unitPrice: 8.50,
         supplier: "Nordic Semiconductor",
-        partNumber: "NRF5340-QKAA-R7",
-        datasheet: "nordicsemi.com/nRF5340",
+        partNumber: "safety MCU (private hardware package)",
+        datasheet: "nordicsemi.com",
       },
       {
         name: "32 GB eMMC 5.1 storage",
@@ -56,7 +56,7 @@ export const BOM_46: BomCategory[] = [
         quantity: 1,
         unitPrice: 5.80,
         supplier: "Micron Technology",
-        partNumber: "MT53E512M32D2DS-046 WT:A",
+        partNumber: "private hardware package",
         datasheet: "micron.com",
       },
     ],
@@ -75,22 +75,22 @@ export const BOM_46: BomCategory[] = [
         datasheet: "analog.com/MAX86178",
       },
       {
-        name: "Bosch BMP390",
-        description: "Barometric pressure sensor for altimeter, elevation tracking, weather",
+        name: "Barometric pressure sensor",
+        description: "Barometric pressure sensor for altimeter, elevation tracking, weather. Needs a sealed vent.",
         quantity: 1,
         unitPrice: 2.80,
-        supplier: "Bosch Sensortec",
-        partNumber: "BMP390",
-        datasheet: "bosch-sensortec.com/BMP390",
+        supplier: "Bosch Sensortec class",
+        partNumber: "private hardware package",
+        datasheet: "bosch-sensortec.com",
       },
       {
-        name: "STMicro LSM6DSO32X",
-        description: "6-axis IMU (32 g accelerometer + gyroscope) for motion, falls, sleep and motion-artifact rejection in the vitals pipeline",
+        name: "6-axis IMU",
+        description: "Accelerometer and gyroscope for motion, falls, sleep and motion-artifact rejection. High-g sensing is a research target.",
         quantity: 1,
         unitPrice: 4.20,
-        supplier: "STMicroelectronics",
-        partNumber: "LSM6DSO32XTR",
-        datasheet: "st.com/LSM6DSO32X",
+        supplier: "STMicroelectronics class",
+        partNumber: "private hardware package",
+        datasheet: "st.com",
       },
       {
         name: "STMicro LIS2MDL",
@@ -98,7 +98,7 @@ export const BOM_46: BomCategory[] = [
         quantity: 1,
         unitPrice: 1.80,
         supplier: "STMicroelectronics",
-        partNumber: "LIS2MDLTR",
+        partNumber: "private hardware package",
         datasheet: "st.com/LIS2MDL",
       },
       {
@@ -107,8 +107,8 @@ export const BOM_46: BomCategory[] = [
         quantity: 1,
         unitPrice: 6.50,
         supplier: "Melexis",
-        partNumber: "MLX90632SFE-BAA-000-RE",
-        datasheet: "melexis.com/MLX90632",
+        partNumber: "private hardware package",
+        datasheet: "melexis.com",
       },
       {
         name: "ams-OSRAM AS7038RB",
@@ -116,7 +116,7 @@ export const BOM_46: BomCategory[] = [
         quantity: 1,
         unitPrice: 3.90,
         supplier: "ams-OSRAM",
-        partNumber: "AS7038RB",
+        partNumber: "private hardware package",
         datasheet: "ams-osram.com",
       },
     ],
@@ -144,15 +144,6 @@ export const BOM_46: BomCategory[] = [
         datasheet: "st.com/ST54",
       },
       {
-        name: "Infineon CYW43022 Wi-Fi/Bluetooth",
-        description: "Candidate low-power Wi-Fi + Bluetooth LE combo for phone pairing and Wi-Fi sync; confirm compatibility with the W5+ Gen 2 reference design",
-        quantity: 1,
-        unitPrice: 4.80,
-        supplier: "Infineon (Cypress)",
-        partNumber: "CYW43022KUBG",
-        datasheet: "infineon.com/CYW43022",
-      },
-      {
         name: "STMicro ST4SIM-200M eSIM (eUICC)",
         description: "Embedded SIM for standalone cellular with remote carrier provisioning (GSMA). Replaces the previously listed Thales ELS62, which is a separate LTE module, not an eSIM.",
         quantity: 1,
@@ -174,7 +165,7 @@ export const BOM_46: BomCategory[] = [
   },
   {
     category: "Sealed Power System (battery + Qi)",
-    description: "Battery with sealed Qi charging. Solar, kinetic and thermoelectric harvesters were removed: on a wrist they produce microwatts to a few milliwatts, far below a cellular smartwatch's load, and the listed solar supplier (Alta Devices) shut down in 2019.",
+    description: "Protected cell with sealed Qi charging. Light and motion harvesting are supplemental and are not claimed to run the watch.",
     items: [
       {
         name: "500 mAh Li-ion polymer cell (certified)",
@@ -191,16 +182,16 @@ export const BOM_46: BomCategory[] = [
         quantity: 1,
         unitPrice: 2.80,
         supplier: "Texas Instruments",
-        partNumber: "BQ51013BRHLR",
+        partNumber: "private hardware package",
         datasheet: "ti.com/BQ51013B",
       },
       {
-        name: "Wurth 760308103 Qi Coil",
+        name: "Qi receive coil",
         description: "Wireless charging receive coil, 20mm diameter",
         quantity: 1,
         unitPrice: 2.80,
         supplier: "Wurth Elektronik",
-        partNumber: "760308103",
+        partNumber: "private hardware package",
         datasheet: "we-online.com",
       },
       {
@@ -209,7 +200,7 @@ export const BOM_46: BomCategory[] = [
         quantity: 1,
         unitPrice: 3.50,
         supplier: "Texas Instruments",
-        partNumber: "BQ25619RTWR",
+        partNumber: "private hardware package",
         datasheet: "ti.com/BQ25619",
       },
     ],
@@ -233,7 +224,7 @@ export const BOM_46: BomCategory[] = [
         quantity: 1,
         unitPrice: 1.50,
         supplier: "Knowles Corporation",
-        partNumber: "SPH0645LM4H-B",
+        partNumber: "private hardware package",
         datasheet: "knowles.com",
       },
       {
@@ -246,13 +237,13 @@ export const BOM_46: BomCategory[] = [
         datasheet: "aactechnologies.com",
       },
       {
-        name: "TDK PowerHap 1204H018V",
+        name: "Piezo haptic actuator",
         description: "Piezoelectric haptic actuator for distinct alert vibration patterns",
         quantity: 1,
         unitPrice: 3.80,
         supplier: "TDK Corporation",
-        partNumber: "1204H018V",
-        datasheet: "tdk.com/PowerHap",
+        partNumber: "private hardware package",
+        datasheet: "tdk.com",
       },
     ],
   },
@@ -308,16 +299,16 @@ export const BOM_46: BomCategory[] = [
         quantity: 1,
         unitPrice: 0,
         supplier: "Analog Devices",
-        partNumber: "ADP5091ACPZ-2-R7",
+        partNumber: "private hardware package",
         datasheet: "analog.com/ADP5091",
       },
       {
-        name: "Analog Devices LTC3331 kinetic harvester / battery-backup path",
-        description: "Candidate rectification and energy-harvesting path for magnetic/electromechanical sources with supercapacitor support. Final architecture may use a different PMIC after generator characterization.",
+        name: "Second kinetic harvester IC (not fitted)",
+        description: "Reviewed and not used. The baseline keeps one harvesting PMIC for the photovoltaic ring and the crown. A second chip is not in the sealed layout.",
         quantity: 1,
         unitPrice: 0,
         supplier: "Analog Devices",
-        partNumber: "LTC3331EUH#PBF",
+        partNumber: "not fitted",
         datasheet: "analog.com/LTC3331",
       },
       {
@@ -330,8 +321,8 @@ export const BOM_46: BomCategory[] = [
         datasheet: "TBD",
       },
       {
-        name: "Thin thermoelectric case-back harvester",
-        description: "Custom thin TEG using skin-to-ambient temperature gradient. Must preserve sensor contact, wearer comfort and thermal-sensor accuracy.",
+        name: "Thermoelectric harvester (not fitted)",
+        description: "Reviewed and not fitted. A useful body-heat generator needs more thickness than the sealed case back can give, and that face is already the sensor windows and the Qi coil.",
         quantity: 1,
         unitPrice: 0,
         supplier: "Custom TEG vendor (TBD)",
@@ -423,12 +414,12 @@ export const BOM_46: BomCategory[] = [
         datasheet: "shinetsu.com",
       },
       {
-        name: "10-Layer HDI PCB Assembly",
-        description: "High-density interconnect PCB with all SMD components placed. Rigid-flex design connects main board to sensor boards. Lead-free RoHS",
+        name: "8-layer HDI carrier assembly",
+        description: "8-layer 1+6+1 HDI safety and core carrier. The wearable compute module is a separate board. Not a released Gerber set.",
         quantity: 1,
         unitPrice: 28.00,
         supplier: "JLCPCB / PCBWay",
-        partNumber: "NG-PCBA-R5-10L",
+        partNumber: "46 mm carrier",
         datasheet: "N/A - Custom",
       },
       {
@@ -446,7 +437,7 @@ export const BOM_46: BomCategory[] = [
         quantity: 1,
         unitPrice: 4.50,
         supplier: "Mill-Max Manufacturing",
-        partNumber: "0906-2-15-20-75-14-11-0",
+        partNumber: "private hardware package",
         datasheet: "mill-max.com",
       },
       {
@@ -495,7 +486,7 @@ export const BOM_40: BomCategory[] = replace(BOM_46, {
     unitPrice: 7.0,
     partNumber: "TBD (300 mAh)",
   },
-  "Wurth 760308103 Qi Coil": {
+  "Qi receive coil": {
     name: "Qi receiver coil, about 25 mm (TBD)",
     description: "Smaller wireless-charging receive coil to fit the 40 mm case back; catalogue or custom part chosen after coupling tests with the charger",
     supplier: "Wurth Elektronik / TDK (TBD)",
@@ -522,9 +513,9 @@ export const BOM_40: BomCategory[] = replace(BOM_46, {
     description: "Candidate LSR silicone strap with a 20 mm interface, supplied with small/medium and medium/large bands so it fits smaller wrists; biocompatibility and skin contact require qualification",
     partNumber: "NG-STRAP-LSR-20MM",
   },
-  "10-Layer HDI PCB Assembly": {
-    description: "Smaller Ø34.2 mm 10-layer HDI board laid out for the 40 mm case, with its own component placement and rigid-flex to the sensor board; a separate fabrication from the 46 mm board. Price is an estimate until quoted.",
-    partNumber: "NG-PCBA-R5-40-10L",
+  "8-layer HDI carrier assembly": {
+    description: "Smaller 8-layer 1+6+1 HDI carrier for the 40 mm case. A separate fabrication from the 46 mm board. Not a released Gerber set.",
+    partNumber: "40 mm carrier",
   },
   "Ceramic Case Back w/ Sensor Windows": {
     description: "Zirconia ceramic case back sized for the 40 mm case, with optical windows for PPG/SpO2 sensors and the device ID and QR code",

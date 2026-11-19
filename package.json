@@ -7,7 +7,7 @@
     "node": ">=24 <25"
   },
   "description": "Public PWA demo and early wearable concept for overdose-prevention research and community response",
-  "license": "MIT",
+  "license": "SEE LICENSE IN LICENSE",
   "author": "Stephen Blanford <narcoguard607@gmail.com>",
   "scripts": {
     "build": "node scripts/run-next-build.js",

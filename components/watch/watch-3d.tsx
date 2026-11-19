@@ -1,3 +1,4 @@
+// Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
 "use client"
 
 import { useEffect, useRef, useState } from "react"
