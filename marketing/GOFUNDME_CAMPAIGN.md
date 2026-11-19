@@ -14,29 +14,25 @@ Repeat them near the bottom of the campaign so donors can verify the live app an
 
 ## Rev 5 campaign image set — upload in this order
 
-1. Campaign cover with **NarcoGuard.app** visible.
-2. Full campaign infographic with **NarcoGuard.app** visible.
-3. Rev 5 family engineering/spec sheet.
-4. NG46 rugged engineering sheet.
-5. NG40 elegant rose-gold/titanium engineering sheet.
-6. Dual blueprint sheet.
-7. Exploded component/CAD-style view.
-8. Hero Network/resource concept visual.
+Use these corrected concept renders from the public repo (also served at `https://www.narcoguard.app/images/...`). They show a premium solid titanium link bracelet with solar cells integrated into the band. Do not upload older rubber- or silicone-strap renders.
+
+1. **Campaign cover:** `public/images/ng-rev5-hero-titanium.jpg` — 16:9 concept render of NG46 in natural titanium and NG40 in rose gold titanium, side by side on solar-inlay link bracelets. Labeled "Concept render".
+2. **Gallery / exploded view:** `public/images/ng-rev5-exploded-titanium.jpg` — 9:16 labeled exploded view with the titanium solar link band and silver, titanium, and rose gold titanium finish swatches. Labeled "Concept render".
 
 Every generated watch image must be labeled **concept**, **engineering visual**, or equivalent. Do not present generated people, responders, watches, maps, or hardware as documentary evidence of a deployed medical device or active responder coverage.
 
 ---
 
-## Rev 5 campaign image set — upload in this order
+## Rev 5 campaign image filenames
 
-1. **Campaign hero** — NarcoGuard mission, NG46 + NG40, Hero network, app callout.
-2. **Full campaign infographic** — app + watch + Hero network + large reciprocal links.
-3. **Rev 5 family engineering spec** — both watches, dimensions, BOM/spec overview.
-4. **NG46 rugged engineering sheet** — rugged titanium edition, orthographic + exploded views.
-5. **NG40 elegant rose-gold/titanium engineering sheet** — premium women’s-fit edition, band included.
-6. **Dual blueprint sheet** — NG46 + NG40 dimensions and engineering layouts.
-7. **Exploded component view** — internal stack / CAD-style component diagram.
-8. **Hero network visual** — resource map / responder concept.
+Upload only these two corrected concept renders. Filenames match the files in `public/images/`:
+
+| Role | File | Notes |
+| --- | --- | --- |
+| Cover | `ng-rev5-hero-titanium.jpg` | 16:9; NG46 natural titanium + NG40 rose gold titanium on solar-inlay titanium link bracelets |
+| Gallery | `ng-rev5-exploded-titanium.jpg` | 9:16; labeled exploded view with solar link band and finish swatches (silver, titanium, rose gold titanium) |
+
+Public URLs after deploy: `https://www.narcoguard.app/images/ng-rev5-hero-titanium.jpg` and `https://www.narcoguard.app/images/ng-rev5-exploded-titanium.jpg`.
 
 **Image truth boundary:** every watch/engineering visual must be labeled as a concept or engineering visualization. Do not present any render as a photographed finished medical device. Supplier CAD, routed PCB, RF/antenna, thermal, battery, ingress/drop, harvesting bench, and clinical/regulatory validation remain in progress.
 
@@ -122,7 +118,7 @@ The hardware program now has two size targets:
 
 - 46 mm Grade 5 titanium case;
 - 13.8 mm target thickness;
-- 22 mm strap;
+- 22 mm premium solid titanium link bracelet with integrated solar cells; men's finishes are silver or natural titanium;
 - 1.4–1.5 inch round LTPO AMOLED target;
 - 500 mAh protected Li-ion battery target.
 
@@ -130,7 +126,7 @@ The hardware program now has two size targets:
 
 - 40 mm Grade 5 titanium case;
 - 12.2 mm target thickness;
-- 20 mm strap;
+- 20 mm premium solid titanium link bracelet with integrated solar cells; women's finish is rose gold titanium;
 - 1.2 inch round AMOLED target;
 - 300 mAh protected Li-ion battery target.
 
@@ -327,13 +323,14 @@ Do not say a donation amount purchases a finished watch.
 ## Campaign images
 
 Use:
-1. real screenshots of the live app;
-2. the NG46 / NG40 Rev 5 concept board, clearly marked "concept";
-3. engineering drawings generated from the repository geometry;
-4. future photos of real PCB, enclosure and bench prototypes;
-5. spending/test updates.
+1. `ng-rev5-hero-titanium.jpg` as the campaign cover (concept render, 16:9);
+2. `ng-rev5-exploded-titanium.jpg` in the gallery (labeled exploded concept, 9:16);
+3. real screenshots of the live app;
+4. engineering drawings generated from the repository geometry;
+5. future photos of real PCB, enclosure and bench prototypes;
+6. spending/test updates.
 
-Do not use a concept render as though it were a photographed finished product.
+Do not upload older rubber- or silicone-strap renders. Do not use a concept render as though it were a photographed finished product.
 
 ## Publication checklist
 

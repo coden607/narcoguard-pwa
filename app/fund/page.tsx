@@ -72,10 +72,10 @@ export default function FundPage() {
               <div className="md:col-span-2 rounded-2xl overflow-hidden border border-primary/30">
                 <div className="grid gap-3 p-3">
                   <Image
-                    src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
-                    alt="NarcoGuard titanium and pink rose-titanium 3D watch concepts"
-                    width={1200}
-                    height={800}
+                    src="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
+                    alt="Concept render of NarcoGuard NG46 in natural titanium and NG40 in rose gold titanium on premium metal titanium link bracelets with integrated solar cells"
+                    width={1280}
+                    height={720}
                     priority
                     sizes="(min-width: 768px) 50vw, 100vw"
                     className="w-full h-auto rounded-xl"
@@ -85,7 +85,7 @@ export default function FundPage() {
               </div>
               <div className="rounded-2xl border border-primary/30 p-5 md:col-span-2">
                 <p className="text-sm font-semibold text-primary">Current public engineering package: Rev 5</p>
-                <p className="mt-2 text-sm text-muted-foreground">The images show the approved titanium and pink rose-titanium watch concepts with metal link bands. These are design visuals; manufacturing CAD and internal fit remain unverified.</p>
+                <p className="mt-2 text-sm text-muted-foreground">The images show the approved concept renders: a premium solid metal titanium link bracelet with solar cells integrated into the band. Men's finishes are silver or natural titanium; the women's finish is rose gold titanium. These are design visuals, not photographs of a built watch; manufacturing CAD and internal fit remain unverified.</p>
               </div>
             </div>
             <figcaption className="mt-2 text-center text-sm text-muted-foreground">
@@ -197,14 +197,14 @@ export default function FundPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div className="rounded-xl overflow-hidden border border-primary/20">
                 <Image
-                  src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
-                  alt="NarcoGuard NG46 Rev 5 concept blueprint"
-                  width={1200}
-                  height={800}
+                  src="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
+                  alt="Concept render of the NarcoGuard NG46 and NG40 on titanium solar link bracelets"
+                  width={1280}
+                  height={720}
                   className="w-full h-56 object-contain bg-background"
                 />
                 <div className="p-3 bg-card">
-                  <p className="text-sm text-muted-foreground">A visualization of the proposed NarcoGuard NG concept</p>
+                  <p className="text-sm text-muted-foreground">Concept render of the proposed NarcoGuard NG on a titanium solar link bracelet</p>
                 </div>
               </div>
               <div className="rounded-xl overflow-hidden border border-primary/20">
@@ -315,19 +315,19 @@ export default function FundPage() {
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
-                alt="NarcoGuard NG46 Rev 5 engineering blueprint"
-                width={1200}
-                height={800}
+                src="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
+                alt="Concept render of NarcoGuard NG46 natural titanium and NG40 rose gold titanium with solar-inlay link bracelets"
+                width={1280}
+                height={720}
                 className="w-full h-64 object-contain bg-background"
               />
             </div>
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng-titanium-3d.png?rev=complete-2026-10-15"
-                alt="NarcoGuard NG40 Rev 5 engineering blueprint"
-                width={1200}
-                height={800}
+                src="/images/ng-rev5-exploded-titanium.jpg?rev=titanium-solar-2026-11-18"
+                alt="Concept render: labeled exploded view with titanium solar link band and silver, titanium, and rose gold titanium finish swatches"
+                width={720}
+                height={1280}
                 className="w-full h-64 object-contain bg-background"
               />
             </div>

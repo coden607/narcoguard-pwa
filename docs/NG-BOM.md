@@ -31,7 +31,7 @@ Known limitation: published overdose-detection research mainly uses chest-worn r
 | Connectivity stack | 16×14 mm budget | 12×12 mm compact RF module target | The 46 mm footprint does not fit beside the SoC; needs vendor confirmation or a double-sided board |
 | Qi coil | Sealed receive coil | Smaller sealed receive coil | Smaller case back |
 | Crystal / case back | 46 mm sapphire, zirconia back | About 36 mm, 0.8 mm sapphire; smaller zirconia back | Smaller case; drop testing required |
-| Strap | 22 mm LSR | 20 mm LSR with S/M and M/L bands | Fits smaller wrists |
+| Band | 22 mm titanium solar link bracelet; men's finishes silver or natural titanium | 20 mm titanium solar link bracelet; women's finish rose gold titanium | Premium metal band with integrated solar cells; fits smaller wrists on the 40 mm |
 | Medication pod | 18×12×10 mm research module | Unchanged | Dose volume does not shrink; needle length would be set for body size by clinicians, not by sex |
 
 The public concept total moves when a line is removed. It is not a quote. The drawing and the side-by-side render are concepts. Manufacturing files are proprietary and are not in this repository.
@@ -89,7 +89,7 @@ Current status: unverified. The repository has no physical enclosure, CAD interf
 
 ## Current diagrams
 
-The public concept page includes these illustrative assets: `ng-blueprint.jpg`, `ng-blueprint-detailed.jpg`, `ng-exploded-view.jpg`, and `ng-modular-exploded.jpg`. They communicate intended placement and modular boundaries only; dimensions, tolerances, fastener specifications, material selection and actuator safety margins still require CAD and prototype verification.
+The public concept page includes these illustrative assets: `ng-rev5-hero-titanium.jpg`, `ng-rev5-exploded-titanium.jpg`, `ng-titanium-3d.png`, and `ng-blueprint.jpg`. They communicate intended appearance and modular boundaries only; dimensions, tolerances, fastener specifications, material selection and actuator safety margins still require CAD and prototype verification.
 
 ## Simulation status
 
