@@ -72,8 +72,8 @@ test.describe("NarcoGuard Production Validation", () => {
     }
   })
 
-  test("obsolete dispatch and location routes are removed and never report success", async ({ request }) => {
-    for (const api of ["/api/emergency", "/api/location"]) {
+  test("obsolete dispatch, location, and analytics routes are removed and never report success", async ({ request }) => {
+    for (const api of ["/api/emergency", "/api/location", "/api/analytics/emergency"]) {
       const missing = await request.get(api)
       expect(missing.status()).toBe(404)
     }
