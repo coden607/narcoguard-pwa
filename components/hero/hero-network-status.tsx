@@ -11,16 +11,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 
 export function HeroNetworkStatus() {
   const [networkLive, setNetworkLive] = useState(false)
+  const [onCallCount, setOnCallCount] = useState<number | null>(null)
 
   useEffect(() => {
     let cancelled = false
     fetch("/api/heroes", { cache: "no-store" })
       .then((response) => response.json())
-      .then((body: { nearbyRequests?: boolean }) => {
-        if (!cancelled) setNetworkLive(body.nearbyRequests === true)
+      .then((body: { nearbyRequests?: boolean; onCallCount?: number | null }) => {
+        if (cancelled) return
+        setNetworkLive(body.nearbyRequests === true)
+        setOnCallCount(typeof body.onCallCount === "number" ? body.onCallCount : null)
       })
       .catch(() => {
-        if (!cancelled) setNetworkLive(false)
+        if (!cancelled) {
+          setNetworkLive(false)
+          setOnCallCount(null)
+        }
       })
     return () => { cancelled = true }
   }, [])
@@ -40,11 +46,13 @@ export function HeroNetworkStatus() {
           <div className="glass p-4 rounded-lg neon-border">
             <div className="flex items-center gap-2 mb-2">
               <Users className="w-5 h-5 text-primary pulse-glow" />
-              <span className="text-xs text-muted-foreground">Status</span>
+              <span className="text-xs text-muted-foreground">Eligible on call</span>
             </div>
-            <p className="text-3xl font-bold glow-text">{networkLive ? "Live" : "Ready"}</p>
+            <p className="text-3xl font-bold glow-text">{onCallCount === null ? "—" : onCallCount}</p>
             <p className="text-[11px] text-muted-foreground mt-1">
-              {networkLive ? "Responder + practical-resource requests enabled" : "Awaiting production launch switch"}
+              {onCallCount === null
+                ? "On-call count unavailable until Hero enrollment is configured"
+                : "Enrolled, current certificate, and unexpired naloxone. This is not a nearby dispatch."}
             </p>
           </div>
 
@@ -53,8 +61,10 @@ export function HeroNetworkStatus() {
               <MapPin className="w-5 h-5 text-secondary pulse-glow" />
               <span className="text-xs text-muted-foreground">Nearby</span>
             </div>
-            <p className="text-3xl font-bold glow-text">Map</p>
-            <p className="text-[11px] text-muted-foreground mt-1">Approximate areas only</p>
+            <p className="text-3xl font-bold glow-text">{networkLive ? "Live" : "Off"}</p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              {networkLive ? "Nearby requests are switched on" : "Nearby dispatch is not live"}
+            </p>
           </div>
         </div>
 
