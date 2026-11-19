@@ -147,6 +147,7 @@ export function NeedsFinder() {
   const [servedFromCache, setServedFromCache] = useState(false)
   const locationGeneration = useRef(0)
   const searchGeneration = useRef(0)
+  const searchAbort = useRef<AbortController | null>(null)
 
   useEffect(() => {
     // Revocation invalidates callbacks already queued by the browser; no location
@@ -154,6 +155,7 @@ export function NeedsFinder() {
     const revoke = () => {
       locationGeneration.current += 1
       searchGeneration.current += 1
+      searchAbort.current?.abort()
       // The low data cache keys carry the ZIP or rounded coordinates, so forgetting a place clears it.
       void clearDirectoryCache("caches" in window ? window.caches : undefined)
       setSavedPlace(null)
@@ -168,6 +170,8 @@ export function NeedsFinder() {
     window.addEventListener("storage", storageChanged)
     return () => {
       locationGeneration.current += 1
+      searchGeneration.current += 1
+      searchAbort.current?.abort()
       window.removeEventListener(PLACE_FORGOTTEN_EVENT, revoke)
       window.removeEventListener("storage", storageChanged)
     }
@@ -227,6 +231,9 @@ export function NeedsFinder() {
       const active = effectiveZip(travel, new Date().toISOString())
       if (active.inTravel && active.zip) origin = { zip: active.zip }
     }
+    searchAbort.current?.abort()
+    const controller = new AbortController()
+    searchAbort.current = controller
     const search = ++searchGeneration.current
     setBusy(true)
     setNotice(undefined)
@@ -240,6 +247,7 @@ export function NeedsFinder() {
         const result = await fetchDirectory(`/api/resources/needs?${params}`, {
           lowData: true,
           caches: await openDirectoryCache(),
+          fetchImpl: (url) => fetch(url, { signal: controller.signal }),
           onRefresh: ({ body }) => {
             // A refresh for an older search must not replace the results of a newer one.
             if (search !== searchGeneration.current) return
@@ -260,14 +268,20 @@ export function NeedsFinder() {
         setData(body.kinds ? body : { status: "unavailable", kinds: {} })
         return
       }
-      const response = await fetch(`/api/resources/needs?${params}`, { cache: "no-store" })
+      const response = await fetch(`/api/resources/needs?${params}`, { cache: "no-store", signal: controller.signal })
       const body = (await response.json()) as NeedsResponse
+      if (search !== searchGeneration.current) return
       setServedFromCache(false)
       setData(body.kinds ? body : { status: "unavailable", kinds: {} })
-    } catch {
-      setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
+    } catch (error) {
+      if (search === searchGeneration.current && !(error instanceof DOMException && error.name === "AbortError")) {
+        setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
+      }
     } finally {
-      if (search === searchGeneration.current) setBusy(false)
+      if (search === searchGeneration.current) {
+        if (searchAbort.current === controller) searchAbort.current = null
+        setBusy(false)
+      }
     }
   }
 
