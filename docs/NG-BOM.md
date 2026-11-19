@@ -105,7 +105,7 @@ These links are manufacturer or standards-body sources used to bound the candida
 - [Qualcomm Snapdragon X35 product brief](https://docs.qualcomm.com/doc/87-27160-1/87-27160-1_REV_A_Snapdragon_X35_5G_Modem-RF_System_Product_Brief.pdf) — 5G RedCap modem capabilities.
 - [Analog Devices MAX86178](https://www.analog.com/en/products/max86178.html) — PPG, ECG, and BioZ AFE capabilities.
 - [Texas Instruments BQ25619](https://www.ti.com/product/BQ25619) — single-cell, single-input charger/power-path constraints.
-- [Texas Instruments BQ51013B](https://www.ti.com/lit/ds/symlink/bq51013b.pdf) — Qi receiver constraints.
+- [Texas Instruments Qi receiver family](https://www.ti.com/product/BQ51013B) — receiver constraints. The exact order code stays in the private hardware package.
 - [Nordic nRF5340 product specification](https://docs.nordicsemi.com/r/bundle/ps_nrf5340/page/keyfeatures_html5.html) — MCU supply, package, and operating limits.
 - [Bosch BMP390](https://www.bosch-sensortec.com/en/products/environmental-sensors/pressure-sensors/pressure-sensors-bmp390.html), [ST LSM6DSO32X](https://www.st.com/en/mems-and-sensors/lsm6dso32x.html), and [Melexis MLX90632](https://www.melexis.com/en/product/MLX90632/Miniature-SMD-Infrared-Thermometer-IC) — candidate environmental, motion, and temperature-sensor limits.
 

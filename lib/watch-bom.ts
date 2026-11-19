@@ -51,8 +51,8 @@ export const BOM_46: BomCategory[] = [
         datasheet: "jedec.org (eMMC 5.1)",
       },
       {
-        name: "Micron MT53E512M32D2DS-046",
-        description: "2GB LPDDR4X RAM",
+        name: "2 GB low-power memory",
+        description: "Memory for the wearable module. The exact chip stays in the private hardware package.",
         quantity: 1,
         unitPrice: 5.80,
         supplier: "Micron Technology",
@@ -144,12 +144,12 @@ export const BOM_46: BomCategory[] = [
         datasheet: "st.com/ST54",
       },
       {
-        name: "STMicro ST4SIM-200M eSIM (eUICC)",
+        name: "Embedded SIM (eUICC)",
         description: "Embedded SIM for standalone cellular with remote carrier provisioning (GSMA). Replaces the previously listed Thales ELS62, which is a separate LTE module, not an eSIM.",
         quantity: 1,
         unitPrice: 2.50,
         supplier: "STMicroelectronics",
-        partNumber: "ST4SIM-200M",
+        partNumber: "private hardware package",
         datasheet: "st.com/ST4SIM",
       },
       {
@@ -177,13 +177,13 @@ export const BOM_46: BomCategory[] = [
         datasheet: "iec.ch (IEC 62133-2)",
       },
       {
-        name: "Texas Instruments BQ51013B",
+        name: "Qi receiver IC",
         description: "Qi-compatible wireless charging receiver IC, 5W input",
         quantity: 1,
         unitPrice: 2.80,
         supplier: "Texas Instruments",
         partNumber: "private hardware package",
-        datasheet: "ti.com/BQ51013B",
+        datasheet: "ti.com",
       },
       {
         name: "Qi receive coil",
@@ -219,8 +219,8 @@ export const BOM_46: BomCategory[] = [
         datasheet: "boe.com",
       },
       {
-        name: "Knowles SPH0645LM4H-B MEMS Mic",
-        description: "Digital I2S MEMS microphone for voice input to Angel AI and calls; behind a waterproof acoustic membrane",
+        name: "MEMS microphone",
+        description: "Microphone for voice input, behind a membrane vent. The exact microphone stays in the private hardware package.",
         quantity: 1,
         unitPrice: 1.50,
         supplier: "Knowles Corporation",
@@ -295,7 +295,7 @@ export const BOM_46: BomCategory[] = [
       },
       {
         name: "Analog Devices ADP5091 energy-harvesting PMU",
-        description: "Ultralow-power MPPT harvester candidate for photovoltaic and thermoelectric inputs. Input/source matching and cold-start behavior require bench validation.",
+        description: "Ultralow-power MPPT harvester candidate for the photovoltaic ring and the rectified crown. Body-heat thermoelectric input is not fitted. Cold-start behavior requires bench validation.",
         quantity: 1,
         unitPrice: 0,
         supplier: "Analog Devices",

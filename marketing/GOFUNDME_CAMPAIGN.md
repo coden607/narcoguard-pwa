@@ -127,7 +127,7 @@ The current engineering concept includes:
 - **Melexis MLX90632** temperature-sensing candidate;
 - **ams-OSRAM AS7038RB** secondary biosensing candidate;
 - **Qualcomm X35 / SDX35 5G RedCap** cellular concept;
-- **ST4SIM-200M** eSIM;
+- an embedded SIM (eUICC);
 - **ST54K** NFC / secure-element architecture;
 - sealed **Qi wireless charging**;
 - zirconia ceramic case back;
