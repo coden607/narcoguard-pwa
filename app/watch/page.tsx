@@ -206,7 +206,7 @@ export default function NGWatchPage() {
               <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Current engineering blueprint</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("3d-view")}>Interactive 3D view</Button>
               <Button type="button" variant="outline" onClick={() => activateTab("bom")}>Rev 5 BOM layout</Button>
-              <Button type="button" variant="outline" onClick={() => activateTab("cad")}>STEP / STL CAD package</Button>
+              <Button type="button" variant="outline" onClick={() => activateTab("cad")}>Concept CAD status</Button>
             </div>
           </figure>
         </section>
@@ -349,14 +349,14 @@ export default function NGWatchPage() {
               <h3 className="font-bold text-lg mb-4">Current Candidate Parts</h3>
               <div className="space-y-3 text-sm">
                 {[
-                  ["Compute", "W5+ Gen 2", "Qualcomm Snapdragon (2025)"],
-                  ["Health MCU", "private hardware package", "Dedicated safety microcontroller"],
-                  ["Vitals AFE", "MAX86178", "Analog Devices / Maxim"],
-                  ["Motion", "private hardware package", "6-axis IMU"],
-                  ["Cellular", "SDX35", "Snapdragon X35 5G RedCap"],
-                  ["Barometer", "private hardware package", "Pressure sensor with a vent"],
+                  ["Compute", "Wearable platform", "Qualcomm Snapdragon class (2025)"],
+                  ["Health MCU", "Dedicated safety microcontroller", "Separate from the main OS"],
+                  ["Vitals AFE", "Optical and electrical front end", "Heart rate, SpO2 estimate, ECG"],
+                  ["Motion", "6-axis IMU", "Motion and impact research"],
+                  ["Cellular", "5G RedCap modem", "Carrier certification unverified"],
+                  ["Barometer", "Pressure sensor with a vent", "Altitude and weather"],
                 ].map(([system, part, maker]) => (
-                  <div key={part} className="grid grid-cols-[.8fr_1fr] gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0">
+                  <div key={system} className="grid grid-cols-[.8fr_1fr] gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0">
                     <span className="text-muted-foreground">{system}</span>
                     <span><span className="block font-mono text-primary">{part}</span><span className="text-xs">{maker}</span></span>
                   </div>
@@ -480,56 +480,21 @@ export default function NGWatchPage() {
               <HolographicCard className="p-6" glowIntensity="high">
                 <h2 className="text-xl font-bold flex items-center gap-2">
                   <Boxes className="h-5 w-5 text-primary" />
-                  Rev 5 Fabrication CAD — {variant.label}
+                  Rev 5 concept CAD — {variant.label}
                 </h2>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  The same parametric Rev 5 geometry used by the fit and DFM gates now generates a fabrication-oriented package for both NG46 and NG40. Every package is rebuilt in GitHub Actions so its solids, exploded assembly, profiles, and tolerance data remain tied to a reviewed commit.
+                  This public page shows a concept sketch. STEP, STL, Gerbers, and the buildable bill of materials are not in this repository and are not offered for download. GitHub Actions does not rebuild or upload a fabrication package.
                 </p>
-                <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <div className="mt-5">
                   <a
                     href={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14"}
                     download
-                    className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
+                    className="block rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
                   >
                     <Download className="h-5 w-5 text-primary" />
-                    <p className="mt-2 font-semibold">Download Rev 5 blueprint</p>
-                    <p className="text-xs text-muted-foreground">SVG engineering drawing for the selected size.</p>
+                    <p className="mt-2 font-semibold">Download Rev 5 concept blueprint</p>
+                    <p className="text-xs text-muted-foreground">Simplified SVG for the selected size. Not a manufacturing drawing.</p>
                   </a>
-                  <a
-                    href="https://github.com/coden607/narcoguard-pwa/actions/workflows/watch-cad.yml"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
-                  >
-                    <Download className="h-5 w-5 text-primary" />
-                    <p className="mt-2 font-semibold">Download full fabrication package</p>
-                    <p className="text-xs text-muted-foreground">The narcoguard-rev5-cad manufacturing package is not published from this public repository.</p>
-                  </a>
-                </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  {[
-                    ["Assemblies", "Complete + exploded STEP/STL"],
-                    ["Individual solids", "Per-part STEP/STL for enclosure, PCB, power, sensors and component envelopes"],
-                    ["2D profiles", "PCB, case-back and sensor-window DXF outlines"],
-                    ["Tolerance / GD&T plan", "Generated drawing sheet + CSV with provisional datums, nominals, target tolerances, inspection methods and open supplier dependencies"],
-                  ].map(([title, detail]) => (
-                    <div key={title} className="rounded-xl border border-border/60 bg-background/40 p-4">
-                      <p className="font-semibold">{title}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 rounded-xl border border-border/60 bg-background/40 p-4">
-                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">Selected-size package structure</p>
-                  <ul className="mt-2 space-y-1 font-mono text-xs text-muted-foreground">
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/[variant]-assembly.step</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/assemblies/[variant]-exploded.step</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/parts/[part].step + [part].stl</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/profiles/[profile].dxf</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-tolerance-gdt.csv</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-gdt-plan.svg</li>
-                    <li>{variantId === "46" ? "ng46" : "ng40"}/[variant]-manifest.json</li>
-                  </ul>
                 </div>
               </HolographicCard>
               <HolographicCard className="p-6">
@@ -791,12 +756,12 @@ export default function NGWatchPage() {
                   icon: Wifi, color: "text-cyan-400", title: "Connectivity",
                   specs: [
                     ["Cellular", "Snapdragon X35 5G RedCap + LTE fallback; carrier certification unverified"],
-                    ["eSIM", "STMicro ST4SIM-200M eUICC; carrier support unverified"],
+                    ["eSIM", "Embedded SIM for remote carrier provisioning; carrier support unverified"],
                     ["Satellite", "SOS messaging via W5+ Gen 2 (Skylo NB-NTN) where available"],
                     ["Wi-Fi", "Treated as part of the wearable module, with a separate safety radio. Not a second Wi-Fi chip."],
                     ["Bluetooth", "Bluetooth LE (version per final radio)"],
                     ["GNSS", "Platform/modem GNSS (L1+L5 capable); no separate chip"],
-                    ["NFC", "STMicro ST54K (emergency ID; payments need certification)"],
+                    ["NFC", "NFC plus a secure element for an emergency ID tap; payments need certification"],
                   ]
                 },
                 {
@@ -804,8 +769,8 @@ export default function NGWatchPage() {
                   specs: [
                     ["Battery", `${variant.model.nominalBatteryCapacityMah}mAh Li-ion polymer, IEC 62133-2 / UN38.3 certified cell required`],
                     ["Battery Life", "Unknown until measured; cellular watches typically need daily charging"],
-                    ["Energy harvesting", "Rev 5 research: crown generator, photovoltaic ring, thermoelectric path and automatic rotor feed an isolated reserve; none is claimed to continuously power the cellular watch"],
-                    ["Wireless Charging", variantId === "40" ? "Qi (TI BQ51013B) with a smaller receive coil" : "Qi (TI BQ51013B, 5W)"],
+                    ["Energy harvesting", "Rev 5 research: crown generator, photovoltaic ring, and on the larger case an automatic rotor. Body-heat thermoelectric harvesting was reviewed and is not fitted. None of this is claimed to continuously power the cellular watch"],
+                    ["Wireless Charging", variantId === "40" ? "Sealed Qi with a smaller receive coil" : "Sealed Qi receive coil"],
                     ["Charging boundary", "No external USB-C port; sealed Qi charging target"],
                     ["Low-battery mode", "Target: keep alarms and SOS working; duration to be measured"],
                   ]
@@ -818,7 +783,7 @@ export default function NGWatchPage() {
                     ["Dose & route", "To be set by clinicians (prior auto-injector: 2 mg / 0.4 mL IM or SC)"],
                     ["Needle", "Gauge and length to be specified for intramuscular delivery"],
                     ["Drug supply", "Licensed pharmaceutical partner with stability data"],
-                    ["Actuator", "Faulhaber 0206B candidate; force and reliability unproven"],
+                    ["Actuator", "Not selected; force and reliability are unproven"],
                     ["Trigger", "Would require validated detection plus a person-confirmable cancel"],
                   ]
                 },
@@ -830,8 +795,8 @@ export default function NGWatchPage() {
                     ["Glass", "Lab-grown sapphire crystal (9H)"],
                     ["Touch", "Capacitive touch"],
                     ["Speaker", "Sealed micro speaker; alarm loudness to be measured"],
-                    ["Microphone", "Knowles SPH0645 MEMS (voice for Angel AI)"],
-                    ["Haptics", "TDK PowerHap 1204H piezoelectric"],
+                    ["Microphone", "MEMS microphone behind a membrane vent"],
+                    ["Haptics", "Piezoelectric haptic actuator"],
                   ]
                 },
                 {

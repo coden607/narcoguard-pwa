@@ -120,7 +120,7 @@ export const WATCH_REV5_MODULES: readonly Rev5Module[] = [
 export const REV5_POWER_ARCHITECTURE = {
   primaryStorage: "protected Li-ion battery",
   primaryCharging: "sealed Qi receiver",
-  harvestingPmics: ["ADP5091/ADP5092 for PV/TEG", "LTC3331-class rectified magnetic/kinetic harvesting path"],
+  harvestingPmics: ["one MPPT harvester for the photovoltaic ring and the rectified crown", "body-heat thermoelectric harvesting is not fitted"],
   reserve: "electrically isolated supercapacitor safety reserve",
   rule: "Harvesters extend reserve/runtime; none are represented as capable of continuously powering the full cellular Wear OS watch.",
 } as const
