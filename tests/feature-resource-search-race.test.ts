@@ -10,4 +10,7 @@ test("resource finder cancels superseded requests and rejects stale responses", 
   assert.match(source, /signal: controller\.signal/)
   assert.match(source, /search !== searchGeneration\.current/)
   assert.match(source, /error\.name === "AbortError"/)
+  assert.match(source, /refresh = result\.refresh/)
+  assert.match(source, /if \(!refresh && searchAbort\.current === controller\) searchAbort\.current = null/)
+  assert.match(source, /void refresh\?\.finally/)
 })
