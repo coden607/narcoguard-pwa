@@ -249,7 +249,7 @@ export default function DashboardPage() {
 
         <EmergencyButton />
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="rounded-xl border border-primary/30 p-5">
             <h2 className="text-xl font-semibold">Guardian Stability</h2>
             <p className="text-sm text-muted-foreground mb-3">Opt-in check-ins for food, sleep and everyday needs, with a next-day plan and resource starting points.</p>
@@ -265,6 +265,11 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold">Calm Audio</h2>
             <p className="text-sm text-muted-foreground mb-3">Local binaural tone presets, deep meditation drones, brown noise, and slow ocean soundscapes.</p>
             <Link href="/calm"><Button variant="outline">Open Calm Audio</Button></Link>
+          </div>
+          <div className="rounded-xl border border-primary/30 p-5">
+            <h2 className="text-xl font-semibold">Recovery Sleep</h2>
+            <p className="text-sm text-muted-foreground mb-3">Opt-in wind-down pink noise, a sleep timer and a private sleep log. Safety signals and alarms always stop the sound.</p>
+            <Link href="/recovery-sleep"><Button variant="outline">Open Recovery Sleep</Button></Link>
           </div>
         </div>
 

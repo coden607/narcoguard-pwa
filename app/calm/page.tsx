@@ -331,6 +331,13 @@ export default function CalmPage() {
       </section>
 
       <section className="rounded-xl border p-5">
+        <h2 className="font-semibold">Winding down for the night?</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          <Link href="/recovery-sleep" className="underline text-primary">Recovery Sleep</Link> adds an opt-in sleep timer, pink noise and a private sleep log, with a safety check before every session.
+        </p>
+      </section>
+
+      <section className="rounded-xl border p-5">
         <h2 className="font-semibold">Privacy</h2>
         <p className="text-sm text-muted-foreground mt-1">
           This feature does not need an account, microphone, location, or network audio stream. Session choices stay in this page and are not sent to Heroes or Angel.
