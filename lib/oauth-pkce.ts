@@ -6,6 +6,8 @@ export const EMAIL_PKCE_COOKIE = "ng_pkce_email_verifier"
 export const PKCE_COOKIE = GOOGLE_PKCE_COOKIE
 export const GOOGLE_NEXT_COOKIE = "ng_auth_google_next"
 export const EMAIL_NEXT_COOKIE = "ng_auth_email_next"
+export const APPLE_STATE_COOKIE = "ng_auth_apple_state"
+export const APPLE_NEXT_COOKIE = "ng_auth_apple_next"
 export const PKCE_MAX_AGE_S = 600
 
 const base64url = (bytes: Uint8Array) =>
