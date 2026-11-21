@@ -71,7 +71,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
         <a href="https://narcoguard.app" className="flex min-h-20 items-center justify-center rounded-xl border border-primary/40 bg-primary/10 px-4 text-center font-orbitron text-2xl font-black tracking-wide text-primary hover:bg-primary/20 sm:text-3xl">
           NARCOGUARD.APP
         </a>
-        <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer" className="flex min-h-20 items-center justify-center rounded-xl bg-green-500 px-4 text-center font-orbitron text-2xl font-black tracking-wide text-black shadow-[0_0_36px_rgba(34,197,94,0.35)] hover:bg-green-400 sm:text-3xl">
+        <a href="https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches" target="_blank" rel="noopener noreferrer" className="flex min-h-20 items-center justify-center rounded-xl bg-green-500 px-4 text-center font-orbitron text-2xl font-black tracking-wide text-black shadow-[0_0_36px_rgba(34,197,94,0.35)] hover:bg-green-400 sm:text-3xl">
           SUPPORT ON GOFUNDME
         </a>
       </div>

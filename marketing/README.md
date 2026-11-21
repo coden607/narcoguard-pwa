@@ -4,7 +4,7 @@
 Automated marketing system for NarcoGuard PWA and GoFundMe campaign.
 
 ## Campaign Details
-- **GoFundMe URL**: https://gofund.me/9acf270ea
+- **GoFundMe URL**: https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches
 - **Live App**: https://narcoguard.app
 - **Demo URL**: https://narcoguard-pwa-iota.vercel.app/
 - **GitHub Repo**: https://github.com/coden607/narcoguard-pwa

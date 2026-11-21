@@ -48,7 +48,7 @@ const OnboardingFlow = dynamic(
 )
 
 export default function DashboardPage() {
-  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
+  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
   const preferences = useUserPreferences()
   const showOnboarding = preferences !== null && !preferences.hasCompletedOnboarding
@@ -366,7 +366,7 @@ export default function DashboardPage() {
               <p className="text-muted-foreground mb-4">
                 Goal: <span className="text-green-400 font-bold">{formatUsd(FUNDING_GOAL)}</span> for Rev 5 engineering, prototype iterations, testing, and validation
               </p>
-              <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer" className="block">
+              <a href="https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches" target="_blank" rel="noopener noreferrer" className="block">
                 <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold text-lg py-6">
                   <DollarSign className="w-5 h-5 mr-2" />
                   Donate Now
@@ -415,7 +415,7 @@ export default function DashboardPage() {
             </a>
             <span className="text-muted-foreground">|</span>
             <a
-              href="https://gofund.me/9acf270ea"
+              href="https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches"
               target="_blank"
               rel="noopener noreferrer"
               className="text-green-400 hover:underline text-sm"

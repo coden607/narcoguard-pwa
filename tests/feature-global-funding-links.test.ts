@@ -5,7 +5,7 @@ import { readFile } from "node:fs/promises"
 test("global shell exposes prominent NarcoGuard and GoFundMe links", async () => {
   const chrome = await readFile(new URL("../components/site-chrome.tsx", import.meta.url), "utf8")
   assert.match(chrome, /https:\/\/narcoguard\.app/)
-  assert.match(chrome, /https:\/\/gofund\.me\/9acf270ea/)
+  assert.match(chrome, /https:\/\/www\.gofundme\.com\/f\/save-lives-with-narcoguard-ng2pro-watches/)
   assert.match(chrome, /NARCOGUARD\.APP/)
   assert.match(chrome, /SUPPORT ON GOFUNDME/)
 })
@@ -14,9 +14,9 @@ test("campaign source keeps reciprocal links explicit", async () => {
   const campaign = await readFile(new URL("../marketing/GOFUNDME_CAMPAIGN.md", import.meta.url), "utf8")
   const config = JSON.parse(await readFile(new URL("../marketing/campaign-config.json", import.meta.url), "utf8"))
   assert.match(campaign, /LIVE APP — https:\/\/narcoguard\.app/)
-  assert.match(campaign, /GOFUNDME — https:\/\/gofund\.me\/9acf270ea/)
+  assert.match(campaign, /GOFUNDME — https:\/\/www\.gofundme\.com\/f\/save-lives-with-narcoguard-ng2pro-watches/)
   assert.equal(config.links.app, "https://narcoguard.app")
-  assert.equal(config.links.gofundme, "https://gofund.me/9acf270ea")
+  assert.equal(config.links.gofundme, "https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches")
 })
 
 test("agents are instructed to bootstrap token-saving coden607 skills", async () => {

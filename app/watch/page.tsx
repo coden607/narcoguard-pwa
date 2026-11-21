@@ -66,7 +66,7 @@ const { assemblyLabor, qualityTesting, complianceTesting, packaging } = UNIT_COS
 const BOM_ICONS = [Cpu, Heart, Wifi, Battery, Smartphone, Syringe, Cog, Shield, Watch] as const
 
 export default function NGWatchPage() {
-  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
+  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null)
   const [variantId, setVariantId] = useState<VariantId>("46")
