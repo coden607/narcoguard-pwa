@@ -60,8 +60,15 @@ export interface VoiceLike {
   default?: boolean
 }
 
-const NATURAL_HINTS = /natural|neural|premium|enhanced|siri|samantha|\bava\b|allison|zoe|jenny|\baria\b|\bevan\b|nicky|karen|daniel|moira|tessa/i
+const NATURAL_HINTS = /natural|neural|premium|enhanced|siri|samantha|\bava\b|allison|zoe|jenny|\baria\b|\bevan\b|nicky|karen|daniel|moira|tessa|alex|victoria|aaron|fiona|susan|kate|serena/i
+const QUALITY_HINTS = /premium|enhanced|natural|neural/i
 const NOVELTY = /albert|bad news|good news|bahh|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|deranged|hysterical|fred|junior|ralph|kathy|eloquence|compact|espeak/i
+
+/** True when the voice sounds like a natural or enhanced voice rather than a compact/robotic fallback. */
+export function isNaturalVoice(voice: VoiceLike | undefined): boolean {
+  if (!voice) return false
+  return NATURAL_HINTS.test(voice.name) || QUALITY_HINTS.test(voice.name)
+}
 
 /** Picks the most natural-sounding on-device voice for the language; undefined means the browser default. */
 export function pickVoice<T extends VoiceLike>(voices: readonly T[], lang: string): T | undefined {
@@ -75,7 +82,8 @@ export function pickVoice<T extends VoiceLike>(voices: readonly T[], lang: strin
     if (voice.localService === false) return -1
     let points = voiceLang === want ? 4 : 2
     if (NATURAL_HINTS.test(voice.name)) points += 5
-    if (/premium|enhanced|natural|neural/i.test(voice.name)) points += 3
+    // An enhanced/premium build of a voice beats the compact build of the same voice.
+    if (QUALITY_HINTS.test(voice.name)) points += 5
     if (voice.default) points += 1
     return points
   }

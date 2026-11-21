@@ -532,6 +532,27 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
 
       {available && consented && (
         <>
+          {voiceEnabled && voice.sttSupported && voice.ttsSupported && (
+            <Button
+              type="button"
+              size="lg"
+              variant={handsFree ? "default" : "secondary"}
+              aria-pressed={handsFree}
+              disabled={!!pending && !handsFree}
+              onClick={toggleHandsFree}
+              data-testid="angel-hands-free-hero"
+              className="w-full min-h-16 flex-col gap-0.5 py-3 text-base font-bold"
+            >
+              <span className="inline-flex items-center gap-2">
+                {handsFree ? <MicOff className="h-5 w-5" aria-hidden="true" /> : <Mic className="h-5 w-5" aria-hidden="true" />}
+                {handsFree ? "Listening — tap to stop hands-free" : "Talk hands-free with Angel"}
+              </span>
+              <span className="text-xs font-normal opacity-80">
+                {handsFree ? "Angel listens, answers out loud, and keeps listening." : "One tap — Angel listens, answers out loud, and keeps listening."}
+              </span>
+            </Button>
+          )}
+
           <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
             <div className="flex flex-wrap gap-2">
               {(isCompass ? COMPASS_SUGGESTIONS : SUGGESTIONS).map((suggestion) => (
@@ -550,16 +571,16 @@ export function AngelAI({ compact = false, mode = "angel" }: { compact?: boolean
                     {voice.listening && !handsFree ? "Stop" : "Talk"}
                   </Button>
                 )}
-                {voice.sttSupported && voice.ttsSupported && (
-                  <Button type="button" variant={handsFree ? "default" : "outline"} disabled={!!pending && !handsFree} aria-pressed={handsFree} onClick={toggleHandsFree}>
-                    {handsFree ? "End hands-free" : "Hands-free conversation"}
-                  </Button>
-                )}
                 {voice.ttsSupported && (
                   <Button type="button" variant="outline" aria-pressed={readAloud} onClick={() => { if (readAloud) voice.cancelSpeech(); else voice.primeSpeech(); setReadAloud(!readAloud) }}>
                     {readAloud ? <Volume2 className="w-4 h-4 mr-2" aria-hidden="true" /> : <VolumeX className="w-4 h-4 mr-2" aria-hidden="true" />}
                     {readAloud ? "Reading replies aloud" : "Read replies aloud"}
                   </Button>
+                )}
+                {voice.ttsSupported && voice.voiceName && !voice.voiceIsNatural && (
+                  <p className="w-full text-xs text-muted-foreground">
+                    Angel is using the {voice.voiceName} voice. For a more natural voice, download an enhanced voice on this device — on iPhone: Settings → Accessibility → Spoken Content → Voices → English.
+                  </p>
                 )}
                 <p className="w-full text-sm text-muted-foreground" role="status" aria-live="polite">
                   {voice.listening ? (voice.interim ? `Hearing: ${voice.interim}` : "Listening…") : voice.speaking ? "Angel is speaking…" : voiceNote ?? (handsFree ? "Hands-free is on." : "")}

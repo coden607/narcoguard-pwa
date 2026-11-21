@@ -71,3 +71,17 @@ test("the most natural on-device voice is chosen, never a novelty or remote voic
   assert.equal(pickVoice([{ name: "Fred", lang: "en-US" }], "en-US"), undefined, "a novelty-only list falls back to the browser default")
   assert.equal(pickVoice([{ name: "Daniel", lang: "en_GB" }], "en-US")?.name, "Daniel", "same language, other region, still beats nothing")
 })
+
+test("an enhanced build beats the compact build of the same voice", async () => {
+  const { isNaturalVoice, pickVoice } = await import("../lib/voice")
+  const voices = [
+    { name: "Samantha", lang: "en-US", localService: true },
+    { name: "Samantha (Enhanced)", lang: "en-US", localService: true },
+    { name: "Alex", lang: "en-US", localService: true },
+  ]
+  assert.equal(pickVoice(voices, "en-US")?.name, "Samantha (Enhanced)")
+  assert.equal(isNaturalVoice({ name: "Samantha (Enhanced)", lang: "en-US" }), true)
+  assert.equal(isNaturalVoice({ name: "Samantha", lang: "en-US" }), true)
+  assert.equal(isNaturalVoice({ name: "Google US English", lang: "en-US" }), false)
+  assert.equal(isNaturalVoice(undefined), false)
+})
