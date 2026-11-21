@@ -3,7 +3,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { ArrowLeft, LifeBuoy, HandHeart, HeartPulse, Home, LogIn, MapPin, Menu, ShieldCheck, Sparkles, Users, Watch, X } from "lucide-react"
+import { ArrowLeft, LifeBuoy, HandHeart, HeartPulse, Home, LogIn, MapPin, Menu, Moon, ShieldCheck, Sparkles, Sun, Users, Watch, X } from "lucide-react"
 import { useEffect, useState } from "react"
 import { InstallButton } from "@/components/pwa/install-button"
 import { isEmergencyPrimary } from "@/lib/emergency-routes"
@@ -22,6 +22,25 @@ const links = [
   { href: "/fund", label: "Support", icon: HeartPulse },
   { href: "/account", label: "Account", icon: LogIn },
 ]
+
+/** Light/dark switch. The choice is remembered on this device; with no choice the system preference wins. */
+function ThemeToggle() {
+  const [dark, setDark] = useState(false)
+  /* eslint-disable react-hooks/set-state-in-effect -- one-time read of the theme class the pre-paint script set */
+  useEffect(() => { setDark(document.documentElement.classList.contains("dark")) }, [])
+  /* eslint-enable react-hooks/set-state-in-effect */
+  const toggle = () => {
+    const next = !dark
+    setDark(next)
+    document.documentElement.classList.toggle("dark", next)
+    try { localStorage.setItem("ng-theme", next ? "dark" : "light") } catch { /* private mode: the choice just doesn't stick */ }
+  }
+  return (
+    <button type="button" onClick={toggle} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} className="menu-button" data-testid="theme-toggle">
+      {dark ? <Sun /> : <Moon />}
+    </button>
+  )
+}
 
 /** One consistent way back on every page: the previous page in this app, or the dashboard. */
 function BackButton() {
@@ -64,7 +83,7 @@ export function SiteChrome({ children }: { children: React.ReactNode }) {
     <header className="site-header"><div className="site-header-inner">
       <Link href="/" className="brand" aria-label="NarcoGuard Always within reach, home" onClick={() => setOpen(false)}><span className="brand-mark"><Image src="/images/narcoguard-logo-96.webp" alt="" width={44} height={44} priority /></span><span><strong>NARCOGUARD</strong>{" "}<small>Always within reach</small></span></Link>
       <nav className="desktop-nav" aria-label="Primary navigation">{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} aria-current={isActive(href) ? "page" : undefined} className={cn("nav-link", isActive(href) && "is-active")}><Icon aria-hidden="true" />{label}</Link>)}</nav>
-      <div className="header-actions"><InstallButton /><button className="menu-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-nav" aria-label="Toggle navigation">{open ? <X /> : <Menu />}</button></div>
+      <div className="header-actions"><ThemeToggle /><InstallButton /><button className="menu-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-nav" aria-label="Toggle navigation">{open ? <X /> : <Menu />}</button></div>
     </div><nav id="mobile-nav" className={cn("mobile-nav", open && "is-open")} aria-label="Mobile navigation" aria-hidden={!open}>{links.map(({ href, label, icon: Icon }) => <Link key={href} href={href} tabIndex={open ? 0 : -1} aria-current={isActive(href) ? "page" : undefined} onClick={() => setOpen(false)} className={cn("nav-link", isActive(href) && "is-active")}><Icon aria-hidden="true" />{label}</Link>)}</nav></header>
     {!isEmergencyPrimary(pathname) && <div className="mx-auto w-full max-w-7xl px-4 pt-4" data-funding-banner="" data-testid="funding-banner">
       <div className="grid min-w-0 gap-3 rounded-2xl border border-primary/30 bg-background/85 p-3 shadow-2xl backdrop-blur md:grid-cols-2 [&>a]:min-w-0 [&>a]:text-base sm:[&>a]:text-2xl">
