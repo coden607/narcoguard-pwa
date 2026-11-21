@@ -1,5 +1,6 @@
 import { cookies } from "next/headers"
 import type { NextResponse } from "next/server"
+import { hasAppleClientSecret } from "@/lib/apple-oauth"
 import { hasAppleOAuthCredentials, hasGoogleOAuthCredentials } from "@/lib/google-oauth"
 import { sessionCookieOptions } from "@/lib/auth-origin"
 
@@ -191,11 +192,20 @@ export async function signInWithGoogleIdToken(idToken: string): Promise<AuthAtte
   return parseAuthAttempt(response)
 }
 
-/** Last-resort path when the Google provider is not yet enabled in Supabase: create or confirm the user with the service role and issue a session. */
-export async function sessionFromVerifiedGoogleProfile(profile: { email?: string; name?: string }): Promise<AuthAttempt> {
+/** Completes Apple sign-in by trading an Apple ID token for a Supabase session. */
+export async function signInWithAppleIdToken(idToken: string): Promise<AuthAttempt> {
+  const response = await supabaseRequest("/auth/v1/token?grant_type=id_token", {
+    method: "POST",
+    body: JSON.stringify({ provider: "apple", id_token: idToken }),
+  })
+  return parseAuthAttempt(response)
+}
+
+/** Last-resort path when the OAuth provider is not yet enabled in Supabase: create or confirm the user with the service role and issue a session. */
+export async function sessionFromVerifiedOAuthProfile(profile: { email?: string; name?: string }, providerLabel: string): Promise<AuthAttempt> {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY
   const email = profile.email?.trim()
-  if (!key || !email) return { session: null, user: null, error: { message: "Google account is not available", status: 503 } }
+  if (!key || !email) return { session: null, user: null, error: { message: `${providerLabel} account is not available`, status: 503 } }
   const { url } = getSupabaseConfig()
   const headers = { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" }
   const metadata = { full_name: profile.name, name: profile.name, display_name: profile.name }
@@ -219,7 +229,7 @@ export async function sessionFromVerifiedGoogleProfile(profile: { email?: string
     const token = typeof properties.email_otp === "string" ? properties.email_otp
       : typeof properties.hashed_token === "string" ? properties.hashed_token
       : undefined
-    if (!token) return { session: null, user: null, error: { message: "Google account is not available", status: 503 } }
+    if (!token) return { session: null, user: null, error: { message: `${providerLabel} account is not available`, status: 503 } }
     const verify = await supabaseRequest("/auth/v1/verify", {
       method: "POST",
       body: JSON.stringify({ type: "magiclink", email, token }),
@@ -228,6 +238,16 @@ export async function sessionFromVerifiedGoogleProfile(profile: { email?: string
   } catch {
     return { session: null, user: null, error: { message: "Authentication service is unavailable", status: 503 } }
   }
+}
+
+/** Service-role fallback for the Google callback (provider not yet enabled in Supabase). */
+export async function sessionFromVerifiedGoogleProfile(profile: { email?: string; name?: string }): Promise<AuthAttempt> {
+  return sessionFromVerifiedOAuthProfile(profile, "Google")
+}
+
+/** Service-role fallback for the Apple callback (provider not yet enabled in Supabase). */
+export async function sessionFromVerifiedAppleProfile(profile: { email?: string; name?: string }): Promise<AuthAttempt> {
+  return sessionFromVerifiedOAuthProfile(profile, "Apple")
 }
 
 export async function getSession() {
@@ -240,8 +260,8 @@ export const isHeroServerConfigured = () => isAuthConfigured() && Boolean(proces
 /** Google sign-in is shown only when AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET are set. */
 export const isGoogleSignInEnabled = () => isAuthConfigured() && hasGoogleOAuthCredentials()
 
-/** Apple sign-in stays hidden unless explicitly enabled and both credentials are set. */
-export const isAppleSignInEnabled = () => isAuthConfigured() && hasAppleOAuthCredentials()
+/** Apple sign-in stays hidden unless explicitly enabled and the full client-secret set is present. */
+export const isAppleSignInEnabled = () => isAuthConfigured() && hasAppleOAuthCredentials() && hasAppleClientSecret()
 
 export const supabaseAuthUrl = () => getSupabaseConfig().url
 

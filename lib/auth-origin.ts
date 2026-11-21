@@ -1,5 +1,6 @@
 /** Canonical public origin for OAuth redirects and session cookies. */
 export const AUTH_CALLBACK_GOOGLE_PATH = "/api/auth/callback/google"
+export const AUTH_CALLBACK_APPLE_PATH = "/api/auth/callback/apple"
 export const AUTH_CALLBACK_EMAIL_PATH = "/api/auth/callback"
 export const AUTH_RECOVERY_PATH = "/api/auth/recovery"
 export const PRODUCTION_ORIGIN = "https://www.narcoguard.app"
@@ -23,6 +24,10 @@ export function publicAuthOrigin(request: Request): string {
 
 export function googleRedirectUri(origin: string): string {
   return `${origin.replace(/\/+$/, "")}${AUTH_CALLBACK_GOOGLE_PATH}`
+}
+
+export function appleRedirectUri(origin: string): string {
+  return `${origin.replace(/\/+$/, "")}${AUTH_CALLBACK_APPLE_PATH}`
 }
 
 export function emailRedirectUri(origin: string): string {

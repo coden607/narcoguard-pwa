@@ -40,7 +40,9 @@ export default function AuthPage() {
         ? "Google sign-in is not switched on yet. Use email below."
       : error === "apple-off"
         ? "Apple sign-in is not switched on yet. Use Google or email below."
-        : params.get('reason') === 'expired' ? 'Your session has expired. Sign in to continue where you left off.' : ""
+        : error === "apple"
+          ? "Apple sign-in did not finish. Try again, or use email below."
+          : params.get('reason') === 'expired' ? 'Your session has expired. Sign in to continue where you left off.' : ""
     let cancelled = false
     fetch("/api/auth", { cache: "no-store" })
       .then((r) => r.json())
@@ -141,7 +143,7 @@ export default function AuthPage() {
 
   return (
     <main className="min-h-screen px-6 py-16 text-white">
-      <div className="mx-auto max-w-md rounded-2xl border border-white/15 bg-black/30 p-8 shadow-2xl backdrop-blur-sm">
+      <div className="mx-auto max-w-md rounded-2xl border border-white/15 bg-black/70 p-8 shadow-2xl backdrop-blur-sm">
         <h1 className="mt-2 text-3xl font-bold">{mode === "login" ? "Sign in" : mode === 'reset' ? 'Reset your password' : "Create your account"}</h1>
         <p className="mt-2 text-sm text-white/70">
           Account access is protected by Supabase Auth. NarcoGuard emergency guidance and resources do not require an account.

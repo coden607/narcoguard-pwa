@@ -1,5 +1,6 @@
 import 'next/dist/server/node-environment'
 import assert from 'node:assert/strict'
+import { generateKeyPairSync } from 'node:crypto'
 import { test } from 'node:test'
 import { NextRequest } from 'next/server'
 import { createRequestStoreForAPI } from 'next/dist/server/async-storage/request-store'
@@ -9,7 +10,8 @@ import { GET as authStatus } from '../app/api/auth/route'
 import { GET as startGoogle } from '../app/api/auth/google/route'
 import { GET as googleCallback } from '../app/api/auth/callback/google/route'
 import { GET as startApple } from '../app/api/auth/apple/route'
-import { GOOGLE_NEXT_COOKIE, GOOGLE_PKCE_COOKIE, challengeFor } from '../lib/oauth-pkce'
+import { POST as appleCallback } from '../app/api/auth/callback/apple/route'
+import { APPLE_NEXT_COOKIE, APPLE_STATE_COOKIE, GOOGLE_NEXT_COOKIE, GOOGLE_PKCE_COOKIE, challengeFor } from '../lib/oauth-pkce'
 import { googleAuthorizeUrl, hasAppleOAuthCredentials, hasGoogleOAuthCredentials, profileFromIdToken } from '../lib/google-oauth'
 import { googleRedirectUri, publicAuthOrigin, sessionCookieOptions } from '../lib/auth-origin'
 import { ACCESS_COOKIE, REFRESH_COOKIE, getAuthContext, isAppleSignInEnabled, isGoogleSignInEnabled } from '../lib/supabase-auth'
@@ -27,7 +29,7 @@ function withAuthEnv(run: () => Promise<void>) {
   process.env.AUTH_GOOGLE_ID = 'google-client-id.apps.googleusercontent.com'
   process.env.AUTH_GOOGLE_SECRET = 'google-client-secret'
   return run().finally(() => {
-    for (const key of ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'AUTH_GOOGLE_ID', 'AUTH_GOOGLE_SECRET', 'AUTH_APPLE_ID', 'AUTH_APPLE_SECRET', 'AUTH_APPLE_ENABLED', 'AUTH_URL', 'NEXT_PUBLIC_APP_URL', 'SUPABASE_SERVICE_ROLE_KEY']) {
+    for (const key of ['SUPABASE_URL', 'SUPABASE_ANON_KEY', 'AUTH_GOOGLE_ID', 'AUTH_GOOGLE_SECRET', 'AUTH_APPLE_ID', 'AUTH_APPLE_SECRET', 'AUTH_APPLE_TEAM_ID', 'AUTH_APPLE_KEY_ID', 'AUTH_APPLE_ENABLED', 'AUTH_URL', 'NEXT_PUBLIC_APP_URL', 'SUPABASE_SERVICE_ROLE_KEY']) {
       if (previous[key] === undefined) delete process.env[key]
       else process.env[key] = previous[key]
     }
@@ -39,6 +41,8 @@ test('Google and Apple buttons stay hidden until their credentials are set', () 
   delete process.env.AUTH_GOOGLE_SECRET
   delete process.env.AUTH_APPLE_ID
   delete process.env.AUTH_APPLE_SECRET
+  delete process.env.AUTH_APPLE_TEAM_ID
+  delete process.env.AUTH_APPLE_KEY_ID
   delete process.env.AUTH_APPLE_ENABLED
   process.env.SUPABASE_URL = 'https://example.supabase.co'
   process.env.SUPABASE_ANON_KEY = 'test-key'
@@ -63,6 +67,8 @@ test('GET /api/auth reports google when credentials exist and apple only with th
     process.env.AUTH_APPLE_ENABLED = 'true'
     process.env.AUTH_APPLE_ID = 'apple-id'
     process.env.AUTH_APPLE_SECRET = 'apple-secret'
+    process.env.AUTH_APPLE_TEAM_ID = 'apple-team'
+    process.env.AUTH_APPLE_KEY_ID = 'apple-key'
     const withApple = await inRequest(request, () => authStatus(request))
     assert.equal((await withApple.result.json()).apple, true)
   })
@@ -107,6 +113,81 @@ test('Apple start stays off by default', async () => {
   const request = new NextRequest('https://www.narcoguard.app/api/auth/apple')
   const outcome = await inRequest(request, () => startApple(request))
   assert.equal(outcome.result.headers.get('location'), 'https://www.narcoguard.app/auth?error=apple-off')
+})
+
+test('Apple start sends the person to Apple with the exact www callback when enabled', async () => {
+  await withAuthEnv(async () => {
+    process.env.AUTH_APPLE_ENABLED = 'true'
+    process.env.AUTH_APPLE_ID = 'app.narcoguard.web'
+    process.env.AUTH_APPLE_SECRET = 'apple-secret'
+    process.env.AUTH_APPLE_TEAM_ID = 'apple-team'
+    process.env.AUTH_APPLE_KEY_ID = 'apple-key'
+    const request = new NextRequest('https://www.narcoguard.app/api/auth/apple?next=/account')
+    const outcome = await inRequest(request, () => startApple(request))
+    const location = outcome.result.headers.get('location')
+    assert.ok(location)
+    const url = new URL(location)
+    assert.equal(url.origin + url.pathname, 'https://appleid.apple.com/auth/authorize')
+    assert.equal(url.searchParams.get('client_id'), 'app.narcoguard.web')
+    assert.equal(url.searchParams.get('redirect_uri'), 'https://www.narcoguard.app/api/auth/callback/apple')
+    assert.equal(url.searchParams.get('response_type'), 'code')
+    assert.equal(url.searchParams.get('response_mode'), 'form_post')
+    assert.ok(url.searchParams.get('state'))
+    assert.equal(outcome.result.cookies.get(APPLE_STATE_COOKIE)?.httpOnly, true)
+    assert.equal(outcome.result.cookies.get(APPLE_NEXT_COOKIE)?.value, '/account')
+    assert.equal(outcome.result.cookies.get(APPLE_STATE_COOKIE)?.value, url.searchParams.get('state'))
+  })
+})
+
+test('Apple callback writes session cookies onto the redirect when Apple and Supabase succeed', async () => {
+  await withAuthEnv(async () => {
+    process.env.AUTH_URL = 'https://www.narcoguard.app'
+    process.env.AUTH_APPLE_ENABLED = 'true'
+    process.env.AUTH_APPLE_ID = 'app.narcoguard.web'
+    process.env.AUTH_APPLE_TEAM_ID = 'apple-team'
+    process.env.AUTH_APPLE_KEY_ID = 'apple-key'
+    const { privateKey } = generateKeyPairSync('ec', { namedCurve: 'P-256' })
+    process.env.AUTH_APPLE_SECRET = privateKey.export({ type: 'pkcs8', format: 'pem' }).toString()
+    const original = globalThis.fetch
+    const state = 'csrf-state-token'
+    // A structurally valid JWT payload {email} — signature is not checked because the token is taken from Apple's token endpoint.
+    const idToken = `eyJhbGciOiJub25lIn0.${Buffer.from(JSON.stringify({ email: 'user@example.invalid' })).toString('base64url')}.sig`
+    try {
+      globalThis.fetch = async (input, init) => {
+        const url = String(input)
+        if (url === 'https://appleid.apple.com/auth/token') {
+          const body = String(init?.body)
+          assert.ok(body.includes('code=auth-code'))
+          assert.ok(body.includes('grant_type=authorization_code'))
+          assert.ok(body.includes('redirect_uri=' + encodeURIComponent('https://www.narcoguard.app/api/auth/callback/apple')))
+          assert.ok(body.includes('client_secret='))
+          return Response.json({ id_token: idToken, access_token: 'apple-access' })
+        }
+        if (url.includes('/auth/v1/token?grant_type=id_token')) {
+          return Response.json({
+            access_token: 'access-token',
+            refresh_token: 'refresh-token',
+            expires_in: 3600,
+            user: { id: 'fixture-user', email: 'user@example.invalid', user_metadata: { full_name: 'Sam Lee' } },
+          })
+        }
+        return Response.json({}, { status: 200 })
+      }
+      const form = new URLSearchParams({ code: 'auth-code', state, user: JSON.stringify({ name: { firstName: 'Sam', lastName: 'Lee' }, email: 'user@example.invalid' }) })
+      const request = new NextRequest('https://www.narcoguard.app/api/auth/callback/apple', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded', Cookie: `${APPLE_STATE_COOKIE}=${state}; ${APPLE_NEXT_COOKIE}=/account` },
+        body: form.toString(),
+      })
+      const outcome = await inRequest(request, () => appleCallback(request))
+      assert.equal(outcome.result.headers.get('location'), 'https://www.narcoguard.app/account')
+      assert.equal(outcome.cookies.get(ACCESS_COOKIE)?.value, 'access-token')
+      assert.equal(outcome.cookies.get(ACCESS_COOKIE)?.httpOnly, true)
+      assert.equal(outcome.cookies.get(REFRESH_COOKIE)?.value, 'refresh-token')
+    } finally {
+      globalThis.fetch = original
+    }
+  })
 })
 
 test('Google callback writes session cookies onto the redirect when Google and Supabase succeed', async () => {
