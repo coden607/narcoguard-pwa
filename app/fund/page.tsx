@@ -13,7 +13,7 @@ import { DonateForm } from "@/components/fund/donate-form"
 export default function FundPage() {
   const [copied, setCopied] = useState(false)
 
-  const GOFUNDME_URL = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
+  const GOFUNDME_URL = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches"
   const CONTACT_EMAIL = "narcoguard607@gmail.com"
 
   const copyLink = async () => {

@@ -8,7 +8,7 @@ Paste-ready campaign draft updated for the current NarcoGuard app and Rev 5 NG46
 
 # **WATCH SPECS + BLUEPRINTS — https://narcoguard.app/watch**
 
-# **GOFUNDME — https://gofund.me/9acf270ea**
+# **GOFUNDME — https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches**
 
 Repeat them near the bottom of the campaign so donors can verify the live app and current engineering work.
 
@@ -42,13 +42,13 @@ Public URLs after deploy: `https://www.narcoguard.app/images/ng-rev5-hero-titani
 
 # **WATCH SPECS & BLUEPRINTS — https://narcoguard.app/watch**
 
-# **GOFUNDME — https://gofund.me/9acf270ea**
+# **GOFUNDME — https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches**
 
 ---
 
 ## Recommended title
 
-**Help Build NarcoGuard: Free Recovery Help + Safer Wearable R&D**
+**Help Build NarcoGuard: Free Support Now, Safer Wearable Tech**
 
 ## Short description
 

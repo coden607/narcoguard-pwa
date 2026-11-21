@@ -5,7 +5,7 @@ export const env = {
   APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || "NarcoGuard",
   APP_URL: SITE_URL,
   API_URL: process.env.NEXT_PUBLIC_API_URL || "/api",
-  GOFUNDME_URL: process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea",
+  GOFUNDME_URL: process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches",
   INVESTOR_URL:
     process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL ||
     "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry",
