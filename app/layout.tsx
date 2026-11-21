@@ -72,8 +72,10 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${orbitron.variable}`}>
+    <html lang="en" className={`${inter.variable} ${orbitron.variable}`}>
       <head>
+        {/* Apply the saved theme (or the system preference) before first paint so the page never flashes the wrong theme. */}
+        <Script id="ng-theme" strategy="beforeInteractive">{`try{var t=localStorage.getItem("ng-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}`}</Script>
         <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(() => undefined)`}</Script>
         {/* Chromium fires beforeinstallprompt once, often before React hydrates; keep it for the install button. */}
         <Script id="narcoguard-install" strategy="beforeInteractive">{`addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__ngInstallPrompt = e; dispatchEvent(new Event("ng-installprompt")) })`}</Script>
