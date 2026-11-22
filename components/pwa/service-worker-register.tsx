@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { reloadOnceForChunkError } from "@/lib/chunk-reload"
 
 const UPDATE_INTERVAL_MS = 15 * 60 * 1000
 const VERSION_STORAGE_KEY = "narcoguard_seen_deployment_version_v1"
@@ -31,6 +32,11 @@ export function ServiceWorkerRegister({ initialVersion = "local" }: { initialVer
     }
     document.addEventListener("input", markDirty, true)
     document.addEventListener("change", markDirty, true)
+    // A chunk from the previous deployment can fail outside a render (a lazy import in a handler).
+    const onChunkRejection = (event: PromiseRejectionEvent) => { reloadOnceForChunkError(event.reason) }
+    const onChunkError = (event: ErrorEvent) => { reloadOnceForChunkError(event.error ?? event.message) }
+    window.addEventListener("unhandledrejection", onChunkRejection)
+    window.addEventListener("error", onChunkError)
     const syncUpdateAcrossTabs = (event: StorageEvent) => {
       if (event.storageArea !== window.localStorage || event.key !== UPDATE_READY_KEY || !event.newValue) return
       if (event.newValue !== loaded && /^[a-zA-Z0-9._-]{1,128}$/.test(event.newValue)) {
@@ -138,6 +144,8 @@ export function ServiceWorkerRegister({ initialVersion = "local" }: { initialVer
       window.removeEventListener("offline", connectivity)
       document.removeEventListener("input", markDirty, true)
       document.removeEventListener("change", markDirty, true)
+      window.removeEventListener("unhandledrejection", onChunkRejection)
+      window.removeEventListener("error", onChunkError)
       window.removeEventListener("storage", syncUpdateAcrossTabs)
       navigator.serviceWorker?.removeEventListener("controllerchange", onControllerChange)
       if (timer !== undefined) window.clearInterval(timer)
