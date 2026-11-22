@@ -8,6 +8,7 @@ import { useEffect, useState } from "react"
 import { InstallButton } from "@/components/pwa/install-button"
 import { isEmergencyPrimary } from "@/lib/emergency-routes"
 import { cn } from "@/lib/utils"
+import { applyTheme, currentTheme, type Theme } from "@/lib/theme"
 
 const links = [
   { href: "/", label: "Dashboard", icon: Home },
@@ -23,21 +24,21 @@ const links = [
   { href: "/account", label: "Account", icon: LogIn },
 ]
 
-/** Light/dark switch. The choice is remembered on this device; with no choice the system preference wins. */
+/** Light/dark switch. Dark is the default; the choice is remembered on this device and beats the system setting. */
 function ThemeToggle() {
-  const [dark, setDark] = useState(false)
+  const [theme, setTheme] = useState<Theme>("dark")
   /* eslint-disable react-hooks/set-state-in-effect -- one-time read of the theme class the pre-paint script set */
-  useEffect(() => { setDark(document.documentElement.classList.contains("dark")) }, [])
+  useEffect(() => { setTheme(currentTheme()) }, [])
   /* eslint-enable react-hooks/set-state-in-effect */
+  const dark = theme === "dark"
   const toggle = () => {
-    const next = !dark
-    setDark(next)
-    document.documentElement.classList.toggle("dark", next)
-    try { localStorage.setItem("ng-theme", next ? "dark" : "light") } catch { /* private mode: the choice just doesn't stick */ }
+    const next: Theme = dark ? "light" : "dark"
+    setTheme(next)
+    applyTheme(next)
   }
   return (
-    <button type="button" onClick={toggle} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} className="menu-button" data-testid="theme-toggle">
-      {dark ? <Sun /> : <Moon />}
+    <button type="button" onClick={toggle} aria-label={dark ? "Switch to light theme" : "Switch to dark theme"} title={dark ? "Light theme" : "Dark theme"} className="menu-button theme-toggle" data-testid="theme-toggle" data-theme-state={theme}>
+      {dark ? <Sun aria-hidden="true" /> : <Moon aria-hidden="true" />}
     </button>
   )
 }
