@@ -1,5 +1,34 @@
 # NarcoGuard — public PWA and wearable research concept
 
+<!-- showcase:start -->
+**A public PWA demo and research concept for overdose prevention and person-led recovery support. It is not a medical device or emergency service.**
+
+[![Live demo](https://img.shields.io/badge/live_demo-www.narcoguard.app-2ea44f?logo=vercel)](https://www.narcoguard.app) [![License: see LICENSE](https://img.shields.io/badge/license-see_LICENSE-blue)](LICENSE)
+
+![NarcoGuard live demo screenshot](docs/screenshot.png)
+
+**Live demo:** https://www.narcoguard.app
+
+### Highlights
+
+- Needs-first resource search built around Maslow’s hierarchy of needs
+- Angel AI assistant for finding services and planning next steps
+- Emergency and CPR steps, training and Hero certification, Good Samaritan law summaries
+- Installable PWA with light and dark themes and an optional encrypted account backup
+
+**Tech stack:** Next.js 16, React 19, TypeScript, Tailwind CSS 4, Zod, Supabase Auth, Vercel
+
+**Run locally:**
+
+```bash
+npm ci
+npm run dev     # http://localhost:3000
+npm test
+```
+
+<!-- showcase:end -->
+
+
 NarcoGuard explores overdose prevention and person-led recovery support. It is organized around [Maslow's hierarchy of needs](#how-narcoguard-uses-maslows-hierarchy-of-needs): basic needs first, then safety, connection, stability and the goals each person chooses. Today the free app offers needs-first resource search, Angel AI, emergency and CPR steps, training and Hero certification, Good Samaritan law summaries, an optional Guardian planner and Daily Life routines, emergency contacts, on-screen Bluetooth heart-rate and oxygen readings, an optional encrypted account backup, and install-to-home-screen. It is guided by a public [founding Constitution](#founding-constitution) draft, not yet ratified, whose proposed rights floor keeps ordinary help free of tracking or risk scores. The public web app is a **demo and research concept**. It is not a validated medical device, emergency dispatch service, treatment program, or proof that an experimental wearable can detect or reverse an overdose. In an immediate emergency, call 911.
 
 ## Where the idea came from
