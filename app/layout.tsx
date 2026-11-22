@@ -7,6 +7,7 @@ import Script from "next/script"
 import { Analytics } from "@vercel/analytics/next"
 import { SiteChrome } from "@/components/site-chrome"
 import { SITE_URL } from "@/lib/site-url"
+import { THEME_INIT_SCRIPT } from "@/lib/theme"
 import "./globals.css"
 
 const orbitron = Orbitron({
@@ -72,10 +73,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} ${orbitron.variable}`}>
+    <html lang="en" className={`dark ${inter.variable} ${orbitron.variable}`} style={{ colorScheme: "dark" }} suppressHydrationWarning>
       <head>
-        {/* Apply the saved theme (or the system preference) before first paint so the page never flashes the wrong theme. */}
-        <Script id="ng-theme" strategy="beforeInteractive">{`try{var t=localStorage.getItem("ng-theme");if(t==="dark"||(!t&&matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark")}}catch(e){}`}</Script>
+        {/* Dark is the default and is rendered by the server. This inline script runs before first paint and
+            applies a saved light/dark choice, so the page never flashes the wrong theme. */}
+        <script id="ng-theme" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(() => undefined)`}</Script>
         {/* Chromium fires beforeinstallprompt once, often before React hydrates; keep it for the install button. */}
         <Script id="narcoguard-install" strategy="beforeInteractive">{`addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__ngInstallPrompt = e; dispatchEvent(new Event("ng-installprompt")) })`}</Script>
