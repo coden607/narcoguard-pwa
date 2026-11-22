@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import Image from "next/image"
 import { DonateForm } from "@/components/fund/donate-form"
+import { HoloWatchShowcase } from "@/components/effects/holo-watch-showcase"
 
 export default function FundPage() {
   const [copied, setCopied] = useState(false)
@@ -69,19 +70,13 @@ export default function FundPage() {
           {/* Campaign Hero Image */}
           <figure className="mb-8" data-testid="watch-showcase">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2 rounded-2xl overflow-hidden border border-primary/30">
-                <div className="grid gap-3 p-3">
-                  <Image
-                    src="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
-                    alt="Concept render of NarcoGuard NG46 in natural titanium and NG40 in rose gold titanium on premium metal titanium link bracelets with integrated solar cells"
-                    width={1280}
-                    height={720}
-                    priority
-                    sizes="(min-width: 768px) 50vw, 100vw"
-                    className="w-full h-auto rounded-xl"
-                  />
-
-                </div>
+              <div className="md:col-span-2">
+                <HoloWatchShowcase
+                  title="See-through NG concept"
+                  imageSrc="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
+                  priority
+                  titleAs="p"
+                />
               </div>
               <div className="rounded-2xl border border-primary/30 p-5 md:col-span-2">
                 <p className="text-sm font-semibold text-primary">Current public engineering package: Rev 5</p>

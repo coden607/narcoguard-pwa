@@ -7,6 +7,7 @@ import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
 import { BrandBackdrop } from "@/components/effects/brand-backdrop"
 import { HolographicCard } from "@/components/effects/holographic-card"
+import { HoloWatchShowcase } from "@/components/effects/holo-watch-showcase"
 import { VitalsMonitor } from "@/components/dashboard/vitals-monitor"
 import { EmergencyButton } from "@/components/emergency/emergency-button"
 import { HeroNetworkStatus } from "@/components/hero/hero-network-status"
@@ -248,6 +249,8 @@ export default function DashboardPage() {
         </HolographicCard>
 
         <EmergencyButton />
+
+        <HoloWatchShowcase title="Meet the NG concept watch" />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="rounded-xl border border-primary/30 p-5">

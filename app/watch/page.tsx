@@ -33,7 +33,20 @@ import { FUNDING_GOAL } from "@/lib/funding-goal"
 import { REV5_POWER_ARCHITECTURE, WATCH_REV5_MODULES } from "@/lib/watch-rev5"
 import { EngineeringDrawing } from "@/components/watch/engineering-drawing"
 import { Watch3D } from "@/components/watch/watch-3d"
+import { HoloWatchShowcase } from "@/components/effects/holo-watch-showcase"
 import { OwnerLock } from "@/components/watch/owner-lock"
+
+/** Black or white, whichever reads better on a #rrggbb swatch (WCAG relative luminance). */
+function readableTextOn(hex: string): string {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex)
+  if (!m) return "#000000"
+  const [r, g, b] = [0, 2, 4].map((i) => {
+    const c = parseInt(m[1].slice(i, i + 2), 16) / 255
+    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  const l = 0.2126 * r + 0.7152 * g + 0.0722 * b
+  return (1.05 / (l + 0.05)) >= ((l + 0.05) / 0.05) ? "#ffffff" : "#000000"
+}
 
 // Candidate bills of materials live in lib/watch-bom.ts; supplier and part numbers require
 // confirmation. This is a research concept, not a manufacturing-ready or medical-device BOM.
@@ -119,15 +132,17 @@ export default function NGWatchPage() {
 
       <div className="relative z-10 container mx-auto px-4 py-6">
         {/* Header */}
-        <header className="flex items-center justify-between mb-8">
+        <header className="flex flex-wrap items-center justify-between gap-3 mb-8">
           <h1 className="text-2xl md:text-3xl font-bold glow-text text-center">NG | NarcoGuard System Blueprint</h1>
           <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
-            <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
+            <Button className="bg-green-500 hover:bg-green-600 text-black font-bold whitespace-nowrap">
               <DollarSign className="w-4 h-4 mr-2" />
               Fund This
             </Button>
           </a>
         </header>
+
+        <HoloWatchShowcase className="mb-8" title="NG concept hologram" />
 
         <section className="mb-8 rounded-2xl neon-border bg-background/40 p-4" aria-labelledby="size-heading" data-testid="watch-size">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -321,8 +336,8 @@ export default function NGWatchPage() {
                   className="flex items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 text-left hover:border-primary/60 hover:bg-primary/5 transition-colors"
                 >
                   <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-black"
-                    style={{ backgroundColor: component.color }}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                    style={{ backgroundColor: component.color, color: readableTextOn(component.color) }}
                   >
                     {index + 1}
                   </span>
@@ -443,7 +458,7 @@ export default function NGWatchPage() {
                     }`}
                     onClick={() => setSelectedComponent(selectedComponent === comp.id ? null : comp.id)}
                   >
-                    <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black" style={{ backgroundColor: comp.color }}>{index + 1}</div>
+                    <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: comp.color, color: readableTextOn(comp.color) }}>{index + 1}</div>
                     <span className="text-[11px] leading-tight">{comp.name}</span>
                   </button>
                 ))}
