@@ -11,7 +11,7 @@
 <g fill="#d7fff2" font-family="monospace"><text x="40" y="28" font-size="26" font-weight="bold">NARCOGUARD NG46 — REV 5 BLUEPRINT</text>
 <text x="170" y="45" font-size="18">46.0 mm</text><text x="575" y="170" font-size="18">SIDE — 13.8 mm target thickness</text>
 <text x="88" y="480" font-size="18">FRONT</text><text x="680" y="775" font-size="18">BACK / INTERNAL PLAN</text>
-<text x="575" y="330" font-size="16">22 mm titanium solar link bracelet • 1.45 in AMOLED • 500 mAh</text>
+<text x="575" y="330" font-size="16">22 mm titanium solar link bracelet • 1.45 in AMOLED • ~250 mAh (estimated)</text>
 <text x="575" y="355" font-size="16">W5+ Gen 2 + nRF5340 safety MCU</text>
 <text x="575" y="380" font-size="16">SDX35 5G RedCap + ST4SIM eSIM</text>
 <text x="575" y="405" font-size="16">MAX86178 PPG / ECG / BioZ sensor stack</text>

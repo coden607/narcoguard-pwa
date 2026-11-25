@@ -168,12 +168,12 @@ export const BOM_46: BomCategory[] = [
     description: "Protected cell with sealed Qi charging. Light and motion harvesting are supplemental and are not claimed to run the watch.",
     items: [
       {
-        name: "500 mAh Li-ion polymer cell (certified)",
-        description: "Custom-shape lithium-polymer cell with protection circuit; must hold IEC 62133-2 and UN38.3 certification. Supplier (e.g. ATL, Amperex, or other wearable-cell maker) to be quoted.",
+        name: "~250 mAh (estimated) certified protected lithium polymer pouch cell",
+        description: "Volume estimate pending cell selection. Certified protected lithium polymer pouch cell with protection circuit; must hold IEC 62133-2 and UN38.3 certification. ~0.93 Wh (estimated) at 3.7V. Supplier (e.g. ATL, Amperex, or other wearable-cell maker) to be quoted.",
         quantity: 1,
         unitPrice: 8.50,
         supplier: "Qualified wearable-cell supplier (TBD)",
-        partNumber: "TBD (500 mAh)",
+        partNumber: "TBD (~250 mAh, estimated)",
         datasheet: "iec.ch (IEC 62133-2)",
       },
       {
@@ -480,11 +480,11 @@ export const BOM_40: BomCategory[] = replace(BOM_46, {
     description: "Antennas co-designed with the smaller 40 mm titanium case; shorter radiators make cellular and GNSS performance harder, so RF testing decides whether a ceramic window is needed",
     partNumber: "TBD (custom, 40 mm)",
   },
-  "500 mAh Li-ion polymer cell (certified)": {
-    name: "300 mAh Li-ion polymer cell (certified)",
-    description: "Custom-shape cell about 24×19×4.2 mm, the capacity class used in 40–41 mm smartwatches, with protection circuit; must hold IEC 62133-2 and UN38.3 certification. Runtime will be shorter than the 46 mm and must be measured.",
+  "~250 mAh (estimated) certified protected lithium polymer pouch cell": {
+    name: "~120 mAh (estimated) certified protected lithium polymer pouch cell",
+    description: "Smaller certified protected lithium polymer pouch cell; volume estimate pending cell selection, with protection circuit; must hold IEC 62133-2 and UN38.3 certification. ~0.44 Wh (estimated) at 3.7V. Runtime will be shorter than the 46 mm and must be measured.",
     unitPrice: 7.0,
-    partNumber: "TBD (300 mAh)",
+    partNumber: "TBD (~120 mAh, estimated)",
   },
   "Qi receive coil": {
     name: "Qi receiver coil, about 25 mm (TBD)",

@@ -185,7 +185,7 @@ The aperture requires:
 | Safety supercapacitor | Required Rev 5 target | Required Rev 5 target |
 | Camera | Medium feasibility | Medium/high packaging risk |
 | Qi | Remains primary charging | Remains primary charging |
-| Li-ion | 500 mAh target | 300 mAh target |
+| Li-ion | ~250 mAh (estimated) | ~120 mAh (estimated) |
 
 ## Validation gates before calling any harvester useful
 

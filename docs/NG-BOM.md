@@ -27,7 +27,7 @@ Known limitation: published overdose-detection research mainly uses chest-worn r
 | --- | --- | --- | --- |
 | Case | 46 × 13.8 mm Ti-6Al-4V | 40 × 12.2 mm Ti-6Al-4V | Smaller wrists; the size class of 40–41 mm smartwatches |
 | Display | 1.4–1.5 in LTPO AMOLED (Ø36.8 panel) | 1.2 in round AMOLED, about 396×396 (Ø30.5 panel) | Fits inside a Ø34.2 mm board area |
-| Battery | Cell sized to the clearance stack. The old 500 mAh figure is not a quoted cell. | Smaller cell. The old 300 mAh figure is not a quoted cell. | Runtime must be measured. A sensor-only hour count is not the system budget. |
+| Battery | ~250 mAh (estimated) certified protected lithium polymer pouch cell, ~0.93 Wh (estimated) at 3.7V. Final cell capacity is pending cell selection. | ~120 mAh (estimated) certified protected lithium polymer pouch cell, ~0.44 Wh (estimated) at 3.7V. Final cell capacity is pending cell selection. | Runtime must be measured. A sensor-only hour count is not the system budget. |
 | Connectivity stack | 16×14 mm budget | 12×12 mm compact RF module target | The 46 mm footprint does not fit beside the SoC; needs vendor confirmation or a double-sided board |
 | Qi coil | Sealed receive coil | Smaller sealed receive coil | Smaller case back |
 | Crystal / case back | 46 mm sapphire, zirconia back | About 36 mm, 0.8 mm sapphire; smaller zirconia back | Smaller case; drop testing required |

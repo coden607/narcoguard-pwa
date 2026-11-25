@@ -126,11 +126,11 @@ function generateSupportingMaterials() {
 - GPS/GLONASS for location tracking
 
 ### Power
-- 500mAh rechargeable battery
+- ~250 mAh (estimated) certified protected lithium polymer pouch cell, 3.7V (~0.93 Wh estimated). Final cell capacity is pending cell selection.
 - Solar charging capability
 - Kinetic energy harvesting
 - USB-C fast charging
-- 72-hour battery life under normal use
+- Battery life needs recalculation (power budget in progress); no hour or day figure is published here.
 
 ## Software Features
 

@@ -217,7 +217,7 @@ export const GEOMETRY_40 = buildWatchGeometry(watchDesignModel40, {
     "The connectivity stack is budgeted at 12×12 mm (16×14 on the 46 mm) as a compact RF module target; if no vendor confirms it, the board must go double-sided.",
     `The SoC corner sits within 0.05 mm of the Ø34.2 board edge, and the eMMC sits in the ${clearance} mm battery clearance; both need CAD and tolerance checks.`,
     "Same medication pod as the 46 mm (the dose volume does not shrink); it sits in a 20 mm lug and remains research only.",
-    "A 0.8 mm crystal, smaller antennas and a 300 mAh cell need drop, RF and runtime testing before any claim.",
+    "A 0.8 mm crystal, smaller antennas and a ~120 mAh (estimated) cell need drop, RF and runtime testing before any claim.",
   ],
 })
 

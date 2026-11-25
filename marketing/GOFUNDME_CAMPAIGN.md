@@ -120,7 +120,7 @@ The hardware program now has two size targets:
 - 13.8 mm target thickness;
 - 22 mm premium solid titanium link bracelet with integrated solar cells; men's finishes are silver or natural titanium;
 - 1.4–1.5 inch round LTPO AMOLED target;
-- 500 mAh protected Li-ion battery target.
+- ~250 mAh (estimated) certified protected lithium polymer pouch cell (~0.93 Wh estimated at 3.7V). Final cell capacity is pending cell selection.
 
 ### NG40
 
@@ -128,7 +128,7 @@ The hardware program now has two size targets:
 - 12.2 mm target thickness;
 - 20 mm premium solid titanium link bracelet with integrated solar cells; women's finish is rose gold titanium;
 - 1.2 inch round AMOLED target;
-- 300 mAh protected Li-ion battery target.
+- ~120 mAh (estimated) certified protected lithium polymer pouch cell (~0.44 Wh estimated at 3.7V). Final cell capacity is pending cell selection.
 
 Anyone can wear either size. The smaller model is not a different safety product; it is a smaller enclosure with the same core safety architecture.
 

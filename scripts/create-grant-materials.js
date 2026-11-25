@@ -37,9 +37,9 @@ const techSpecs = `# NarcoGuard NG Technical Specifications
 - **Safety**: Multi-stage verification, tamper-evident seal
 
 ### Power Management
-- **Battery**: 500mAh Li-Po
-- **Runtime**: 72 hours continuous monitoring
-- **Standby**: 30 days with periodic check-ins
+- **Battery**: ~250 mAh (estimated) certified protected lithium polymer pouch cell, 3.7V (~0.93 Wh estimated). Final cell capacity is pending cell selection.
+- **Runtime**: Needs recalculation (power budget in progress). Not a measured battery-life claim.
+- **Standby**: Needs recalculation (power budget in progress). Not a measured battery-life claim.
 - **Charging**:
   - Solar panel (5V 100mA)
   - Kinetic generator (wrist motion)
