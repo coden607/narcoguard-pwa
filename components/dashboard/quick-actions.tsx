@@ -2,10 +2,8 @@
 
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
-import { Phone, MapPin, Users, BookOpen, Contact, Settings, LifeBuoy, PhoneCall } from "lucide-react"
+import { Phone, MapPin, Users, BookOpen, Contact, Settings } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { NEVER_USE_ALONE } from "@/lib/safer-use"
-import { saveUserPreferences } from "@/lib/user-preferences"
 
 export function QuickActions() {
   const router = useRouter()
@@ -32,7 +30,11 @@ export function QuickActions() {
   }
 
   const openSettings = () => {
-    saveUserPreferences({ hasCompletedOnboarding: false })
+    // Clear onboarding to restart setup
+    if (confirm("Reset app and go through setup again?")) {
+      localStorage.removeItem("narcoguard_preferences")
+      window.location.reload()
+    }
   }
 
   return (
@@ -57,16 +59,6 @@ export function QuickActions() {
         >
           <Users className="w-6 h-6" />
           <span className="text-xs">Hero Network</span>
-        </GlowButton>
-
-        <GlowButton variant="default" className="flex flex-col items-center gap-2 h-auto py-4" onClick={() => { window.location.href = `tel:${NEVER_USE_ALONE.tel}` }} data-testid="call-never-use-alone">
-          <PhoneCall className="w-6 h-6" />
-          <span className="text-xs">Never Use Alone</span>
-        </GlowButton>
-
-        <GlowButton variant="default" className="flex flex-col items-center gap-2 h-auto py-4" onClick={() => router.push("/safer-use")}>
-          <LifeBuoy className="w-6 h-6" />
-          <span className="text-xs">Stay Safer</span>
         </GlowButton>
 
         <GlowButton variant="default" className="flex flex-col items-center gap-2 h-auto py-4" onClick={openTraining}>

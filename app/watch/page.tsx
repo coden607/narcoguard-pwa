@@ -1,13 +1,14 @@
 "use client"
 
 import type React from "react"
-import { useRef, useState } from "react"
+import { useState } from "react"
 import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
 import { HolographicCard } from "@/components/effects/holographic-card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
+  ArrowLeft,
   Syringe,
   Battery,
   Wifi,
@@ -22,108 +23,409 @@ import {
   Cog,
   Satellite,
   Lock,
-  Download,
-  Boxes,
 } from "lucide-react"
-import { watchDesignCalculations, watchDesignCalculations40, watchDesignModel, watchDesignModel40 } from "@/lib/watch-design"
-import { WATCH_COMPONENTS, WATCH_COMPONENTS_40 } from "@/lib/watch-components"
-import { GEOMETRY_40, GEOMETRY_46 } from "@/lib/watch-geometry"
-import { BOM_40, BOM_46, UNIT_COSTS, bomTotals } from "@/lib/watch-bom"
-import { FUNDING_GOAL } from "@/lib/funding-goal"
-import { REV5_POWER_ARCHITECTURE, WATCH_REV5_MODULES } from "@/lib/watch-rev5"
+import Link from "next/link"
+import { watchDesignCalculations, watchDesignModel } from "@/lib/watch-design"
+import { WATCH_COMPONENTS } from "@/lib/watch-components"
 import { EngineeringDrawing } from "@/components/watch/engineering-drawing"
 import { Watch3D } from "@/components/watch/watch-3d"
-import { HoloWatchShowcase } from "@/components/effects/holo-watch-showcase"
 import { OwnerLock } from "@/components/watch/owner-lock"
 
-/** Black or white, whichever reads better on a #rrggbb swatch (WCAG relative luminance). */
-function readableTextOn(hex: string): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex)
-  if (!m) return "#000000"
-  const [r, g, b] = [0, 2, 4].map((i) => {
-    const c = parseInt(m[1].slice(i, i + 2), 16) / 255
-    return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+// =============================================================================
+// CANDIDATE BILL OF MATERIALS - supplier and part numbers require confirmation.
+// This is a research concept, not a manufacturing-ready or medical-device BOM.
+// =============================================================================
+const billOfMaterials = [
+  {
+    category: "Main Processing Unit",
+    description: "Main Wear OS platform plus an independent safety microcontroller",
+    items: [
+      {
+        name: "Qualcomm Snapdragon W5+ Gen 2",
+        description: "Current Qualcomm wearable platform (announced Aug 2025): 4nm SoC with always-on co-processor, Wear OS support, Location ML 3.0 GNSS and Skylo NB-NTN satellite emergency messaging. Requires a Qualcomm customer agreement; price is an estimate.",
+        quantity: 1,
+        unitPrice: 26.00,
+        supplier: "Qualcomm",
+        partNumber: "W5+ Gen 2 (confirm SKU with Qualcomm)",
+        datasheet: "qualcomm.com/wearables",
+      },
+      {
+        name: "Nordic nRF5340 Safety MCU",
+        description: "Independent low-power microcontroller that keeps sensor sampling and local alarms running if the main OS crashes or reboots. Algorithms on it are unvalidated.",
+        quantity: 1,
+        unitPrice: 8.50,
+        supplier: "Nordic Semiconductor",
+        partNumber: "NRF5340-QKAA-R7",
+        datasheet: "nordicsemi.com/nRF5340",
+      },
+      {
+        name: "32 GB eMMC 5.1 storage",
+        description: "Storage for Wear OS, apps and on-device logs. Wear OS needs far more than the 4 Gbit (512 MB) SPI NAND previously listed. Vendor (Samsung, Kioxia or Micron) to be selected by quote.",
+        quantity: 1,
+        unitPrice: 6.00,
+        supplier: "Samsung / Kioxia / Micron (TBD)",
+        partNumber: "TBD (32 GB eMMC 5.1)",
+        datasheet: "jedec.org (eMMC 5.1)",
+      },
+      {
+        name: "Micron MT53E512M32D2DS-046",
+        description: "2GB LPDDR4X RAM",
+        quantity: 1,
+        unitPrice: 5.80,
+        supplier: "Micron Technology",
+        partNumber: "MT53E512M32D2DS-046 WT:A",
+        datasheet: "micron.com",
+      },
+    ],
+  },
+  {
+    category: "Health Sensors (Candidate)",
+    description: "Candidate sensor array for research; accuracy and overdose-detection performance are unverified",
+    items: [
+      {
+        name: "Analog Devices MAX86178",
+        description: "Optical PPG + ECG + bioimpedance analog front end: heart rate, SpO2 estimate, single-lead ECG and skin-contact detection. Wrist SpO2 accuracy, especially across skin tones, must be validated.",
+        quantity: 1,
+        unitPrice: 12.50,
+        supplier: "Analog Devices (Maxim)",
+        partNumber: "MAX86178",
+        datasheet: "analog.com/MAX86178",
+      },
+      {
+        name: "Bosch BMP390",
+        description: "Barometric pressure sensor for altimeter, elevation tracking, weather",
+        quantity: 1,
+        unitPrice: 2.80,
+        supplier: "Bosch Sensortec",
+        partNumber: "BMP390",
+        datasheet: "bosch-sensortec.com/BMP390",
+      },
+      {
+        name: "STMicro LSM6DSO32X",
+        description: "6-axis IMU (32 g accelerometer + gyroscope) for motion, falls, sleep and motion-artifact rejection in the vitals pipeline",
+        quantity: 1,
+        unitPrice: 4.20,
+        supplier: "STMicroelectronics",
+        partNumber: "LSM6DSO32XTR",
+        datasheet: "st.com/LSM6DSO32X",
+      },
+      {
+        name: "STMicro LIS2MDL",
+        description: "3-axis magnetometer/compass for navigation and GPS assist",
+        quantity: 1,
+        unitPrice: 1.80,
+        supplier: "STMicroelectronics",
+        partNumber: "LIS2MDLTR",
+        datasheet: "st.com/LIS2MDL",
+      },
+      {
+        name: "Melexis MLX90632",
+        description: "candidate non-contact infrared skin-temperature sensor; accuracy depends on the selected variant and requires validation",
+        quantity: 1,
+        unitPrice: 6.50,
+        supplier: "Melexis",
+        partNumber: "MLX90632SFE-BAA-000-RE",
+        datasheet: "melexis.com/MLX90632",
+      },
+      {
+        name: "ams-OSRAM AS7038RB",
+        description: "Candidate secondary biosensor front end for electrodermal/stress research; confirm feature set and long-term availability before committing",
+        quantity: 1,
+        unitPrice: 3.90,
+        supplier: "ams-OSRAM",
+        partNumber: "AS7038RB",
+        datasheet: "ams-osram.com",
+      },
+    ],
+  },
+  {
+    category: "Connectivity (5G RedCap + eSIM + satellite SOS)",
+    description: "Candidate standalone connectivity; carrier and RF integration are unverified",
+    items: [
+      {
+        name: "Qualcomm Snapdragon X35 (SDX35) 5G RedCap modem",
+        description: "5G NR-Light (RedCap) modem with LTE Cat 4 fallback and L1+L5 GNSS, designed for wearables. Carrier certification, antenna design and power budget unverified.",
+        quantity: 1,
+        unitPrice: 18.00,
+        supplier: "Qualcomm",
+        partNumber: "SDX35",
+        datasheet: "qualcomm.com (Snapdragon X35 product brief)",
+      },
+      {
+        name: "STMicro ST54K NFC Controller",
+        description: "NFC for an emergency medical-ID tap and pairing. Contactless payments would need Google Wallet certification; Apple Pay is not available on non-Apple watches.",
+        quantity: 1,
+        unitPrice: 2.80,
+        supplier: "STMicroelectronics",
+        partNumber: "ST54K",
+        datasheet: "st.com/ST54",
+      },
+      {
+        name: "Infineon CYW43022 Wi-Fi/Bluetooth",
+        description: "Candidate low-power Wi-Fi + Bluetooth LE combo for phone pairing and Wi-Fi sync; confirm compatibility with the W5+ Gen 2 reference design",
+        quantity: 1,
+        unitPrice: 4.80,
+        supplier: "Infineon (Cypress)",
+        partNumber: "CYW43022KUBG",
+        datasheet: "infineon.com/CYW43022",
+      },
+      {
+        name: "STMicro ST4SIM-200M eSIM (eUICC)",
+        description: "Embedded SIM for standalone cellular with remote carrier provisioning (GSMA). Replaces the previously listed Thales ELS62, which is a separate LTE module, not an eSIM.",
+        quantity: 1,
+        unitPrice: 2.50,
+        supplier: "STMicroelectronics",
+        partNumber: "ST4SIM-200M",
+        datasheet: "st.com/ST4SIM",
+      },
+      {
+        name: "Cellular/GNSS/Wi-Fi antenna set (custom)",
+        description: "Antennas co-designed with the titanium case (for example by Taoglas or Ignion); a metal case needs dedicated antenna slots or a ceramic/sapphire window",
+        quantity: 1,
+        unitPrice: 3.20,
+        supplier: "Taoglas / Ignion (TBD)",
+        partNumber: "TBD (custom)",
+        datasheet: "taoglas.com",
+      },
+    ],
+  },
+  {
+    category: "Sealed Power System (battery + Qi)",
+    description: "Battery with sealed Qi charging. Solar, kinetic and thermoelectric harvesters were removed: on a wrist they produce microwatts to a few milliwatts, far below a cellular smartwatch's load, and the listed solar supplier (Alta Devices) shut down in 2019.",
+    items: [
+      {
+        name: "500 mAh Li-ion polymer cell (certified)",
+        description: "Custom-shape lithium-polymer cell with protection circuit; must hold IEC 62133-2 and UN38.3 certification. Supplier (e.g. ATL, Amperex, or other wearable-cell maker) to be quoted.",
+        quantity: 1,
+        unitPrice: 8.50,
+        supplier: "Qualified wearable-cell supplier (TBD)",
+        partNumber: "TBD (500 mAh)",
+        datasheet: "iec.ch (IEC 62133-2)",
+      },
+      {
+        name: "Texas Instruments BQ51013B",
+        description: "Qi-compatible wireless charging receiver IC, 5W input",
+        quantity: 1,
+        unitPrice: 2.80,
+        supplier: "Texas Instruments",
+        partNumber: "BQ51013BRHLR",
+        datasheet: "ti.com/BQ51013B",
+      },
+      {
+        name: "Wurth 760308103 Qi Coil",
+        description: "Wireless charging receive coil, 20mm diameter",
+        quantity: 1,
+        unitPrice: 2.80,
+        supplier: "Wurth Elektronik",
+        partNumber: "760308103",
+        datasheet: "we-online.com",
+      },
+      {
+        name: "Texas Instruments BQ25619",
+        description: "Single-cell charger with power path and low quiescent current, fed by the Qi receiver",
+        quantity: 1,
+        unitPrice: 3.50,
+        supplier: "Texas Instruments",
+        partNumber: "BQ25619RTWR",
+        datasheet: "ti.com/BQ25619",
+      },
+    ],
+  },
+  {
+    category: "Display, Audio & Haptics",
+    description: "Candidate display, audio, and haptic modules; brightness, acoustics, ingress, and reliability require qualification",
+    items: [
+      {
+        name: "1.4–1.5 in round LTPO AMOLED module",
+        description: "Round always-on-capable AMOLED with touch; resolution, brightness and price from a supplier quote (e.g. BOE, Samsung Display)",
+        quantity: 1,
+        unitPrice: 32.00,
+        supplier: "BOE / Samsung Display (TBD)",
+        partNumber: "TBD (quote)",
+        datasheet: "boe.com",
+      },
+      {
+        name: "Knowles SPH0645LM4H-B MEMS Mic",
+        description: "Digital I2S MEMS microphone for voice input to Angel AI and calls; behind a waterproof acoustic membrane",
+        quantity: 1,
+        unitPrice: 1.50,
+        supplier: "Knowles Corporation",
+        partNumber: "SPH0645LM4H-B",
+        datasheet: "knowles.com",
+      },
+      {
+        name: "Micro speaker (sealed, wearable-grade)",
+        description: "Waterproof micro speaker for alarms and voice; part selected after measuring alarm loudness in the enclosure",
+        quantity: 1,
+        unitPrice: 2.20,
+        supplier: "AAC Technologies / Knowles (TBD)",
+        partNumber: "TBD",
+        datasheet: "aactechnologies.com",
+      },
+      {
+        name: "TDK PowerHap 1204H018V",
+        description: "Piezoelectric haptic actuator for distinct alert vibration patterns",
+        quantity: 1,
+        unitPrice: 3.80,
+        supplier: "TDK Corporation",
+        partNumber: "1204H018V",
+        datasheet: "tdk.com/PowerHap",
+      },
+    ],
+  },
+  {
+    category: "Naloxone Delivery Module (future research only)",
+    description: "Research-only concept. A wearable that injects a drug is an FDA-regulated drug-device combination product; nothing here is implemented, tested or approved",
+    items: [
+      {
+        name: "Faulhaber 0206B Micro DC Motor",
+        description: "1.9 mm coreless micro motor considered for driving a plunger. Force, speed and reliability for an injection must be proven on a bench before any further design.",
+        quantity: 1,
+        unitPrice: 28.00,
+        supplier: "Faulhaber Group",
+        partNumber: "0206B-012-SR",
+        datasheet: "faulhaber.com/0206B",
+      },
+      {
+        name: "Needle and insertion mechanism (to be specified)",
+        description: "Needle gauge, length and insertion speed must be set by clinical engineering for intramuscular naloxone. The 30-gauge, 4 mm micro-needle previously listed does not match how naloxone is injected. (For reference, the discontinued Evzio auto-injector delivered 2 mg in 0.4 mL.)",
+        quantity: 1,
+        unitPrice: 15.00,
+        supplier: "Medical-device contract manufacturer (TBD)",
+        partNumber: "TBD",
+        datasheet: "fda.gov (combination products)",
+      },
+      {
+        name: "Naloxone primary container (to be specified)",
+        description: "Drug container must come from a licensed drug manufacturer with stability, sterility and shelf-life data; it cannot be filled by NarcoGuard",
+        quantity: 1,
+        unitPrice: 8.00,
+        supplier: "Licensed pharmaceutical partner (TBD)",
+        partNumber: "TBD",
+        datasheet: "fda.gov",
+      },
+    ],
+  },
+  {
+    category: "Enclosure, Strap & Modular Assembly",
+    description: "Titanium case with controlled-service modules; ingress, durability and skin-contact qualification required",
+    items: [
+      {
+        name: "Grade 5 Titanium (Ti-6Al-4V) Case",
+        description: "Candidate CNC Ti-6Al-4V enclosure; coating, ingress protection, pressure rating, and thermal/mechanical performance require qualification",
+        quantity: 1,
+        unitPrice: 38.00,
+        supplier: "Custom CNC (Foxconn Interconnect)",
+        partNumber: "NG-CASE-TI6AL4V-R4",
+        datasheet: "N/A - Custom",
+      },
+      {
+        name: "Sapphire Crystal Watch Glass",
+        description: "Lab-grown sapphire with multi-layer AR coating. 9H hardness, scratch-proof. 46mm diameter, 0.8mm thick",
+        quantity: 1,
+        unitPrice: 16.00,
+        supplier: "Swiss Jewel Company",
+        partNumber: "SJ-SAP-46-08",
+        datasheet: "swissjewel.com",
+      },
+      {
+        name: "Medical Silicone Sport Strap (w/ Quick-Release)",
+        description: "Candidate LSR silicone strap with 22mm interface; biocompatibility, skin contact, washability, and sensor integration require qualification",
+        quantity: 1,
+        unitPrice: 6.00,
+        supplier: "Custom (Shin-Etsu Chemical)",
+        partNumber: "NG-STRAP-LSR-22MM",
+        datasheet: "shinetsu.com",
+      },
+      {
+        name: "10-Layer HDI PCB Assembly",
+        description: "High-density interconnect PCB with all SMD components placed. Rigid-flex design connects main board to sensor boards. Lead-free RoHS",
+        quantity: 1,
+        unitPrice: 28.00,
+        supplier: "JLCPCB / PCBWay",
+        partNumber: "NG-PCBA-R4-10L",
+        datasheet: "N/A - Custom",
+      },
+      {
+        name: "IP68 Gasket Set (Viton)",
+        description: "Candidate fluoroelastomer seals for case back, crown, sensor windows, acoustic membranes, and service bay; compression and chemical compatibility require qualification",
+        quantity: 1,
+        unitPrice: 3.50,
+        supplier: "Parker Hannifin",
+        partNumber: "NG-GASKET-VITON-SET",
+        datasheet: "parker.com",
+      },
+      {
+        name: "Modular Snap-Fit Connector System",
+        description: "Internal pogo-pin service interfaces with keyed alignment; any user-serviceable boundary requires a replaceable gasket and post-service pressure test",
+        quantity: 1,
+        unitPrice: 4.50,
+        supplier: "Mill-Max Manufacturing",
+        partNumber: "0906-2-15-20-75-14-11-0",
+        datasheet: "mill-max.com",
+      },
+      {
+        name: "Ceramic Case Back w/ Sensor Windows",
+        description: "Zirconia ceramic case back with optical windows for PPG/SpO2 sensors and thermal contact pad. Engraved with unique device ID and QR code",
+        quantity: 1,
+        unitPrice: 12.00,
+        supplier: "Custom (CoorsTek)",
+        partNumber: "NG-BACK-ZRO2",
+        datasheet: "coorstek.com",
+      },
+    ],
+  },
+]
+
+// Calculate totals
+const calculateBOMTotal = () => {
+  let total = 0
+  billOfMaterials.forEach((category) => {
+    category.items.forEach((item) => {
+      total += item.quantity * item.unitPrice
+    })
   })
-  const l = 0.2126 * r + 0.7152 * g + 0.0722 * b
-  return (1.05 / (l + 0.05)) >= ((l + 0.05) / 0.05) ? "#ffffff" : "#000000"
+  return total
 }
 
-// Candidate bills of materials live in lib/watch-bom.ts; supplier and part numbers require
-// confirmation. This is a research concept, not a manufacturing-ready or medical-device BOM.
-const VARIANTS = {
-  "46": {
-    label: "NG46 Rugged",
-    fit: "Larger / rugged fit",
-    model: watchDesignModel,
-    calc: watchDesignCalculations,
-    geometry: GEOMETRY_46,
-    components: WATCH_COMPONENTS,
-    bom: BOM_46,
-    drawingNumber: "NG-CON-001",
-  },
-  "40": {
-    label: "NG40 Elegant",
-    fit: "Smaller-wrist / refined fit",
-    model: watchDesignModel40,
-    calc: watchDesignCalculations40,
-    geometry: GEOMETRY_40,
-    components: WATCH_COMPONENTS_40,
-    bom: BOM_40,
-    drawingNumber: "NG-CON-040",
-  },
-} as const
-type VariantId = keyof typeof VARIANTS
+const componentBOMTotal = calculateBOMTotal()
+const assemblyLabor = 35.00
+const qualityTesting = 25.00
+const complianceTesting = 15.00
+const packaging = 8.00
+const naloxoneRefill = 42.00
+const totalPerUnit = componentBOMTotal + assemblyLabor + qualityTesting + complianceTesting + packaging
+const totalWithNaloxone = totalPerUnit + naloxoneRefill
+const fundingGoal80Units = totalWithNaloxone * 80
 
-const { assemblyLabor, qualityTesting, complianceTesting, packaging } = UNIT_COSTS
-
-const BOM_ICONS = [Cpu, Heart, Wifi, Battery, Smartphone, Syringe, Cog, Shield, Watch] as const
+const coreLayerMarginsMm2 = watchDesignCalculations.coreLayerMarginsMm2
+const coreMinimumLayerMarginMm2 = Math.min(...coreLayerMarginsMm2)
+const idealizedRuntimeHours = watchDesignCalculations.idealizedRuntimeHours
+const componentCount = billOfMaterials.reduce((sum, category) => sum + category.items.length, 0)
+const simulationPanels = [
+  {
+    label: "Sealed core fit",
+    value: "Conditional",
+    detail: `${watchDesignModel.coreLayers.length} layered planes; minimum ${coreMinimumLayerMarginMm2} mm² planar margin and ${watchDesignCalculations.coreThicknessMarginMm} mm modeled stack margin. Medication pod is separate.`,
+  },
+  {
+    label: "Power margin",
+    value: "Unverified",
+    detail: "Battery and load figures are design targets, not measured data",
+  },
+  {
+    label: "BOM integrity",
+    value: `${componentCount} parts`,
+    detail: `$${componentBOMTotal.toFixed(2)} candidate component subtotal before labor`,
+  },
+]
 
 export default function NGWatchPage() {
-  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches"
+  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
   const [selectedComponent, setSelectedComponent] = useState<string | null>(null)
-  const [variantId, setVariantId] = useState<VariantId>("46")
-  const [activeTab, setActiveTab] = useState("blueprint")
-  const tabsRef = useRef<HTMLDivElement>(null)
-  const activateTab = (tab: string) => {
-    setActiveTab(tab)
-    requestAnimationFrame(() => {
-      const tabs = tabsRef.current
-      if (!tabs) return
-      tabs.scrollIntoView({
-        behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth",
-        block: "start",
-      })
-      tabs.focus({ preventScroll: true })
-    })
-  }
-  const variant = VARIANTS[variantId]
-  const billOfMaterials = variant.bom
-  const totals = bomTotals(billOfMaterials)
-  const componentBOMTotal = totals.components
-  const totalPerUnit = totals.hardware
-  const coreMinimumLayerMarginMm2 = Math.min(...variant.calc.coreLayerMarginsMm2)
-  const idealizedRuntimeHours = variant.calc.idealizedRuntimeHours
-  const caseMm = variant.model.caseDiameterMm
-  const designChecks = [
-    {
-      label: "Sealed core fit",
-      value: "Conditional",
-      detail: `${variant.model.coreLayers.length} layered planes; minimum ${coreMinimumLayerMarginMm2} mm² planar margin and ${variant.calc.coreThicknessMarginMm} mm modeled stack margin. Medication pod is separate.`,
-    },
-    {
-      label: "Power margin",
-      value: "Unverified",
-      detail: "Battery and load figures are design targets, not measured data",
-    },
-    {
-      label: "BOM integrity",
-      value: `${totals.count} parts`,
-      detail: `$${componentBOMTotal.toFixed(2)} candidate component subtotal before labor`,
-    },
-  ]
 
-  const watchComponents = variant.components
+  const watchComponents = WATCH_COMPONENTS
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -132,186 +434,47 @@ export default function NGWatchPage() {
 
       <div className="relative z-10 container mx-auto px-4 py-6">
         {/* Header */}
-        <header className="flex flex-wrap items-center justify-between gap-3 mb-8">
+        <header className="flex items-center justify-between mb-8">
+          <Link href="/">
+            <Button variant="outline" className="glass neon-border bg-transparent">
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back
+            </Button>
+          </Link>
           <h1 className="text-2xl md:text-3xl font-bold glow-text text-center">NG | NarcoGuard System Blueprint</h1>
           <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
-            <Button className="bg-green-500 hover:bg-green-600 text-black font-bold whitespace-nowrap">
+            <Button className="bg-green-500 hover:bg-green-600 text-black font-bold">
               <DollarSign className="w-4 h-4 mr-2" />
               Fund This
             </Button>
           </a>
         </header>
 
-        <HoloWatchShowcase className="mb-8" title="NG concept hologram" />
-
-        <section className="mb-8 rounded-2xl neon-border bg-background/40 p-4" aria-labelledby="size-heading" data-testid="watch-size">
-          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <h2 id="size-heading" className="text-lg font-bold">Choose a size</h2>
-              <p className="text-sm text-muted-foreground">
-                Both sizes run the same safety functions: SOS, emergency call, overdose steps and the alarm. The 40 mm is the smaller-wrist refined fit, sized with a smaller case, display and battery; anyone can wear either size.
-              </p>
-            </div>
-            <div className="flex shrink-0 gap-2" role="group" aria-label="Watch size">
-              {(Object.keys(VARIANTS) as VariantId[]).map((id) => (
-                <Button
-                  key={id}
-                  type="button"
-                  variant={variantId === id ? "default" : "outline"}
-                  aria-pressed={variantId === id}
-                  onClick={() => {
-                    setVariantId(id)
-                    setSelectedComponent(null)
-                  }}
-                  className="flex h-auto flex-col items-start px-4 py-2"
-                >
-                  <span className="font-bold">{VARIANTS[id].label}</span>
-                  <span className="text-[11px] font-normal">{VARIANTS[id].fit}</span>
-                </Button>
-              ))}
-            </div>
+        {/* Hero Product Showcase with New Images */}
+        <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 rounded-2xl overflow-hidden neon-border">
+            <Image src="/images/ng-modular-exploded.jpg" alt="Earlier NarcoGuard NG concept render. It still shows a solar cell, a thermoelectric generator and a filled naloxone cartridge, none of which are in the current design." width={1200} height={675} priority className="w-full h-auto object-cover" />
           </div>
-          <dl className="mt-4 grid grid-cols-2 gap-2 text-sm sm:grid-cols-5">
-            {[
-              ["Case", `${caseMm} × ${variant.model.caseThicknessMm} mm`],
-              ["Display", variant.geometry.ENVELOPE.displayDiameter > 33 ? '1.45" round' : '1.2" round'],
-              ["Battery", `${variant.model.nominalBatteryCapacityMah} mAh`],
-              ["Band", `${variant.geometry.ENVELOPE.strapWidth} mm titanium link`],
-              ["Base candidate HW", `${totalPerUnit.toFixed(2)}`],
-            ].map(([term, value]) => (
-              <div key={term} className="rounded-lg border border-border/60 p-2">
-                <dt className="text-xs text-muted-foreground">{term}</dt>
-                <dd className="font-mono font-semibold">{value}</dd>
-              </div>
-            ))}
-          </dl>
-          <figure className="mt-4" data-testid="rev5-primary-visuals">
-            <div className="overflow-hidden rounded-2xl border border-primary/30 bg-background/40">
-              <Image
-                src="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
-                alt="Concept render of NarcoGuard NG46 in natural titanium and NG40 in rose gold titanium, both on premium metal titanium link bracelets with integrated solar cells"
-                width={1280}
-                height={720}
-                priority
-                sizes="(min-width: 1152px) 1100px, 100vw"
-                className="block h-auto w-full object-contain"
-              />
+          <div className="flex flex-col gap-4">
+            <div className="rounded-2xl overflow-hidden neon-border flex-1">
+              <Image src="/images/ng-blueprint-detailed.jpg" alt="Stylised blueprint-style illustration of the NarcoGuard NG concept. The figures on it are decorative, not measured dimensions." width={600} height={338} className="w-full h-full object-cover" />
             </div>
-            <a href="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18" target="_blank" rel="noopener noreferrer" className="mt-2 inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4">Open full-size concept render</a>
-            <div className="mt-3 grid gap-3 lg:grid-cols-2">
-              <Image
-                src="/images/ng-rev5-exploded-titanium.jpg?rev=titanium-solar-2026-11-18"
-                alt="Concept render: labeled exploded view of the Rev 5 watch with a titanium link band, integrated solar cells, and silver, titanium, and rose gold titanium finish swatches"
-                width={720}
-                height={1280}
-                className="h-auto w-full rounded-xl border border-border/60 bg-background"
-              />
-            </div>
-            <figcaption className="mt-3 rounded-xl border border-amber-400/30 bg-amber-400/5 p-3 text-xs text-muted-foreground">
-              <strong className="text-foreground">Primary visual direction:</strong> a premium solid metal titanium link bracelet with solar cells integrated into the band. Men&apos;s finishes are silver or natural titanium (NG46); the women&apos;s finish is rose gold titanium (NG40). These generated 3D concept renders show the intended appearance; they are not photographs of a built watch and are not exports from the downloadable CAD. Internal layout, materials, dimensions, and manufacturing fit remain unverified. Use the Blueprint, 3D, CAD, BOM, and PCBWay sections below for the current engineering package and its limits.
-            </figcaption>
-            <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-              <Button type="button" variant="outline" onClick={() => activateTab("blueprint")}>Current engineering blueprint</Button>
-              <Button type="button" variant="outline" onClick={() => activateTab("3d-view")}>Interactive 3D view</Button>
-              <Button type="button" variant="outline" onClick={() => activateTab("bom")}>Rev 5 BOM layout</Button>
-              <Button type="button" variant="outline" onClick={() => activateTab("cad")}>Concept CAD status</Button>
-            </div>
-          </figure>
-        </section>
-
-        <section className="mb-8" data-testid="rev5-concept-visual-gallery">
-          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-primary">Rev 5 concept visuals</p>
-              <h2 className="mt-1 text-2xl font-bold">Original watch design boards</h2>
-              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
-                These are the richer visual design boards from the Rev 5 concept phase: product renders, exploded views, dimensional layouts, Hero Network scenes, and presentation boards. They are shown for design direction; embedded marketing/spec text can be older than the current engineering package.
-              </p>
-            </div>
-            <Button type="button" variant="outline" onClick={() => activateTab("cad")}>
-              Open current engineering CAD
-            </Button>
-          </div>
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {[
-              ["/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18", "NG46 natural titanium and NG40 rose gold titanium on solar-inlay link bracelets"],
-              ["/images/ng-rev5-exploded-titanium.jpg?rev=titanium-solar-2026-11-18", "Labeled exploded view with titanium solar link band and finish swatches"],
-              ["/images/ng-titanium-3d.png?rev=complete-2026-10-15", "Earlier NG46 / NG40 metal-link 3D concept board"],
-              ["/images/ng-blueprint.jpg?rev=visual-2026-10-14", "Original NarcoGuard watch blueprint concept"],
-            ].map(([src, label]) => (
-              <figure key={src} className="overflow-hidden rounded-2xl border border-border/60 bg-background/35">
-                <Image
-                  src={src}
-                  alt={label}
-                  width={1200}
-                  height={1500}
-                  className="h-auto w-full"
-                />
-                <figcaption className="border-t border-border/50 p-3 text-xs text-muted-foreground">
-                  <span className="font-semibold text-foreground">{label}</span>
-                  <span className="mt-1 block">Concept artwork — use the Blueprint, 3D, CAD, BOM, and PCBWay sections for current engineering status.</span>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-        </section>
-
-        <section className="mb-8 rounded-2xl border border-red-500/30 bg-red-500/5 p-5" data-testid="modular-auto-injector">
-          <div className="grid gap-4 lg:grid-cols-[1fr_.8fr]">
-            <div>
-              <p className="text-xs uppercase tracking-[0.18em] text-red-300">Rev 5 research module</p>
-              <h2 className="mt-1 text-2xl font-bold">Modular auto-injector research pod</h2>
-              <p className="mt-3 text-sm text-muted-foreground">
-                The medication system is being treated as a separate removable module, not part of the sealed base watch. The base NG46/NG40 remains useful for sensing research, alerts, communications, Hero Network access, and safety functions without a drug-delivery pod attached.
-              </p>
-              <p className="mt-3 text-sm text-muted-foreground">
-                The pod would require its own isolation boundary, cartridge/service interface, interlocks, status sensing, clinical requirements, pharmaceutical partnership, human-factors work, and FDA combination-product pathway before any human-use claim.
-              </p>
-              <p className="mt-3 font-semibold text-red-200">
-                No NarcoGuard watch currently injects naloxone. Dose, delivery mechanism, activation logic, cartridge, and clinical performance are not finalized.
-              </p>
-            </div>
-            <div className="rounded-xl border border-border/60 bg-background/40 p-4">
-              <h3 className="font-semibold">Module rules</h3>
-              <ul className="mt-3 list-disc space-y-2 pl-5 text-sm text-muted-foreground">
-                {WATCH_REV5_MODULES.find((module) => module.id === "auto-injector-module")?.designRules.map((rule) => <li key={rule}>{rule}</li>)}
-              </ul>
+            <div className="rounded-2xl overflow-hidden neon-border flex-1">
+              <Image src="/images/ng-watch-hero.jpg" alt="NarcoGuard NG watch on wrist showing vital signs display" width={600} height={338} className="w-full h-full object-cover" />
             </div>
           </div>
         </section>
 
-        {/* Rev 5 blueprint + module summary */}
-        <section className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <HolographicCard className="p-6" glowIntensity="high">
-            <h2 className="text-xl font-bold mb-4">Rev 5 blueprint — {variant.label}</h2>
-            <Image
-              src={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14"}
-              alt={`${variant.label} Rev 5 concept blueprint`}
-              width={1200}
-              height={800}
-              priority
-              className="w-full h-auto rounded-xl border border-border/60"
-            />
-            <p className="mt-2 text-xs text-muted-foreground">Concept engineering visual only. Supplier CAD, routed PCB, tolerance, RF, thermal, ingress, and physical validation remain open.</p>
-          </HolographicCard>
-          <HolographicCard className="p-6" glowIntensity="high">
-            <h2 className="text-xl font-bold mb-4">Rev 5 power, privacy & modular additions</h2>
-            <div className="grid gap-3">
-              {WATCH_REV5_MODULES.filter((item) => item.sizes.includes(variantId === "46" ? "NG46" : "NG40")).map((item) => (
-                <div key={item.id} className="rounded-lg border border-border/60 bg-background/40 p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="font-semibold">{item.label}</span>
-                    <span className="text-[10px] uppercase tracking-wide text-primary">{item.feasibility}</span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">{item.purpose}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-lg border border-primary/30 p-3 text-xs text-muted-foreground">
-              Primary storage: {REV5_POWER_ARCHITECTURE.primaryStorage}. Primary charging: {REV5_POWER_ARCHITECTURE.primaryCharging}. {REV5_POWER_ARCHITECTURE.rule}
-            </div>
-          </HolographicCard>
-        </section>
+        {/* These renders predate the 2026-10-05 watch-only revision. Saying so in
+            view matters more than the alt text: a reader who sees a naloxone
+            cartridge should not believe this device delivers a dose today. */}
+        <p className="mb-8 rounded-lg border border-yellow-500/40 bg-yellow-500/10 p-3 text-sm" role="note">
+          <strong>These images are earlier illustrative renders, not the current design.</strong> They still show a solar
+          cell, a thermoelectric generator, a micro-dosing motor and a filled naloxone cartridge. All of those were removed
+          in the 2026-10-05 review: wrist energy harvesting cannot power this device, and the needle, dose and drug
+          container are now unspecified and belong to a future research module that requires clinical and FDA review.
+          Figures shown on the blueprint are decorative, not measured dimensions. The parts list below is the current one.
+        </p>
 
         {/* Investor-facing engineering summary */}
         <section className="mb-8 grid grid-cols-1 xl:grid-cols-[1.15fr_.85fr] gap-6">
@@ -324,7 +487,7 @@ export default function NGWatchPage() {
                   Callouts correspond to the conceptual diagram and the candidate supplier BOM below.
                 </p>
               </div>
-              <span className="text-xs font-mono rounded-md border border-primary/40 px-3 py-2 whitespace-nowrap">CONCEPT REV 5</span>
+              <span className="text-xs font-mono rounded-md border border-primary/40 px-3 py-2 whitespace-nowrap">CONCEPT REV 4.2</span>
             </div>
 
             <div className="grid sm:grid-cols-2 gap-2">
@@ -336,8 +499,8 @@ export default function NGWatchPage() {
                   className="flex items-start gap-3 rounded-lg border border-border/60 bg-background/40 p-3 text-left hover:border-primary/60 hover:bg-primary/5 transition-colors"
                 >
                   <span
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                    style={{ backgroundColor: component.color, color: readableTextOn(component.color) }}
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-xs font-bold text-black"
+                    style={{ backgroundColor: component.color }}
                   >
                     {index + 1}
                   </span>
@@ -355,14 +518,14 @@ export default function NGWatchPage() {
               <h3 className="font-bold text-lg mb-4">Current Candidate Parts</h3>
               <div className="space-y-3 text-sm">
                 {[
-                  ["Compute", "Wearable platform", "Qualcomm Snapdragon class (2025)"],
-                  ["Health MCU", "Dedicated safety microcontroller", "Separate from the main OS"],
-                  ["Vitals AFE", "Optical and electrical front end", "Heart rate, SpO2 estimate, ECG"],
-                  ["Motion", "6-axis IMU", "Motion and impact research"],
-                  ["Cellular", "5G RedCap modem", "Carrier certification unverified"],
-                  ["Barometer", "Pressure sensor with a vent", "Altitude and weather"],
+                  ["Compute", "W5+ Gen 2", "Qualcomm Snapdragon (2025)"],
+                  ["Health MCU", "NRF5340-QKAA-R7", "Nordic nRF5340"],
+                  ["Vitals AFE", "MAX86178", "Analog Devices / Maxim"],
+                  ["Motion", "LSM6DSO32XTR", "STMicroelectronics"],
+                  ["Cellular", "SDX35", "Snapdragon X35 5G RedCap"],
+                  ["Barometer", "BMP390", "Bosch Sensortec"],
                 ].map(([system, part, maker]) => (
-                  <div key={system} className="grid grid-cols-[.8fr_1fr] gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0">
+                  <div key={part} className="grid grid-cols-[.8fr_1fr] gap-3 border-b border-border/50 pb-3 last:border-0 last:pb-0">
                     <span className="text-muted-foreground">{system}</span>
                     <span><span className="block font-mono text-primary">{part}</span><span className="text-xs">{maker}</span></span>
                   </div>
@@ -382,26 +545,23 @@ export default function NGWatchPage() {
           </div>
         </section>
 
-        <section className="mb-8 space-y-3" aria-labelledby="design-checks-heading">
-          <h2 id="design-checks-heading" className="text-lg font-semibold">Design checks, not a running watch</h2>
-          <p className="text-sm text-muted-foreground">These figures come from the design model. They are not measurements from hardware, and they are not a sensor simulation.</p>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {designChecks.map((panel) => (
+        {/* Simulation / validation summary */}
+        <section className="mb-8 grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {simulationPanels.map((panel) => (
             <HolographicCard key={panel.label} className="p-5" glowIntensity="medium">
               <p className="text-xs uppercase tracking-[0.18em] text-primary">{panel.label}</p>
               <p className="mt-2 text-3xl font-bold font-mono">{panel.value}</p>
               <p className="mt-2 text-sm text-muted-foreground">{panel.detail}</p>
             </HolographicCard>
           ))}
-          </div>
         </section>
 
         {/* Funding CTA */}
         <section className="mb-8 p-6 rounded-2xl neon-border bg-linear-to-r from-green-500/20 via-primary/10 to-green-500/20">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-balance">Fund Rev 5 Engineering & Validation</h2>
-              <p className="text-muted-foreground mt-1">Current planning goal: <span className="text-green-400 font-bold">${FUNDING_GOAL.toLocaleString("en-US")}</span>. This supports CAD, electronics, RF, power, reliability, safety, human-factors, regulatory, and prototype work; it is not a preorder or fixed-watch-count promise.</p>
+              <h2 className="text-2xl font-bold text-balance">80 Watches for Field Evaluation</h2>
+              <p className="text-muted-foreground mt-1">Each NarcoGuard NG costs <span className="text-green-400 font-bold">${totalWithNaloxone.toFixed(2)}</span> in the current candidate BOM model. Total planning goal: <span className="text-green-400 font-bold">${fundingGoal80Units.toFixed(2)}</span></p>
             </div>
             <div className="flex gap-3">
               <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer">
@@ -419,12 +579,10 @@ export default function NGWatchPage() {
           </div>
         </section>
 
-        <div ref={tabsRef} tabIndex={-1} className="scroll-mt-4 outline-none">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="gap-8">
-          <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 glass neon-border">
+        <Tabs defaultValue="blueprint" className="gap-8">
+          <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-5 glass neon-border">
             <TabsTrigger value="blueprint">Blueprint</TabsTrigger>
             <TabsTrigger value="3d-view">3D View</TabsTrigger>
-            <TabsTrigger value="cad">CAD Package</TabsTrigger>
             <TabsTrigger value="bom">Bill of Materials</TabsTrigger>
             <TabsTrigger value="specs">Full Specifications</TabsTrigger>
             <TabsTrigger value="owner-lock">Owner Lock</TabsTrigger>
@@ -433,8 +591,8 @@ export default function NGWatchPage() {
           {/* Interactive Blueprint - DEFAULT TAB */}
           <TabsContent value="blueprint">
             <HolographicCard className="p-6" glowIntensity="medium">
-              <h2 className="text-xl font-bold mb-2 text-center">Engineering Drawing — {variant.label} Rev 5</h2>
-              <EngineeringDrawing key={variantId} selected={selectedComponent} onSelect={setSelectedComponent} geometry={variant.geometry} components={variant.components} modelName={`NARCOGUARD ${variant.label.toUpperCase()}`} drawingNumber={variant.drawingNumber} />
+              <h2 className="text-xl font-bold mb-2 text-center">Engineering Drawing — NarcoGuard NG Rev 4.2</h2>
+              <EngineeringDrawing selected={selectedComponent} onSelect={setSelectedComponent} />
 
               {selectedComponent && (
                 <div className="mt-6 p-4 rounded-lg bg-background/50 neon-border max-w-lg mx-auto">
@@ -458,7 +616,7 @@ export default function NGWatchPage() {
                     }`}
                     onClick={() => setSelectedComponent(selectedComponent === comp.id ? null : comp.id)}
                   >
-                    <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold" style={{ backgroundColor: comp.color, color: readableTextOn(comp.color) }}>{index + 1}</div>
+                    <div className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-[10px] font-bold text-black" style={{ backgroundColor: comp.color }}>{index + 1}</div>
                     <span className="text-[11px] leading-tight">{comp.name}</span>
                   </button>
                 ))}
@@ -466,11 +624,11 @@ export default function NGWatchPage() {
               <div className="mt-6 grid gap-3 md:grid-cols-3">
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-xs uppercase tracking-[0.16em] text-primary">Core fit margin</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Layered core minimum: {coreMinimumLayerMarginMm2} mm² planar margin; modeled stack margin: {variant.calc.coreThicknessMarginMm} mm. CAD interference and tolerances remain required.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Layered core minimum: {coreMinimumLayerMarginMm2} mm² planar margin; modeled stack margin: {watchDesignCalculations.coreThicknessMarginMm} mm. CAD interference and tolerances remain required.</p>
                 </div>
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-xs uppercase tracking-[0.16em] text-primary">Power balance</p>
-                  <p className="mt-1 text-sm text-muted-foreground">Battery life and load balance are unverified until measured on a populated prototype.{variantId === "40" ? " The 40 mm has a smaller battery, so expect shorter runtime." : ""}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Battery life and load balance are unverified until measured on a populated prototype.</p>
                 </div>
                 <div className="rounded-lg border border-border/60 bg-background/40 p-3">
                   <p className="text-xs uppercase tracking-[0.16em] text-primary">Runtime model</p>
@@ -480,64 +638,16 @@ export default function NGWatchPage() {
             </HolographicCard>
           </TabsContent>
 
-          {/* Generated CAD package */}
-          <TabsContent value="cad">
-            <div className="grid gap-6 lg:grid-cols-[1.05fr_.95fr]">
-              <HolographicCard className="p-6" glowIntensity="high">
-                <h2 className="text-xl font-bold flex items-center gap-2">
-                  <Boxes className="h-5 w-5 text-primary" />
-                  Rev 5 concept CAD — {variant.label}
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  This public page shows a concept sketch. STEP, STL, Gerbers, and the buildable bill of materials are not in this repository and are not offered for download. GitHub Actions does not rebuild or upload a fabrication package.
-                </p>
-                <div className="mt-5">
-                  <a
-                    href={variantId === "46" ? "/images/ng46-rev5-blueprint.svg?rev=5-2026-10-14" : "/images/ng40-rev5-blueprint.svg?rev=5-2026-10-14"}
-                    download
-                    className="block rounded-xl border border-primary/30 bg-primary/5 p-4 transition-colors hover:bg-primary/10"
-                  >
-                    <Download className="h-5 w-5 text-primary" />
-                    <p className="mt-2 font-semibold">Download Rev 5 concept blueprint</p>
-                    <p className="text-xs text-muted-foreground">Simplified SVG for the selected size. Not a manufacturing drawing.</p>
-                  </a>
-                </div>
-              </HolographicCard>
-              <HolographicCard className="p-6">
-                <h3 className="font-bold text-lg">CAD provenance & release boundary</h3>
-                <div className="mt-3 space-y-3 text-sm text-muted-foreground">
-                  <p>Manufacturing CAD, Gerbers and the buildable bill of materials are proprietary and are not in this public repository. The picture on this page is a concept.</p>
-                  <p>STEP is the editable solid-exchange format, STL supports prototype/visualization workflows, and DXF carries selected 2D fabrication profiles.</p>
-                  <p>The GD&amp;T/tolerance CSV is a planning surface, not a released drawing. Supplier CAD, routed PCB data, final datum scheme/tolerance stack, RF/antenna signoff, thermal/ingress validation, and physical prototype inspection remain required before tooling release.</p>
-                  <p>The medication/auto-injector research pod remains outside this manufacturing package and is not represented as a validated drug-delivery mechanism.</p>
-                </div>
-                <div className="mt-5 rounded-xl border border-primary/30 bg-primary/5 p-4">
-                  <p className="text-xs font-mono uppercase tracking-[0.16em] text-primary">PCBWay engineering package</p>
-                  <p className="mt-2 text-sm text-muted-foreground">
-                    Rev 5 now includes an 8-layer HDI safety/core carrier specification, placement and routing constraints, PCBWay capability checks, impedance/thermal/power feasibility models, and a generated BOM/placement/fabrication review package.
-                  </p>
-                  <p className="mt-2 text-xs text-amber-300">
-                    Gerber/NC-drill release remains blocked. This public site does not contain Gerbers. No board here has a clean DRC, and none of it is fabrication-ready.
-                  </p>
-                  <p className="mt-3 text-xs text-muted-foreground">
-                    The public check is <span className="font-mono">watch-pcb.yml</span>. It does not upload Gerbers.
-                    Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
-                  </p>
-                </div>
-              </HolographicCard>
-            </div>
-          </TabsContent>
-
           {/* 3D Interactive View */}
           <TabsContent value="3d-view">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <HolographicCard className="p-6" glowIntensity="high">
                 <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
                   <Watch className="w-5 h-5 text-primary" />
-                  Interactive 3D Model — {variant.label} (to scale)
+                  Interactive 3D Model (to scale)
                 </h2>
 
-                <Watch3D selected={selectedComponent} onSelect={setSelectedComponent} geometry={variant.geometry} />
+                <Watch3D selected={selectedComponent} onSelect={setSelectedComponent} />
                 {selectedComponent && (
                   <div className="mt-4 rounded-lg border border-primary/40 bg-background/50 p-4" aria-live="polite">
                     {watchComponents.filter((c) => c.id === selectedComponent).map((comp) => (
@@ -588,12 +698,17 @@ export default function NGWatchPage() {
                       <span>Hardware Total</span>
                       <span className="font-mono text-primary">${totalPerUnit.toFixed(2)}</span>
                     </div>
-                    <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-3 text-xs text-muted-foreground">
-                      The removable auto-injector research pod is not included in this hardware estimate. It is unquoted, not functional, and requires separate clinical, pharmaceutical, human-factors, regulatory, and supplier work.
+                    <div className="flex justify-between text-muted-foreground">
+                      <span>+ Naloxone Cartridge (0.4mg)</span>
+                      <span className="font-mono">${naloxoneRefill.toFixed(2)}</span>
+                    </div>
+                    <div className="border-t border-primary/30 pt-2 flex justify-between font-bold text-lg">
+                      <span>Complete Unit</span>
+                      <span className="font-mono text-green-500">${totalWithNaloxone.toFixed(2)}</span>
                     </div>
                     <div className="p-3 bg-green-500/10 rounded-lg text-center">
-                      <p className="text-xs text-muted-foreground">Rev 5 development-and-validation planning target — not tied to a fixed prototype count</p>
-                      <p className="text-xl font-bold text-green-400">${FUNDING_GOAL.toLocaleString("en-US")}</p>
+                      <p className="text-xs text-muted-foreground">80 units for Broome County pilot</p>
+                      <p className="text-xl font-bold text-green-400">${fundingGoal80Units.toFixed(2)}</p>
                     </div>
                   </div>
                 </HolographicCard>
@@ -604,40 +719,14 @@ export default function NGWatchPage() {
           {/* Bill of Materials */}
           <TabsContent value="bom">
             <div className="space-y-6">
-              {billOfMaterials.map((category, catIndex) => {
-                const CategoryIcon = BOM_ICONS[catIndex] ?? Package
-                return (
-                <HolographicCard key={category.category} className="p-6">
-                  <div className="mb-4 flex items-start gap-3">
-                    <div className="rounded-xl border border-primary/30 bg-primary/10 p-2.5">
-                      <CategoryIcon className="h-6 w-6 text-primary" aria-hidden="true" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-mono uppercase tracking-[0.16em] text-primary">Rev 5 subsystem {catIndex + 1}</p>
-                      <h3 className="text-lg font-bold">{category.category}</h3>
-                      <p className="mt-1 text-xs text-muted-foreground">{category.description}</p>
-                    </div>
-                  </div>
-                  <div className="grid gap-2 md:hidden">
-                    {category.items.map((item, i) => (
-                      <div key={item.partNumber + i} className="rounded-xl border border-border/60 bg-background/40 p-3">
-                        <div className="flex items-start gap-3">
-                          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/15 font-mono text-xs font-bold text-primary">{i + 1}</span>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-semibold">{item.name}</p>
-                            <p className="break-all font-mono text-[11px] text-primary">{item.partNumber}</p>
-                            <p className="mt-1 text-xs text-muted-foreground">{item.description}</p>
-                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
-                              <span>{item.supplier}</span>
-                              <span>Qty {item.quantity}</span>
-                              <span className="font-mono font-bold">${item.unitPrice.toFixed(2)}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="hidden overflow-x-auto md:block">
+              {billOfMaterials.map((category, catIndex) => (
+                <HolographicCard key={catIndex} className="p-6">
+                  <h3 className="text-lg font-bold mb-1 flex items-center gap-2">
+                    <Package className="w-5 h-5 text-primary" />
+                    {category.category}
+                  </h3>
+                  <p className="text-xs text-muted-foreground mb-4">{category.description}</p>
+                  <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-primary/30">
@@ -672,12 +761,11 @@ export default function NGWatchPage() {
                     </span>
                   </div>
                 </HolographicCard>
-                )
-              })}
+              ))}
 
               {/* Grand Total */}
               <HolographicCard className="p-6 bg-linear-to-r from-green-500/20 to-primary/20" glowIntensity="high">
-                <h3 className="text-xl font-bold mb-4">Prototype Cost Summary - {variant.label}</h3>
+                <h3 className="text-xl font-bold mb-4">Prototype Cost Summary - NarcoGuard NG</h3>
                 <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                   <div className="p-4 rounded-lg bg-background/50">
                     <p className="text-xs text-muted-foreground">Components</p>
@@ -697,19 +785,18 @@ export default function NGWatchPage() {
                     <p className="text-xl font-bold font-mono">${packaging.toFixed(2)}</p>
                   </div>
                   <div className="p-4 rounded-lg bg-primary/20 neon-border">
-                    <p className="text-xs text-muted-foreground">Candidate hardware estimate</p>
-                    <p className="text-xl font-bold font-mono text-green-500">${totalPerUnit.toFixed(2)}</p>
-                    <p className="text-[10px] text-muted-foreground">excludes the unquoted auto-injector research pod and any drug product</p>
+                    <p className="text-xs text-muted-foreground">Per Unit Total</p>
+                    <p className="text-xl font-bold font-mono text-green-500">${totalWithNaloxone.toFixed(2)}</p>
+                    <p className="text-[10px] text-muted-foreground">incl. naloxone</p>
                   </div>
                 </div>
 
                 <div className="mt-6 p-4 rounded-lg bg-background/30">
-                  <h4 className="font-bold mb-2">Rev 5 Development & Validation Goal</h4>
-                  <div className="flex items-center justify-between gap-4">
-                    <span>CAD, PCB/electronics, RF, power, reliability, safety, human factors, regulatory work, and prototype iterations</span>
-                    <span className="shrink-0 text-2xl font-bold text-green-500">${FUNDING_GOAL.toLocaleString("en-US")}</span>
+                  <h4 className="font-bold mb-2">Funding Goal: 80 Watches for Broome County Pilot</h4>
+                  <div className="flex items-center justify-between">
+                    <span>80 units x ${totalWithNaloxone.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-green-500">${fundingGoal80Units.toFixed(2)}</span>
                   </div>
-                  <p className="mt-2 text-xs text-muted-foreground">This is a planning budget, not a supplier quote, preorder, or promise to produce a fixed number of watches. Candidate BOM figures remain engineering estimates until vendor quotes and physical builds exist.</p>
                   <a href={goFundMeUrl} target="_blank" rel="noopener noreferrer" className="block mt-4">
                     <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold" size="lg">
                       <DollarSign className="w-5 h-5 mr-2" />
@@ -752,9 +839,9 @@ export default function NGWatchPage() {
                     ["BioZ", "Body impedance analysis (hydration, composition)"],
                     ["Skin Temperature", "Melexis MLX90632 IR (trend only)"],
                     ["EDA (research)", "ams-OSRAM AS7038RB candidate"],
-                    ["Motion", "6-axis IMU, including a high-g range for impact research"],
+                    ["Motion", "STMicro LSM6DSO32X 6-axis IMU (32g)"],
                     ["Compass", "STMicro LIS2MDL 3-axis magnetometer"],
-                    ["Barometer", "Pressure sensor behind a membrane vent"],
+                    ["Barometer", "Bosch BMP390 (altitude, weather)"],
                     ["Fall Detection", "Planned; algorithm not written"],
                   ]
                 },
@@ -762,21 +849,21 @@ export default function NGWatchPage() {
                   icon: Wifi, color: "text-cyan-400", title: "Connectivity",
                   specs: [
                     ["Cellular", "Snapdragon X35 5G RedCap + LTE fallback; carrier certification unverified"],
-                    ["eSIM", "Embedded SIM for remote carrier provisioning; carrier support unverified"],
+                    ["eSIM", "STMicro ST4SIM-200M eUICC; carrier support unverified"],
                     ["Satellite", "SOS messaging via W5+ Gen 2 (Skylo NB-NTN) where available"],
-                    ["Wi-Fi", "Treated as part of the wearable module, with a separate safety radio. Not a second Wi-Fi chip."],
+                    ["Wi-Fi", "Infineon CYW43022 candidate; Wi-Fi standard and RF integration unverified"],
                     ["Bluetooth", "Bluetooth LE (version per final radio)"],
                     ["GNSS", "Platform/modem GNSS (L1+L5 capable); no separate chip"],
-                    ["NFC", "NFC plus a secure element for an emergency ID tap; payments need certification"],
+                    ["NFC", "STMicro ST54K (emergency ID; payments need certification)"],
                   ]
                 },
                 {
                   icon: Battery, color: "text-green-500", title: "Candidate Sealed Power System",
                   specs: [
-                    ["Battery", `${variant.model.nominalBatteryCapacityMah}mAh Li-ion polymer, IEC 62133-2 / UN38.3 certified cell required`],
+                    ["Battery", "500mAh Li-ion polymer, IEC 62133-2 / UN38.3 certified cell required"],
                     ["Battery Life", "Unknown until measured; cellular watches typically need daily charging"],
-                    ["Energy harvesting", "Rev 5 research: crown generator, photovoltaic ring, and on the larger case an automatic rotor. Body-heat thermoelectric harvesting was reviewed and is not fitted. None of this is claimed to continuously power the cellular watch"],
-                    ["Wireless Charging", variantId === "40" ? "Sealed Qi with a smaller receive coil" : "Sealed Qi receive coil"],
+                    ["Energy harvesting", "Removed: wrist harvesters cannot power a cellular watch"],
+                    ["Wireless Charging", "Qi (TI BQ51013B, 5W)"],
                     ["Charging boundary", "No external USB-C port; sealed Qi charging target"],
                     ["Low-battery mode", "Target: keep alarms and SOS working; duration to be measured"],
                   ]
@@ -789,20 +876,20 @@ export default function NGWatchPage() {
                     ["Dose & route", "To be set by clinicians (prior auto-injector: 2 mg / 0.4 mL IM or SC)"],
                     ["Needle", "Gauge and length to be specified for intramuscular delivery"],
                     ["Drug supply", "Licensed pharmaceutical partner with stability data"],
-                    ["Actuator", "Not selected; force and reliability are unproven"],
+                    ["Actuator", "Faulhaber 0206B candidate; force and reliability unproven"],
                     ["Trigger", "Would require validated detection plus a person-confirmable cancel"],
                   ]
                 },
                 {
                   icon: Smartphone, color: "text-blue-500", title: "Display, Audio & Haptics",
                   specs: [
-                    ["Display", variantId === "40" ? "1.2 in round AMOLED, about 396×396 (supplier quote pending)" : "1.4–1.5 in round LTPO AMOLED (supplier quote pending)"],
+                    ["Display", "1.4–1.5 in round LTPO AMOLED (supplier quote pending)"],
                     ["Always-On", "Target, with low-power refresh"],
                     ["Glass", "Lab-grown sapphire crystal (9H)"],
                     ["Touch", "Capacitive touch"],
                     ["Speaker", "Sealed micro speaker; alarm loudness to be measured"],
-                    ["Microphone", "MEMS microphone behind a membrane vent"],
-                    ["Haptics", "Piezoelectric haptic actuator"],
+                    ["Microphone", "Knowles SPH0645 MEMS (voice for Angel AI)"],
+                    ["Haptics", "TDK PowerHap 1204H piezoelectric"],
                   ]
                 },
                 {
@@ -810,13 +897,13 @@ export default function NGWatchPage() {
                   specs: [
                     ["Case", "Grade 5 Titanium (Ti-6Al-4V) + PVD"],
                     ["Back", "Zirconia ceramic with sensor windows"],
-                    ["Dimensions", `Target ${caseMm}mm case, about ${variant.model.caseThicknessMm}mm thick (Rev 5 concept CAD generated; physical validation pending)`],
+                    ["Dimensions", "Target 46mm case, about 14mm thick (CAD pending)"],
                     ["Weight", "Unknown until a prototype is built"],
-                    ["Water Rating", "Target IEC 60529 IP68 at 1.5 m for 30 min, plus ISO 22810. Not certified."],
+                    ["Water Rating", "Target IP68/ISO 22810; qualification unverified"],
                     ["Temp Range", "Target -20C to +55C (untested)"],
-                    ["Band", variantId === "40" ? "20 mm premium solid titanium link bracelet with solar cells integrated into the band; women's finish is rose gold titanium. Candidate part; biocompatibility, clasp, and ingress effects unverified." : "22 mm premium solid titanium link bracelet with solar cells integrated into the band; men's finishes are silver or natural titanium. Candidate part; biocompatibility, clasp, and ingress effects unverified."],
+                    ["Strap", "22mm quick-release candidate silicone; biocompatibility and ingress effects unverified"],
                     ["Gaskets", "Fluoroelastomer (FKM) seals, supplier TBD"],
-                    ["Modular Parts", "Battery, band, glass; service seals require post-service pressure testing"],
+                    ["Modular Parts", "Battery, strap, glass; service seals require post-service pressure testing"],
                   ]
                 },
                 {
@@ -848,7 +935,6 @@ export default function NGWatchPage() {
             </div>
           </TabsContent>
         </Tabs>
-        </div>
       </div>
     </div>
   )

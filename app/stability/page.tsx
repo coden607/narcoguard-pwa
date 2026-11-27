@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import {
@@ -9,21 +9,9 @@ import {
 } from "@/lib/guardian-stability"
 import { normalizePostalCode, resourcesForNeed } from "@/lib/guardian-resources"
 import { analyzePreventionPatterns, suggestedNeeds } from "@/lib/prevention-engine"
-import { learnedNeedSuggestions, neuralNeedForecasts } from "@/lib/adaptive-guardian"
-import { AdaptiveGuardianPanel } from "@/components/guardian/adaptive-guardian-panel"
-import { GuardianRewardsPanel } from "@/components/guardian/guardian-rewards-panel"
-import { GuardianAchievementJournal } from "@/components/guardian/guardian-achievement-journal"
-import { GuardianPreparednessPlan } from "@/components/guardian/guardian-preparedness-plan"
-import { GuardianGentlePrompts } from "@/components/guardian/guardian-gentle-prompts"
-import { InterventionOutcomePanel } from "@/components/guardian/intervention-outcome-panel"
-import { anticipateResourceNeeds, questionsForUnknowns } from "@/lib/proactive-resource-needs"
 import { CalmingAudio } from "@/components/calming-audio"
 import { MealLogSection } from "@/components/guardian/meal-log-section"
-import { MaslowResourceAutomation } from "@/components/guardian/maslow-resource-automation"
-import { PredictedResourceWatchPanel } from "@/components/resources/predicted-resource-watch-panel"
 import { notifyGuardianChange, useGuardianState, useLocalDate } from "@/lib/hooks/use-guardian-state"
-import { nextRouteAwarePlan } from "@/lib/route-aware-planning"
-import { RouteAwareResourcePlanner } from "@/components/guardian/route-aware-resource-planner"
 
 const names: Record<Need, string> = {
   food: "Food", water: "Water", sleep: "Sleep", hygiene: "Shower / hygiene",
@@ -44,14 +32,6 @@ export default function StabilityPage() {
   const [planLocation, setPlanLocation] = useState("")
   const [planNeed, setPlanNeed] = useState<Need | "">("")
   const now = useLocalDate()
-  const [clockTime, setClockTime] = useState("00:00")
-
-  useEffect(() => {
-    const updateClock = () => setClockTime(new Date().toTimeString().slice(0, 5))
-    updateClock()
-    const timer = window.setInterval(updateClock, 60_000)
-    return () => window.clearInterval(timer)
-  }, [])
 
   const update = (next: GuardianState) => {
     saveGuardianState(window.localStorage, next)
@@ -65,17 +45,7 @@ export default function StabilityPage() {
   const prevention = analyzePreventionPatterns(state.entries, today)
   const suggested = suggestedNeeds(prevention)
   const needsHelp = NEEDS.filter((need) => today.needs[need] === "needs-help")
-  const proactive = anticipateResourceNeeds({ entries: state.entries, today, plan: state.plan, now: { date: now, time: clockTime } })
-  const pendingQuestions = questionsForUnknowns(today, proactive)
-  const proactiveNeeds = proactive.map((cue) => cue.need)
-  const learnedSuggestions = state.adaptiveLearningEnabled ? learnedNeedSuggestions(state.entries, today, state.alertNeeds) : []
-  const learnedNeeds = learnedSuggestions.map((cue) => cue.need)
-  const neuralForecasts = state.adaptiveLearningEnabled ? neuralNeedForecasts(state.entries, today, state.alertNeeds) : []
-  const neuralNeeds = neuralForecasts.filter((forecast) => forecast.score >= 65).map((forecast) => forecast.need)
-  const predictedWatchNeeds = [...new Set([...learnedNeeds, ...neuralNeeds])]
-  const resourceNeeds = [...new Set([...needsHelp, ...suggested, ...proactiveNeeds, ...learnedNeeds, ...neuralNeeds])]
   const telephone = state.supportPhone.replace(/[^\d+]/g, "")
-  const routeAwarePlan = nextRouteAwarePlan(state.plan, { date: now, time: clockTime })
 
   const updateCheckIn = (need: Need, status: NeedStatus | undefined) => {
     const needs = { ...today.needs }
@@ -123,11 +93,6 @@ export default function StabilityPage() {
           }} />
         </label>
       </section>
-      <GuardianPreparednessPlan state={state} onChange={update} />
-      <GuardianGentlePrompts state={state} today={today} now={{ date: now, time: clockTime }} onChange={update} />
-      <AdaptiveGuardianPanel state={state} today={today} onChange={update} />
-      <GuardianRewardsPanel state={state} onChange={update} />
-      <GuardianAchievementJournal state={state} onChange={update} today={now} />
       <MealLogSection
         today={today}
         entries={state.entries}
@@ -143,12 +108,12 @@ export default function StabilityPage() {
         </form>
 
         <ul className="space-y-2">{state.goals.map((item, index) => <li key={`${index}-${item}`} className="flex justify-between gap-2">{item}<button disabled={state.paused} className="underline" onClick={() => update({ ...state, goals: state.goals.filter((_, i) => i !== index) })}>Remove</button></li>)}</ul>
-        <p className="text-sm text-muted-foreground">Plan a task or an appointment. NarcoGuard does not book, confirm, or change appointments; verify details with the provider. Include a 5-digit ZIP in the location if you want NarcoGuard to preload resources near that appointment without tracking your route. If you tag a plan with the need it supports and later mark it complete, NarcoGuard can locally learn descriptive next-check-in outcome patterns after enough comparable examples.</p>
+        <p className="text-sm text-muted-foreground">Plan a task or an appointment. NarcoGuard does not book, confirm, or change appointments; verify details with the provider.</p>
         <form className="grid gap-2 sm:grid-cols-2" onSubmit={(event) => { event.preventDefault(); if (planTitle.trim()) { update({ ...state, plan: [...state.plan, { id: crypto.randomUUID(), date: planDate || localDate(1), title: planTitle.trim().slice(0, 160), done: false, kind: planTime ? "appointment" : "task", ...(planTime ? { time: planTime } : {}), ...(planLocation.trim() ? { location: planLocation.trim().slice(0, 160) } : {}), ...(planNeed ? { need: planNeed } : {}) }] }); setPlanTitle(""); setPlanDate(""); setPlanTime(""); setPlanLocation(""); setPlanNeed("") } }}>
           <input aria-label="Task or appointment" disabled={state.paused} maxLength={160} className="bg-background border rounded p-2 sm:col-span-2" placeholder="Task or appointment name" value={planTitle} onChange={(event) => setPlanTitle(event.target.value)} />
           <label className="text-sm">Date<input aria-label="Plan date" disabled={state.paused} type="date" min={now} className="block bg-background border rounded p-2 w-full" value={planDate || localDate(1)} onChange={(event) => setPlanDate(event.target.value)} /></label>
           <label className="text-sm">Time (optional; adding one makes it an appointment)<input aria-label="Plan time" disabled={state.paused} type="time" className="block bg-background border rounded p-2 w-full" value={planTime} onChange={(event) => setPlanTime(event.target.value)} /></label>
-          <label className="text-sm">Location or ZIP / call details (optional)<input aria-label="Plan location" disabled={state.paused} maxLength={160} className="block bg-background border rounded p-2 w-full" value={planLocation} onChange={(event) => setPlanLocation(event.target.value)} /></label>
+          <label className="text-sm">Location or call details (optional)<input aria-label="Plan location" disabled={state.paused} maxLength={160} className="block bg-background border rounded p-2 w-full" value={planLocation} onChange={(event) => setPlanLocation(event.target.value)} /></label>
           <label className="text-sm">Need this supports (optional)<select aria-label="Plan need" disabled={state.paused} className="block bg-background border rounded p-2 w-full" value={planNeed} onChange={(event) => setPlanNeed(event.target.value as Need | "")}><option value="">Choose a need</option>{NEEDS.map((need) => <option key={need} value={need}>{names[need]}</option>)}</select></label>
           <Button disabled={state.paused} type="submit" className="sm:col-span-2">Add to plan</Button>
         </form>
@@ -159,37 +124,6 @@ export default function StabilityPage() {
           <button disabled={state.paused} className="underline ml-auto" onClick={() => update({ ...state, plan: state.plan.filter((candidate) => candidate.id !== item.id) })}>Remove</button>
         </li>)}</ul>
       </section>
-      <InterventionOutcomePanel state={state} />
-      {neuralForecasts.length > 0 && <section className="border rounded-xl p-5 space-y-4" aria-live="polite" data-testid="neural-maslow-forecast">
-        <h2 className="text-xl font-semibold">Neural Maslow forecast</h2>
-        <p className="text-sm text-muted-foreground">These experimental local models learn which needs tended to appear on your next recorded check-in after combinations like missed meals, isolation, low mood, sleep loss, or other needs. Scores are pattern scores, not probabilities or diagnoses.</p>
-        <ul className="space-y-2">{neuralForecasts.slice(0, 5).map((forecast) => <li key={forecast.need} className="rounded-lg border p-3">
-          <strong>{names[forecast.need]}</strong>
-          <span className="block text-sm">Next-check-in pattern score: {forecast.score}/100</span>
-          <span className="block text-xs text-muted-foreground">Learned from {forecast.trainingPairs} comparable transitions ({forecast.positivePairs} where this need appeared, {forecast.negativePairs} where it did not). {forecast.score >= 65 ? "NarcoGuard is preloading matching resources below." : "Below the early-sourcing threshold for now."}</span>
-        </li>)}</ul>
-      </section>}
-      <PredictedResourceWatchPanel predictedNeeds={predictedWatchNeeds} />
-      {proactive.length > 0 && <section className="border rounded-xl p-5 space-y-4" aria-live="polite">
-        <h2 className="text-xl font-semibold">Plan ahead before a need becomes urgent</h2>
-        <p className="text-sm text-muted-foreground">These cues use only information you chose to record. NarcoGuard can search early, but it does not turn missing logs into facts.</p>
-        <ul className="space-y-3">{proactive.map((cue) => <li key={cue.id} className="rounded-lg border p-3">
-          <strong>{cue.title}</strong>
-          <span className="block text-sm">{cue.detail}</span>
-          <span className="block text-xs text-muted-foreground mt-1">Planning horizon: {cue.horizon} · Resource category: {names[cue.need]}</span>
-        </li>)}</ul>
-        {pendingQuestions.length > 0 && <div className="space-y-3">
-          <h3 className="font-semibold">Confirm anything uncertain</h3>
-          {pendingQuestions.map((item) => <div key={item.id} className="rounded-lg border p-3">
-            <p>{item.question}</p>
-            <p className="text-xs text-muted-foreground">{item.reason}</p>
-            <div className="flex gap-2 mt-2">
-              <Button disabled={state.paused} variant="outline" onClick={() => updateCheckIn(item.need, "met")}>Yes, met</Button>
-              <Button disabled={state.paused} variant="outline" onClick={() => updateCheckIn(item.need, "needs-help")}>No, find help</Button>
-            </div>
-          </div>)}
-        </div>}
-      </section>}
       <section className="border rounded-xl p-5 space-y-4" aria-live="polite">
         <h2 className="text-xl font-semibold">Pre-warning & next action</h2>
         {prevention.level === "steady" ? <p>No change that needs attention is visible in the information you chose to record today. Unknown answers stay unknown.</p> : <>
@@ -202,13 +136,11 @@ export default function StabilityPage() {
       </section>
       <section className="border rounded-xl p-5 space-y-4">
         <h2 className="text-xl font-semibold">Find a next step</h2>
-        <label className="block">Your ZIP code (optional; used to look up nearby public resources)
+        <label className="block">Your ZIP code (optional; enter it on the service directory)
           <input disabled={state.paused} inputMode="numeric" maxLength={10} className="block bg-background border rounded p-2" value={state.postalCode} onChange={(event) => update({ ...state, postalCode: event.target.value })} placeholder="ZIP code" />
         </label>
         {state.postalCode && !normalizePostalCode(state.postalCode) && <p className="text-sm">Enter a five-digit US ZIP code, or leave it blank.</p>}
         {needsHelp.length === 0 && <p className="text-muted-foreground">Mark a need above to see relevant starting points.</p>}
-        <RouteAwareResourcePlanner plan={routeAwarePlan} />
-      <MaslowResourceAutomation needs={resourceNeeds} postalCode={state.postalCode} />
         {needsHelp.map((need) => <div key={need} className="space-y-2"><h3 className="font-semibold">{names[need]}</h3>{resourcesForNeed(need, normalizePostalCode(state.postalCode)).map((link) => <p key={link.url}><a href={link.url} target="_blank" rel="noopener noreferrer" className="underline text-primary">{link.title} ↗</a><span className="block text-sm text-muted-foreground">{link.description}</span></p>)}</div>)}
       </section>
       <section className="border rounded-xl p-5 space-y-3">

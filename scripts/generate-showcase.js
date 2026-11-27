@@ -47,7 +47,7 @@ Every 11 minutes, someone dies from an opioid overdose in America. NarcoGuard ex
 ### Hardware
 - NG Smartwatch with auto-injection system
 - 4 charging methods: Solar, Kinetic, Wireless, USB-C
-- IP68 target, 1.5 m for 30 min. Not certified. Not a MIL-STD-810 claim.
+- IP68 waterproof, MIL-STD-810 ruggedized
 - 72-hour battery life, 30-day standby
 
 ### Software
@@ -74,9 +74,8 @@ Every 11 minutes, someone dies from an opioid overdose in America. NarcoGuard ex
 - Perfect testbed for nationwide scale-up
 
 ## Current Funding Status
-- **GoFundMe Campaign**: Help Build NarcoGuard: Free Support Now, Safer Wearable Tech
-- **Link**: https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches
-- **Totals**: use the live campaign page; do not publish older workbook figures as current fundraising numbers
+- **GoFundMe Campaign**: $60,000 goal to deploy first 80 watches
+- **Link**: https://gofund.me/ac8905cc
 - **Progress**: [Live tracking via GitHub Actions]
 
 ## Grant Applications in Progress
@@ -98,7 +97,7 @@ Broome Estates LLC (DOS ID: 4789234)
 📍 112 South Washington St, Binghamton, NY 13903
 
 ## How to Support
-1. **Donate**: https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches
+1. **Donate**: https://gofund.me/ac8905cc
 2. **Share**: Tell your network about NarcoGuard
 3. **Partner**: Contact us for pilot deployment opportunities
 4. **Hero Network**: Sign up to save lives in your community

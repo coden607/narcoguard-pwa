@@ -21,16 +21,6 @@ const requiredTables = [
   "activity_log",
   "legal_agreements",
   "emergency_contacts",
-  "hero_certifications",
-  "hero_availability",
-  "hero_requests",
-  "hero_push_subscriptions",
-  "user_push_subscriptions",
-  "resource_watch_subscriptions",
-  "community_profiles",
-  "community_connections",
-  "community_posts",
-  "community_messages",
 ]
 
 const requiredChecks = [
@@ -44,17 +34,38 @@ const requiredChecks = [
   ["contact ownership index", /create index if not exists emergency_contacts_user_idx/i],
   ["agreement ownership index", /create index if not exists legal_agreements_user_idx/i],
   ["service-only donations", /Donations and activity logs contain administrative/i],
-  ["hero certification RLS", /alter table public\.hero_certifications enable row level security/i],
-  ["hero availability RLS", /alter table public\.hero_availability enable row level security/i],
-  ["hero request RLS", /alter table public\.hero_requests enable row level security/i],
-  ["hero push RLS", /alter table public\.hero_push_subscriptions enable row level security/i],
-  ["community profile RLS", /alter table public\.community_profiles enable row level security/i],
-  ["resource watch RLS", /alter table public\.resource_watch_subscriptions enable row level security/i],
+  // Hero practical offers: account owned, owner readable only. A public or anon
+  // read policy here would publish contact numbers, so its absence is enforced.
+  ["hero offers table", /create table if not exists public\.hero_practical_offers/i],
+  ["hero offers RLS", /alter table public\.hero_practical_offers enable row level security/i],
+  ["hero offers owner select policy", /create policy hero_practical_offers_owner_select/i],
+  ["hero offers owner insert policy", /create policy hero_practical_offers_owner_insert/i],
+  ["hero offers owner update policy", /create policy hero_practical_offers_owner_update/i],
+  ["hero offers owner delete policy", /create policy hero_practical_offers_owner_delete/i],
+  ["hero offers owner index", /create index if not exists hero_practical_offers_owner_idx/i],
+  ["hero offers contact pair guard", /hero_practical_offers_contact_pair/i],
+  // Hero presence: short-lived, consented location for nearby discovery. A
+  // public or anon read policy here would expose where people are, so its
+  // absence is enforced, and so is the coarseness of what can be stored.
+  ["hero presence table", /create table if not exists public\.hero_presence/i],
+  ["hero presence RLS", /alter table public\.hero_presence enable row level security/i],
+  ["hero presence owner select policy", /create policy hero_presence_owner_select/i],
+  ["hero presence owner insert policy", /create policy hero_presence_owner_insert/i],
+  ["hero presence owner update policy", /create policy hero_presence_owner_update/i],
+  ["hero presence owner delete policy", /create policy hero_presence_owner_delete/i],
+  ["hero presence owner index", /create index if not exists hero_presence_owner_idx/i],
+  ["hero presence consent pair guard", /hero_presence_consent_pair/i],
+  // numeric(_,2) makes a full-precision coordinate unstorable at the column
+  // level, so a caller that forgets to round cannot pinpoint anyone.
+  ["hero presence coarse latitude", /latitude numeric\(4,\s*2\)/i],
+  ["hero presence coarse longitude", /longitude numeric\(5,\s*2\)/i],
+  // One row per account: presence is replaced, never accumulated into a trail.
+  ["hero presence single row per account", /auth_user_id uuid not null unique references auth\.users/i],
 ]
 
 const failures = []
 for (const table of requiredTables) {
-  if (!new RegExp(`create table if not exists (?:public\\.)?${table}\\b`, "i").test(migrations)) {
+  if (!new RegExp(`create table if not exists ${table}\\b`, "i").test(migrations)) {
     failures.push(`missing table definition: ${table}`)
   }
 }
@@ -63,7 +74,7 @@ for (const [name, pattern] of requiredChecks) {
 }
 
 const policyCount = (migrations.match(/create policy\b/gi) || []).length
-if (policyCount < 18) failures.push(`expected at least 18 explicit RLS policies, found ${policyCount}`)
+if (policyCount < 26) failures.push(`expected at least 26 explicit RLS policies, found ${policyCount}`)
 
 if (failures.length) {
   console.error("[supabase] migration validation failed")

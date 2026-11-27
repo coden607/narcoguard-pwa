@@ -7,26 +7,12 @@ import { HolographicCard } from "@/components/effects/holographic-card"
 import { GlowButton } from "@/components/effects/glow-button"
 import { Award, BookOpen, Heart, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { CertificationTest, HERO_CERTIFICATE_KEY } from "@/components/hero/certification-test"
-import { HeroAvailabilityPanel } from "@/components/hero/hero-availability-panel"
-import { PracticalHelpOfferPanel } from "@/components/hero/practical-help-offer-panel"
-import { readinessView } from "@/lib/hero-readiness"
+import { HeroOfferManager } from "@/components/hero/hero-offer-manager"
 
-type HeroState = {
-  expires_at: string
-  enrolled: boolean
-  naloxone_ready: boolean
-  naloxone_expires_on: string | null
-  on_call: boolean
-  on_call_since: string | null
-}
-
-type Status = { enrollment: boolean; certification: boolean; nearbyRequests: boolean; hero?: HeroState | null }
+type Status = { enrollment: boolean; certification: boolean; nearbyRequests: boolean }
 
 const noSubscription = () => () => undefined
-let capturedClock = 0
-const clientClock = () => capturedClock || (capturedClock = Date.now())
 const storedCertificate = () => {
   try {
     return localStorage.getItem(HERO_CERTIFICATE_KEY)
@@ -43,28 +29,13 @@ export default function HeroSignup() {
   const [status, setStatus] = useState<Status | null>(null)
   const [note, setNote] = useState<string>()
   const [busy, setBusy] = useState(false)
-  const [naloxoneOnCall, setNaloxoneOnCall] = useState(false)
-  const clock = useSyncExternalStore(noSubscription, () => clientClock(), () => null)
-  const [naloxoneReady, setNaloxoneReady] = useState(false)
-  const [naloxoneExpiresOn, setNaloxoneExpiresOn] = useState("")
-
-  const applyStatus = (body: Status) => {
-    setStatus(body)
-    setNaloxoneReady(body.hero?.naloxone_ready === true)
-    setNaloxoneExpiresOn(body.hero?.naloxone_expires_on ?? "")
-  }
-
-  const load = async () => {
-    const response = await fetch("/api/heroes", { cache: "no-store" })
-    applyStatus((await response.json()) as Status)
-  }
 
   useEffect(() => {
     let cancelled = false
     fetch("/api/heroes", { cache: "no-store" })
       .then((response) => response.json())
-      .then((body: Status) => { if (!cancelled) applyStatus(body) })
-      .catch(() => { if (!cancelled) setStatus({ enrollment: false, certification: false, nearbyRequests: false, hero: null }) })
+      .then((body: Status) => { if (!cancelled) setStatus(body) })
+      .catch(() => { if (!cancelled) setStatus({ enrollment: false, certification: false, nearbyRequests: false }) })
     return () => { cancelled = true }
   }, [])
 
@@ -72,75 +43,24 @@ export default function HeroSignup() {
     setBusy(true)
     setNote(undefined)
     try {
-      const response = await fetch("/api/heroes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ certificate, naloxoneOnCall }) })
+      const response = await fetch("/api/heroes", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ certificate }) })
       const body = (await response.json()) as { enrolled?: boolean; error?: string }
       if (response.status === 401) setNote("Sign in first, then come back to enroll.")
-      else if (body.enrolled) {
-        setNote("You are enrolled in the Hero Network.")
-        await load()
-      } else setNote(body.error ?? "Enrollment failed.")
+      else setNote(body.enrolled ? "You are enrolled in the Hero Network." : (body.error ?? "Enrollment failed."))
     } catch {
       setNote("Could not reach NarcoGuard. Check your connection.")
     } finally {
       setBusy(false)
     }
   }
-
-  const updateReadiness = async (onCall: boolean) => {
-    setBusy(true)
-    setNote(undefined)
-    try {
-      const response = await fetch("/api/heroes", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ naloxoneReady, naloxoneExpiresOn, onCall }),
-      })
-      const body = (await response.json()) as { hero?: HeroState; error?: string }
-      if (!response.ok || !body.hero) {
-        setNote(body.error ?? "Could not update Hero readiness.")
-        return
-      }
-      setStatus((current) => current ? { ...current, hero: body.hero } : current)
-      setNaloxoneReady(body.hero.naloxone_ready)
-      setNaloxoneExpiresOn(body.hero.naloxone_expires_on ?? "")
-      setNote(body.hero.on_call
-        ? "You are On Call. Keep naloxone physically with you and leave On Call if that changes. Nearby requests stay off until they are separately switched on."
-        : "You are Off Call. Nearby requests are unchanged.")
-    } catch {
-      setNote("Could not reach NarcoGuard. Check your connection.")
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  const hero = status?.hero ?? null
-  const eligibility = hero && clock !== null
-    ? readinessView({
-      enrolled: hero.enrolled,
-      expiresAt: hero.expires_at,
-      naloxoneReady,
-      naloxoneExpiresOn: naloxoneExpiresOn || null,
-      now: clock,
-    })
-    : null
-  const certCurrent = eligibility?.certCurrent === true
-  const readyForCall = eligibility?.readyForCall === true
 
   return (
     <div className="min-h-screen bg-background px-4 py-8 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-8">
-        <div id="hero-setup" className="text-center space-y-4 scroll-mt-24">
+        <div className="text-center space-y-4">
           <Shield className="w-20 h-20 mx-auto text-primary pulse-glow" aria-hidden="true" />
           <h1 className="text-4xl font-bold glow-text">Become a Hero</h1>
-          <p className="text-lg text-muted-foreground">We need trained Heroes. A lifesaving emergency Hero must earn certification: learn the overdose-response steps, pass the certification test at 100%, enroll with the current certificate, carry naloxone while on call, then explicitly choose emergency responder mode.</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            <Button asChild size="lg">
-              <a href="#hero-certification">Start certification</a>
-            </Button>
-            <Button asChild variant="outline" size="lg">
-              <Link href="/auth">Sign in first</Link>
-            </Button>
-          </div>
+          <p className="text-lg text-muted-foreground">Volunteers who know what to do in an overdose. Every Hero passes the test below with a perfect score.</p>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6">
@@ -156,87 +76,40 @@ export default function HeroSignup() {
           </HolographicCard>
           <HolographicCard className="p-6 text-center">
             <Shield className="w-12 h-12 mx-auto mb-4 text-blue-500" aria-hidden="true" />
-            <h2 className="font-bold mb-2">3. Earn Hero status</h2>
-            <p className="text-sm text-muted-foreground">After a perfect score, link the earned certificate to your account. The certificate must remain current.</p>
+            <h2 className="font-bold mb-2">3. Enroll</h2>
+            <p className="text-sm text-muted-foreground">Link your certificate to your account. Valid for one year.</p>
           </HolographicCard>
         </div>
 
-        <div id="hero-certification" className="scroll-mt-24">
-          <HolographicCard className="p-6 sm:p-8">
-            <CertificationTest onCertified={setFresh} />
-          </HolographicCard>
-        </div>
+        <HolographicCard className="p-6 sm:p-8">
+          <CertificationTest onCertified={setFresh} />
+        </HolographicCard>
 
         <HolographicCard className="p-6 sm:p-8">
           <section className="space-y-3" data-testid="hero-enroll">
             <h2 className="text-xl font-bold">Enroll as a Hero</h2>
-            {!certificate ? (
+            {/* Say which prerequisite is missing. Without the signing key nothing can be
+                certified at all, so a "pass the test first" prompt would be misleading. */}
+            {status && !status.certification ? (
+              <p className="text-sm text-muted-foreground">Certificates are not being issued on this deployment: the certificate signing key is not configured. The test still runs and is graded, but a pass cannot certify you and cannot enroll you.</p>
+            ) : !certificate ? (
               <p className="text-sm text-muted-foreground">Pass the test first. Enrollment needs a certificate from a perfect score.</p>
             ) : status && !status.enrollment ? (
-              <p className="text-sm text-muted-foreground">You have a certificate on this device. Enrollment is not switched on yet; it will use your certificate once it is.</p>
+              <p className="text-sm text-muted-foreground">You have a certificate on this device, but account enrollment is not configured on this deployment, so it cannot be linked to an account yet.</p>
             ) : (
-              <>
-                <label className="flex items-start gap-2 rounded-lg border p-3 text-sm">
-                  <input type="checkbox" checked={naloxoneOnCall} onChange={(event) => setNaloxoneOnCall(event.target.checked)} />
-                  <span>I confirm that whenever I choose to be available/on call as a Hero, I will carry naloxone that I know how to use and will pause availability if I do not have it. This is a self-attestation, not NarcoGuard verification.</span>
-                </label>
-                <Button type="button" onClick={enroll} disabled={busy || !status || !naloxoneOnCall}>{busy ? "Enrolling…" : "Enroll with my certificate"}</Button>
-              </>
-            )}
-            {hero?.enrolled && (
-              <div className="space-y-4 rounded-lg border p-4" data-testid="hero-readiness">
-                <h3 className="font-semibold">On-call readiness</h3>
-                <p className="text-sm text-muted-foreground">This records that you are carrying unexpired naloxone. It does not send you anywhere, and nearby Hero requests stay off until a separate review switches them on.</p>
-                <div className="rounded-lg border p-4 text-sm space-y-1">
-                  <p><strong>Certification:</strong> {certCurrent ? "Current" : "Expired or still loading today's date"}</p>
-                  <p><strong>On-call state:</strong> {hero.on_call ? "On Call" : "Off Call"}</p>
-                  {hero.on_call_since && <p className="text-muted-foreground">On Call since {new Date(hero.on_call_since).toLocaleString()}</p>}
-                </div>
-                <label className="flex items-start gap-3">
-                  <input type="checkbox" className="mt-1" checked={naloxoneReady} onChange={(event) => setNaloxoneReady(event.target.checked)} />
-                  <span className="text-sm">
-                    <strong>I physically have naloxone with me while On Call.</strong>
-                    <span className="block text-muted-foreground">If you no longer have it, go Off Call. This is a self-attestation, not pharmacy or medical verification.</span>
-                  </span>
-                </label>
-                <div className="space-y-2">
-                  <label htmlFor="naloxone-expiry" className="text-sm font-medium">Naloxone expiration date</label>
-                  <Input id="naloxone-expiry" type="date" value={naloxoneExpiresOn} onChange={(event) => setNaloxoneExpiresOn(event.target.value)} />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" disabled={busy || (hero.on_call && !readyForCall)} onClick={() => void updateReadiness(hero.on_call)}>
-                    {hero.on_call ? "Save On Call details" : "Save and stay Off Call"}
-                  </Button>
-                  {hero.on_call ? (
-                    <Button type="button" variant="destructive" disabled={busy} onClick={() => void updateReadiness(false)}>Go Off Call now</Button>
-                  ) : (
-                    <Button type="button" disabled={busy || !readyForCall} onClick={() => void updateReadiness(true)}>Go On Call</Button>
-                  )}
-                </div>
-                {!readyForCall && !hero.on_call && <p className="text-xs text-muted-foreground">To go On Call: a current Hero certificate, enrollment, naloxone physically with you, and an expiration date that is still current.</p>}
-              </div>
+              <Button type="button" onClick={enroll} disabled={busy || !status}>{busy ? "Enrolling…" : "Enroll with my certificate"}</Button>
             )}
             {note && <p className="text-sm" role="status">{note} {note.startsWith("Sign in") && <Link href="/auth" className="underline text-primary">Sign in</Link>}</p>}
             <p className="text-sm text-muted-foreground">
-              {status?.nearbyRequests
-                ? "Nearby Hero/resource requests are enabled in the network infrastructure. Every Hero still chooses when to go available and what they can offer; NarcoGuard does not guarantee that anyone is currently nearby."
-                : "Nearby Hero/resource requests are not enabled in this environment yet."}
-              {" "}Emergency-ready mode requires explicit opt-in, a current certificate, naloxone-on-call attestation, and the ability to pause or leave at any time. Heroes never replace 911.
+              Nearby help requests are not live. Before they can be, they need a separate safety and privacy review, your explicit opt-in, and a way to pause or leave at any time.
+              Heroes never replace 911.
             </p>
           </section>
         </HolographicCard>
 
+        {/* Practical offers need no certification, so they sit outside the test flow. */}
         <HolographicCard className="p-6 sm:p-8">
-          <PracticalHelpOfferPanel />
-        </HolographicCard>
-
-        <HolographicCard className="p-6 sm:p-8">
-          <HeroAvailabilityPanel />
-          <div className="mt-5 rounded-lg border p-4 text-sm">
-            <strong>Optional community connection</strong>
-            <p className="mt-1 text-muted-foreground">Heroes and other signed-in users can connect by handle in NarcoGuard Community when both people want ongoing contact. A help request never automatically reveals a profile, recovery status, or exact location.</p>
-            <Link href="/community" className="mt-2 inline-block underline text-primary">Open NarcoGuard Community</Link>
-          </div>
+          <HeroOfferManager />
         </HolographicCard>
 
         <HolographicCard className="p-6">

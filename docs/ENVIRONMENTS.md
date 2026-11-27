@@ -25,9 +25,9 @@ embedded in browser bundles and must never contain credentials.
 
 The Vercel/Supabase integration may provide `POSTGRES_URL`, `POSTGRES_PRISMA_URL`, or
 `SUPABASE_DB_URL` instead of `DATABASE_URL`. The application accepts these aliases;
-do not duplicate a database password unless required. Safety-critical switches such as `HERO_ALERTS_ENABLED` and `SMS_ALERTS_ENABLED`
+do not duplicate a database password unless required. Safety-critical feature flags
 should stay disabled until their provider configuration and end-to-end behavior are
-approved and verified. Unused `NEXT_PUBLIC_ENABLE_*` flags were removed; they never gated any feature.
+approved and verified.
 
 ## GitHub Actions
 

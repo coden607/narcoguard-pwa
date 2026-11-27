@@ -1,9 +1,6 @@
 "use client"
 
-import { SourceList } from "@/components/common/source-list"
-import { GUIDE_SOURCES, GUIDES_REVIEWED } from "@/lib/response-guides"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { createPortal } from "react-dom"
 import { Lock, ShieldAlert, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
@@ -120,8 +117,7 @@ export function CertificationTest({ onCertified }: { onCertified?: (certificate:
     const question = data.questions[index]
     const last = index === data.questions.length - 1
     const chosen = answers[question.id]
-    // Portalled to <body> so the page's stacking contexts and the sticky header cannot cover it.
-    return createPortal(
+    return (
       <section className="fixed inset-0 z-[100] overflow-y-auto bg-background p-4 sm:p-8 select-none" aria-labelledby="test-question" data-testid="hero-test-running">
         <div className="mx-auto max-w-2xl space-y-6">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
@@ -148,16 +144,13 @@ export function CertificationTest({ onCertified }: { onCertified?: (certificate:
             )}
           </div>
         </div>
-      </section>,
-      document.body,
+      </section>
     )
   }
 
   return (
     <section className="space-y-4" aria-labelledby="hero-test-heading" data-testid="hero-test">
       <h2 id="hero-test-heading" className="flex items-center gap-2 text-xl font-bold"><ShieldCheck className="h-5 w-5" aria-hidden="true" />Hero certification test</h2>
-
-      <SourceList sources={GUIDE_SOURCES} reviewed={GUIDES_REVIEWED} testId="hero-test-sources" />
 
       {phase.name === "result" ? (
         <div className="space-y-3" data-testid="hero-test-result">

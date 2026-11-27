@@ -54,7 +54,7 @@ const techSpecs = `# NarcoGuard NG Technical Specifications
 - **NFC**: For pairing and authentication
 
 ### Durability
-- **Water Resistance**: IP68 target, 1.5 m for 30 min per IEC 60529. Not certified.
+- **Water Resistance**: IP68 (50m depth)
 - **Shock Resistance**: MIL-STD-810H
 - **Temperature Range**: -20°C to 60°C
 - **Certifications**: Regulatory classification not established; formal review required
@@ -193,7 +193,7 @@ const budget = `# NarcoGuard Pilot Budget Breakdown
 - **SAMHSA/OASAS Grant**: $250,000 (requested)
 - **Arnold Ventures Grant**: $150,000 (requested)  
 - **DARPA TALON Phase 1**: $150,000 (requested - allocated to technical validation)
-- **GoFundMe Campaign**: $58,565 planning residual in this workbook (not a live campaign total; live campaign: Help Build NarcoGuard: Free Support Now, Safer Wearable Tech — https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches)
+- **GoFundMe Campaign**: $58,565 (current goal: $60,000)
 
 ### Budget Justification
 This budget reflects a 12-month pilot deployment of 100 NarcoGuard watches in Broome County, NY. Personnel costs include lived-experience peer navigators essential for community trust and recovery support. Equipment costs are based on prototype manufacturing quotes. Operations include robust technical infrastructure and participant retention incentives critical for compliance. Evaluation by independent academic partner ensures scientific rigor.

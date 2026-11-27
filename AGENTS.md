@@ -1,30 +1,3 @@
-<!-- BEGIN coden607-skills (managed block; safe to re-run installer) -->
-# 🧠 Continuity OS Universal Directives (Always-On)
-
-Continuity OS (core: `/root/Projects/continuity-os`, local daemon: `http://localhost:3030`) is the canonical operating system for all AI assistants and coding agents on this machine. ALL work, routing, memory, and safety invariants MUST flow through it.
-
-## Always in effect (default behavior across EVERY session):
-- **compress-token-spend**: pick the cheapest model tier that fits, search before dumping files into context, keep replies as short as correctness allows, structure prompts for cache hits.
-- **route-interrupts**: if a message arrives mid-task and is not a stop order, classify it (steering addition / side question / new task / urgent redirect). Fold in, answer tersely then resume, queue behind current work, or halt safely at the next checkpoint. Never silently drop the active task. Stop/abort messages execute immediately.
-- **isolate-agent-runs**: before any destructive or irreversible action (rm -rf, force-push, DB writes, touching keys/secrets, production-shaped resources), gate it. In autonomous/yolo runs, sandbox and protect secrets. Watch for the "dumb zone" in long sessions and checkpoint or restart instead of pushing on.
-- **maintain-second-brain**: when a new durable fact arrives, classify it as STATE (overwrite stale value in MEMORY.md) or EVENT (append with timestamp in daily/YYYY-MM-DD.md) and file it in the right tier in `/root/Projects/continuity-os/second-brain/`. Flag contradictions between memory and other sources.
-- **always-format-clickable-links**: ALL web URLs, files, and demo links MUST ALWAYS be formatted as tap-to-open clickable Markdown hyperlinks (e.g. `[Open Live Demo](https://...)` or `[file.ts](file:///path)`). Never leave raw unclickable URLs.
-- **anticipate**: predict and surface the highest-value likely next action while preserving user control. Advance the active task with minimal interaction: Do Now (already authorized, reversible, advancing), Suggest (user choice), or Ask First (destructive, irreversible, monetary, external comms). Output discipline: Result -> Blocker -> Next Action.
-
-## Apply when the situation fits:
-- **enforce-with-hooks**: when a rule must fire every time, or the agent keeps ignoring an instruction, implement it as a hook (PreToolUse / PostToolUse / Stop / SessionStart) instead of a prompt reminder.
-- **route-with-jev**: for classification, routing, and guardrail decisions, use the Jev decision endpoint (`cos jev` or `POST http://localhost:3030/api/jev`) instead of a full LLM call. Otherwise fall back to a regex or the cheapest tier.
-- **run-software-factory**: for repos that ship their own code, follow its autonomy levels and PRD to PR pipeline. Never raise autonomy level without the user saying so.
-
-<!-- END coden607-skills -->
-
-<!-- CODEN607 SKILLS GLOBAL RULES -->
-Canonical skills: /root/.coden607/skills
-Continuity OS Core: /root/Projects/continuity-os
-Universal Daemon: http://localhost:3030
-Before substantial work, read /root/.coden607/skills/bundle.md and load only the smallest matching SKILL.md set.
-<!-- END CODEN607 SKILLS GLOBAL RULES -->
-
 # NarcoGuard PWA — Agent Guide
 
 ## Project
@@ -39,43 +12,6 @@ NarcoGuard is a production-oriented Next.js PWA for the NG overdose-prevention w
 - npm with Node 24 (see `.nvmrc`, `engines`, and `packageManager`)
 - Playwright for browser and PWA tests
 
-## Shared Skills — Required
-
-- Canonical skill source: `https://github.com/coden607/skills.git`.
-- At the start of every substantive agent run, execute `npm run setup:agent-skills` (or `bash scripts/bootstrap-agent-skills.sh`) before selecting skills.
-- Always include `compress-token-spend` when routing/model/context decisions are involved.
-- Load only the smallest relevant skill set for the task; do not preload the full repository into context.
-- The pinned commit in `.agent-skills/manifest.json` is the reproducible source of truth.
-- `npm run validate:agent-skills` must remain green in CI.
-
-## Continuity OS Routing
-
-- **All substantive NarcoGuard agent work routes through the canonical Continuity OS first:** `https://github.com/coden607/continuity-os`.
-- Use Continuity OS as the control plane for task classification, model/tier selection, Jev decision gates, interruption routing, token-spend discipline, guardrails, STATE/EVENT memory handling, and software-factory orchestration when applicable.
-- Domain implementation remains in this repository; do not vendor or fork the full Continuity OS into NarcoGuard.
-- Before acting, classify the task through Continuity OS routing semantics. Use deterministic code for exact rules, Jev for repeated/discrete judgment gates, and an LLM only for reasoning/generation work.
-- Route mid-task interruptions through the canonical `route-interrupts` skill: steering folds into the active task, side questions resume afterward, new tasks queue visibly, and only explicit stop/redirect messages halt work.
-- **Token policy.** Order of attack: deterministic code or `rg` first, then Jev (decide only), then the cheapest capable tier, then a frontier model last. An idle factory run (`python3 factory/dispatch.py` prints `idle`) reads nothing else. Spend heavily only on genuinely token-intensive work (cross-file refactors, full audits, test-suite analysis) and say why in the PR body.
-- **Second brain.** Durable project facts go to `MEMORY.md` (STATE: overwrite stale values, keep `as-of`, `source`, `review-by`) and `memory/daily/` (EVENT: append-only, ET times). Promoted lessons go to `memory/kb/`. Run `continuity brain audit --root .` (when the CLI is available) before trusting an old fact. Never store secrets or personal, health or location data: this repository is public.
-- Apply `compress-token-spend` on every substantive run: search/read narrowly, minimize context, reuse stable prompts, and choose the cheapest capable tier from Continuity OS `config/orchestration/models.yaml`.
-- Use Continuity OS guardrails before destructive, irreversible, secret-bearing, production, payment, or external-send actions; repository/system approval rules still take precedence.
-- Use Continuity OS STATE/EVENT memory discipline for durable project facts and append-only events.
-- Use Continuity OS factory/worktree flow for autonomous multi-file implementation when that flow is available; exact-head CI and repository release rules remain mandatory.
-- Jev is a decision layer only. It does not draft code, prose, or explanations.
-- If Continuity OS is unavailable, fail over to the equivalent local NarcoGuard rules and report that routing fallback; do not silently bypass the control plane.
-
-
-## Rules for every AI
-
-Applies to every assistant that reads this repo (chatgpt, claude, codex, gemini, kimi, grok, any other). Owner: Stephen.
-
-1. **Route first.** Before substantive work call the ContinuityOS MCP (`continuity_route`, `continuity_token_analysis`; advisory) at `https://ubuntu-s-1vcpu-2gb-nyc1.tailfd6ac4.ts.net/mcp` (streamable HTTP, OAuth). Only Stephen enters the passphrase, on the OAuth page; never ask for it or store it. Jev decides discrete choices only (`jev --file request.json` on the shared box); it never writes code or prose.
-2. **Save tokens.** Use `compress-token-spend` and `route-with-jev`: `rg` and deterministic code first, then Jev, then the cheapest capable model. Spend big only on genuinely token-heavy work and say why in the PR.
-3. **Claim a lane.** Read board status and messages at the start of each turn, claim a lane with exact repo-relative paths before writing (`continuity_claim_lane`), check open PRs and issues first, then post status with the SHA and release the lane. The board is notification only, not approval.
-4. **Linear history.** Rebase-merge only: no merge commits, no squash, no force-push of shared branches. Roll back with revert commits.
-5. **Manual steps for Stephen** come as one clickable prefilled link with every value inline, so he never opens another tab or goes back. Decisions show scored options with short reasons.
-6. **Never print or commit secrets** (keys, tokens, passphrases, `.env*`). Secrets, repo/ruleset/billing settings and destructive actions always need Stephen, at any autonomy level.
-
 ## Working Style
 
 - Work autonomously on safe, in-scope implementation and verification steps.
@@ -85,7 +21,6 @@ Applies to every assistant that reads this repo (chatgpt, claude, codex, gemini,
 - Never print, commit, or copy secret values. Refer to environment variables by name only.
 - Do not bypass sandbox, approval, branch-protection, or provider security controls.
 - Require explicit confirmation immediately before destructive operations, production deployment, database migration against production, payment activation, secret rotation, or sending external communications.
-- Factory merge gate (owner decision, 2026-10-28, Stephen; supersedes the earlier same-day hold at 2): the autonomy dial is `.factory/locks/autonomy = 5` (owner decision 2026-10-28, Stephen; raised from 3; level 5 widens scope to all of the owner's repos and removes no safeguard). The factory (`factory/merge.sh` via `factory-merge.yml`) may `gh pr merge --rebase` a `factory/issue-*` PR itself, and so may anyone else with write access, but only by rebase: never squash, never a merge commit, so `main` stays one straight line. The factory merges only when `quality`, `pwa-browser-smoke`, `lighthouse`, `linear-history` and `gate` are green on the exact PR head, the PR is `factory:validated`, no review thread is unresolved, there is no merge commit, and the PR does not touch a guard-protected path (`factory/guard.py`; those fail the gate). It fails closed on anything it cannot read, `.factory/STOP` or the `factory:stop` label stops it, and a live-check failure reverts the whole PR range. The owner still approves: guard-protected paths (including governance, `.factory/`, `.github/`, dependencies, emergency, auth and data paths), repository settings and secrets, and everything on the irreversible list (§7.3). See `MISSION.md`, `FACTORY_RULES.md` and `FACTORY.md`.
 
 ## Required Checks
 
@@ -120,8 +55,6 @@ Use `npm run verify` for the complete gate; it runs the same checks as CI, inclu
 ## Git and Deployment
 
 - Work from the current branch unless asked otherwise.
-- **History is one straight line (owner decision).** Merge to `main` only by **rebase-merge** of a reviewed PR. Never create a merge commit, never squash-merge, never force-push `main`. Never merge `origin/main` into a branch: GitHub rebases the PR onto `main` at merge time, so a behind-but-conflict-free branch needs nothing. On a conflict, the owner (or a session the owner has explicitly allowed to force-push its own PR branch with `--force-with-lease`) rebases it; factory sessions stay under the `.claude/settings.json` force-push deny and escalate with `factory:needs-human`. Keep one logical change per PR in one to three clean commits, because each commit lands on `main` unchanged. Never rewrite history that is already on `main`.
-- **Approval gates.** The owner is in the loop for: merging PRs that touch guard-protected paths (the factory rebase-merges other green, validated PRs itself at autonomy 3; a PR you author is rebase-merged by you or the owner), dependency additions and upgrades, CI/workflow and `.factory/` changes, repository settings, and anything on the irreversible list in `FACTORY_RULES.md` §7.3. Everything else the factory may prepare as a PR.
 - Review `git status` and the diff before committing.
 - Do not amend user commits, force-push, or rewrite history unless explicitly requested.
 - Before pushing `main` or deploying production, ensure the full verification gate passes and summarize the exact commit and deployment target.
@@ -148,17 +81,12 @@ Use `npm run verify` for the complete gate; it runs the same checks as CI, inclu
 
 ## Angel AI, nearby search and Bluetooth readings
 
-- Angel AI (`/angel`, `app/api/angel`) relays chats to Kimi (Moonshot AI) first when the server-only `MOONSHOT_API_KEY` (or `KIMI_API_KEY`) is set (owner's choice, to use the owner's Kimi credits; optional `KIMI_MODEL`, default `kimi-k2-turbo-preview`, and `MOONSHOT_BASE_URL`), with a free direct Groq key (`GROQ_API_KEY`, when set) and then the Vercel AI Gateway chain below as cross-service fallbacks on refusal, no credit, rate limits or outages (models refusing for account reasons are skipped for 10 minutes); the consent text and `/privacy` must keep saying NarcoGuard has not confirmed Moonshot's retention or training terms until that is verified. Otherwise it relays to Groq: directly when the server-only `GROQ_API_KEY` is set (optional `GROQ_MODEL`), else through OpenRouter when `OPENROUTER_API_KEY` is set (optional `OPENROUTER_MODEL`; requests ask for `data_collection: "deny"` providers only), otherwise through Vercel AI Gateway using the deployment's OIDC token (`lib/angel-provider.ts`, optional `AI_GATEWAY_API_KEY`/`ANGEL_GATEWAY_MODEL`). On the gateway the default is `anthropic/claude-sonnet-5` (the owner's choice) with `zeroDataRetention: true`, falling back to `openai/gpt-oss-120b` on Groq when the gateway refuses it (400/401/403/404, e.g. a free tier without credits) so Angel never switches off for that reason; keep the consent text in `components/ai/angel-ai.tsx` and `/privacy` in step with the model and retention setting. Angel's prompt asks for a warm, spoken, non-list style and for searching implied needs; tools are off only for pleasantries (`lib/angel-routing.ts`). Spoken replies use the most natural on-device voice (`pickVoice` in `lib/voice.ts`; voices with `localService === false` are never chosen, since replies may be private) and say 911/988/211 digit by digit. `GET /api/angel?probe` checks provider access on preview deployments only. Its `find_resources` tool searches several needs in one call (`lookupKinds` in `lib/resource-lookup.ts`) using a typed or spoken ZIP or, after the person taps or says "use my location", a location rounded to about 1 km in the browser; coordinates are used only for directory searches and never reach the model or logs (`lib/angel-resources.ts` sends the model names, distances and phones only). The nearest place per need is read aloud by a deterministic summary, and a search asked before a location was shared re-runs once it is. It requires in-page consent, keeps conversations in memory only, never logs content, and adds deterministic 911/988 notices (`lib/angel-ai.ts`) independent of the model. It is not an emergency service and must not claim to monitor, detect or contact anyone.
-- `/about` and the README explain the Maslow-based approach, mapping each level to app features, with its limits. Angel's system prompt follows the same order as a planning aid. Keep all three consistent, and never claim needs will be met or that the AI decides for the person. The "How addiction can hijack the hierarchy" explanation (`/about`, intro, README, GoFundMe copy) cites NIDA and must stay framed as support alongside treatment, never a cure or a promise of recovery. The `/fund` auto-injection section describes research the funding pays for (sensing, delivery engineering, independent review, the FDA combination-product pathway); never describe automatic naloxone delivery as existing or working. The auto-injection idea, and the project, originated with Shannon Pillion Robinson (NarcoGuard's CFO); keep her credit on `/about`, `/fund` and the README in step with `lib/credits.ts`.
-- Need matching (`lib/need-intent.ts`) runs on the device and orders stated needs by Maslow level for display only; nothing is hidden or withheld based on it. `app/api/resources/understand` sends the person's words to the AI provider only after they tap "Let AI read my words", validates the reply to known kinds and never stores or logs the text. Food, shelter and showers with no listing within 10 miles are searched once more to about 25 miles and labelled as farther away.
-- Nearby search (`app/api/resources/nearby`, `lib/resource-lookup.ts`) uses SAMHSA FindTreatment.gov and OpenStreetMap (Overpass/Nominatim). Coordinates are rounded to about 1 km server-side and never stored or logged; every listing shows its source and "call first", with 211 and directory fallbacks. A place can count for several needs (a truck stop with showers is both a quick meal and a shower); shelter includes services tagged for people experiencing homelessness without promising a bed, and any need with no listing offers a one-tap Call 211.
-- Where to search (`lib/saved-place.ts`): Angel and Find help remember a ZIP or a location rounded to about 1 km in the phone's own storage, so it is entered once; never on the server, on by default with a visible "Remember … on this phone" switch and a one-tap "Forget where I am". Directory answers are cached in server memory for 15 minutes per rounded area (`lib/ttl-cache.ts`), never with personal data.
-- Phone vitals checks (`lib/camera-pulse.ts`, `components/dashboard/manual-vitals.tsx`): a fingertip camera pulse estimate and a tap-to-count breathing rate, on screen only, never stored, uploaded or fed into overdose detection or alerts; `Permissions-Policy` must keep `camera=(self)` for them to work.
+- Angel AI (`/angel`, `app/api/angel`) relays chats to Groq: directly when the server-only `GROQ_API_KEY` is set (optional `GROQ_MODEL`), otherwise through Vercel AI Gateway using the deployment's OIDC token (`lib/angel-provider.ts`, optional `AI_GATEWAY_API_KEY`/`ANGEL_GATEWAY_MODEL`). `GET /api/angel?probe` checks provider access on preview deployments only. It requires in-page consent, keeps conversations in memory only, never logs content, and adds deterministic 911/988 notices (`lib/angel-ai.ts`) independent of the model. It is not an emergency service and must not claim to monitor, detect or contact anyone.
+- Nearby search (`app/api/resources/nearby`, `lib/resource-lookup.ts`) uses SAMHSA FindTreatment.gov and OpenStreetMap (Overpass/Nominatim). Coordinates are rounded to about 1 km server-side and never stored or logged; every listing shows its source and "call first", with 211 and directory fallbacks.
 - Bluetooth readings (`lib/ble-vitals.ts`) come from standard heart-rate and pulse-oximeter GATT services, stay on screen only, and are never fed into overdose detection or alerts.
-- Accounts (`/account`, `app/api/account/vault`) are optional; "Continue with Google" (`app/api/auth/google`, `app/api/auth/callback/google`, `lib/google-oauth.ts`) uses Google OAuth with PKCE, exchanges the code on the server with `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`, and creates a Supabase session. The button stays hidden until those two variables are set. The registered redirect URI is `https://www.narcoguard.app/api/auth/callback/google` (no query string). Sessions persist for 30 days in an httpOnly refresh cookie on `.narcoguard.app`. Apple sign-in (`app/api/auth/apple`, `app/api/auth/callback/apple`, `lib/apple-oauth.ts`) mirrors Google with a form_post code flow: it stays hidden behind `AUTH_APPLE_ENABLED` plus the full client-secret set `AUTH_APPLE_ID` (Services ID), `AUTH_APPLE_SECRET` (the .p8 private key), `AUTH_APPLE_TEAM_ID` and `AUTH_APPLE_KEY_ID`, from which the client-secret JWT is signed per request; the registered return URL is `https://www.narcoguard.app/api/auth/callback/apple`. Both providers first try a Supabase `id_token` sign-in and fall back to a service-role verified-profile session when the provider is not yet enabled in Supabase. Backup is end-to-end encrypted in the browser (`lib/vault-crypto.ts`) and excludes the Guardian planner. Never make emergency features depend on an account.
-- The NG watch has two sizes on `/watch`: 46 mm and the 40 mm women's fit. Both come from one design model (`lib/watch-design.ts`), geometry builder (`lib/watch-geometry.ts`), component list and BOM (`lib/watch-bom.ts`); the 40 mm changes only case-driven parts and keeps every safety function. Re-render `public/images/ng-rev5-hero-titanium.jpg` and `public/images/ng-rev5-exploded-titanium.jpg` when either geometry or the band design changes. The band is a premium solid titanium link bracelet with solar cells integrated into the band (men's finishes: silver or natural titanium; women's finish: rose gold titanium). Label renders as concepts, and keep `PROTOTYPE_UNIT_COST` equal to the 46 mm BOM total.
+- Accounts (`/account`, `app/api/account/vault`) are optional; backup is end-to-end encrypted in the browser (`lib/vault-crypto.ts`) and excludes the Guardian planner. Never make emergency features depend on an account.
 - Watch owner lock (`lib/watch-ownership.ts`, `lib/watch-ble.ts`, `app/api/watch`): safety functions (SOS, emergency call, overdose steps, alarm) work in every lock state and must never be gated. Registration needs `WATCH_REGISTRY_PRIVATE_JWK` and `SUPABASE_SERVICE_ROLE_KEY`; transfers are support-approved releases for the listed reasons only, never a sale or trade. No NG hardware has shipped.
-- Hero certification (`lib/hero-test-bank.ts`, server only) requires 100% on a random 12-question draw; certificates need `HERO_CERT_SECRET`. Lockdown mode cannot block other apps; proctors use Guided Access or app pinning. Bump `HERO_TEST_VERSION` and re-check sources when editing questions. Nearby Hero requests (`lib/hero-alerts.ts`, `app/api/heroes/alerts`, migration `20261007120000_hero_alerts.sql`) are built but switched off: they stay off unless `HERO_ALERTS_ENABLED=true` and Supabase plus `HERO_CERT_SECRET` are configured, and that switch and the migration must not be applied to production before a separate safety and privacy review approves them. Requests require 911 to have been called, keep only a ~5 km cell for 30 minutes, reach at most 5 opted-in certified Heroes (availability capped at 8 hours), are pull-only (no texts) and use generic alert text.
+- Hero certification (`lib/hero-test-bank.ts`, server only) requires 100% on a random 12-question draw; certificates need `HERO_CERT_SECRET`. Lockdown mode cannot block other apps; proctors use Guided Access or app pinning. Bump `HERO_TEST_VERSION` and re-check sources when editing questions. Nearby Hero requests are not live and need separate safety and privacy review.
 - Overdose Good Samaritan summaries (`lib/good-samaritan-laws.ts`) are general information with citations and a review date; re-verify against the statute and update the date when changing any entry.
 
 ## Founding Constitution
@@ -183,6 +111,6 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 
 ## Shared agent skills
-Before substantive work in a fresh checkout, run `bash scripts/bootstrap-agent-skills.sh`. This installs the complete shared skill library from `https://github.com/coden607/skills` (every skill listed in `.agent-skills/manifest.json`, at its exact pinned commit) into repo-local agent skill directories. Then consult the installed catalog and apply every relevant skill automatically; installing a skill never runs its bundled scripts or widens authorization, and on-demand skills (for example `legal-war-room`) are used only when a task calls for them. Do not silently follow the moving upstream `main` branch; skill updates require an explicit reviewed pin change. Treat that repository as the canonical cross-agent skill source; do not require the user to ask for a skill by name. Preserve this repository's own project rules and use them when they are more specific.
+Before substantive work, consult the shared skill catalog at https://github.com/coden607/skills and apply every relevant skill automatically. Treat that repository as the canonical cross-agent skill source; do not require the user to ask for a skill by name. Preserve this repository's own project rules and use them when they are more specific.
 
 Compatibility: Codex/OpenAI-compatible agents use AGENTS.md directly. Claude, Gemini, Copilot, Kimi, Grok, and other coding agents should treat this section and coden607/skills as shared guidance whenever their environment can read repository instructions or GitHub. Never claim a skill, MCP, hook, CLI, or external tool is available unless it is actually installed/accessible in the current runtime.

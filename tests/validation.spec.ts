@@ -64,24 +64,18 @@ test.describe("NarcoGuard Production Validation", () => {
     await page.waitForTimeout(2000)
   })
 
-  test("vitals API fails closed when no wearable ingest provider is configured", async ({ request }) => {
-    const response = await request.get("/api/vitals")
-    expect(response.status()).toBe(503)
-    await expect(response.json()).resolves.toMatchObject({ available: false })
+  test("critical APIs fail closed when providers are unavailable", async ({ request }) => {
+    for (const api of ["/api/vitals", "/api/emergency", "/api/location", "/api/stats"]) {
+      const response = await request.get(api)
+      expect(response.status()).toBe(503)
+      await expect(response.json()).resolves.toMatchObject({ available: false })
+    }
   })
 
-  test("obsolete dispatch, location, analytics, and stats routes are removed and never report success", async ({ request }) => {
-    for (const api of ["/api/emergency", "/api/location", "/api/analytics/emergency", "/api/stats"]) {
-      const missing = await request.get(api)
-      expect(missing.status()).toBe(404)
-    }
+  test("emergency dispatch never reports a fabricated success", async ({ request }) => {
     const response = await request.post("/api/emergency", { data: { location: null, vitals: null } })
-    expect(response.status()).toBe(404)
-    const contentType = response.headers()["content-type"] ?? ""
-    if (contentType.includes("json")) {
-      const body = await response.json()
-      expect(body.dispatched).not.toBe(true)
-    }
+    expect(response.status()).toBe(503)
+    await expect(response.json()).resolves.toMatchObject({ available: false, dispatched: false })
   })
 
   test("native text correction is enabled for prose fields", async ({ page }) => {

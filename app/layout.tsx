@@ -7,7 +7,6 @@ import Script from "next/script"
 import { Analytics } from "@vercel/analytics/next"
 import { SiteChrome } from "@/components/site-chrome"
 import { SITE_URL } from "@/lib/site-url"
-import { THEME_INIT_SCRIPT } from "@/lib/theme"
 import "./globals.css"
 
 const orbitron = Orbitron({
@@ -73,12 +72,9 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className={`dark ${inter.variable} ${orbitron.variable}`} style={{ colorScheme: "dark" }} suppressHydrationWarning>
+    <html lang="en" className={`dark ${inter.variable} ${orbitron.variable}`}>
       <head>
-        {/* Dark is the default and is rendered by the server. This inline script runs before first paint and
-            applies a saved light/dark choice, so the page never flashes the wrong theme. */}
-        <script id="ng-theme" dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
-        <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/", updateViaCache: "none" }).catch(() => undefined)`}</Script>
+        <Script id="narcoguard-sw" strategy="beforeInteractive">{`if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(() => undefined)`}</Script>
         {/* Chromium fires beforeinstallprompt once, often before React hydrates; keep it for the install button. */}
         <Script id="narcoguard-install" strategy="beforeInteractive">{`addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); window.__ngInstallPrompt = e; dispatchEvent(new Event("ng-installprompt")) })`}</Script>
         <link rel="icon" href="/icon-dark-32x32.png" sizes="32x32" type="image/png" />
@@ -92,7 +88,7 @@ export default function RootLayout({
         <SiteChrome>{children}</SiteChrome>
         {process.env.VERCEL ? <Analytics /> : null}
         <InstallPrompt />
-        <ServiceWorkerRegister initialVersion={process.env.VERCEL_GIT_COMMIT_SHA || process.env.VERCEL_DEPLOYMENT_ID || "local"} />
+        <ServiceWorkerRegister />
       </body>
     </html>
   )

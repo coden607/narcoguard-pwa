@@ -1,7 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react"
-import { isFatalRecognitionError, isNaturalVoice, pickVoice, readTranscript, speechChunks, speechRecognitionCtor, type SpeechRecognitionLike } from "@/lib/voice"
+import { isFatalRecognitionError, readTranscript, speechChunks, speechRecognitionCtor, type SpeechRecognitionLike } from "@/lib/voice"
 
 const noSubscription = () => () => undefined
 
@@ -14,24 +14,7 @@ export function useVoice() {
   const [listening, setListening] = useState(false)
   const [speaking, setSpeaking] = useState(false)
   const [interim, setInterim] = useState("")
-  const [voiceName, setVoiceName] = useState<string | undefined>(undefined)
-  const [voiceIsNatural, setVoiceIsNatural] = useState(false)
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null)
-  const voiceRef = useRef<SpeechSynthesisVoice | undefined>(undefined)
-
-  // Voices load asynchronously on most browsers; keep the most natural one for the person's language.
-  useEffect(() => {
-    if (!("speechSynthesis" in window)) return
-    const choose = () => {
-      const picked = pickVoice(window.speechSynthesis.getVoices?.() ?? [], navigator.language || "en-US")
-      voiceRef.current = picked
-      setVoiceName(picked?.name)
-      setVoiceIsNatural(isNaturalVoice(picked))
-    }
-    choose()
-    window.speechSynthesis.addEventListener?.("voiceschanged", choose)
-    return () => window.speechSynthesis.removeEventListener?.("voiceschanged", choose)
-  }, [])
 
   const stopListening = useCallback(() => {
     recognitionRef.current?.abort()
@@ -92,15 +75,6 @@ export function useVoice() {
     if (!("speechSynthesis" in window) || !text) return Promise.resolve()
     const synth = window.speechSynthesis
     synth.cancel()
-    // Re-pick from the live voice list on every reply: the list can still be
-    // loading when the page mounts, and a stale early pick sticks on the
-    // compact/robotic voice even after the natural voices arrive.
-    const fresh = pickVoice(synth.getVoices?.() ?? [], navigator.language || "en-US")
-    if (fresh) {
-      voiceRef.current = fresh
-      setVoiceName(fresh.name)
-      setVoiceIsNatural(isNaturalVoice(fresh))
-    }
     const chunks = speechChunks(text)
     setSpeaking(true)
     return new Promise((resolve) => {
@@ -108,12 +82,8 @@ export function useVoice() {
       const next = () => {
         if (index >= chunks.length) { setSpeaking(false); resolve(); return }
         const utterance = new SpeechSynthesisUtterance(chunks[index++])
-        const voice = voiceRef.current ?? pickVoice(synth.getVoices?.() ?? [], navigator.language || "en-US")
-        if (voice) utterance.voice = voice
-        utterance.lang = voice?.lang ?? (navigator.language || "en-US")
-        // Slightly slower than default reads as calmer and is easier to follow on a phone speaker.
-        utterance.rate = 0.95
-        utterance.pitch = 1
+        utterance.lang = navigator.language || "en-US"
+        utterance.rate = 1
         utterance.onend = next
         utterance.onerror = () => { setSpeaking(false); resolve() }
         synth.speak(utterance)
@@ -130,5 +100,5 @@ export function useVoice() {
     window.speechSynthesis.speak(utterance)
   }, [])
 
-  return { sttSupported, ttsSupported, listening, speaking, interim, voiceName, voiceIsNatural, listen, stopListening, speak, cancelSpeech, primeSpeech, isFatalRecognitionError }
+  return { sttSupported, ttsSupported, listening, speaking, interim, listen, stopListening, speak, cancelSpeech, primeSpeech, isFatalRecognitionError }
 }

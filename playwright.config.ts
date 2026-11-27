@@ -11,9 +11,9 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   workers: process.env.CI ? 1 : undefined,
-  reporter: [["list"], ["html", { open: "never" }]],
+  reporter: "html",
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL || "http://localhost:3100",
+    baseURL: "http://localhost:3000",
     trace: "on-first-retry",
     screenshot: "only-on-failure",
   },
@@ -25,9 +25,9 @@ export default defineConfig({
     { name: "Mobile Safari", use: { ...devices["iPhone 12"] } },
   ],
   webServer: {
-    command: "./node_modules/.bin/next start --hostname 127.0.0.1 -p 3100",
-    port: 3100,
+    command: "./node_modules/.bin/next start --hostname 127.0.0.1",
+    port: 3000,
     timeout: 60_000,
-    reuseExistingServer: false,
+    reuseExistingServer: !process.env.CI,
   },
 })
