@@ -53,6 +53,24 @@ for (const root of roots) {
   }
 }
 
+// Renders cannot be scanned for claims, so they are governed by where they appear.
+// ng-modular-exploded, ng-exploded-view and ng-blueprint-detailed predate the
+// 2026-10-05 watch-only revision and still show a solar cell, a thermoelectric
+// generator, a micro-dosing motor and a filled naloxone cartridge. Any page that
+// renders one must say so in view, or a reader takes the picture as the design.
+const supersededRenders = ["ng-modular-exploded.jpg", "ng-exploded-view.jpg", "ng-blueprint-detailed.jpg"]
+const disclosure = /not the current design|predate the 2026-10-05|images are earlier illustrative renders/i
+for (const root of roots) {
+  for (const file of filesIn(path.join(process.cwd(), root))) {
+    if (!extensions.has(path.extname(file)) || file.endsWith("validate-claims.js")) continue
+    const content = fs.readFileSync(file, "utf8")
+    const shown = supersededRenders.filter((render) => content.includes(render))
+    if (shown.length && !disclosure.test(content)) {
+      failures.push(`${path.relative(process.cwd(), file)} renders ${shown.join(", ")} without saying the render is superseded`)
+    }
+  }
+}
+
 if (failures.length) {
   console.error("[claims] unsupported public claim(s) found")
   failures.forEach((failure) => console.error(`- ${failure}`))

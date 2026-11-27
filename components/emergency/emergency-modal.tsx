@@ -7,9 +7,7 @@ import { Button } from "@/components/ui/button"
 import { AlertTriangle, MapPin, MessageSquare, Phone, Pill, Share2 } from "lucide-react"
 import { alertMessage } from "@/lib/contact-alerts-shared"
 import { useEmergencyContacts } from "@/lib/emergency-contacts-store"
-import { useWakeLock } from "@/lib/hooks/use-wake-lock"
 import { useContactAlert } from "@/lib/hooks/use-contact-alert"
-import { OVERDOSE_STEPS } from "@/components/emergency/overdose-steps"
 
 interface EmergencyModalProps {
   open: boolean
@@ -18,6 +16,15 @@ interface EmergencyModalProps {
 
 // Real actions only: the phone dialer, the person's own consented contacts, the share sheet and
 // the resource finder. Nothing here claims that help was dispatched.
+
+const OVERDOSE_STEPS = [
+  "Call 911. Say the person is not breathing or won't wake up.",
+  "Give naloxone (Narcan): one spray in one nostril.",
+  "If you are trained, give rescue breaths: one every 5 seconds.",
+  "No response after 2–3 minutes? Give a second dose in the other nostril.",
+  "If they are breathing, roll them onto their side (recovery position).",
+  "Stay with them. Naloxone can wear off before the opioid does.",
+]
 
 async function shareLocation(): Promise<string> {
   if (!("geolocation" in navigator)) return "Location is not available in this browser."
@@ -40,8 +47,6 @@ async function shareLocation(): Promise<string> {
 }
 
 export function EmergencyModal({ open, onClose }: EmergencyModalProps) {
-  // Keep the screen on while the emergency steps are open (#263). Silently does nothing if unsupported.
-  useWakeLock(open)
   const { state } = useEmergencyContacts()
   const { available, sending, deliveries, note, send } = useContactAlert()
   const [stage, setStage] = useState<"idle" | "preview">("idle")

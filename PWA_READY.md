@@ -91,7 +91,7 @@ The app is production-ready and configured for:
 ### Marketing URLs
 
 - **Live Demo**: https://v0-narcoguard-pwa-build-4zfrgsdwj-coden809s-projects.vercel.app/
-- **GoFundMe**: https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches
+- **GoFundMe**: https://gofund.me/ac8905cca
 - **GitHub**: https://github.com/coden809/narcoguard-pwa
 
 ### Lighthouse PWA Score Target

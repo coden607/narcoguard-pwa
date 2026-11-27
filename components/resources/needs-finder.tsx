@@ -1,35 +1,14 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import Link from "next/link"
-import { AccessibilityDetails } from "@/components/resources/accessibility-details"
-import { LocateFixed, Sparkles } from "lucide-react"
+import { useState } from "react"
+import { LocateFixed } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { safetyNotices } from "@/lib/angel-ai"
-import { QUICK_NEEDS, matchNeeds, orderByMaslow } from "@/lib/need-intent"
 import { NEED_LEVELS, RESOURCE_LABELS, SHORT_LABELS, type NearbyResource, type ResourceKind } from "@/lib/resource-finder"
-import { cardSummary } from "@/lib/resource-display"
-import { directionsUrl } from "@/lib/safer-use"
-import { forgetPlace, PLACE_FORGOTTEN_EVENT, REMEMBER_PLACE_KEY, SAVED_PLACE_KEY, readRememberChoice, readSavedPlace, roundPlace, savePlace } from "@/lib/saved-place"
-import { clearDirectoryCache, fetchDirectory, isLowBandwidthActive, LOW_BANDWIDTH_CACHE, LOW_BANDWIDTH_CHANGED_EVENT, saveLowBandwidthChoice, type DirectoryCaches } from "@/lib/low-bandwidth"
-import { readResourceFeedback, resourceKey, type ResourceFeedback } from "@/lib/resource-personalization"
-import { activateTravel, deactivateTravel, effectiveZip, readTravel, travelBanner, type TravelState } from "@/lib/travel-mode"
-import { browserStorage } from "@/lib/browser-storage"
 
 interface KindLookup {
   status: "ok" | "unavailable"
   results: NearbyResource[]
   fallback: { title: string; url: string }[]
-  widenedMiles?: number
-}
-
-interface FreshWebResource {
-  title: string
-  url: string
-  description?: string
-  kind: ResourceKind
-  source: "Brave Search"
-  rankedBy: "Groq" | "local rules"
 }
 
 interface NeedsResponse {
@@ -37,73 +16,36 @@ interface NeedsResponse {
   message?: string
   fetchedAt?: string
   kinds: Partial<Record<ResourceKind, KindLookup>>
-  web?: {
-    status: "ok" | "disabled" | "unavailable" | "skipped"
-    fetchedAt?: string
-    results: FreshWebResource[]
-    message?: string
-  }
 }
 
 type Origin = { lat: number; lon: number } | { zip: string }
 
-type ConnectionInfo = { saveData?: boolean }
-const connection = () => (typeof navigator !== "undefined" ? (navigator as Navigator & { connection?: ConnectionInfo }).connection : undefined)
-const lowDataActive = () => isLowBandwidthActive(browserStorage(), connection())
-/** The on-device cache used in low data mode; undefined where CacheStorage is unavailable. */
-const openDirectoryCache = async (): Promise<DirectoryCaches | undefined> => {
-  if (!("caches" in window)) return undefined
-  try { return await window.caches.open(LOW_BANDWIDTH_CACHE) } catch { return undefined }
-}
-
 const DIRECTORY_211 = { title: "Find local help through 211", url: "https://www.211.org/get-help" }
 
-const CHIP_TONE_CLASS: Record<string, string> = {
-  open: "text-green-400",
-  closed: "text-red-400",
-  unknown: "text-muted-foreground",
-}
-
 function ResourceCard({ resource }: { resource: NearbyResource }) {
-  const summary = cardSummary(resource, new Date())
-  const directions = directionsUrl(resource.lat, resource.lon)
-  const details = [summary.freshness, summary.wheelchair, summary.services].filter((line): line is string => line !== null)
   return (
     <li className="border rounded-lg p-3 space-y-1">
       <p className="font-semibold">{resource.name}{resource.distanceMiles !== undefined && <span className="font-normal text-muted-foreground"> · {resource.distanceMiles} mi</span>}</p>
-      <p className="text-sm"><span className={`font-semibold ${CHIP_TONE_CLASS[summary.chip.tone]}`}>{summary.chip.label}</span></p>
       {resource.address && <p className="text-sm text-muted-foreground">{resource.address}</p>}
-      {summary.hours
-        ? <p className="text-sm text-muted-foreground">{summary.hours}</p>
-        : summary.chip.label !== "Hours unknown — call first"
-          ? <p className="text-sm text-muted-foreground">Hours unknown — call first</p>
-          : null}
-      {details.map((line) => <p key={line} className="text-sm text-muted-foreground">{line}</p>)}
-      {summary.unknowns.map((line) => <p key={line} className="text-xs text-muted-foreground">{line}</p>)}
+      {resource.hours && <p className="text-sm text-muted-foreground">Listed hours: {resource.hours} (may be out of date)</p>}
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
         {resource.phone && <a className="underline text-primary inline-flex min-h-6 items-center" href={`tel:${resource.phone.replace(/[^\d+]/g, "")}`}>Call {resource.phone}</a>}
         {resource.website && <a className="underline text-primary inline-flex min-h-6 items-center" href={resource.website} target="_blank" rel="noopener noreferrer">Website</a>}
         {resource.lat !== undefined && resource.lon !== undefined && (
           <a className="underline text-primary inline-flex min-h-6 items-center" href={`https://www.openstreetmap.org/?mlat=${resource.lat}&mlon=${resource.lon}#map=17/${resource.lat}/${resource.lon}`} target="_blank" rel="noopener noreferrer">Map</a>
         )}
-        {directions && (
-          <a className="underline text-primary inline-flex min-h-6 items-center" href={directions} target="_blank" rel="noopener noreferrer" data-testid="directions">Directions</a>
-        )}
       </div>
       <p className="text-xs text-muted-foreground">Source: {resource.source}. Hours, openings and eligibility are not confirmed; call first.</p>
-      <AccessibilityDetails resource={resource} />
     </li>
   )
 }
 
-function KindResults({ kind, lookup, open = false, feedback = [] }: { kind: ResourceKind; lookup: KindLookup | undefined; open?: boolean; feedback?: ResourceFeedback[] }) {
-  const hidden = new Set(feedback.filter((row) => row.value === "closed" || row.value === "not-for-me").map((row) => row.key))
-  const results = (lookup?.results ?? []).filter((resource) => !hidden.has(resourceKey(resource)))
+function KindResults({ kind, lookup }: { kind: ResourceKind; lookup: KindLookup | undefined }) {
+  const results = lookup?.results ?? []
   const fallback = lookup?.fallback.length ? lookup.fallback : [DIRECTORY_211]
-  const where = lookup?.widenedMiles ? `within ${lookup.widenedMiles} mi` : "nearby"
-  const summary = lookup?.status !== "ok" ? "directory links" : results.length === 0 ? "none listed nearby" : `${results.length} ${where} · closest ${results[0].distanceMiles ?? "?"} mi`
+  const summary = lookup?.status !== "ok" ? "directory links" : results.length === 0 ? "none listed nearby" : `${results.length} nearby · closest ${results[0].distanceMiles ?? "?"} mi`
   return (
-    <details className="border rounded-lg" data-testid={`need-${kind}`} open={open || undefined}>
+    <details className="border rounded-lg" data-testid={`need-${kind}`}>
       <summary className="cursor-pointer p-3 min-h-11 flex flex-wrap items-center justify-between gap-2">
         <span className="font-medium">{SHORT_LABELS[kind]}</span>
         <span className="text-sm text-muted-foreground">{summary}</span>
@@ -112,12 +54,6 @@ function KindResults({ kind, lookup, open = false, feedback = [] }: { kind: Reso
         {RESOURCE_LABELS[kind] !== SHORT_LABELS[kind] && <p className="text-sm">{RESOURCE_LABELS[kind]}</p>}
         {lookup?.status !== "ok" && <p className="text-sm">Live listings are unavailable right now.</p>}
         {lookup?.status === "ok" && results.length === 0 && <p className="text-sm">No listings found nearby in public data. That does not mean there are none; try the directories below.</p>}
-        {lookup?.widenedMiles && results.length > 0 && <p className="text-sm">Nothing was listed within 10 miles, so this searched up to {lookup.widenedMiles} miles. Call first; a closer service may not be in public data.</p>}
-        {(lookup?.status !== "ok" || results.length === 0) && (
-          <a href="tel:211" className="inline-flex min-h-11 items-center rounded-lg border border-primary/50 px-4 font-semibold text-primary hover:bg-primary/10" data-testid={`call-211-${kind}`}>
-            Call 211 for {SHORT_LABELS[kind].toLowerCase()} near you
-          </a>
-        )}
         {results.length > 0 && <ul className="space-y-2">{results.map((resource) => <ResourceCard key={`${resource.name}-${resource.lat}-${resource.lon}`} resource={resource} />)}</ul>}
         <ul className="text-sm list-disc pl-5 space-y-1" aria-label={`Other directories for ${SHORT_LABELS[kind]}`}>
           {fallback.map((link) => <li key={link.url}><a className="inline-flex min-h-6 items-center underline text-primary" href={link.url} target="_blank" rel="noopener noreferrer">{link.title}</a></li>)}
@@ -127,202 +63,26 @@ function KindResults({ kind, lookup, open = false, feedback = [] }: { kind: Reso
   )
 }
 
-type Ai = { available: boolean; provider: string | null }
-
 export function NeedsFinder() {
-  const [needText, setNeedText] = useState("")
-  const [picked, setPicked] = useState<ResourceKind[]>([])
-  const [aiKinds, setAiKinds] = useState<ResourceKind[]>([])
-  const [ai, setAi] = useState<Ai>({ available: false, provider: null })
-  const [aiNote, setAiNote] = useState<string>()
-  const [aiBusy, setAiBusy] = useState(false)
   const [zip, setZip] = useState("")
   const [busy, setBusy] = useState(false)
   const [notice, setNotice] = useState<string>()
   const [data, setData] = useState<NeedsResponse>()
-  const [feedback, setFeedback] = useState<ResourceFeedback[]>([])
-  const [travelState, setTravelState] = useState<TravelState | null>(null)
-  const [savedPlace, setSavedPlace] = useState<Origin | null>(null)
-  const [lowData, setLowData] = useState(false)
-  const [servedFromCache, setServedFromCache] = useState(false)
-  const locationGeneration = useRef(0)
-  const searchGeneration = useRef(0)
-  const searchAbort = useRef<AbortController | null>(null)
 
-  useEffect(() => {
-    // Revocation invalidates callbacks already queued by the browser; no location
-    // is carried in the signal and consuming it never writes or rebroadcasts.
-    const revoke = () => {
-      locationGeneration.current += 1
-      searchGeneration.current += 1
-      searchAbort.current?.abort()
-      // The low data cache keys carry the ZIP or rounded coordinates, so forgetting a place clears it.
-      void clearDirectoryCache("caches" in window ? window.caches : undefined)
-      setSavedPlace(null)
-      setZip("")
-      setBusy(false)
-    }
-    const storageChanged = (event: StorageEvent) => {
-      if (event.storageArea !== browserStorage()) return
-      if (event.key === null || (event.key === SAVED_PLACE_KEY && event.newValue === null) || (event.key === REMEMBER_PLACE_KEY && event.newValue === "off")) revoke()
-    }
-    window.addEventListener(PLACE_FORGOTTEN_EVENT, revoke)
-    window.addEventListener("storage", storageChanged)
-    return () => {
-      locationGeneration.current += 1
-      searchGeneration.current += 1
-      searchAbort.current?.abort()
-      window.removeEventListener(PLACE_FORGOTTEN_EVENT, revoke)
-      window.removeEventListener("storage", storageChanged)
-    }
-  }, [])
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setFeedback(readResourceFeedback(browserStorage()))
-      setTravelState(readTravel(browserStorage()))
-      setLowData(lowDataActive())
-    }, 0)
-    const followToggle = () => setLowData(lowDataActive())
-    window.addEventListener(LOW_BANDWIDTH_CHANGED_EVENT, followToggle)
-    return () => {
-      window.clearTimeout(timer)
-      window.removeEventListener(LOW_BANDWIDTH_CHANGED_EVENT, followToggle)
-    }
-  }, [])
-
-  useEffect(() => {
-    let cancelled = false
-    // Low data mode skips this probe: it only powers the optional "Let AI read my words" hint.
-    if (lowDataActive()) return
-    fetch("/api/resources/understand", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((body: Ai) => { if (!cancelled) setAi({ available: Boolean(body.available), provider: body.provider ?? null }) })
-      .catch(() => undefined)
-    return () => { cancelled = true }
-  }, [])
-
-  // What the person said they need, put in Maslow order. Typed words are matched on this device.
-  const stated = orderByMaslow([...picked, ...matchNeeds(needText), ...aiKinds])
-  const notices = safetyNotices(needText)
-  const togglePick = (kinds: ResourceKind[]) => setPicked((current) => kinds.every((kind) => current.includes(kind)) ? current.filter((kind) => !kinds.includes(kind)) : [...current, ...kinds])
-
-  const understandWithAi = async () => {
-    setAiBusy(true)
-    setAiNote(undefined)
-    try {
-      const response = await fetch("/api/resources/understand", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: needText }) })
-      const body = (await response.json()) as { kinds?: ResourceKind[]; error?: string }
-      if (!response.ok || !body.kinds) setAiNote(body.error ?? "AI matching did not work. Pick your needs below instead.")
-      else if (body.kinds.length === 0) setAiNote("The AI did not find a matching kind of service. Pick from the list below or search everything.")
-      else { setAiKinds(orderByMaslow(body.kinds)); setAiNote(undefined) }
-    } catch {
-      setAiNote("Could not reach NarcoGuard. Pick your needs below instead.")
-    } finally {
-      setAiBusy(false)
-    }
-  }
-
-  const lookup = async (exact: Origin) => {
-    // Rounded to about 1 km on the phone, before it is saved or sent (the server rounds again).
-    let origin = roundPlace(exact)
-    const travel = readTravel(browserStorage())
-    if (travel) {
-      const active = effectiveZip(travel, new Date().toISOString())
-      if (active.inTravel && active.zip) origin = { zip: active.zip }
-    }
-    searchAbort.current?.abort()
-    const controller = new AbortController()
-    searchAbort.current = controller
-    const search = ++searchGeneration.current
+  const lookup = async (origin: Origin) => {
     setBusy(true)
     setNotice(undefined)
-    // Remembered on this phone only (coordinates rounded to about 1 km), unless the person turned that off in Angel.
-    if (readRememberChoice(browserStorage())) savePlace(browserStorage(), origin)
-    const params = new URLSearchParams("zip" in origin ? { zip: origin.zip } : { lat: String(origin.lat), lon: String(origin.lon) })
-    let refresh: Promise<void> | undefined
     try {
-      if (lowDataActive()) {
-        // Low data mode: text-only, cache-first. Ask the server to skip the fresh web search round.
-        params.set("web", "0")
-        const result = await fetchDirectory(`/api/resources/needs?${params}`, {
-          lowData: true,
-          caches: await openDirectoryCache(),
-          fetchImpl: (url) => fetch(url, { signal: controller.signal }),
-          onRefresh: ({ body }) => {
-            // A refresh for an older search must not replace the results of a newer one.
-            if (search !== searchGeneration.current) return
-            const refreshed = body as NeedsResponse
-            if (refreshed.kinds) { setData(refreshed); setServedFromCache(false) }
-          },
-        })
-        refresh = result.refresh
-        if (search !== searchGeneration.current) return
-        if (!result.ok) {
-          // Keep the per-kind fallback links the API sends with its 502.
-          const failed = result.body as NeedsResponse | null
-          if (failed?.kinds) { setServedFromCache(false); setData(failed); return }
-          setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
-          return
-        }
-        const body = result.body as NeedsResponse
-        setServedFromCache(result.servedFromCache)
-        setData(body.kinds ? body : { status: "unavailable", kinds: {} })
-        return
-      }
-      const response = await fetch(`/api/resources/needs?${params}`, { cache: "no-store", signal: controller.signal })
+      const params = new URLSearchParams("zip" in origin ? { zip: origin.zip } : { lat: String(origin.lat), lon: String(origin.lon) })
+      const response = await fetch(`/api/resources/needs?${params}`, { cache: "no-store" })
       const body = (await response.json()) as NeedsResponse
-      if (search !== searchGeneration.current) return
-      setServedFromCache(false)
       setData(body.kinds ? body : { status: "unavailable", kinds: {} })
-    } catch (error) {
-      if (search === searchGeneration.current && !(error instanceof DOMException && error.name === "AbortError")) {
-        setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
-      }
+    } catch {
+      setData({ status: "unavailable", message: "Could not reach the directories. Check your connection.", kinds: {} })
     } finally {
-      if (search === searchGeneration.current) setBusy(false)
-      // A cache hit returns before its refresh. Keep this controller until that refresh
-      // settles so forget, unmount, and a newer search can still abort it.
-      if (!refresh && searchAbort.current === controller) searchAbort.current = null
-      void refresh?.finally(() => {
-        if (searchAbort.current === controller) searchAbort.current = null
-      })
+      setBusy(false)
     }
   }
-
-  // A place remembered on this phone searches straight away, so help shows without asking again.
-  useEffect(() => {
-    const saved = readRememberChoice(browserStorage()) ? readSavedPlace(browserStorage()) : null
-    if (!saved) return
-    /* eslint-disable react-hooks/set-state-in-effect -- one-time restore from device storage */
-    setSavedPlace(saved)
-    // Restore must not clobber a ZIP the person already typed while the page was hydrating.
-    if ("zip" in saved) setZip((current) => (/^\d{5}$/.test(current) ? current : saved.zip))
-    /* eslint-enable react-hooks/set-state-in-effect */
-    void lookup(saved)
-  }, [])
-  const forgetSavedPlace = () => { forgetPlace(browserStorage()); deactivateTravel(browserStorage()); setTravelState(null); setSavedPlace(null); setZip("") }
-  const startTravel = () => {
-    if (!/^\d{5}$/.test(zip) || !savedPlace || !("zip" in savedPlace) || savedPlace.zip === zip) {
-      setNotice("Save a different five-digit home ZIP first, then enter the destination ZIP.")
-      return
-    }
-    const result = activateTravel(browserStorage(), { destinationZip: zip, homeZip: savedPlace.zip })
-    if (!result.ok) { setNotice(result.error); return }
-    setTravelState(result.state)
-    setNotice(`Travel mode is on for ${result.state.destinationZip} until it expires automatically.`)
-    void lookup({ zip: result.state.destinationZip })
-  }
-  const stopTravel = () => { deactivateTravel(browserStorage()); setTravelState(null); setZip(savedPlace && "zip" in savedPlace ? savedPlace.zip : ""); setNotice("Travel mode is off. Searches use your normal saved place again.") }
-  const toggleLowData = () => {
-    const next = !lowData
-    saveLowBandwidthChoice(browserStorage(), next)
-    setLowData(next)
-    setNotice(next
-      ? "Low data mode is on: listings stay text-only, searches use your on-device cache first, and fresh web leads are skipped."
-      : "Low data mode is off. Searches always ask the directories first.")
-  }
-  const activeTravel = travelBanner(travelState, new Date().toISOString())
 
   const findNearMe = () => {
     if (!("geolocation" in navigator)) {
@@ -331,14 +91,9 @@ export function NeedsFinder() {
     }
     setBusy(true)
     setNotice(undefined)
-    const generation = ++locationGeneration.current
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        if (generation !== locationGeneration.current) return
-        void lookup({ lat: position.coords.latitude, lon: position.coords.longitude })
-      },
+      (position) => void lookup({ lat: position.coords.latitude, lon: position.coords.longitude }),
       () => {
-        if (generation !== locationGeneration.current) return
         setBusy(false)
         setNotice("Location permission was not given. Enter a ZIP code instead.")
       },
@@ -350,39 +105,10 @@ export function NeedsFinder() {
     <section className="space-y-4" aria-labelledby="needs-heading" data-testid="needs-finder">
       <div className="space-y-1">
         <h2 id="needs-heading" className="text-xl font-semibold">Find help near me</h2>
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm"><Link href="/meetings" className="inline-flex min-h-8 items-center underline text-primary">Find recovery meetings</Link><Link href="/resources/review" className="inline-flex min-h-8 items-center underline text-primary">Resource corrections and review</Link></div>
         <p className="text-sm text-muted-foreground">
           One search covers every level of need, from food, water and shelter to health care, recovery, libraries and job help. Start wherever you need to.
         </p>
       </div>
-      <div className="space-y-2 rounded-lg border p-3" data-testid="need-input">
-        <label htmlFor="need-text" className="font-medium">What do you need right now? <span className="font-normal text-muted-foreground">(optional)</span></label>
-        <textarea id="need-text" rows={2} maxLength={500} className="w-full bg-background border rounded p-2" placeholder="For example: I'm hungry and need somewhere to sleep tonight" value={needText} onChange={(event) => { setNeedText(event.target.value); setAiKinds([]) }} />
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Or tap what you need">
-          {QUICK_NEEDS.map((need) => {
-            const on = need.kinds.every((kind) => picked.includes(kind))
-            return <Button key={need.label} type="button" size="sm" variant={on ? "default" : "outline"} aria-pressed={on} onClick={() => togglePick(need.kinds)}>{need.label}</Button>
-          })}
-        </div>
-        {notices.map((notice) => <p key={notice} className="rounded border border-destructive bg-destructive/10 p-2 text-sm font-semibold" role="alert">{notice}</p>)}
-        {stated.length > 0 ? (
-          <p className="text-sm" data-testid="stated-needs">Shown first, basic needs at the top: {stated.map((kind) => SHORT_LABELS[kind]).join(" · ")}</p>
-        ) : needText.trim() ? (
-          <p className="text-sm text-muted-foreground">No need recognized from those words yet. Tap one above, or search and see everything.</p>
-        ) : null}
-        {ai.available && needText.trim() && (
-          <div className="space-y-1">
-            <Button type="button" size="sm" variant="ghost" onClick={understandWithAi} disabled={aiBusy}><Sparkles className="mr-2 h-4 w-4" aria-hidden="true" />{aiBusy ? "Reading…" : "Let AI read my words"}</Button>
-            <p className="text-xs text-muted-foreground">Only if you tap: your words are sent to {ai.provider === "OpenRouter" ? "OpenRouter (no-retention providers only)" : ai.provider === "Kimi" ? "Kimi, from Moonshot AI, a company based in China (NarcoGuard has not confirmed whether it keeps or trains on them; if Kimi is unavailable they go to Vercel AI Gateway instead)" : ai.provider ?? "an AI provider"} for this one match, and NarcoGuard does not save them. Matching on this device already works without it.</p>
-          </div>
-        )}
-        {aiNote && <p className="text-sm" role="status">{aiNote}</p>}
-      </div>
-      {activeTravel && (
-        <div className="rounded-lg border p-3 text-sm" data-testid="travel-banner">
-          Travel mode: searching ZIP <strong>{activeTravel.destinationZip}</strong> for about {activeTravel.remainingMinutes} more minutes. <button type="button" className="underline text-primary" onClick={stopTravel}>Turn off</button>
-        </div>
-      )}
       <div className="flex flex-col sm:flex-row gap-2">
         <Button type="button" onClick={findNearMe} disabled={busy}><LocateFixed className="mr-2 h-4 w-4" aria-hidden="true" />Find everything near me</Button>
         <form
@@ -399,81 +125,23 @@ export function NeedsFinder() {
           <input aria-label="ZIP code" inputMode="numeric" maxLength={5} className="bg-background border rounded p-2 w-28" placeholder="ZIP code" value={zip} onChange={(event) => setZip(event.target.value.replace(/\D/g, ""))} />
           <Button type="submit" variant="outline" disabled={busy}>Search</Button>
         </form>
-        {savedPlace && "zip" in savedPlace && /^\d{5}$/.test(zip) && zip !== savedPlace.zip && !activeTravel && (
-          <Button type="button" variant="outline" disabled={busy} onClick={startTravel}>Use this ZIP for travel (24h)</Button>
-        )}
       </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" variant="outline" size="sm" aria-pressed={lowData} onClick={toggleLowData} data-testid="low-data-toggle">
-          Low data mode: {lowData ? "on" : "off"}
-        </Button>
-        {lowData && <p className="text-xs text-muted-foreground">Listings stay text-only, searches use this phone's cache first, and fresh web leads are skipped.</p>}
-      </div>
-      <p className="text-xs text-muted-foreground" data-testid="place-privacy">
-        Your location is rounded to about a kilometer and used only to search public directories. It is never stored on our
-        servers. ZIP searches may also send generic resource categories + the ZIP to Brave Search when fresh web discovery is enabled;
-        your typed need description and GPS coordinates are not sent to Brave. So you only enter it once, this phone remembers it until
-        you tap Forget (turn this off in Angel).
-        {savedPlace && <> <button type="button" className="inline-flex min-h-6 items-center underline text-primary" onClick={forgetSavedPlace} data-testid="forget-saved-place">Forget where I am</button></>}
+      <p className="text-xs text-muted-foreground">
+        Your location is used only for this search, rounded to about a kilometer, and is not saved.
       </p>
       {notice && <p className="text-sm" role="status">{notice}</p>}
       {busy && <p className="text-sm text-muted-foreground" role="status">Searching every need…</p>}
       {data && !busy && (
         <div className="space-y-5" aria-live="polite">
           {data.message && <p className="text-sm">{data.message}</p>}
-          {servedFromCache && (
-            <p className="text-sm" data-testid="cached-results-note">
-              Low data mode: showing your cached search{data.fetchedAt ? ` from ${new Date(data.fetchedAt).toLocaleTimeString()}` : ""}. It may be out of date — call first. Search again when online for fresh listings.
-            </p>
-          )}
-          {data.web?.status === "ok" && data.web.results.length > 0 && (
-            <section className="space-y-2 rounded-lg border border-cyan-400/30 bg-cyan-400/5 p-3" aria-labelledby="fresh-web-leads" data-testid="fresh-web-leads">
-              <div>
-                <h3 id="fresh-web-leads" className="font-semibold">Fresh web leads</h3>
-                <p className="text-xs text-muted-foreground">
-                  Found live through Brave Search{data.web.results.some((item) => item.rankedBy === "Groq") ? " and categorized by Groq" : ""}. These are web leads, not verified availability. Check the provider page or call before traveling.
-                </p>
-              </div>
-              {data.web.message && <p className="text-xs text-muted-foreground">{data.web.message}</p>}
-              <ul className="space-y-2">
-                {data.web.results.map((item) => (
-                  <li key={item.url} className="rounded-lg border p-3">
-                    <p className="font-medium">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">{SHORT_LABELS[item.kind]} · Source: {item.source}</p>
-                    {item.description && <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>}
-                    <a className="mt-2 inline-flex min-h-8 items-center underline text-primary" href={item.url} target="_blank" rel="noopener noreferrer">Open provider/search result</a>
-                  </li>
-                ))}
-              </ul>
-              {data.web.fetchedAt && <p className="text-xs text-muted-foreground">Web search checked at {new Date(data.web.fetchedAt).toLocaleTimeString()}.</p>}
-            </section>
-          )}
-          {data.web?.status === "skipped" && lowData && <p className="text-sm text-muted-foreground">Fresh web leads are off in low data mode.</p>}
-          {data.status === "unavailable" && (
-            <a href="tel:211" className="inline-flex min-h-11 items-center rounded-lg border border-primary/50 px-4 font-semibold text-primary hover:bg-primary/10" data-testid="call-211-unavailable">
-              Call 211 to find help near you
-            </a>
-          )}
-          {stated.length > 0 && (
-            <section className="space-y-2 rounded-lg border-2 border-primary/60 p-3" aria-labelledby="level-yours" data-testid="your-needs">
-              <h3 id="level-yours" className="font-semibold">Your needs first</h3>
+          {NEED_LEVELS.map((level) => (
+            <section key={level.id} className="space-y-2" aria-labelledby={`level-${level.id}`}>
+              <h3 id={`level-${level.id}`} className="font-semibold">{level.title}</h3>
               <div className="space-y-2">
-                {stated.map((kind) => <KindResults key={kind} kind={kind} lookup={data.kinds[kind]} open feedback={feedback} />)}
+                {level.kinds.map((kind) => <KindResults key={kind} kind={kind} lookup={data.kinds[kind]} />)}
               </div>
             </section>
-          )}
-          {NEED_LEVELS.map((level) => {
-            const rest = (level.kinds as readonly ResourceKind[]).filter((kind) => !stated.includes(kind))
-            if (rest.length === 0) return null
-            return (
-              <section key={level.id} className="space-y-2" aria-labelledby={`level-${level.id}`}>
-                <h3 id={`level-${level.id}`} className="font-semibold">{level.title}</h3>
-                <div className="space-y-2">
-                  {rest.map((kind) => <KindResults key={kind} kind={kind} lookup={data.kinds[kind]} feedback={feedback} />)}
-                </div>
-              </section>
-            )
-          })}
+          ))}
           {data.fetchedAt && <p className="text-xs text-muted-foreground">Searched at {new Date(data.fetchedAt).toLocaleTimeString()}. Listings come from public directories and may be incomplete.</p>}
         </div>
       )}

@@ -1,9 +1,5 @@
 # NarcoGuard wearable concept: BOM and validation notes
 
-Copyright (c) 2026 Stephen Blanford / NarcoGuard. All rights reserved. Not licensed under MIT.
-
-Orderable part numbers and manufacturing files are not in this public repository.
-
 This document describes the current engineering concept. It is not a manufacturing drawing, medical-device specification, or evidence that the hardware can safely administer medication.
 
 ## 2026-10-05 modernization (watch-only design)
@@ -18,23 +14,6 @@ The candidate BOM on `/watch` was reviewed against current, buyable parts:
 - **Claims removed:** "Same class as Apple Watch", Apple Pay, "Patent-Pending", HIPAA compliance, fixed accuracy figures (±1 BPM, ±2 % SpO2, ±0.1 °C), fixed weight, 2000-nit brightness and <3 s deployment. These remain targets to measure.
 
 Known limitation: published overdose-detection research mainly uses chest-worn respiration sensing ([PneumoWave protocol](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC11422748/), [closed-loop injector](https://pmc.ncbi.nlm.nih.gov/articles/PMC11920833/)). Wrist-only detection of opioid-induced respiratory depression is unproven and is the largest technical risk of the watch-only design.
-
-## NG 40 mm (women's fit)
-
-`/watch` now has a size switch. The NG 40 mm is the women's fit: a smaller case for smaller wrists that anyone can wear. It keeps the same processor, safety MCU, sensors, radios, owner lock and safety functions (SOS, emergency call, overdose steps, alarm) as the 46 mm. Only the parts that a smaller case forces have changed:
-
-| Item | NG 46 mm | NG 40 mm | Why |
-| --- | --- | --- | --- |
-| Case | 46 × 13.8 mm Ti-6Al-4V | 40 × 12.2 mm Ti-6Al-4V | Smaller wrists; the size class of 40–41 mm smartwatches |
-| Display | 1.4–1.5 in LTPO AMOLED (Ø36.8 panel) | 1.2 in round AMOLED, about 396×396 (Ø30.5 panel) | Fits inside a Ø34.2 mm board area |
-| Battery | Cell sized to the clearance stack. The old 500 mAh figure is not a quoted cell. | Smaller cell. The old 300 mAh figure is not a quoted cell. | Runtime must be measured. A sensor-only hour count is not the system budget. |
-| Connectivity stack | 16×14 mm budget | 12×12 mm compact RF module target | The 46 mm footprint does not fit beside the SoC; needs vendor confirmation or a double-sided board |
-| Qi coil | Sealed receive coil | Smaller sealed receive coil | Smaller case back |
-| Crystal / case back | 46 mm sapphire, zirconia back | About 36 mm, 0.8 mm sapphire; smaller zirconia back | Smaller case; drop testing required |
-| Band | 22 mm titanium solar link bracelet; men's finishes silver or natural titanium | 20 mm titanium solar link bracelet; women's finish rose gold titanium | Premium metal band with integrated solar cells; fits smaller wrists on the 40 mm |
-| Medication pod | 18×12×10 mm research module | Unchanged | Dose volume does not shrink; needle length would be set for body size by clinicians, not by sex |
-
-The public concept total moves when a line is removed. It is not a quote. The drawing and the side-by-side render are concepts. Manufacturing files are proprietary and are not in this repository.
 
 ## Modular bill of materials
 
@@ -73,7 +52,7 @@ These are feasibility calculations, not CAD evidence. The core remains condition
 
 ## Water-resistance requirement
 
-Water resistance is a required design constraint, not a current product claim. The target is IEC 60529 IP68 as continuous immersion at 1.5 m for 30 minutes, the depth stated for this design, together with water-resistant-watch qualification under [ISO 22810:2010](https://www.iso.org/standard/45334.html). The standards define the test methods. A drawing is not a certificate. No watch has been tested.
+Water resistance is a required design constraint, not a current product claim. The target is an IP68 enclosure qualification under [IEC 60529](https://webstore.iec.ch/en/publication/2453) together with water-resistant-watch qualification under [ISO 22810:2010](https://www.iso.org/standard/45334.html). The applicable standards define the test methods and marking requirements; a rendered blueprint or gasket specification cannot substitute for those tests.
 
 The enclosure concept must use a continuous case-back seal, controlled crystal and crown interfaces, sealed service connectors, a sealed charging strategy, protected sensor windows, and a cartridge bay that cannot compromise the pressure boundary. The medication module must be mechanically locked out during water exposure and must not be represented as safe to deploy underwater.
 
@@ -89,9 +68,9 @@ Current status: unverified. The repository has no physical enclosure, CAD interf
 
 ## Current diagrams
 
-The public concept page includes these illustrative assets: `ng-rev5-hero-titanium.jpg`, `ng-rev5-exploded-titanium.jpg`, `ng-titanium-3d.png`, and `ng-blueprint.jpg`. They communicate intended appearance and modular boundaries only; dimensions, tolerances, fastener specifications, material selection and actuator safety margins still require CAD and prototype verification.
+The public concept page includes these illustrative assets: `ng-blueprint.jpg`, `ng-blueprint-detailed.jpg`, `ng-exploded-view.jpg`, and `ng-modular-exploded.jpg`. They communicate intended placement and modular boundaries only; dimensions, tolerances, fastener specifications, material selection and actuator safety margins still require CAD and prototype verification.
 
-Swappable battery concept (not validated): [NG-REV5-SWAPPABLE-BATTERY.md](NG-REV5-SWAPPABLE-BATTERY.md).
+**These renders predate this revision and contradict it.** `ng-modular-exploded.jpg` and `ng-exploded-view.jpg` still label a solar cell, a thermoelectric generator, a micro-dosing motor and a filled naloxone cartridge; `ng-blueprint-detailed.jpg` carries a "NG2 PRO REV 4.2" title and a dosed cartridge callout that appear nowhere in this document or in the parts list on `/watch`. Every page that shows them now states this in view as well as in alt text. Replacing them needs new artwork generated from the current watch-only design; until then they must never be presented as the current configuration or as engineering evidence.
 
 ## Simulation status
 
@@ -107,7 +86,7 @@ These links are manufacturer or standards-body sources used to bound the candida
 - [Qualcomm Snapdragon X35 product brief](https://docs.qualcomm.com/doc/87-27160-1/87-27160-1_REV_A_Snapdragon_X35_5G_Modem-RF_System_Product_Brief.pdf) — 5G RedCap modem capabilities.
 - [Analog Devices MAX86178](https://www.analog.com/en/products/max86178.html) — PPG, ECG, and BioZ AFE capabilities.
 - [Texas Instruments BQ25619](https://www.ti.com/product/BQ25619) — single-cell, single-input charger/power-path constraints.
-- [Texas Instruments Qi receiver family](https://www.ti.com/product/BQ51013B) — receiver constraints. The exact order code stays in the private hardware package.
+- [Texas Instruments BQ51013B](https://www.ti.com/lit/ds/symlink/bq51013b.pdf) — Qi receiver constraints.
 - [Nordic nRF5340 product specification](https://docs.nordicsemi.com/r/bundle/ps_nrf5340/page/keyfeatures_html5.html) — MCU supply, package, and operating limits.
 - [Bosch BMP390](https://www.bosch-sensortec.com/en/products/environmental-sensors/pressure-sensors/pressure-sensors-bmp390.html), [ST LSM6DSO32X](https://www.st.com/en/mems-and-sensors/lsm6dso32x.html), and [Melexis MLX90632](https://www.melexis.com/en/product/MLX90632/Miniature-SMD-Infrared-Thermometer-IC) — candidate environmental, motion, and temperature-sensor limits.
 

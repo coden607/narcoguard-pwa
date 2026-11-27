@@ -74,9 +74,3 @@ export function markGraded(id: string, now = Date.now()) {
   graded.set(id, now + ATTEMPT_TTL_MS)
   return true
 }
-
-
-/** Enrollment requires an explicit readiness attestation; this is self-attested, not independently verified. */
-export function acceptsHeroNaloxoneAttestation(value: unknown) {
-  return value === true
-}

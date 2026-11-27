@@ -1,6 +1,7 @@
 import { strict as assert } from "node:assert"
+import { readFileSync, readdirSync } from "node:fs"
 import { test } from "node:test"
-import { ATTEMPT_TTL_MS, attemptLabeler, issueAttempt, issueCertificate, markGraded, verify, verifyCertificate } from "../lib/hero-certification"
+import { ATTEMPT_TTL_MS, attemptLabeler, heroSecret, issueAttempt, issueCertificate, markGraded, verify, verifyCertificate } from "../lib/hero-certification"
 import { HERO_BANK, QUESTIONS_PER_ATTEMPT, drawQuestions, gradeAttempt } from "../lib/hero-test-bank"
 
 const SECRET = "x".repeat(40)
@@ -87,4 +88,62 @@ test("certified attempts hide which option is correct behind per-attempt opaque 
   assert.equal(gradeAttempt(ids, perfect, labelA)?.passed, true)
   assert.equal(gradeAttempt(ids, Object.fromEntries(ids.map((id) => [id, key[id]])), labelA)?.passed, false, "plain ids do not pass a certified attempt")
   assert.equal(gradeAttempt(ids, perfect, labelB)?.passed, false, "answers from another attempt do not carry over")
+})
+
+// --- Task 1: certification and enrollment status must be truthful -------------
+// These assertions guard claims the UI makes about training, certificates and
+// enrollment. They read component source because this suite has no DOM harness;
+// the Playwright cases in tests/pwa.spec.ts cover the rendered behaviour.
+
+const sourceOf = (path: string) => readFileSync(new URL(`../${path}`, import.meta.url), "utf8")
+
+test("no component treats simulated module clicks as completed training", () => {
+  const components = readdirSync(new URL("../components/hero", import.meta.url))
+  for (const file of components) {
+    const source = sourceOf(`components/hero/${file}`)
+    assert.ok(
+      !/setTrainingProgress|completedModules/.test(source),
+      `${file} drives training progress from clicks, which claims training the app did not deliver`,
+    )
+    assert.ok(
+      !/certified Hero/i.test(source) || !/trainingProgress/.test(source),
+      `${file} promises certification from simulated progress`,
+    )
+  }
+})
+
+test("a practice-mode pass never claims a certificate", () => {
+  const source = sourceOf("components/hero/certification-test.tsx")
+  // The certificate claim must be conditioned on an actual issued certificate.
+  assert.match(source, /phase\.result\.certificate \?/)
+  assert.match(source, /Practice mode: certificates are not being issued yet\./)
+  // "valid for one year" may only appear on the branch that has a certificate.
+  const [withoutCertificate] = source.split("phase.result.certificate ?").slice(-1)
+  const practiceBranch = withoutCertificate.split(":")[1] ?? ""
+  assert.ok(!/valid for one year/i.test(practiceBranch), "practice branch claims a real certificate")
+})
+
+test("a missing signing secret issues no certificate, so the test is practice only", () => {
+  const saved = process.env.HERO_CERT_SECRET
+  try {
+    delete process.env.HERO_CERT_SECRET
+    assert.equal(heroSecret(), null)
+    process.env.HERO_CERT_SECRET = "too-short"
+    assert.equal(heroSecret(), null, "a weak secret must not be accepted as configured")
+    process.env.HERO_CERT_SECRET = SECRET
+    assert.equal(heroSecret(), SECRET)
+  } finally {
+    if (saved === undefined) delete process.env.HERO_CERT_SECRET
+    else process.env.HERO_CERT_SECRET = saved
+  }
+})
+
+test("enrollment being off explains which prerequisite is missing", () => {
+  const source = sourceOf("app/hero-signup/page.tsx")
+  // The page already knows both facts from /api/heroes; it must use them to say
+  // why enrollment is unavailable instead of one generic sentence.
+  assert.match(source, /status\.certification/,
+    "the page must distinguish a missing certificate signing key from missing account storage")
+  assert.match(source, /certificates are not being issued/i,
+    "say plainly that no certificate can be issued when the signing key is absent")
 })

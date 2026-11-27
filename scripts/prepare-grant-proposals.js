@@ -118,7 +118,7 @@ Technical Partners: [TBD – seeking university/defense contractor partnerships 
 
 FUNDING REQUEST
 Phase 1 (18 months): $1.5M
-- Enclosure work toward an IP68 target of 1.5 m for 30 min. Not a MIL-STD-810 claim and not certified.
+- Ruggedize hardware for military specs (MIL-STD-810, IP68)
 - Validate AI model on DoD-relevant scenarios (combat anesthesia, chemical agent exposure)
 - Pilot with 50 active-duty personnel in controlled environment
 

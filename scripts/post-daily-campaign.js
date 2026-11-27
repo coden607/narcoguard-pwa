@@ -1,3 +1,4 @@
+const axios = require("axios")
 const fs = require("fs")
 const path = require("path")
 
@@ -144,7 +145,7 @@ const platformRules = {
 }
 
 function zonedDateParts(date = new Date()) {
-  const timeZone = config.social?.timezone || "UTC"
+  const timeZone = config.social.timezone || "UTC"
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone,
     year: "numeric",
@@ -187,7 +188,7 @@ function trimText(text, maxLength) {
 }
 
 function pickHashtags(theme, count) {
-  const merged = [...theme.hashtags, ...(config.social?.hashtags?.primary || []), ...(config.social?.hashtags?.secondary || [])]
+  const merged = [...theme.hashtags, ...config.social.hashtags.primary, ...config.social.hashtags.secondary]
   const unique = Array.from(new Set(merged.map((tag) => tag.replace(/^#/, ""))))
   return unique.slice(0, count).map((tag) => `#${tag}`).join(" ")
 }
@@ -362,13 +363,10 @@ function shouldPublishToday(platform, date) {
 async function pushToRelay(relayUrl, payload) {
   if (!relayUrl) return { status: "skipped" }
   if (process.env.ALLOW_MARKETING_PUBLISH !== "true") return { status: "approval-required" }
-  const response = await fetch(relayUrl, {
-    method: "POST",
+  await axios.post(relayUrl, payload, {
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(15000),
+    timeout: 15000,
   })
-  if (!response.ok) throw new Error(`Marketing relay responded ${response.status}`)
   return { status: "sent", relayUrl }
 }
 

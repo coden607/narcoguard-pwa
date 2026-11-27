@@ -1,6 +1,5 @@
 "use client"
 
-import { IDEA_ORIGINATOR, ORIGIN_CREDIT } from "@/lib/credits"
 import { useState } from "react"
 import { MotionConfig, motion } from "framer-motion"
 import { Heart, Mail, Share2, Copy, Check, Watch, Shield, Zap, Phone, MapPin, ArrowRight } from "lucide-react"
@@ -9,12 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
 import Image from "next/image"
 import { DonateForm } from "@/components/fund/donate-form"
-import { HoloWatchShowcase } from "@/components/effects/holo-watch-showcase"
 
 export default function FundPage() {
   const [copied, setCopied] = useState(false)
 
-  const GOFUNDME_URL = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches"
+  const GOFUNDME_URL = "https://gofund.me/9acf270ea"
   const CONTACT_EMAIL = "narcoguard607@gmail.com"
 
   const copyLink = async () => {
@@ -48,13 +46,13 @@ export default function FundPage() {
     { amount: 25, description: "Sensor evaluation", impact: "Supports benchtop testing of candidate sensors" },
     { amount: 50, description: "Prototype materials", impact: "Contributes to non-clinical prototype fabrication" },
     { amount: 100, description: "Engineering support", impact: "Helps fund design review and test fixtures" },
-    { amount: 250, description: "Prototype engineering", impact: "Contributes to PCB, enclosure, fixture, or bench-validation work", highlight: true },
+    { amount: 307, description: "Prototype milestone", impact: "Supports one estimated hardware build allocation", highlight: true },
     { amount: 500, description: "Validation support", impact: "Contributes to documented testing and expert review" },
   ]
 
   const stats = [
-    { value: "$75K", label: "Rev 5 planning goal" },
-    { value: "Rev 5", label: "Current engineering program" },
+    { value: "80", label: "Long-term prototype goal" },
+    { value: "$325", label: "Component estimate (BOM)" },
     { value: "Public", label: "Development status" },
     { value: "Concept", label: "Not a medical device" },
   ]
@@ -68,26 +66,16 @@ export default function FundPage() {
         <div className="absolute inset-0 bg-linear-to-b from-primary/20 to-background" />
         <div className="relative z-10 max-w-6xl mx-auto">
           {/* Campaign Hero Image */}
-          <figure className="mb-8" data-testid="watch-showcase">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="md:col-span-2">
-                <HoloWatchShowcase
-                  title="See-through NG concept"
-                  imageSrc="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
-                  priority
-                  titleAs="p"
-                />
-              </div>
-              <div className="rounded-2xl border border-primary/30 p-5 md:col-span-2">
-                <p className="text-sm font-semibold text-primary">Current public engineering package: Rev 5</p>
-                <p className="mt-2 text-sm text-muted-foreground">The images show the approved concept renders: a premium solid metal titanium link bracelet with solar cells integrated into the band. Men's finishes are silver or natural titanium; the women's finish is rose gold titanium. These are design visuals, not photographs of a built watch; manufacturing CAD and internal fit remain unverified.</p>
-              </div>
-            </div>
-            <figcaption className="mt-2 text-center text-sm text-muted-foreground">
-              Rev 5 concept engineering blueprints for the NarcoGuard NG46 and NG40 smaller-wrist refined fit. These are current research drawings, not finished-product photos. See{" "}
-              <Link href="/watch" className="text-primary underline underline-offset-4">the NG watch blueprint page</Link>. It is not a finished product and none has shipped.
-            </figcaption>
-          </figure>
+          <div className="rounded-2xl overflow-hidden mb-8 border border-primary/30">
+            <Image
+              src="/images/gofundme-hero.jpg"
+              alt="NarcoGuard wearable concept and community-support campaign"
+              width={1200}
+              height={600}
+              priority
+              className="w-full h-64 md:h-96 object-cover"
+            />
+          </div>
 
           <div className="text-center">
             <motion.div
@@ -144,44 +132,6 @@ export default function FundPage() {
         </div>
       </section>
 
-      {/* Auto-injection research: what the funding is for */}
-      <section className="py-16 px-4" aria-labelledby="auto-injection" data-testid="auto-injection-funding">
-        <div className="max-w-4xl mx-auto space-y-6">
-          <h2 id="auto-injection" className="text-3xl font-bold text-center">Why we are raising money for auto-injection research</h2>
-          <p className="text-lg text-muted-foreground">
-            Naloxone can reverse an opioid overdose, but only if someone is there to give it. Many people use alone, and an
-            overdose can leave them unable to help themselves. The idea behind the NG watch is to research whether a wearable could
-            one day recognize signs consistent with an opioid overdose, warn the wearer, and, if they do not respond, deliver a
-            dose of naloxone automatically while help is called.
-          </p>
-          <p className="rounded-xl border border-primary/30 bg-primary/5 p-4 text-muted-foreground" data-testid="idea-credit">
-            <strong className="text-foreground">Where the idea came from.</strong> {ORIGIN_CREDIT}
-          </p>
-          <p className="text-muted-foreground">
-            None of that exists yet. The NG watch is a concept: it does not detect overdoses, it does not deliver naloxone, and it\n            must not be relied on. Rev 5 treats any future auto-injector as a separate removable research module so the base watch remains independent of drug delivery. Turning the idea into something safe takes work that costs money:
-          </p>
-          <ol className="grid gap-4 md:grid-cols-2">
-            {[
-              { title: "1. Sensing research", body: "Bench prototypes to test which signals, such as breathing, heart rate and blood oxygen, can be measured reliably on a wrist, and where they fail." },
-              { title: "2. Delivery engineering", body: "Researching a separate removable auto-injector pod with isolation, interlocks, a controlled service/cartridge boundary, and human-factors safeguards. Dose, cartridge, delivery mechanism, and activation logic are not finalized." },
-              { title: "3. Independent review", body: "Safety, clinical and human-factors review by experts, and testing with people who use drugs and recovery communities before anyone wears it." },
-              { title: "4. FDA pathway", body: "A device that delivers a drug is regulated by the FDA as a combination product. It needs FDA review and marketing authorization before it can be offered to anyone; the exact pathway (for example NDA, PMA, De Novo or 510(k)) is still to be determined." },
-            ].map((step) => (
-              <li key={step.title} className="rounded-xl border border-primary/20 bg-card/50 p-5">
-                <h3 className="font-semibold mb-2">{step.title}</h3>
-                <p className="text-sm text-muted-foreground">{step.body}</p>
-              </li>
-            ))}
-          </ol>
-          <p className="text-muted-foreground">
-            Meanwhile the NarcoGuard app is free and works today: it finds food, shelter, treatment and other help near you, guides
-            overdose response, and helps you plan your own goals. See the{" "}
-            <Link className="text-primary underline underline-offset-4" href="/watch">watch parts list and drawings</Link> and{" "}
-            <a className="text-primary underline underline-offset-4" href="https://www.fda.gov/combination-products/about-combination-products" target="_blank" rel="noreferrer">how the FDA regulates combination products</a>.
-          </p>
-        </div>
-      </section>
-
       {/* The Story */}
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
@@ -192,14 +142,14 @@ export default function FundPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
               <div className="rounded-xl overflow-hidden border border-primary/20">
                 <Image
-                  src="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
-                  alt="Concept render of the NarcoGuard NG46 and NG40 on titanium solar link bracelets"
-                  width={1280}
-                  height={720}
-                  className="w-full h-56 object-contain bg-background"
+                  src="/images/watch-on-wrist-lifestyle.jpg"
+                  alt="Illustration of the proposed NarcoGuard NG wearable concept"
+                  width={800}
+                  height={448}
+                  className="w-full h-56 object-cover"
                 />
                 <div className="p-3 bg-card">
-                  <p className="text-sm text-muted-foreground">Concept render of the proposed NarcoGuard NG on a titanium solar link bracelet</p>
+                  <p className="text-sm text-muted-foreground">A visualization of the proposed NarcoGuard NG concept</p>
                 </div>
               </div>
               <div className="rounded-xl overflow-hidden border border-primary/20">
@@ -229,11 +179,6 @@ export default function FundPage() {
                   </p>
 
                   <p className="mb-6">
-                    Then {IDEA_ORIGINATOR.name}, now NarcoGuard&apos;s {IDEA_ORIGINATOR.role}, told me her idea: a wearable that could
-                    give naloxone automatically when no one else is there. Everything in NarcoGuard grew from that idea.
-                  </p>
-
-                  <p className="mb-6">
                     <strong>So I started NarcoGuard.</strong> It is an early wearable and response-system concept that
                     explores whether sensing, alerts, and future delivery mechanisms could help people reach timely
                     support. Those capabilities require substantial engineering, clinical, and regulatory validation.
@@ -241,7 +186,7 @@ export default function FundPage() {
 
                   <p className="mb-6">
                     I am raising funds for responsible prototype development, documented testing, and expert and
-                    community review, without promising a fixed number of watches before supplier quotes, PCB routing, physical prototypes, and validation are complete.
+                    community review, with a long-term goal of evaluating up to <strong>80 prototype units</strong>.
                   </p>
 
                   <p className="text-primary font-semibold">
@@ -310,23 +255,30 @@ export default function FundPage() {
           <div className="grid md:grid-cols-2 gap-6 mb-12">
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng-rev5-hero-titanium.jpg?rev=titanium-solar-2026-11-18"
-                alt="Concept render of NarcoGuard NG46 natural titanium and NG40 rose gold titanium with solar-inlay link bracelets"
-                width={1280}
-                height={720}
-                className="w-full h-64 object-contain bg-background"
+                src="/images/ng-watch-hero.jpg"
+                alt="Rendering of the proposed NarcoGuard NG wearable"
+                width={800}
+                height={512}
+                className="w-full h-64 object-cover"
               />
             </div>
             <div className="rounded-xl overflow-hidden border border-primary/20">
               <Image
-                src="/images/ng-rev5-exploded-titanium.jpg?rev=titanium-solar-2026-11-18"
-                alt="Concept render: labeled exploded view with titanium solar link band and silver, titanium, and rose gold titanium finish swatches"
-                width={720}
-                height={1280}
-                className="w-full h-64 object-contain bg-background"
+                src="/images/ng-exploded-view.jpg"
+                alt="Earlier concept render of the NG watch. It shows components, including a filled naloxone cartridge, that are not in the current design."
+                width={800}
+                height={512}
+                className="w-full h-64 object-cover"
               />
             </div>
           </div>
+
+          {/* Donors must not read a render as evidence of working hardware. */}
+          <p className="mb-12 -mt-6 text-sm text-muted-foreground" role="note">
+            Illustrative renders only. No NG hardware has been built, and the images predate the 2026-10-05 design review,
+            so they still show parts that were removed, including a filled naloxone cartridge. Medication delivery is a
+            future research module subject to clinical and FDA review.
+          </p>
 
           <div className="grid md:grid-cols-4 gap-8">
             {[

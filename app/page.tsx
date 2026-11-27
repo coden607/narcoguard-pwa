@@ -1,13 +1,10 @@
 "use client"
 
-import { FUNDING_GOAL, formatUsd } from "@/lib/funding-goal"
 import { useState } from "react"
 import dynamic from "next/dynamic"
 import Image from "next/image"
 import { ParticleField } from "@/components/effects/particle-field"
-import { BrandBackdrop } from "@/components/effects/brand-backdrop"
 import { HolographicCard } from "@/components/effects/holographic-card"
-import { HoloWatchShowcase } from "@/components/effects/holo-watch-showcase"
 import { VitalsMonitor } from "@/components/dashboard/vitals-monitor"
 import { EmergencyButton } from "@/components/emergency/emergency-button"
 import { HeroNetworkStatus } from "@/components/hero/hero-network-status"
@@ -28,7 +25,7 @@ import {
   DollarSign,
   ExternalLink,
 } from "lucide-react"
-import { preferencesAreTemporary, saveUserPreferences } from "@/lib/user-preferences"
+import { saveUserPreferences } from "@/lib/user-preferences"
 import { useUserPreferences } from "@/lib/hooks/use-user-preferences"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
@@ -49,7 +46,7 @@ const OnboardingFlow = dynamic(
 )
 
 export default function DashboardPage() {
-  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches"
+  const goFundMeUrl = process.env.NEXT_PUBLIC_GOFUNDME_URL || "https://gofund.me/9acf270ea"
   const investorUrl = process.env.NEXT_PUBLIC_INVESTOR_CONTACT_URL || "mailto:narcoguard607@gmail.com?subject=NarcoGuard%20investment%20inquiry"
   const preferences = useUserPreferences()
   const showOnboarding = preferences !== null && !preferences.hasCompletedOnboarding
@@ -128,15 +125,10 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <BrandBackdrop />
-      <ParticleField count={72} />
+      <ParticleField count={100} />
+      <div className="absolute inset-0 bg-linear-to-br from-primary/5 via-background to-secondary/5 animate-pulse" />
 
       <div className="relative z-10 container mx-auto px-4 py-6 space-y-6">
-        {preferencesAreTemporary() && (
-          <p role="status" className="rounded-lg border border-amber-500/50 p-4 text-sm">
-            Your browser could not save settings. They work for this visit, but may be lost when you close or reload this tab.
-          </p>
-        )}
         {skippedSetup && (
           <div className="bg-yellow-500/20 border border-yellow-500/50 rounded-lg p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -192,13 +184,13 @@ export default function DashboardPage() {
 
         <header className="flex flex-col xl:flex-row xl:items-center justify-between gap-5 dashboard-hero">
           <div className="flex items-center gap-4">
-            <div className="relative w-20 h-20 sm:w-24 sm:h-24 shrink-0 float-animation">
+            <div className="relative w-14 h-14 sm:w-16 sm:h-16 shrink-0 float-animation">
               <Image
                 src="/images/narcoguard-icon-256.jpeg"
                 alt="Narcoguard"
-                width={96}
-                height={96}
-                className="w-full h-full rounded-full pulse-glow drop-shadow-[0_0_32px_rgba(34,197,94,0.35)]"
+                width={64}
+                height={64}
+                className="w-full h-full rounded-full pulse-glow"
               />
             </div>
             <div>
@@ -250,30 +242,12 @@ export default function DashboardPage() {
 
         <EmergencyButton />
 
-        <HoloWatchShowcase title="Meet the NG concept watch" />
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="rounded-xl border border-primary/30 p-5">
-            <h2 className="text-xl font-semibold">Guardian Stability</h2>
-            <p className="text-sm text-muted-foreground mb-3">Opt-in check-ins for food, sleep and everyday needs, with a next-day plan and resource starting points.</p>
-            <Link href="/stability"><Button variant="outline">Open my needs planner</Button></Link>
-            <Link href="/constitution" className="ml-3 underline text-sm">Read the founding Constitution</Link>
-          </div>
-          <div className="rounded-xl border border-primary/30 p-5">
-            <h2 className="text-xl font-semibold">Daily Life</h2>
-            <p className="text-sm text-muted-foreground mb-3">Optional wake-up prompts, morning briefing, routines, schedule, thought/mood/gratitude/wins journals, and evening reset.</p>
-            <Link href="/daily-life"><Button variant="outline">Open Daily Life</Button></Link>
-          </div>
-          <div className="rounded-xl border border-primary/30 p-5">
-            <h2 className="text-xl font-semibold">Calm Audio</h2>
-            <p className="text-sm text-muted-foreground mb-3">Local binaural tone presets, deep meditation drones, brown noise, and slow ocean soundscapes.</p>
-            <Link href="/calm"><Button variant="outline">Open Calm Audio</Button></Link>
-          </div>
-          <div className="rounded-xl border border-primary/30 p-5">
-            <h2 className="text-xl font-semibold">Recovery Sleep</h2>
-            <p className="text-sm text-muted-foreground mb-3">Opt-in wind-down pink noise, a sleep timer and a private sleep log. Safety signals and alarms always stop the sound.</p>
-            <Link href="/recovery-sleep"><Button variant="outline">Open Recovery Sleep</Button></Link>
-          </div>
+        <div className="rounded-xl border border-primary/30 p-5">
+          <h2 className="text-xl font-semibold">Guardian Stability</h2>
+          <p className="text-sm text-muted-foreground mb-3">Opt-in check-ins for food, sleep and everyday needs, with a next-day plan and resource starting points.</p>
+          <Link href="/help"><Button>Find local help</Button></Link>
+          <Link href="/stability"><Button variant="outline">Open my needs planner</Button></Link>
+          <Link href="/constitution" className="ml-3 underline text-sm">Read the founding Constitution</Link>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -367,9 +341,9 @@ export default function DashboardPage() {
                 </div>
               </div>
               <p className="text-muted-foreground mb-4">
-                Goal: <span className="text-green-400 font-bold">{formatUsd(FUNDING_GOAL)}</span> for Rev 5 engineering, prototype iterations, testing, and validation
+                Goal: <span className="text-green-400 font-bold">$24,584</span> for 80 watches
               </p>
-              <a href="https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches" target="_blank" rel="noopener noreferrer" className="block">
+              <a href="https://gofund.me/9acf270ea" target="_blank" rel="noopener noreferrer" className="block">
                 <Button className="w-full bg-green-500 hover:bg-green-600 text-black font-bold text-lg py-6">
                   <DollarSign className="w-5 h-5 mr-2" />
                   Donate Now
@@ -418,7 +392,7 @@ export default function DashboardPage() {
             </a>
             <span className="text-muted-foreground">|</span>
             <a
-              href="https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches"
+              href="https://gofund.me/9acf270ea"
               target="_blank"
               rel="noopener noreferrer"
               className="text-green-400 hover:underline text-sm"

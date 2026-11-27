@@ -43,63 +43,12 @@ export function speakableText(notices: string[] | undefined, reply: string): str
     .replace(/[*_#>`|~]/g, "")
     .replace(/\s+/g, " ")
     .trim()
-  return sayNumbersClearly([...(notices ?? []), cleaned].filter(Boolean).join(" "))
-}
-
-/** Some voices read "911" as "nine hundred eleven"; help lines are spoken digit by digit, and "mi" as miles. */
-export function sayNumbersClearly(text: string): string {
-  return text
-    .replace(/\b(911|988|211)\b/g, (n) => n.split("").join(" "))
-    .replace(/(\d) ?mi\b\.?/g, "$1 miles")
-}
-
-export interface VoiceLike {
-  name: string
-  lang: string
-  localService?: boolean
-  default?: boolean
-}
-
-const NATURAL_HINTS = /natural|neural|premium|enhanced|siri|samantha|\bava\b|allison|zoe|jenny|\baria\b|\bevan\b|nicky|karen|daniel|moira|tessa|alex|victoria|aaron|fiona|susan|kate|serena/i
-const QUALITY_HINTS = /premium|enhanced|natural|neural/i
-const NOVELTY = /albert|bad news|good news|bahh|bells|boing|bubbles|cellos|jester|organ|superstar|trinoids|whisper|wobble|zarvox|deranged|hysterical|fred|junior|ralph|kathy|eloquence|compact|espeak/i
-
-/** True when the voice sounds like a natural or enhanced voice rather than a compact/robotic fallback. */
-export function isNaturalVoice(voice: VoiceLike | undefined): boolean {
-  if (!voice) return false
-  return NATURAL_HINTS.test(voice.name) || QUALITY_HINTS.test(voice.name)
-}
-
-/** Picks the most natural-sounding on-device voice for the language; undefined means the browser default. */
-export function pickVoice<T extends VoiceLike>(voices: readonly T[], lang: string): T | undefined {
-  const want = lang.toLowerCase()
-  const base = want.split("-")[0]
-  const score = (voice: T) => {
-    const voiceLang = voice.lang.toLowerCase().replace("_", "-")
-    if (!voiceLang.startsWith(base)) return -1
-    if (NOVELTY.test(voice.name)) return -1
-    // Remote voices (Chrome's Google voices, Edge's "Online" voices) send the text to the vendor; replies may be private.
-    if (voice.localService === false) return -1
-    let points = voiceLang === want ? 4 : 2
-    if (NATURAL_HINTS.test(voice.name)) points += 5
-    // An enhanced/premium build of a voice beats the compact build of the same voice.
-    if (QUALITY_HINTS.test(voice.name)) points += 5
-    if (voice.default) points += 1
-    return points
-  }
-  let best: T | undefined
-  let bestScore = 0
-  for (const voice of voices) {
-    const points = score(voice)
-    if (points > bestScore) { best = voice; bestScore = points }
-  }
-  return best
+  return [...(notices ?? []), cleaned].filter(Boolean).join(" ")
 }
 
 /** Splits text into sentence-sized chunks; long single utterances are cut off on some mobile browsers. */
 export function speechChunks(text: string, maxLength = 180): string[] {
-  // Split only where punctuation is followed by a space, so "0.4 miles" and "Dr.Smith" stay whole.
-  const sentences = text.split(/(?<=[.!?])\s+/)
+  const sentences = text.match(/[^.!?]+[.!?]*\s*/g) ?? []
   const chunks: string[] = []
   let current = ""
   for (const sentence of sentences.map((s) => s.trim()).filter(Boolean)) {

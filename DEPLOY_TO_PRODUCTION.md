@@ -163,8 +163,8 @@ The NG Auto-Injection system is revolutionizing overdose prevention.
 ✅ Hero network coordination
 ✅ Never Use Alone support
 
-Help Build NarcoGuard: Free Support Now, Safer Wearable Tech
-https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches
+Help fund 80 life-saving watches for Broome County:
+https://gofund.me/ac8905cc
 
 #NarcoGuard #OverdosePrevention #SaveLives
 \`\`\`

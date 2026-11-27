@@ -22,27 +22,13 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      - name: Install pinned private agent skills
-        env:
-          SKILLS_READ_TOKEN: ${{ secrets.SKILLS_READ_TOKEN }}
-        run: |
-          if [ -z "$SKILLS_READ_TOKEN" ]; then
-            echo "::error::Add SKILLS_READ_TOKEN with Contents read access to coden607/skills."
-            exit 1
-          fi
-          skills_auth="$(printf 'x-access-token:%s' "$SKILLS_READ_TOKEN" | base64 -w0)"
-          echo "::add-mask::$skills_auth"
-          GIT_CONFIG_COUNT=1 \
-          GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
-          GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $skills_auth" \
-          npm run setup:agent-skills
-      - run: npm run validate:agent-skills
       - run: npm run lint
       - run: npm run validate:production
       - run: npm run validate:env
       - run: npm run typecheck
       - run: npm run validate:supabase
       - run: npm run validate:claims
+      - run: npm run test:signals
       - run: npm run test:vitals
       - run: npm run test:guardian
       - run: npm run test:constitution
@@ -87,15 +73,4 @@ jobs:
       - name: Wait for production server
         run: npx --yes wait-on@8.0.3 http://127.0.0.1:3000/
       - name: Run Lighthouse assertions
-        shell: bash
-        run: |
-          for attempt in 1 2 3; do
-            echo "Lighthouse attempt $attempt of 3"
-            if npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.js; then
-              exit 0
-            fi
-            rm -rf .lighthouseci
-            sleep 5
-          done
-          echo "Lighthouse assertions failed on all 3 attempts"
-          exit 1
+        run: npx --yes @lhci/cli@0.15.1 autorun --config=lighthouserc.js

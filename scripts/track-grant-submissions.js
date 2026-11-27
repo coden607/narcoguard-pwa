@@ -63,7 +63,7 @@ summary += `## Quick Links
 - [DARPA TALON Program](https://www.darpa.mil/)
 - [Arnold Ventures Grants](https://www.arnoldventures.org/grants)
 - [NarcoGuard Live Demo](https://narcoguard.app)
-- [GoFundMe Campaign](https://www.gofundme.com/f/save-lives-with-narcoguard-ng2pro-watches)
+- [GoFundMe Campaign](https://gofund.me/ac8905cc)
 
 ## Contact
 

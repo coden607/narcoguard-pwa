@@ -4,7 +4,6 @@ import { HolographicCard } from "@/components/effects/holographic-card"
 import { Heart, Activity, Droplet, Wind, Unplug } from "lucide-react"
 import { useVitals } from "@/lib/hooks/use-vitals"
 import { BluetoothVitals } from "@/components/dashboard/bluetooth-vitals"
-import { ManualVitals } from "@/components/dashboard/manual-vitals"
 
 export function VitalsMonitor() {
   const { vitals, overdoseCheck, status, message } = useVitals(2000)
@@ -30,9 +29,6 @@ export function VitalsMonitor() {
           <p className="text-sm text-muted-foreground text-balance">NarcoGuard is not monitoring you. If someone may be overdosing, call 911 and give naloxone if available.</p>
         </div>
         <div className="border-t pt-4">
-          <ManualVitals />
-        </div>
-        <div className="border-t pt-4 mt-4">
           <BluetoothVitals />
         </div>
       </HolographicCard>
@@ -156,8 +152,24 @@ export function VitalsMonitor() {
           </p>
         </div>
 
+        {/* Waveform visualization */}
+        <div className="relative h-20 bg-muted/20 rounded-lg overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center">
+            <svg className="w-full h-full" viewBox="0 0 200 50">
+              <path
+                d="M0,25 Q10,25 20,15 T40,25 Q50,25 60,35 T80,25 Q90,25 100,15 T120,25 Q130,25 140,35 T160,25 Q170,25 180,15 T200,25"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                className={`${overdoseCheck?.isAbnormal ? "text-red-500" : "text-primary"} pulse-glow`}
+              />
+            </svg>
+          </div>
+          <div className="absolute inset-0 bg-linear-to-r from-transparent via-primary/20 to-transparent animate-pulse" />
+        </div>
+
         <p className="text-xs text-muted-foreground text-center">
-          Readings from a verified sensor connection. Updated {new Date(vitals.timestamp).toLocaleTimeString()}
+          Kalman filtering + confidence-weighted fusion + trend gating • Updated {new Date(vitals.timestamp).toLocaleTimeString()}
         </p>
       </div>
     </HolographicCard>

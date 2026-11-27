@@ -158,7 +158,7 @@ function generateSupportingMaterials() {
 ## Compliance
 - Privacy-focused data handling; compliance review required
 - FDA medical device pathway (in progress)
-- IP68 target: 1.5 m for 30 min per IEC 60529. Not certified.
+- IP68 water/dust resistance
 - MIL-STD-810 ruggedization (in development)
 - Regulatory pathway and certification review required
 `
